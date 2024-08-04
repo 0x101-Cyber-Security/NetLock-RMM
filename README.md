@@ -7,6 +7,7 @@ NetLock RMM can be deployed in the cloud or in isolated/offline environments.
 ## [Discord](https://discord.gg/93z7CsxFwx)
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
+## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
 ## [LinkedIn Company](https://www.linkedin.com/company/0x101-cyber-security/about)
 ## [LinkedIn Developer](https://www.linkedin.com/in/nico-mak/)
 
@@ -116,16 +117,6 @@ The Web Console and server software come as a standalone server based on Kestrel
       - Successful or failed
     - Actions:
       - PowerShell
-
-## Windows Support
-
-**Web Console & Server** 
-- Windows 10, 11, Server 2008R2, 2012R2, 2016, 2019, 2022 (64-bit only)
-- Docker (Windows, Linux & MacOS)
-
-**Agent**
-- Windows 7, 8.1, 10, 11, Server 2008R2, 2012R2, 2016, 2019, 2022 (64-bit only)
-- Linux & macOS (support coming after polishing & migrating all NetLock legacy features to NetLock RMM)
 
 ## Future Plans
 
