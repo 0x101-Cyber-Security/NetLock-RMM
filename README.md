@@ -13,33 +13,6 @@ NetLock RMM can be deployed in the cloud or in isolated/offline environments.
 
 ## Live Demo (cooming very soon)
 
-## Early Adopters Version
-
-On August 1, 2024, NetLock RMM released its first early adopters version. The documentation is still being written. The backend and agent are stable, and the web console is stable but has some cosmetic flaws. We encourage you to help us find and report bugs. Potential issues include missing translations (English or German) and missing form checks, which may allow duplicate entries/names in some scenarios if caution is not exercised. The web console can be used on mobile devices, but it is not yet optimized. These issues will be addressed and likely fixed with the next release around September 1, 2024. We will also significantly improve the code and syntax behind the web console.
-
-## Early Adopter Program
-
-Do you want to join our journey? Become an early adopter. While NetLock RMM is in the early adopters phase, it will be completely free to use, including compiled binaries, and soon they will be code-signed as well. Don't worry; NetLock RMM will remain free & publishing its source code after that phase. However, since this project is extensive and requires full-time attention, we will offer services in the future to make it profitable. These services will include offering code-signed binaries, special services, or support contracts for companies, managed hosting, a partner portal for consultants, and much more. Our pricing strategy will be fair and aligned with other source code available RMM vendors.
-
-## Early Adopter Benefits
-
-So what are your benefits for being an early adopter? You will receive a permanent 30% discount on our future memberships, limited to the following tiers:
-
-- Startup
-- Bronze
-- Silver
-- Gold
-- Diamond
-
-You will also receive a Discord badge. Depending on your company's size and if you would like to do a case study write-up, you will be mentioned on our website as well. We might add more benefits while the phase is active or later on.
-
-### What Will These Memberships Include?
-
-- All NetLock RMM software components being digitally code-signed
-- Future technology related to upgrading NetLock RMM installations as easily as possible
-- Individual technical support through email, Teams, or TeamViewer-like software
-- And more to be announced in the future...
-
 ## Features
 
 The Web Console and server software come as a standalone server based on Kestrel, eliminating the need to configure and maintain complex server software such as Apache. Do you like Let's Encrypt? The Let's Encrypt integration by LettuceEncrypt offers an easy way to protect your connection with SSL. Our security concept offers high flexibility with server roles, meaning you could run all server components on one machine or split them into different roles. You can also define fallback servers for each role.
@@ -117,6 +90,34 @@ The Web Console and server software come as a standalone server based on Kestrel
       - Successful or failed
     - Actions:
       - PowerShell
+
+        
+## Early Adopters Version
+
+On August 1, 2024, NetLock RMM released its first early adopters version. The documentation is still being written. The backend and agent are stable, and the web console is stable but has some cosmetic flaws. We encourage you to help us find and report bugs. Potential issues include missing translations (English or German) and missing form checks, which may allow duplicate entries/names in some scenarios if caution is not exercised. The web console can be used on mobile devices, but it is not yet optimized. These issues will be addressed and likely fixed with the next release around September 1, 2024. We will also significantly improve the code and syntax behind the web console.
+
+## Early Adopter Program
+
+Do you want to join our journey? Become an early adopter. While NetLock RMM is in the early adopters phase, it will be completely free to use, including compiled binaries, and soon they will be code-signed as well. Don't worry; NetLock RMM will remain free & publishing its source code after that phase. However, since this project is extensive and requires full-time attention, we will offer services in the future to make it profitable. These services will include offering code-signed binaries, special services, or support contracts for companies, managed hosting, a partner portal for consultants, and much more. Our pricing strategy will be fair and aligned with other source code available RMM vendors.
+
+## Early Adopter Benefits
+
+So what are your benefits for being an early adopter? You will receive a permanent 30% discount on our future memberships, limited to the following tiers:
+
+- Startup
+- Bronze
+- Silver
+- Gold
+- Diamond
+
+You will also receive a Discord badge. Depending on your company's size and if you would like to do a case study write-up, you will be mentioned on our website as well. We might add more benefits while the phase is active or later on.
+
+### What Will These Memberships Include?
+
+- All NetLock RMM software components being digitally code-signed
+- Future technology related to upgrading NetLock RMM installations as easily as possible
+- Individual technical support through email, Teams, or TeamViewer-like software
+- And more to be announced in the future...
 
 ## Future Plans
 
