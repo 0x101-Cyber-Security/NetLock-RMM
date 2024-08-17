@@ -4,7 +4,7 @@ NetLock RMM is an Remote Monitoring & Management (RMM) software built for Manage
 
 NetLock RMM can be deployed in the cloud or in isolated/offline environments.
 
-## [Discord](https://discord.gg/93z7CsxFwx)
+## [Discord](https://discord.gg/HqUpZgtX4U)
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
 ## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
