@@ -8,10 +8,9 @@ NetLock RMM can be deployed in the cloud or in isolated/offline environments.
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
 ## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
+## [Live Demo](https://netlockrmm.com/demo.html)
 ## [LinkedIn Company](https://www.linkedin.com/company/0x101-cyber-security/about)
 ## [LinkedIn Developer](https://www.linkedin.com/in/nico-mak/)
-
-## Live Demo (cooming very soon)
 
 ## Features
 
@@ -102,14 +101,7 @@ Do you want to join our journey? Become an early adopter. While NetLock RMM is i
 
 ## Early Adopter Benefits
 
-So what are your benefits for being an early adopter? You will receive a permanent 30% discount on our future memberships, limited to the following tiers:
-
-- Startup
-- Bronze
-- Silver
-- Gold
-- Diamond
-
+So what are your benefits for being an early adopter? You will receive a permanent 30% discount on our future membership.
 You will also receive a Discord badge. Depending on your company's size and if you would like to do a case study write-up, you will be mentioned on our website as well. We might add more benefits while the phase is active or later on.
 
 ### What Will These Memberships Include?
