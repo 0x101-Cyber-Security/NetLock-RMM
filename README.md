@@ -10,7 +10,6 @@ NetLock RMM can be deployed in the cloud or in isolated/offline environments.
 ## [Documentation](https://docs.netlockrmm.com/en/home)
 ## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
 ## [Live Demo](https://netlockrmm.com/demo.html)
-## [Early Adopter Program](https://docs.netlockrmm.com/en/early-adopter)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
 ## [LinkedIn Company](https://www.linkedin.com/company/0x101-cyber-security/about)
 ## [LinkedIn Developer](https://www.linkedin.com/in/nico-mak/)
