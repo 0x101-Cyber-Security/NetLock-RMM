@@ -1,0 +1,79 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Settings.Notifications.E_Mail.Delete_Mail_Notification_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" OnClick="Delete">@Localizer["delete"]"</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+
+    private async Task Delete()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+            MySqlCommand cmd = new MySqlCommand("DELETE FROM `mail_notifications` WHERE id = @id;", conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            await cmd.ExecuteNonQueryAsync();
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Delete_Mail_Notification_Dialog", "Delete", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+        
+        if (success)
+        {
+            MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

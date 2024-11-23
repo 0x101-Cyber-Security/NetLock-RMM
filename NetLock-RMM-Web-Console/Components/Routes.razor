@@ -1,0 +1,32 @@
+﻿@inject NavigationManager NavigationManager
+
+<CascadingAuthenticationState>
+    <Router AppAssembly="@typeof(App).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Layout.MainLayout)">
+                <NotAuthorized>
+                    <!-- Hier kannst du eine benutzerdefinierte Nachricht für nicht autorisierte Benutzer anzeigen. -->
+                    <p>Sorry, you're not authorized to view this page.</p>
+
+                    @{
+                        NavigationManager.NavigateTo("/", true);
+                    }
+
+                </NotAuthorized>
+                <Authorizing>
+                    <!-- Hier kannst du eine benutzerdefinierte Ladeanzeige anzeigen. -->
+                    <MudOverlay Visible="true" DarkBackground="false" Absolute="false">
+                        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                    </MudOverlay>
+                </Authorizing>
+            </AuthorizeRouteView>
+            <!--<AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />-->
+        </Found>
+        <NotFound>
+            <PageTitle>Not found</PageTitle>
+            <LayoutView Layout="@typeof(Layout.MainLayout)">
+                <p role="alert">Sorry, there's nothing at this address.</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

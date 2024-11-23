@@ -1,0 +1,101 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Tenants.Dialogs.Location_Management.Delete_Location_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton Size="Size.Small" OnClick="Delete" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string tenant_id { get; set; }
+    [Parameter] public string location_id { get; set; }
+
+    private async Task Delete()
+    {
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = @"
+                DELETE FROM `locations` WHERE id = @location_id AND tenant_id = @tenant_id;
+                DELETE FROM `groups` WHERE location_id = @location_id AND tenant_id = @tenant_id;
+                UPDATE devices SET group_name = 'Nicht zugewiesen', location_name = 'Nicht zugewiesen' WHERE location_id = @location_id AND tenant_id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+            cmd.Parameters.AddWithValue("@location_id", location_id);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Add_Policy_Dialog", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            this.Snackbar.Add(Localizer["deleted"], Severity.Success);
+
+            Redirect("/tenant_settings", true);
+        }
+        else
+        {
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Redirect(string path, bool refresh)
+    {
+        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo(path);
+
+        if (refresh)
+            NavigationManager.Refresh();
+    }
+}

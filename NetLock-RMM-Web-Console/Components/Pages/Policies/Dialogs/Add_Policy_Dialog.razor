@@ -1,0 +1,149 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Policies.Dialogs.Add_Policy_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Name" T="string" @bind-Value="@policy_name" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
+        <MudSelect T="string" @bind-Value="operating_system" Label="@Localizer["os"]" AnchorOrigin="Origin.BottomCenter">
+            <MudSelectItem Value="@("Windows")" />
+            <!--<MudSelectItem Value="@("Linux")" />-->
+            <!--<MudSelectItem Value="@("macOS")" />-->
+        </MudSelect>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" OnClick="@OK" Disabled="@Form_Valid()">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    private string policy_name = string.Empty;
+    private string description = string.Empty;
+    private string operating_system = string.Empty;
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(policy_name) || String.IsNullOrEmpty(operating_system))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task OK()
+    {
+        if (!String.IsNullOrEmpty(policy_name))
+        {
+            //Check if policy is already existing
+            bool already_existing = false;
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand command = new MySqlCommand("SELECT * FROM policies WHERE policy_name = @policy_name;", conn);
+                command.Parameters.AddWithValue("@policy_name", policy_name);
+
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        Logging.Handler.Debug("Policy_Management.Add_Policy_Dialog", "HasRows", reader.HasRows.ToString());
+
+                        already_existing = true;
+                    }
+                    else 
+                        Logging.Handler.Debug("Policy_Management.Add_Policy_Dialog", "HasRows", reader.HasRows.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Policy_Management.Add_Policy_Dialog.OK", "", ex.Message);
+            }
+
+            //Add if not existing
+            bool success = false;
+
+            if(already_existing == false)
+            {
+                try
+                {
+                    // Get author from session storage
+                    var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+                    var author = await sessionStorage.GetAsync<string>("username");
+
+                    string execute_query = "INSERT INTO `policies` (`name`, `date`, `author`, `description`, `operating_system`) VALUES (@name, @date, @author, @description, @operating_system);";
+
+                    MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+
+                    cmd.Parameters.AddWithValue("@name", policy_name);
+                    cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@author", author.Value);
+                    cmd.Parameters.AddWithValue("@description", await Base64.Handler.Encode(description));
+                    cmd.Parameters.AddWithValue("@content", null);
+                    cmd.Parameters.AddWithValue("@operating_system", operating_system);
+
+                    cmd.ExecuteNonQuery();
+
+                    success = true;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("Policy_Management.Add_Policy_Dialog", "Result", ex.Message);
+                    success = false;
+                }
+                finally
+                {
+                    await conn.CloseAsync();
+                }
+
+                if (success)
+                {
+                    this.Snackbar.Configuration.ShowCloseIcon = true;
+                    this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                    //this.Snackbar.Add("Erfolgreich hinzugefügt.", Severity.Success);
+
+                    Thread.Sleep(1000);
+
+                    NavigationManager.Refresh();
+                }
+                else
+                {
+                    this.Snackbar.Configuration.ShowCloseIcon = true;
+                    this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                    this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+                }
+            }
+            else //Already existing
+            {
+                this.Snackbar.Configuration.ShowCloseIcon = true;
+                this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                this.Snackbar.Add(Localizer["name_already_in_use"], Severity.Warning);
+            }
+
+            this.MudDialog.Close(DialogResult.Ok(String.Empty));
+            this.MudDialog.Close(DialogResult.Cancel());
+        }        
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+}

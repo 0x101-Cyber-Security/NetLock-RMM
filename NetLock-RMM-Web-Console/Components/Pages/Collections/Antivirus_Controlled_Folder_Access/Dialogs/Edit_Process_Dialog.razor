@@ -1,0 +1,148 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Collections.Antivirus_Controlled_Folder_Access.Dialogs.Edit_Process_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["edit"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["application_path"]" T="string" @bind-Value="@process_path" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+    [Parameter] public string json { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        processes_json = json;
+        Logging.Handler.Debug("/Policy_Settings (Edit_Controlled_Folder_Access_Processes_Dialog) -> OnInitializedAsync", "processes_json", processes_json);
+
+        await Get_Processes();
+    }
+
+    private string name = String.Empty;
+    private string process_path = String.Empty;
+    private string description = String.Empty;
+
+    private string old_process_path = String.Empty;
+    private string processes_json = String.Empty;
+    private string updatedJson = String.Empty;
+
+    public class Processes
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string date { get; set; }
+        public string description { get; set; }
+        public string author { get; set; }
+        public string process_path { get; set; }
+        public string company { get; set; }
+        public string product { get; set; }
+        public string copyright { get; set; }
+        public string brand { get; set; }
+        public string product_version { get; set; }
+        public string file_version { get; set; }
+        public string file_sha1 { get; set; }
+        public string file_md5 { get; set; }
+        public string file_sha256 { get; set; }
+        public string file_sha512 { get; set; }
+        public string cert_owner { get; set; }
+        public string cert_issuer { get; set; }
+        public string cert_begin_date { get; set; }
+        public string cert_end_date { get; set; }
+        public string cert_public_key { get; set; }
+        public string cert_serial_key { get; set; }
+        public string cert_sha1 { get; set; }
+    }
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(process_path))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task Get_Processes()
+    {
+        //Get processes
+        List<Processes> processes = JsonSerializer.Deserialize<List<Processes>>(processes_json);
+
+        foreach (var _object in processes)
+        {
+            if (_object.id == id)
+            {
+                name = _object.name;
+                process_path = _object.process_path;
+                description = _object.description;
+            }
+        } 
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        try
+        {
+            List<Processes> processes = JsonSerializer.Deserialize<List<Processes>>(processes_json);
+
+            foreach (var _object in processes)
+            {
+                if (_object.id == id)
+                {
+                    _object.name = name;
+                    _object.process_path = process_path;
+                    _object.description = description;
+                }
+            }
+
+            // Konvertieren der Liste in JSON
+            updatedJson = JsonSerializer.Serialize(processes, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("/Policy_Settings (Edit_Controlled_Folder_Access_Processes_Dialog) -> OK", "Update existing JSON (updatedJson)", updatedJson);
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings (Edit_Controlled_Folder_Access_Processes_Dialog) -> OK", "Update existing JSON", ex.Message);
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok(updatedJson));
+        }
+        else
+        {
+            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

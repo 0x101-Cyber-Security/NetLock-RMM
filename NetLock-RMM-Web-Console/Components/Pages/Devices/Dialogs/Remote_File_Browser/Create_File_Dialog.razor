@@ -1,0 +1,79 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Devices.Dialogs.Remote_File_Browser.Create_File_Dialog> Localizer
+
+<style>
+
+    .monaco-editor {
+        flex-grow: 1;
+        height: 25vh;
+        width: 100%; /* Each editor takes half of the screen width */
+    }
+
+</style>
+
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="Name" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+
+        <StandaloneCodeEditor Id="remote_shell_output-editor" CssClass="monaco-editor" @ref="file_editor" ConstructionOptions="Editor_Construction_Options" />
+
+    </DialogContent>
+    <DialogActions>
+
+        <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name))">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private string name = String.Empty;
+    private string editor_input = String.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private StandaloneCodeEditor file_editor = null!;
+
+    private StandaloneEditorConstructionOptions Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "powershell",
+                ReadOnly = false,
+                //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            };
+    }
+
+    private async Task Remote_Shell_Editor_Handle_Input(ModelContentChangedEvent e)
+    {
+        editor_input = await file_editor.GetValue();
+    }
+
+    private async Task OK()
+    {
+        string content = await Base64.Handler.Encode(editor_input);
+
+        this.MudDialog.Close(DialogResult.Ok(name + "\u001F" + content));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,207 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Settings.Notifications.E_Mail.Smtp_Settings_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog Style="width: 800px">
+            <TitleContent>
+                <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["note"]</MudText>
+                <MudTextField Label="@Localizer["username"]" T="string" @bind-Value="@smtp.username" Immediate="@true" />
+                <MudTextField Label="@Localizer["password"]" InputType="@PasswordInput" @bind-Value="@smtp.password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="Show_Password" AdornmentAriaLabel="@Localizer["display_password"]" Immediate="@true" />
+                <MudTextField Label="Server" T="string" @bind-Value="@smtp.server" Immediate="@true" />
+                <MudTextField Label="Port" T="string" @bind-Value="@smtp.port" Immediate="@true" />
+                <MudCheckBox Color="Color.Primary" T="bool" @bind-Value="@smtp.ssl">SSL/TLS</MudCheckBox>
+                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Info" OnClick="@Test_Smtp" Disabled="@Form_Valid()">@Localizer["test"]</MudButton>
+
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Success" OnClick="@OK" Disabled="@smtp_invalid">@Localizer["confirm"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    bool smtp_invalid = true;
+
+    public Smtp_Settings smtp = new Smtp_Settings();
+
+    public class Smtp_Settings
+    {
+        public string username { get; set; }
+        public string password { get; set; }
+        public string server { get; set; }
+        public string port { get; set; }
+        public bool ssl { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Get_Smtp_Settings();
+    }
+
+    bool password_visible;
+    InputType PasswordInput = InputType.Password;
+    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+
+    private void Show_Password()
+    {
+        @if (password_visible)
+        {
+            password_visible = false;
+            PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+            PasswordInput = InputType.Password;
+        }
+        else
+        {
+            password_visible = true;
+            PasswordInputIcon = Icons.Material.Filled.Visibility;
+            PasswordInput = InputType.Text;
+        }
+    }
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(smtp.username) || String.IsNullOrEmpty(smtp.password) || String.IsNullOrEmpty(smtp.server) || String.IsNullOrEmpty(smtp.port))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task Get_Smtp_Settings()
+    {
+        string smtp_json = String.Empty;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM settings;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        smtp_json = reader["smtp"].ToString() ?? "";
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Get_Smtp_Settings", "Send_Mail", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+        
+        //Extract current settings
+        try
+        {
+            Smtp_Settings temp_smtp_settings = JsonSerializer.Deserialize<Smtp_Settings>(smtp_json);
+
+            smtp.username = temp_smtp_settings.username;
+            smtp.password = temp_smtp_settings.password;
+            smtp.server = temp_smtp_settings.server;
+            smtp.port = temp_smtp_settings.port;
+            smtp.ssl = temp_smtp_settings.ssl;
+        }
+        catch (Exception ex)
+        {
+            //do nothing in this case
+        }
+    }
+
+    private async Task Test_Smtp()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        string result = await Classes.Helper.Notifications.Smtp.Test_Smtp(smtp.username, smtp.password, smtp.server, Convert.ToInt32(smtp.port), smtp.ssl);
+
+        if (result == "success")
+        {
+            smtp_invalid = false;
+            this.Snackbar.Add(Localizer["test_successful"], Severity.Success);
+        }
+        else
+        {
+            smtp_invalid = true;
+            this.Snackbar.Add(Localizer["test_failed"] + " " + result, Severity.Error);
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        string smtp_json = JsonSerializer.Serialize(smtp);
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        //Decide the query to use
+        bool success = false;
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE settings SET smtp = @smtp;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@smtp", smtp_json);
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Add_Mail_Notification_Dialog", "General error", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        //Show snackbar depending on result
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            this.Snackbar.Add(@Localizer["error_occurred"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

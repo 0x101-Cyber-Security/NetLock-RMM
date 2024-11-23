@@ -1,0 +1,744 @@
+﻿@page "/unauthorized_devices"
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Devices.Unauthorized_Devices> Localizer
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+
+        @if(permissions_devices_unauthorized_enabled)
+        {
+            <MudText Typo="Typo.h5">@Localizer["unauthorized_devices"]</MudText>
+
+            <MudTooltip Text="@Localizer["refresh"]">
+                <MudIconButton Class="mt-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="async () => { await Get_Clients_OverviewAsync(); }"></MudIconButton>
+            </MudTooltip>
+
+            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" @onclick="async () => { await Authorize_Device(selectedRowContent); }">@Localizer["authorize_device"]</MudButton>
+            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" @onclick="async () => { await Delete_Device(selectedRowContent); }">@Localizer["delete_device"]</MudButton>
+
+            <MudTooltip Text="@Localizer["export_data"]">
+                <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
+            </MudTooltip>
+
+            <MudTable Class="mt-5" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Device_Table_Filter_Func)">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
+                </HeaderContent>
+                <RowTemplate Context="row">
+
+                    <MudTd DataLabel="Name" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
+                            <ActivatorContent>
+                                <span style="display: flex; align-items: center;">
+                                    &nbsp;@row.device_name
+                                </span>
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                <MudMenuItem @onclick="async () => { await Delete_Device(row.id); }">@Localizer["delete_device"]</MudMenuItem>
+                            </ChildContent>
+                        </MudMenu>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["tenant"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" class="desktop-icon" />&nbsp;@row.tenant_name
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["location"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" class="desktop-icon" />&nbsp;@row.location_name
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["group"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Group" Size="Size.Small" class="desktop-icon" />&nbsp;@row.group_name
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["agent_version"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Update" Size="Size.Small" class="desktop-icon" />&nbsp;@row.agent_version
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["last_access"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_access
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="IP-Adresse" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.NetworkWifi1Bar" Size="Size.Small" class="desktop-icon" />&nbsp;@row.ip_address
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["os"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Size="Size.Small" class="desktop-icon" />&nbsp;@row.operating_system
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["domain"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Domain" Size="Size.Small" class="desktop-icon" />&nbsp;@row.domain
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["firewall"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            @if (row.firewall_status == "True")
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Fireplace" Size="Size.Small" class="desktop-icon" />
+
+                                <span>&nbsp;</span>
+
+                                @Localizer["firewall_enabled"]
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Fireplace" Size="Size.Small" class="desktop-icon" />
+
+                                <span>&nbsp;</span>
+
+                                @Localizer["firewall_disabled"]
+                            }
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["antivirus_solution"]" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Coronavirus" Size="Size.Small" class="desktop-icon" />&nbsp;@row.antivirus_solution
+                        </span>
+                    </MudTd>
+
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="Geräte pro Seite" />
+                </PagerContent>
+            </MudTable>
+        }
+
+        </Authorized>
+    </AuthorizeView>
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_json = String.Empty;
+    private string permissions_tenants_json = String.Empty;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private bool permissions_devices_unauthorized_enabled = false;
+    private bool permissions_devices_unauthorized_authorize = false;
+
+    public class Permissions_Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+    }
+
+    private async Task Get_Permissions()
+    {
+        //Extract user info from users session storage
+        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+        var username = await sessionStorage.GetAsync<string>("username");
+        var password = await sessionStorage.GetAsync<string>("password");
+
+        Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "username", username.Value ?? String.Empty);
+
+        //if user info empty, force logout
+        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
+        {
+            Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "sessions storage data", "empty, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Check if user info is valid, if not, force logout
+        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
+        {
+            Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "verify user", "incorrect data, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Get permissions
+        string query = "SELECT * FROM `accounts` WHERE username = @username;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@username", username.Value);
+
+            Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
+                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "permissions_json", permissions_json);
+
+            //Extract permissions
+            if (!String.IsNullOrEmpty(permissions_json))
+            {
+                using (JsonDocument document = JsonDocument.Parse(permissions_json))
+                {
+                    //devices_unauthorized_enabled
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("devices_unauthorized_enabled");
+                        permissions_devices_unauthorized_enabled = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/unauthorized_devices -> Permissions_Load", "permissions_json (devices_unauthorized_enabled)", ex.Message);
+                    }
+
+                    //devices_unauthorized_authorize
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("devices_unauthorized_authorize");
+                        permissions_devices_unauthorized_authorize = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/unauthorized_devices -> Permissions_Load", "permissions_json (devices_unauthorized_authorize)", ex.Message);
+                    }
+                }
+            }
+            else if (permissions_json == "[]")
+            {
+                Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+            else
+            {
+                Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+
+            //Extract tenants from json
+            permissions_tenants_list.Clear();
+            if (!String.IsNullOrEmpty(permissions_tenants_json))
+            {
+                //Set the activation state for the tenants
+                try
+                {
+                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
+
+                    foreach (var tenant in tenants_activation_state_list)
+                    {
+                        Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load", "foreach tenant", tenant.id);
+
+                        permissions_tenants_list.Add(tenant.id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/unauthorized_devices -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
+                }
+            }
+            else
+            {
+                Logging.Handler.Debug("/unauthorized_devices -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/unauthorized_devices -> Permissions_Load", "general_error (force logout)", ex.Message);
+            NavigationManager.NavigateTo("/logout", true);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        await Get_Permissions();
+        //Check permissions
+        if (!permissions_devices_unauthorized_enabled)
+        {
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await Get_Clients_OverviewAsync();
+
+        StateHasChanged();
+    }
+
+    private string view_port = "70vh";
+    private string sorted_column;
+    private string device_table_search_string = "";
+
+    private bool Device_Table_Filter_Func(MySQL_Entity row)
+    {
+        if (string.IsNullOrEmpty(device_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.device_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.tenant_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.location_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.group_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.agent_version.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.last_access.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.ip_address.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.operating_system.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.domain.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.antivirus_solution.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string selectedRowContent = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void RowClickHandler(MySQL_Entity row)
+    {
+        selectedRowContent = row.id;
+    }
+
+    private string GetRowClass(MySQL_Entity row)
+    {
+        return row.id == selectedRowContent ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    public class MySQL_Entity
+    {
+        public string id { get; set; } = "Empty";
+        public string device_name { get; set; } = "Empty";
+        public string tenant_name { get; set; } = "Empty";
+        public string location_name { get; set; } = "Empty";
+        public string group_name { get; set; } = "Empty";
+        public string agent_version { get; set; } = "Empty";
+        public string last_access { get; set; } = "Empty";
+        public string ip_address { get; set; } = "Empty";
+        public string operating_system { get; set; } = "Empty";
+        public string domain { get; set; } = "Empty";
+        public string antivirus_solution { get; set; } = "Empty";
+        public string firewall_status { get; set; } = "Empty";
+        public string architecture { get; set; } = "Empty";
+        public string last_boot { get; set; } = "Empty";
+        public string cpu { get; set; } = "Empty";
+        public string mainboard { get; set; } = "Empty";
+        public string gpu { get; set; } = "Empty";
+        public string ram { get; set; } = "Empty";
+        public string environment_variables { get; set; } = "Empty";
+        public string network_adapters { get; set; } = "Empty";
+        public string drives { get; set; } = "Empty";
+        public string applications_installed { get; set; } = "Empty";
+        public string applications_logon { get; set; } = "Empty";
+        public string applications_scheduled_tasks { get; set; } = "Empty";
+        public string applications_drivers { get; set; } = "Empty";
+    }
+
+    public List<MySQL_Entity> mysql_data = [];
+
+    private async Task<string> GetTenantNameAsync()
+    {
+        return await localStorage.GetItemAsync<string>("tenantName");
+    }
+
+    private async Task Get_Clients_OverviewAsync()
+    {
+        mysql_data = new List<MySQL_Entity>();
+
+        string query = "SELECT * FROM devices WHERE authorized = '0';";
+
+        Logging.Handler.Debug("/unauthorized_devices  -> Get_Clients_OverviewAsync", "MySQL_Query", query);
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        MySQL_Entity entity = new MySQL_Entity
+                        {
+                            id = reader["id"].ToString() ?? "",
+                            device_name = reader["device_name"].ToString() ?? "",
+                            tenant_name = reader["tenant_name"].ToString() ?? "",
+                            location_name = reader["location_name"].ToString() ?? "",
+                            group_name = reader["group_name"].ToString() ?? "",
+                            agent_version = reader["agent_version"].ToString() ?? "",
+                            last_access = reader["last_access"].ToString() ?? "",
+                            ip_address = reader["ip_address_internal"].ToString() + " & " + reader["ip_address_external"].ToString(),
+                            operating_system = reader["operating_system"].ToString() ?? "",
+                            domain = reader["domain"].ToString() ?? "",
+                            antivirus_solution = reader["antivirus_solution"].ToString() ?? "",
+                            firewall_status = reader["firewall_status"].ToString() ?? "",
+                        };
+
+                        mysql_data.Add(entity);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/unauthorized_devices -> Get_Clients_OverviewAsync", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Authorize_Device(string device_id)
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE devices SET authorized = '1' WHERE id = @id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@id", device_id);
+
+            cmd.ExecuteNonQuery();
+            await conn.CloseAsync();
+
+            await Get_Clients_OverviewAsync();
+
+            await Classes.MySQL.Database.Reset_Device_Sync(false, device_id);
+
+            this.Snackbar.Add(Localizer["device_authorized"].ToString(), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/unauthorized_devices -> Authorize_Device", "Result", ex.ToString());
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+        }      
+    }
+
+    // Delete device
+    private async Task Delete_Device(string device_id)
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "DELETE FROM devices WHERE id = @id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@id", device_id);
+
+            cmd.ExecuteNonQuery();
+            await conn.CloseAsync();
+
+            await Get_Clients_OverviewAsync();
+
+            this.Snackbar.Add(Localizer["device_deleted"].ToString(), Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/unauthorized_devices -> Delete_Device", "Result", ex.ToString());
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+        }
+    }
+
+    private void Redirect(string path)
+    {        
+        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo(path);
+    }
+
+    #region Data_Export
+    private async Task Trigger_Export_Device_Table_Dialog()
+    {
+        var options = new DialogOptions
+            {
+                
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+
+            };
+
+        var result = await this.DialogService.Show<Shared.Export_Data_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        if (result != null && result.Data != null)
+        {
+            if (result.Data.ToString() == "JSON")
+                await Export_Data_Json();
+            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
+                await Export_Data_Spreadsheet();
+            else if (result.Data.ToString() == "XML")
+                await Export_Data_XML();
+            else if (result.Data.ToString() == "HTML")
+                await Export_Data_HTML();
+        }
+    }
+
+    private async Task Export_Data_Json()
+    {
+        try
+        {
+            // Erstellen eines JSON-Strings aus den MudTable-Einträgen
+            string jsonContent = JsonSerializer.Serialize(mysql_data, new JsonSerializerOptions { WriteIndented = true });
+
+            // Aufruf der JavaScript-Funktion für den Export als .txt
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "devices.json", jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_Json", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_XML()
+    {
+        try
+        {
+            if (mysql_data == null || mysql_data.Count == 0)
+            {
+                // Keine Daten zum Exportieren
+                return;
+            }
+
+            var serializer = new XmlSerializer(typeof(List<MySQL_Entity>));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                // Konvertiere die Daten in das XML-Format
+                serializer.Serialize(memoryStream, mysql_data);
+
+                // Setze die Position des MemoryStream auf den Anfang
+                memoryStream.Position = 0;
+
+                // Lese den Inhalt des MemoryStream in einen String
+                using (var streamReader = new StreamReader(memoryStream))
+                {
+                    string xmlContent = await streamReader.ReadToEndAsync();
+
+                    // Hier wird JavaScript-Interop verwendet, um den XML-Inhalt herunterzuladen
+                    await JSRuntime.InvokeVoidAsync("exportToTxt", "devices.xml", xmlContent, "text/xml");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_XML", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_HTML()
+    {
+        try
+        {
+            if (mysql_data == null || mysql_data.Count == 0)
+            {
+                // Keine Daten zum Exportieren
+                return;
+            }
+
+            StringBuilder htmlBuilder = new StringBuilder();
+            htmlBuilder.Append("<table border='1'>");
+            htmlBuilder.Append("<tr>");
+            htmlBuilder.Append("<th>Gerät</th>");
+            htmlBuilder.Append("<th>Mandant</th>");
+            htmlBuilder.Append("<th>Standort</th>");
+            htmlBuilder.Append("<th>Gruppe</th>");
+            htmlBuilder.Append("<th>Agenten Version</th>");
+            htmlBuilder.Append("<th>Letzter Kontakt</th>");
+            htmlBuilder.Append("<th>IP-Addresse</th>");
+            htmlBuilder.Append("<th>Betriebssystem</th>");
+            htmlBuilder.Append("<th>Domäne</th>");
+            htmlBuilder.Append("<th>Antivirus Lösung</th>");
+            htmlBuilder.Append("</tr>");
+
+            foreach (var entry in mysql_data)
+            {
+                htmlBuilder.Append("<tr>");
+                htmlBuilder.Append($"<td>{entry.device_name}</td>");
+                htmlBuilder.Append($"<td>{entry.tenant_name}</td>");
+                htmlBuilder.Append($"<td>{entry.location_name}</td>");
+                htmlBuilder.Append($"<td>{entry.group_name}</td>");
+                htmlBuilder.Append($"<td>{entry.agent_version}</td>");
+                htmlBuilder.Append($"<td>{entry.last_access}</td>");
+                htmlBuilder.Append($"<td>{entry.ip_address}</td>");
+                htmlBuilder.Append($"<td>{entry.operating_system}</td>");
+                htmlBuilder.Append($"<td>{entry.domain}</td>");
+                htmlBuilder.Append($"<td>{entry.antivirus_solution}</td>");
+                htmlBuilder.Append("</tr>");
+            }
+
+            htmlBuilder.Append("</table>");
+
+            string htmlContent = htmlBuilder.ToString();
+
+            // Hier wird JavaScript-Interop verwendet, um den HTML-Inhalt herunterzuladen
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "devices.html", htmlContent, "text/html");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_HTML", ex.Message);
+        }
+    }
+
+    private async Task Export_Data_Spreadsheet()
+    {
+        try
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
+
+                int headerRow = 1;
+                worksheet.Cells[headerRow, 1].Value = "Gerät";
+                worksheet.Cells[headerRow, 2].Value = "Mandant";
+                worksheet.Cells[headerRow, 3].Value = "Standort";
+                worksheet.Cells[headerRow, 4].Value = "Gruppe";
+                worksheet.Cells[headerRow, 5].Value = "Agenten Version";
+                worksheet.Cells[headerRow, 6].Value = "Letzter Kontakt";
+                worksheet.Cells[headerRow, 7].Value = "IP-Addresse";
+                worksheet.Cells[headerRow, 8].Value = "Betriebssystem";
+                worksheet.Cells[headerRow, 9].Value = "Domäne";
+                worksheet.Cells[headerRow, 10].Value = "Antivirus Lösung";
+
+                int dataRow = headerRow + 1;
+                foreach (var entry in mysql_data)
+                {
+                    worksheet.Cells[dataRow, 1].Value = entry.device_name;
+                    worksheet.Cells[dataRow, 2].Value = entry.tenant_name;
+                    worksheet.Cells[dataRow, 3].Value = entry.location_name;
+                    worksheet.Cells[dataRow, 4].Value = entry.group_name;
+                    worksheet.Cells[dataRow, 5].Value = entry.agent_version;
+                    worksheet.Cells[dataRow, 6].Value = entry.last_access;
+                    worksheet.Cells[dataRow, 7].Value = entry.ip_address;
+                    worksheet.Cells[dataRow, 8].Value = entry.operating_system;
+                    worksheet.Cells[dataRow, 9].Value = entry.domain;
+                    worksheet.Cells[dataRow, 10].Value = entry.antivirus_solution;
+
+                    dataRow++;
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
+                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", "devices.xlsx", Convert.ToBase64String(stream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_Spreadsheet", ex.Message);
+        }
+    }
+    #endregion
+}

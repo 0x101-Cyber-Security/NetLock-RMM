@@ -1,0 +1,193 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Events.Dialogs.Event_Details_Dialog> Localizer
+
+<style>
+    .monaco-editor {
+        flex-grow: 1;
+        height: 50vh;
+        width: 100%; /* Each editor takes full screen width */
+    }
+
+    /* For mobile devices (max width 600px) */
+    @@media (max-width: 600px) {
+        .monaco-editor {
+            height: 300px; /* Reduced height for mobile */
+            width: 100%; /* Full width on mobile */
+        }
+    }
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"] (@device_name)</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudPaper Class="pa-4">
+            <MudGrid>
+                <!-- Date in a separate row -->
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">@Localizer["Date"]</MudText>
+                    <MudTextField T="string" @bind-Value="@date" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <!-- Tenant and Location in two columns -->
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6">@Localizer["Tenant"]</MudText>
+                    <MudTextField T="string" @bind-Value="@tenant_name" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6">@Localizer["Location"]</MudText>
+                    <MudTextField T="string" @bind-Value="@location_name" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <!-- Device in a separate row -->
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">@Localizer["Device"]</MudText>
+                    <MudTextField T="string" @bind-Value="@device_name" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <!-- Severity and Reported By in two columns -->
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6">@Localizer["Severity"]</MudText>
+                    <MudTextField T="string" @bind-Value="@severity" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <MudItem xs="12" sm="6">
+                    <MudText Typo="Typo.h6">@Localizer["Reported By"]</MudText>
+                    <MudTextField T="string" @bind-Value="@reported_by" ReadOnly="true" Immediate="true" />
+                </MudItem>
+
+                <!-- Event in a separate row -->
+                <MudItem xs="12">
+                    <MudText Typo="Typo.h6">@Localizer["Event"]</MudText>               
+                    <MudTextField T="string" @bind-Value="@_event" ReadOnly="true" Immediate="true" />
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        <MudTabs Class="mt-2" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default">
+
+            <MudTabPanel Text="Monaco">
+                <StandaloneCodeEditor Id="event-output" CssClass="monaco-editor" @ref="event_editor" ConstructionOptions="Event_Editor_Construction_Options" />
+            </MudTabPanel>
+            <MudTabPanel Text="RAW">
+                <MudTextField T="string" Lines="20" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="true" />
+            </MudTabPanel>
+
+        </MudTabs>
+
+    </DialogContent>
+    <DialogActions>
+
+        <!--<MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">Als gelesen markieren</MudButton>-->
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    [Parameter] public string date { get; set; }
+    [Parameter] public string event_id { get; set; }
+    [Parameter] public string device_name { get; set; }
+    [Parameter] public string tenant_name { get; set; }
+    [Parameter] public string location_name { get; set; }
+    [Parameter] public string severity { get; set; }
+    [Parameter] public string reported_by { get; set; }
+    [Parameter] public string _event { get; set; }
+    [Parameter] public string description { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Convert severity
+        if (severity == "0")
+            severity = Localizer["low"];
+        else if (severity == "1")
+            severity = Localizer["moderate"];
+        else if (severity == "2")
+            severity = Localizer["high"];
+        else if (severity == "3")
+            severity = Localizer["critical"];
+    }
+
+    private StandaloneCodeEditor event_editor = new StandaloneCodeEditor();
+
+    private StandaloneEditorConstructionOptions Event_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "plaintext",
+                ReadOnly = true,
+                Value = description
+            };
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {  
+            /*
+            string scripts_json_string = JsonSerializer.Serialize(script_json, new JsonSerializerOptions { WriteIndented = true });
+
+            //Save to MySQL
+            await conn.OpenAsync();
+
+            string execute_query = "INSERT INTO `scripts` (`name`, `date`, `author`, `description`, `platform`, `shell`, `script`, `json`) VALUES (@name, @date, @author, @description, @platform, @shell, @script, @json);";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+
+            cmd.Parameters.AddWithValue("@name", script_name);
+            cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@author", await localStorage.GetItemAsync<string>("username"));
+            cmd.Parameters.AddWithValue("@description", description);
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
+            cmd.Parameters.AddWithValue("@script", script);
+            cmd.Parameters.AddWithValue("@json", scripts_json_string);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+            */
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> OK", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

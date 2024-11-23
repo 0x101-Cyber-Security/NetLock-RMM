@@ -1,0 +1,152 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Collections.Antivirus_Controlled_Folder_Access.Dialogs.Edit_Ruleset_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["edit"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton Disabled="@Form_Valid()" OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+    [Parameter] public string name { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        old_name = name;
+        Logging.Handler.Debug("/rulesets_antivirus_controlled_folder_access (Edit_Ruleset_Dialog) -> OnInitializedAsync", "name", name);
+
+        await Get_Ruleset();
+    }
+
+    private string old_name = String.Empty;
+    private string description = String.Empty;
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(name))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task Get_Ruleset()
+    {
+        string query = "SELECT * FROM antivirus_controlled_folder_access_rulesets WHERE id = @id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@id", id);
+
+            Logging.Handler.Debug("/rulesets_antivirus_controlled_folder_access (Edit_Ruleset_Dialog) -> Get_Ruleset", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        description = reader["description"].ToString();
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/rulesets_antivirus_controlled_folder_access (Edit_Ruleset_Dialog) -> Get_Ruleset", "MySQL_Query", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            // Check if the name already exists
+            if (old_name != name)
+            {
+                string check_query = "SELECT COUNT(*) FROM `antivirus_controlled_folder_access_rulesets` WHERE `name` = @name;";
+                MySqlCommand check_cmd = new MySqlCommand(check_query, conn);
+                check_cmd.Parameters.AddWithValue("@name", name);
+
+                long count = (long)check_cmd.ExecuteScalar();
+
+                if (count > 0)
+                {
+                    this.Snackbar.Add(Localizer["already_exists"], Severity.Warning);
+                    return;
+                }
+            }
+
+            string execute_query = "UPDATE antivirus_controlled_folder_access_rulesets SET name = @name, description = @description WHERE id = @id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@description", description);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/rulesets_antivirus_controlled_folder_access (Edit_Ruleset_Dialog) -> OK", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok(name));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

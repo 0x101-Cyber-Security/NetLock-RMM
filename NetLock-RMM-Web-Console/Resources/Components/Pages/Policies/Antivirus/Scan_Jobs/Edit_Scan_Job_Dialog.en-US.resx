@@ -1,0 +1,504 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="action" xml:space="preserve">
+    <value>Aktion</value>
+  </data>
+  <data name="action_treshold_failures_max" xml:space="preserve">
+    <value>Aktion ab X Fehlschlägen hintereinander.</value>
+  </data>
+  <data name="action_treshold_hits_max" xml:space="preserve">
+    <value>Aktion ab X Treffer hintereinander</value>
+  </data>
+  <data name="action_treshold_hits_max_tooltip" xml:space="preserve">
+    <value>Wie viele aufeinanderfolgende Sensor Anschläge erforderlich sind, bis die PowerShell Code Aktion ausgeführt wird.</value>
+  </data>
+  <data name="action_treshold_max" xml:space="preserve">
+    <value>Aktion ab X Schwellenwert Überschreitungen.</value>
+  </data>
+  <data name="action_treshold_max_tooltip" xml:space="preserve">
+    <value>Wie viele aufeinanderfolgende Schwellenwert Überschreitungen erforderlich sind, bis die PowerShell Code Aktion ausgeführt wird.</value>
+  </data>
+  <data name="add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="Are you sure you want to delete the directory?" xml:space="preserve">
+    <value>Are you sure you want to delete the directory?</value>
+  </data>
+  <data name="auto_reset" xml:space="preserve">
+    <value>Automatisch zurücksetzen</value>
+  </data>
+  <data name="auto_reset_tooltip" xml:space="preserve">
+    <value>Wenn der Sensor nicht anschlägt, wird der Benachrichtigungs- und Aktionszähler zurückgesetzt. Dadurch wird erreicht, dass eine Benachrichtigung oder Aktion nur ausgelöst wird, wenn der Sensor dem Schwellenwert entsprechend oft hintereinander anschlägt.</value>
+  </data>
+  <data name="cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="category" xml:space="preserve">
+    <value>Kategorie</value>
+  </data>
+  <data name="confirm" xml:space="preserve">
+    <value>Confirm</value>
+  </data>
+  <data name="critical" xml:space="preserve">
+    <value>Kritisch</value>
+  </data>
+  <data name="custom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="date" xml:space="preserve">
+    <value>Date</value>
+  </data>
+  <data name="delete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="description" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="directories" xml:space="preserve">
+    <value>Directories</value>
+  </data>
+  <data name="directory" xml:space="preserve">
+    <value>Directory</value>
+  </data>
+  <data name="disabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="disk_minimum_capacity" xml:space="preserve">
+    <value>Nur Laufwerke ab einer Kapazität von X Gigabyte prüfen.</value>
+  </data>
+  <data name="disk_minimum_capacity_tooltip" xml:space="preserve">
+    <value>Bestimmt wie viel Kapazität ein Laufwerk (Partition) mindestens haben muss, damit es überwacht wird. 0 = egal.</value>
+  </data>
+  <data name="drive" xml:space="preserve">
+    <value>Drive</value>
+  </data>
+  <data name="drive_letter" xml:space="preserve">
+    <value>Laufwerk Buchstaben</value>
+  </data>
+  <data name="drive_letter_tooltip" xml:space="preserve">
+    <value>Buchstaben werden durch Komma getrennt. Zum Beispiel: C,D,G Wird kein Buchstabe angegeben, werden alle Laufwerke überprüft.</value>
+  </data>
+  <data name="drive_used_less_than_x_%" xml:space="preserve">
+    <value>Weniger als X Prozent frei</value>
+  </data>
+  <data name="drive_used_less_than_x_gb" xml:space="preserve">
+    <value>Weniger als X GB frei</value>
+  </data>
+  <data name="drive_used_more_or_less_than_x_%_tooltip" xml:space="preserve">
+    <value>Auslösen wenn folgender Schwellwert (Prozenzt) überschritten wird.</value>
+  </data>
+  <data name="drive_used_more_or_less_than_x_gb_tooltip" xml:space="preserve">
+    <value>Auslösen wenn folgender Schwellwert (GB) überschritten wird.</value>
+  </data>
+  <data name="drive_used_more_than_x_%" xml:space="preserve">
+    <value>Mehr als X Prozent belegt</value>
+  </data>
+  <data name="drive_used_more_than_x_gb" xml:space="preserve">
+    <value>Mehr als X GB belegt</value>
+  </data>
+  <data name="edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="enabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="error_occurred" xml:space="preserve">
+    <value>An error has occurred.</value>
+  </data>
+  <data name="eventlog_application" xml:space="preserve">
+    <value>Anwendung</value>
+  </data>
+  <data name="eventlog_security" xml:space="preserve">
+    <value>Sicherheit</value>
+  </data>
+  <data name="eventlog_setup" xml:space="preserve">
+    <value>Installation</value>
+  </data>
+  <data name="event_id" xml:space="preserve">
+    <value>Ereignis-ID</value>
+  </data>
+  <data name="event_id_tooltip_expected_result" xml:space="preserve">
+    <value>Bleibt das Feld leer, wird nur nach der Ereignis-ID geprüft.</value>
+  </data>
+  <data name="expected_result" xml:space="preserve">
+    <value>Erwartetes Ergebnis</value>
+  </data>
+  <data name="failed" xml:space="preserve">
+    <value>Fehlgeschlagen</value>
+  </data>
+  <data name="friday" xml:space="preserve">
+    <value>Friday</value>
+  </data>
+  <data name="full_scan" xml:space="preserve">
+    <value>Full scan</value>
+  </data>
+  <data name="general" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="high" xml:space="preserve">
+    <value>High</value>
+  </data>
+  <data name="hours" xml:space="preserve">
+    <value>Hours</value>
+  </data>
+  <data name="if..." xml:space="preserve">
+    <value>Wenn</value>
+  </data>
+  <data name="ip_address/hostname" xml:space="preserve">
+    <value>IP-Adresse/Hostname</value>
+  </data>
+  <data name="low" xml:space="preserve">
+    <value>Low</value>
+  </data>
+  <data name="max_cpu_usage_%" xml:space="preserve">
+    <value>Maximum CPU utilisation (%)</value>
+  </data>
+  <data name="minutes" xml:space="preserve">
+    <value>Minutes</value>
+  </data>
+  <data name="moderate" xml:space="preserve">
+    <value>Moderate</value>
+  </data>
+  <data name="monday" xml:space="preserve">
+    <value>Monday</value>
+  </data>
+  <data name="name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="network_drives" xml:space="preserve">
+    <value>Netzlaufwerke</value>
+  </data>
+  <data name="network_drives_tooltip" xml:space="preserve">
+    <value>Überprüft eingebundene Netzlaufwerke. </value>
+  </data>
+  <data name="notifications" xml:space="preserve">
+    <value>Benachrichtungen</value>
+  </data>
+  <data name="notifications_mail_tooltip" xml:space="preserve">
+    <value>Benachrichtigungen per E-Mail versenden.</value>
+  </data>
+  <data name="notifications_microsoft_teams_tooltip" xml:space="preserve">
+    <value>Benachrichtigungen per Microsoft Teams versenden.</value>
+  </data>
+  <data name="notifications_ntfy_sh_tooltip" xml:space="preserve">
+    <value>Benachrichtigungen per ntfy.sh versenden.</value>
+  </data>
+  <data name="notifications_telegram_tooltip" xml:space="preserve">
+    <value>Benachrichtigungen per Telegram versenden.</value>
+  </data>
+  <data name="notification_treshold_failures_max" xml:space="preserve">
+    <value>Benachrichtigung ab X Fehlschlägen hintereinander.</value>
+  </data>
+  <data name="notification_treshold_hits_max" xml:space="preserve">
+    <value>Benachrichtigung ab X Treffer hintereinander</value>
+  </data>
+  <data name="notification_treshold_hits_max_tooltip" xml:space="preserve">
+    <value>Wie viele aufeinanderfolgende Sensor Anschläge erforderlich sind, bis eine Benachrichtung versendet wird.</value>
+  </data>
+  <data name="notification_treshold_max" xml:space="preserve">
+    <value>Benachrichtigung ab X Schwellenwert Überschreitungen.</value>
+  </data>
+  <data name="notification_treshold_max_tooltip" xml:space="preserve">
+    <value>Wie viele Schwellenwert Überschreitungen erforderlich sind, bis eine Benachrichtung versendet wird.</value>
+  </data>
+  <data name="ping_status" xml:space="preserve">
+    <value>Ping Status</value>
+  </data>
+  <data name="platform" xml:space="preserve">
+    <value>Platform</value>
+  </data>
+  <data name="processor" xml:space="preserve">
+    <value>Processor</value>
+  </data>
+  <data name="process_cpu_utilization (%)" xml:space="preserve">
+    <value>Prozess-CPU-Nutzung (%)</value>
+  </data>
+  <data name="process_cpu_utilization (%)_tooltip" xml:space="preserve">
+    <value>Beispiel: explorer.exe</value>
+  </data>
+  <data name="process_name" xml:space="preserve">
+    <value>Prozess Name</value>
+  </data>
+  <data name="process_ram_utilization (%)" xml:space="preserve">
+    <value>Prozess-RAM-Nutzung (%)</value>
+  </data>
+  <data name="process_ram_utilization (MB)" xml:space="preserve">
+    <value>Prozess-RAM-Nutzung (MB)</value>
+  </data>
+  <data name="quick_scan" xml:space="preserve">
+    <value>Quick scan</value>
+  </data>
+  <data name="ram" xml:space="preserve">
+    <value>Arbeitsspeicher</value>
+  </data>
+  <data name="regex_supported_tooltip" xml:space="preserve">
+    <value>Regulärer Ausdrücke (Regex) werden unterstützt.</value>
+  </data>
+  <data name="removable_drives" xml:space="preserve">
+    <value>Removable drives</value>
+  </data>
+  <data name="removable_drives_tooltip" xml:space="preserve">
+    <value>Überprüft eingesteckte Wechseldatenträger.</value>
+  </data>
+  <data name="required" xml:space="preserve">
+    <value>Erforderlich</value>
+  </data>
+  <data name="rows_per_page" xml:space="preserve">
+    <value>Entries per page</value>
+  </data>
+  <data name="rule" xml:space="preserve">
+    <value>Regel</value>
+  </data>
+  <data name="saturday" xml:space="preserve">
+    <value>Saturday</value>
+  </data>
+  <data name="scan_mode" xml:space="preserve">
+    <value>Scan mode</value>
+  </data>
+  <data name="scan_settings_network_drives" xml:space="preserve">
+    <value>Scan connected network drives (full scan)</value>
+  </data>
+  <data name="scan_settings_removable_disks" xml:space="preserve">
+    <value>Scan removable media (full scan)</value>
+  </data>
+  <data name="scan_settings_scan_on_battery" xml:space="preserve">
+    <value>Scanning in battery mode</value>
+  </data>
+  <data name="scan_settings_update_signatures" xml:space="preserve">
+    <value>Check for signature updates before starting the scan</value>
+  </data>
+  <data name="schedule" xml:space="preserve">
+    <value>Time Schedule</value>
+  </data>
+  <data name="schedule_date_time" xml:space="preserve">
+    <value>Date &amp; time</value>
+  </data>
+  <data name="schedule_date_x_hours" xml:space="preserve">
+    <value>Date, every X hours</value>
+  </data>
+  <data name="schedule_date_x_minutes" xml:space="preserve">
+    <value>Date, every X minutes</value>
+  </data>
+  <data name="schedule_date_x_seconds" xml:space="preserve">
+    <value>Date, every X seconds</value>
+  </data>
+  <data name="schedule_days_x_hours" xml:space="preserve">
+    <value>On the following days, every X hours</value>
+  </data>
+  <data name="schedule_days_x_minutes" xml:space="preserve">
+    <value>On the following days, every X minutes</value>
+  </data>
+  <data name="schedule_days_x_seconds" xml:space="preserve">
+    <value>On the following days, every X seconds</value>
+  </data>
+  <data name="schedule_days_x_time" xml:space="preserve">
+    <value>On the following days at X o'clock</value>
+  </data>
+  <data name="schedule_system_boot" xml:space="preserve">
+    <value>Boot</value>
+  </data>
+  <data name="schedule_x_hours" xml:space="preserve">
+    <value>Every X hours</value>
+  </data>
+  <data name="schedule_x_minutes" xml:space="preserve">
+    <value>Every X minutes</value>
+  </data>
+  <data name="schedule_x_seconds" xml:space="preserve">
+    <value>Every X seconds</value>
+  </data>
+  <data name="script" xml:space="preserve">
+    <value>Skript</value>
+  </data>
+  <data name="search" xml:space="preserve">
+    <value>Search</value>
+  </data>
+  <data name="seconds" xml:space="preserve">
+    <value>Seconds</value>
+  </data>
+  <data name="service" xml:space="preserve">
+    <value>Dienst</value>
+  </data>
+  <data name="service_action" xml:space="preserve">
+    <value>Dienst Aktion</value>
+  </data>
+  <data name="service_action_restart" xml:space="preserve">
+    <value>Neustarten</value>
+  </data>
+  <data name="service_action_start" xml:space="preserve">
+    <value>Starten</value>
+  </data>
+  <data name="service_action_stop" xml:space="preserve">
+    <value>Stoppen</value>
+  </data>
+  <data name="service_name" xml:space="preserve">
+    <value>Dienst Name</value>
+  </data>
+  <data name="service_status" xml:space="preserve">
+    <value>Dienst Status</value>
+  </data>
+  <data name="service_status_paused" xml:space="preserve">
+    <value>Angehalten</value>
+  </data>
+  <data name="service_status_running" xml:space="preserve">
+    <value>Ausgeführt</value>
+  </data>
+  <data name="service_status_stopped" xml:space="preserve">
+    <value>Gestoppt</value>
+  </data>
+  <data name="settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="severity" xml:space="preserve">
+    <value>Schweregrad</value>
+  </data>
+  <data name="sub_category" xml:space="preserve">
+    <value>Unterkategorie</value>
+  </data>
+  <data name="successful" xml:space="preserve">
+    <value>Successful</value>
+  </data>
+  <data name="sunday" xml:space="preserve">
+    <value>Sunday</value>
+  </data>
+  <data name="thursday" xml:space="preserve">
+    <value>Thursday</value>
+  </data>
+  <data name="time" xml:space="preserve">
+    <value>Time</value>
+  </data>
+  <data name="timeout_milliseconds" xml:space="preserve">
+    <value>Timeout (Millisekunden)</value>
+  </data>
+  <data name="tuesday" xml:space="preserve">
+    <value>Tuesday</value>
+  </data>
+  <data name="type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="utilization" xml:space="preserve">
+    <value>Auslastung</value>
+  </data>
+  <data name="warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="wednesday" xml:space="preserve">
+    <value>Wednesday</value>
+  </data>
+</root>

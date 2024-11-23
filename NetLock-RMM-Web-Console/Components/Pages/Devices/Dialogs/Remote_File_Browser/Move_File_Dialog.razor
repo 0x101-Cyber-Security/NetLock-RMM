@@ -1,0 +1,46 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Devices.Dialogs.Remote_File_Browser.Move_File_Dialog> Localizer
+
+<MudDialog Style="width: 600px;">
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="Name" T="string" @bind-Value="@_remote_file_path" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+       
+    </DialogContent>
+    <DialogActions>
+
+        <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string _remote_file_path { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        this.MudDialog.Close(DialogResult.Ok(_remote_file_path));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

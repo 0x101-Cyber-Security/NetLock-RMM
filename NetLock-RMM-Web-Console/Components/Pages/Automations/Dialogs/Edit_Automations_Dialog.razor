@@ -1,0 +1,278 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Automations.Dialogs.Edit_Automations_Dialog> Localizer
+@inject IDataProtectionProvider DataProtectionProvider
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["edit"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter">
+            <MudSelectItem T="string" Value="@Localizer["policy"]" />
+        </MudSelect>
+
+        @{
+            if (category == @Localizer["policy"])
+            {
+                <MudSelect Class="mt-3" T="string" @bind-Value="condition" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelectItem T="string" Value="@Localizer["condition_device_name"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_tenant"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_location"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_group"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_internal_ip_adress"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_external_ip_adress"]" />
+                    <MudSelectItem T="string" Value="@Localizer["condition_domain"]" />
+                </MudSelect>
+
+                <div style="display: flex; align-items: center;">
+                    <MudTextField Label="@Localizer["equal..."]" T="string" @bind-Value="@expected_result" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+                    <MudTooltip Text="@Localizer["regex_supported"]">
+                        <MudIconButton Class="ml-2 mt-0" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                </div>
+
+                <MudSelect Class="mt-3" T="string" @bind-Value="trigger" Label="@Localizer["policy"]" Required="true" RequiredError="@Localizer["required"]" AnchorOrigin="Origin.BottomCenter">
+                    @foreach (var policy in policies_list)
+                    {
+                        <MudSelectItem Value="@policy" />
+                    }
+                </MudSelect>
+            }
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(category) || String.IsNullOrEmpty(expected_result) || String.IsNullOrEmpty(trigger))" >@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string name { get; set; }
+    [Parameter] public string json { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        category = Localizer["policy"];
+        condition = Localizer["condition_tenant"];
+
+        old_name = name;
+
+        await Get_Policies();
+        await Extract_Automation();
+    }
+
+    private string updatedJson = String.Empty;
+
+    private string old_name = String.Empty;
+    private string description = String.Empty;
+    private string category = String.Empty;
+    private string sub_category = String.Empty;
+    private string condition = String.Empty;
+    private string expected_result = String.Empty;
+    private string trigger = String.Empty;
+
+    private List<string> policies_list = new List<string> { };
+
+    public class Automation
+    {
+        public string name { get; set; }
+        public string date { get; set; }
+        public string author { get; set; }
+        public string description { get; set; }
+        public int category { get; set; }
+        public int sub_category { get; set; }
+        public int condition { get; set; }
+        public string expected_result { get; set; }
+        public string trigger { get; set; }
+    }
+
+
+    private async Task Get_Policies()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand("SELECT * FROM `policies`;", conn);
+            DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+            while (await reader.ReadAsync())
+            {
+                policies_list.Add(reader["name"].ToString());
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> Get_Policies", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task Extract_Automation()
+    {
+        try
+        {
+            Automation _object = JsonSerializer.Deserialize<Automation>(json);
+            name = _object.name;
+            description = _object.description;
+            category = _object.category.ToString();
+            sub_category = _object.sub_category.ToString();
+            condition = _object.condition.ToString();
+            expected_result = _object.expected_result;
+            trigger = _object.trigger;
+
+            // category
+            if (category == "0")
+                category = Localizer["policy"];
+
+            // sub_category
+            if (sub_category == "0")
+                sub_category = "-";
+
+            if (condition == "0")
+                condition = Localizer["condition_device_name"];
+            else if (condition == "1")
+                condition = Localizer["condition_tenant"];
+            else if (condition == "2")
+                condition = Localizer["condition_location"];
+            else if (condition == "3")
+                condition = Localizer["condition_group"];
+            else if (condition == "4")
+                condition = Localizer["condition_internal_ip_adress"];
+            else if (condition == "5")
+                condition = Localizer["condition_external_ip_adress"];
+            else if (condition == "6")
+                condition = Localizer["domain"];
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_automations -> Extract_Automation", "Result", ex.ToString());
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+            var username = await sessionStorage.GetAsync<string>("username");
+
+            int category_converted = 0;
+            int sub_category_converted = 0;
+            int condition_converted = 0;
+
+            //category
+            if (category == Localizer["policy"])
+                category_converted = 0;
+
+            //sub_category
+            if (sub_category == "-")
+                sub_category_converted = 0;
+
+            if (condition == Localizer["condition_device_name"])
+                condition_converted = 0;
+            else if (condition == Localizer["condition_tenant"])
+                condition_converted = 1;
+            else if (condition == Localizer["condition_location"])
+                condition_converted = 2;
+            else if (condition == Localizer["condition_group"])
+                condition_converted = 3;
+            else if (condition == Localizer["condition_internal_ip_adress"])
+                condition_converted = 4;
+            else if (condition == Localizer["condition_external_ip_adress"])
+                condition_converted = 5;
+            else if (condition == Localizer["condition_domain"])
+                condition_converted = 6;
+
+            Automation automation_json = new Automation
+            {
+                name = name,
+                date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                author = username.Value,
+                description = description,
+                category = category_converted,
+                sub_category = sub_category_converted,
+                condition = condition_converted,
+                expected_result = expected_result,
+                trigger = trigger,
+            };
+
+            string automations_json_string = JsonSerializer.Serialize(automation_json, new JsonSerializerOptions { WriteIndented = true });
+
+            //Save to MySQL
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE `automations` SET name = @name, date = @date, author = @author, description = @description, category = @category, sub_category = @sub_category, `condition` = @condition, expected_result = @expected_result, `trigger` = @trigger, json = @json WHERE name = @old_name;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@old_name", old_name);
+            cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@author", username.Value);
+            cmd.Parameters.AddWithValue("@description", description);
+            cmd.Parameters.AddWithValue("@category", category_converted);
+            cmd.Parameters.AddWithValue("@sub_category", sub_category_converted);
+            cmd.Parameters.AddWithValue("@expected_result", expected_result);
+            cmd.Parameters.AddWithValue("@condition", condition_converted);
+            cmd.Parameters.AddWithValue("@trigger", trigger);
+            cmd.Parameters.AddWithValue("@json", automations_json_string);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> OK", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            this.MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

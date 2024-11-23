@@ -1,0 +1,627 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>System.ServiceProcess.ServiceController</name>
+    </assembly>
+    <members>
+        <member name="M:System.Text.ValueStringBuilder.GetPinnableReference">
+            <summary>
+            Get a pinnable reference to the builder.
+            Does not ensure there is a null char after <see cref="P:System.Text.ValueStringBuilder.Length"/>
+            This overload is pattern matched in the C# 7.3+ compiler so you can omit
+            the explicit method call, and write eg "fixed (char* c = builder)"
+            </summary>
+        </member>
+        <member name="M:System.Text.ValueStringBuilder.GetPinnableReference(System.Boolean)">
+            <summary>
+            Get a pinnable reference to the builder.
+            </summary>
+            <param name="terminate">Ensures that the builder has a null char after <see cref="P:System.Text.ValueStringBuilder.Length"/></param>
+        </member>
+        <member name="P:System.Text.ValueStringBuilder.RawChars">
+            <summary>Returns the underlying storage of the builder.</summary>
+        </member>
+        <member name="M:System.Text.ValueStringBuilder.AsSpan(System.Boolean)">
+            <summary>
+            Returns a span around the contents of the builder.
+            </summary>
+            <param name="terminate">Ensures that the builder has a null char after <see cref="P:System.Text.ValueStringBuilder.Length"/></param>
+        </member>
+        <member name="M:System.Text.ValueStringBuilder.Grow(System.Int32)">
+            <summary>
+            Resize the internal buffer either by doubling current buffer size or
+            by adding <paramref name="additionalCapacityBeyondPos"/> to
+            <see cref="F:System.Text.ValueStringBuilder._pos"/> whichever is greater.
+            </summary>
+            <param name="additionalCapacityBeyondPos">
+            Number of chars requested beyond current position.
+            </param>
+        </member>
+        <member name="T:System.ServiceProcess.ServiceBase">
+            <summary>
+            <para>Provides a base class for a service that will exist as part of a service application. <see cref='T:System.ServiceProcess.ServiceBase'/>
+            must be derived when creating a new service class.</para>
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.ServiceBase.MaxNameLength">
+            <summary>
+            Indicates the maximum size for a service name.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.#ctor">
+            <summary>
+            Creates a new instance of the <see cref='M:System.ServiceProcess.ServiceBase.#ctor'/> class.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.RequestAdditionalTime(System.Int32)">
+            <summary>
+            When this method is called from OnStart, OnStop, OnPause or OnContinue,
+            the specified wait hint is passed to the
+            Service Control Manager to avoid having the service marked as not responding.
+            </summary>
+            <param name="milliseconds"></param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.RequestAdditionalTime(System.TimeSpan)">
+            <summary>
+            When this method is called from OnStart, OnStop, OnPause or OnContinue,
+            the specified wait hint is passed to the
+            Service Control Manager to avoid having the service marked as not responding.
+            </summary>
+            <param name="time">The requested additional time</param>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.AutoLog">
+            <summary>
+            Indicates whether to report Start, Stop, Pause, and Continue commands in the event.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.ExitCode">
+            <summary>
+            The termination code for the service.  Set this to a non-zero value before
+            stopping to indicate an error to the Service Control Manager.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.CanHandlePowerEvent">
+            <summary>
+             Indicates whether the service can be handle notifications on
+             computer power status changes.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.CanHandleSessionChangeEvent">
+            <summary>
+            Indicates whether the service can handle Terminal Server session change events.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.CanPauseAndContinue">
+            <summary>
+              Indicates whether the service can be paused and resumed.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.CanShutdown">
+            <summary>
+            Indicates whether the service should be notified when the system is shutting down.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.CanStop">
+            <summary>
+            Indicates whether the service can be stopped once it has started.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.EventLog">
+            <summary>
+            can be used to write notification of service command calls, such as Start and Stop, to the Application event log. This property is read-only.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceBase.ServiceName">
+            <summary>
+            Indicates the short name used to identify the service to the system.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.Dispose(System.Boolean)">
+            <summary>
+               <para>Disposes of the resources (other than memory ) used by
+                  the <see cref='T:System.ServiceProcess.ServiceBase'/>.</para>
+               This is called from <see cref="M:System.ServiceProcess.ServiceBase.Run(System.ServiceProcess.ServiceBase[])"/> when all
+               services in the process have entered the SERVICE_STOPPED state.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnContinue">
+            <summary>
+               <para> When implemented in a
+                  derived class,
+                  executes when a Continue command is sent to the service
+                  by the
+                  Service Control Manager. Specifies the actions to take when a
+                  service resumes normal functioning after being paused.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnPause">
+            <summary>
+               <para> When implemented in a
+                  derived class, executes when a Pause command is sent
+                  to
+                  the service by the Service Control Manager. Specifies the
+                  actions to take when a service pauses.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnPowerEvent(System.ServiceProcess.PowerBroadcastStatus)">
+            <summary>
+               <para>
+                    When implemented in a derived class, executes when the computer's
+                    power status has changed.
+               </para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnSessionChange(System.ServiceProcess.SessionChangeDescription)">
+            <summary>
+               <para>When implemented in a derived class,
+                  executes when a Terminal Server session change event is received.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnShutdown">
+            <summary>
+               <para>When implemented in a derived class,
+                  executes when the system is shutting down.
+                  Specifies what should
+                  happen just prior
+                  to the system shutting down.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnStart(System.String[])">
+            <summary>
+               <para> When implemented in a
+                  derived class, executes when a Start command is sent
+                  to the service by the Service
+                  Control Manager. Specifies the actions to take when the service starts.</para>
+               <note type="rnotes">
+                  Tech review note:
+                  except that the SCM does not allow passing arguments, so this overload will
+                  never be called by the SCM in the current version. Question: Is this true even
+                  when the string array is empty? What should we say, then. Can
+                  a ServiceBase derived class only be called programmatically? Will
+                  OnStart never be called if you use the SCM to start the service? What about
+                  services that start automatically at boot-up?
+               </note>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnStop">
+            <summary>
+               <para> When implemented in a
+                  derived class, executes when a Stop command is sent to the
+                  service by the Service Control Manager. Specifies the actions to take when a
+                  service stops
+                  running.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.OnCustomCommand(System.Int32)">
+            <summary>
+            <para>When implemented in a derived class, <see cref='M:System.ServiceProcess.ServiceBase.OnCustomCommand(System.Int32)'/>
+            executes when a custom command is passed to the service. Specifies the actions to take when
+            a command with the specified parameter value occurs.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.Run(System.ServiceProcess.ServiceBase[])">
+            <summary>
+               <para>Provides the main entry point for an executable that
+                  contains multiple associated services. Loads the specified services into memory so they can be
+                  started.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.Run(System.ServiceProcess.ServiceBase)">
+            <summary>
+               <para>Provides the main
+                  entry point for an executable that contains a single
+                  service. Loads the service into memory so it can be
+                  started.</para>
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.ServiceCommandCallback(System.Int32)">
+            <summary>
+                Command Handler callback is called by NT .
+                Need to take specific action in response to each
+                command message. There is usually no need to override this method.
+                Instead, override OnStart, OnStop, OnCustomCommand, etc.
+            </summary>
+            <internalonly/>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceBase.ServiceMainCallback(System.Int32,System.IntPtr)">
+            <summary>
+                ServiceMain callback is called by NT .
+                It is expected that we register the command handler,
+                and start the service at this point.
+            </summary>
+            <internalonly/>
+        </member>
+        <member name="T:System.ServiceProcess.ServiceController">
+            This class represents an NT service. It allows you to connect to a running or stopped service
+            and manipulate it or get information about it.
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.#ctor(System.String)">
+            <summary>
+            Creates a ServiceController object, based on service name.
+            </summary>
+            <param name="name">Name of the service</param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.#ctor(System.String,System.String)">
+            <summary>
+            Creates a ServiceController object, based on machine and service name.
+            </summary>
+            <param name="name">Name of the service</param>
+            <param name="machineName">Name of the machine</param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.#ctor(System.String,Interop.Advapi32.ENUM_SERVICE_STATUS_PROCESS)">
+            <summary>
+            Used by the GetServicesInGroup method.
+            </summary>
+            <param name="machineName">Name of the machine</param>
+            <param name="status">Service process status</param>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.CanPauseAndContinue">
+            <summary>
+            Tells if the service referenced by this object can be paused.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.CanShutdown">
+            <summary>
+            Tells if the service is notified when system shutdown occurs.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.CanStop">
+            <summary>
+            Tells if the service referenced by this object can be stopped.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.DisplayName">
+            <summary>
+            The descriptive name shown for this service in the Service applet.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.DependentServices">
+            <summary>
+            The set of services that depend on this service. These are the services that will be stopped if this service is stopped.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.MachineName">
+            <summary>
+            The name of the machine on which this service resides.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.ServiceName">
+            <summary>
+            Returns the short name of the service referenced by this object.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.ServicesDependedOn">
+            <summary>
+            A set of services on which the given service object is dependent upon.
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.Status">
+            <summary>
+            Gets the status of the service referenced by this object, e.g., Running, Stopped, etc.
+            </summary>
+            <remarks>
+            Please see <see cref="T:System.ServiceProcess.ServiceControllerStatus"/> for more available status.
+            </remarks>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceController.ServiceType">
+            <summary>
+            Gets the type of service that this object references.
+            </summary>
+            <remarks>
+            Please see <see cref="T:System.ServiceProcess.ServiceType"/> for available list of Service types.
+            </remarks>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Close">
+            <summary>
+            Closes the handle to the service manager, but does not
+            mark the class as disposed.
+            </summary>
+            <remarks>
+            Violates design guidelines by not matching Dispose() -- matches .NET Framework
+            </remarks>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Dispose(System.Boolean)">
+            <summary>
+            Closes the handle to the service manager, and disposes.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServiceKeyName(Microsoft.Win32.SafeHandles.SafeServiceHandle,System.String)">
+            <summary>
+            Gets service name (key name) from service display name.
+            Returns null if service is not found.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetDevices">
+            <summary>
+            Gets all the device-driver services with <see cref="F:System.ServiceProcess.ServiceController.DefaultMachineName"/>.
+            </summary>
+            <returns>Set of service controllers</returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetDevices(System.String)">
+            <summary>
+            Gets all the device-driver services in the machine specified.
+            </summary>
+            <param name="machineName">Name of the machine.</param>
+            <returns>Set of service controllers</returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServiceHandle(System.Int32)">
+            <summary>
+            Opens a handle for the current service. The handle must be Dispose()'d.
+            </summary>
+            <param name="desiredAccess">Access level to pass to OpenService()</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServices">
+            <summary>
+            Gets the services (not including device-driver services) on the local machine.
+            </summary>
+            <returns>Set of service controllers</returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServices(System.String)">
+            <summary>
+            Gets the services (not including device-driver services) on the given machine name.
+            /// </summary>
+            <param name="machineName">Name of the machine</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServicesInGroup(System.String,System.String)">
+            <summary>
+            Helper function for ServicesDependedOn.
+            </summary>
+            <param name="machineName">Name of the machine.</param>
+            <param name="group">Name of the group.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServicesOfType(System.String,System.Int32)">
+            <summary>
+            Helper function for GetDevices and GetServices.
+            </summary>
+            <param name="machineName">Name of the machine.</param>
+            <param name="serviceType">Type of service.</param>
+            <returns></returns>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.GetServices``1(System.String,System.Int32,System.String,System.Func{Interop.Advapi32.ENUM_SERVICE_STATUS_PROCESS,``0})">
+            Helper for GetDevices, GetServices, and ServicesDependedOn
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Pause">
+            <summary>
+            Suspends a service's operation.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Continue">
+            <summary>
+            Continues a service after it has been paused.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.ExecuteCommand(System.Int32)">
+            <summary>
+            Executes the command.
+            </summary>
+            <param name="command">The command</param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Refresh">
+            <summary>
+            Refreshes all property values.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Start">
+            <summary>
+            Starts the service.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Start(System.String[])">
+            <summary>
+            Starts a service in the machine specified.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Stop">
+            <summary>
+            Stops the service. If any other services depend on this one for operation,
+            they will be stopped first. The DependentServices property lists this set
+            of services.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.Stop(System.Boolean)">
+            <summary>
+            Stops the service and optionally any services that are dependent on this service.
+            </summary>
+            <remarks>
+            If any other services depend on this one, you need to either pass <c>true</c> for
+            <paramref name="stopDependentServices"/> or stop them manually before calling this method.
+            </remarks>
+            <param name="stopDependentServices">
+            <c>true</c> to stop all running dependent services together with the service; <c>false</c> to stop only the service.
+            </param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.WaitForStatus(System.ServiceProcess.ServiceControllerStatus)">
+            <summary>
+            Waits infinitely until the service has reached the given status.
+            </summary>
+            <param name="desiredStatus">The status for which to wait.</param>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceController.WaitForStatus(System.ServiceProcess.ServiceControllerStatus,System.TimeSpan)">
+            <summary>
+            Waits until the service has reached the given status or until the specified time has expired.
+            </summary>
+            <param name="desiredStatus">The status for which to wait.</param>
+            <param name="timeout">Wait for specific timeout</param>
+        </member>
+        <member name="T:System.ServiceProcess.ServiceProcessDescriptionAttribute">
+            <summary>
+            DescriptionAttribute marks a property, event, or extender with a
+            description. Visual designers can display this description when referencing
+            the member.
+            </summary>
+        </member>
+        <member name="M:System.ServiceProcess.ServiceProcessDescriptionAttribute.#ctor(System.String)">
+            <summary>
+            Constructs a new sys description
+            </summary>
+        </member>
+        <member name="P:System.ServiceProcess.ServiceProcessDescriptionAttribute.Description">
+            <summary>
+            Retrieves the description text.
+            </summary>
+        </member>
+        <member name="T:System.ServiceProcess.SessionChangeReason">
+            <summary>
+            Enum containing various session change reason
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.ConsoleConnect">
+            <summary>
+             A session was connected to the console session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.ConsoleDisconnect">
+            <summary>
+            A session was disconnected from the console session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.RemoteConnect">
+            <summary>
+             A session was connected to the remote session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.RemoteDisconnect">
+            <summary>
+             A session was disconnected from the remote session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.SessionLogon">
+            <summary>
+             A user has logged on to the session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.SessionLogoff">
+            <summary>
+             A user has logged off the session.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.SessionLock">
+            <summary>
+             A session has been locked.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.SessionUnlock">
+            <summary>
+             A session has been unlocked.
+            </summary>
+        </member>
+        <member name="F:System.ServiceProcess.SessionChangeReason.SessionRemoteControl">
+            <summary>
+             A session has changed its remote controlled status.
+            </summary>
+        </member>
+        <member name="P:System.SR.ArgsCantBeNull">
+            <summary>Arguments within the 'args' array passed to Start cannot be null.</summary>
+        </member>
+        <member name="P:System.SR.BadMachineName">
+            <summary>MachineName '{0}' is invalid.</summary>
+        </member>
+        <member name="P:System.SR.CannotStart">
+            <summary>Cannot start service '{0}' on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.InvalidEnumArgument">
+            <summary>The value of argument '{0}' ({1}) is invalid for Enum type '{2}'.</summary>
+        </member>
+        <member name="P:System.SR.InvalidParameter">
+            <summary>Invalid value '{1}' for parameter '{0}'.</summary>
+        </member>
+        <member name="P:System.SR.NoService">
+            <summary>Service '{0}' was not found on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.OpenSC">
+            <summary>Cannot open Service Control Manager on computer '{0}'. This operation might require other privileges.</summary>
+        </member>
+        <member name="P:System.SR.OpenService">
+            <summary>Cannot open '{0}' service on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.PauseService">
+            <summary>Cannot pause '{0}' service on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.ResumeService">
+            <summary>Cannot resume '{0}' service on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.StopService">
+            <summary>Cannot stop '{0}' service on computer '{1}'.</summary>
+        </member>
+        <member name="P:System.SR.Timeout">
+            <summary>The operation requested for service '{0}' has not been completed within the specified time interval.</summary>
+        </member>
+        <member name="P:System.SR.PlatformNotSupported_ServiceController">
+            <summary>ServiceController enables manipulating and accessing Windows services and it is not applicable for other operating systems.</summary>
+        </member>
+        <member name="P:System.SR.CannotChangeProperties">
+            <summary>Cannot change CanStop, CanPauseAndContinue, CanShutdown, CanHandlePowerEvent, or CanHandleSessionChangeEvent property values after the service has been started.</summary>
+        </member>
+        <member name="P:System.SR.CannotChangeName">
+            <summary>Cannot change service name when the service is running.</summary>
+        </member>
+        <member name="P:System.SR.ServiceName">
+            <summary>Service name '{0}' contains invalid characters, is empty, or is too long (max length = {1}).</summary>
+        </member>
+        <member name="P:System.SR.NoServices">
+            <summary>Service has not been supplied. At least one object derived from ServiceBase is required in order to run.</summary>
+        </member>
+        <member name="P:System.SR.CantStartFromCommandLine">
+            <summary>Cannot start service from the command line or a debugger.  A Windows Service must first be installed and then started with the ServerExplorer, Windows Services Administrative tool or the NET START command.</summary>
+        </member>
+        <member name="P:System.SR.NotInPendingState">
+            <summary>UpdatePendingStatus can only be called during the handling of Start, Stop, Pause and Continue commands.</summary>
+        </member>
+        <member name="P:System.SR.StartSuccessful">
+            <summary>Service started successfully.</summary>
+        </member>
+        <member name="P:System.SR.StopSuccessful">
+            <summary>Service stopped successfully.</summary>
+        </member>
+        <member name="P:System.SR.PauseSuccessful">
+            <summary>Service paused successfully.</summary>
+        </member>
+        <member name="P:System.SR.ContinueSuccessful">
+            <summary>Service continued successfully.</summary>
+        </member>
+        <member name="P:System.SR.CommandSuccessful">
+            <summary>Service command was processed successfully.</summary>
+        </member>
+        <member name="P:System.SR.StartFailed">
+            <summary>Service cannot be started. {0}</summary>
+        </member>
+        <member name="P:System.SR.StopFailed">
+            <summary>Failed to stop service. {0}</summary>
+        </member>
+        <member name="P:System.SR.PauseFailed">
+            <summary>Failed to pause service. {0}</summary>
+        </member>
+        <member name="P:System.SR.ContinueFailed">
+            <summary>Failed to continue service. {0}</summary>
+        </member>
+        <member name="P:System.SR.SessionChangeFailed">
+            <summary>Failed to process session change. {0}</summary>
+        </member>
+        <member name="P:System.SR.CommandFailed">
+            <summary>Failed to process service command. {0}</summary>
+        </member>
+        <member name="P:System.SR.ShutdownOK">
+            <summary>Service has been successfully shut down.</summary>
+        </member>
+        <member name="P:System.SR.ShutdownFailed">
+            <summary>Failed to shut down service. The error that occurred was: {0}.</summary>
+        </member>
+        <member name="P:System.SR.PowerEventOK">
+            <summary>PowerEvent handled successfully by the service.</summary>
+        </member>
+        <member name="P:System.SR.PowerEventFailed">
+            <summary>Failed in handling the PowerEvent. The error that occurred was: {0}.</summary>
+        </member>
+        <member name="P:System.SR.ControlService">
+            <summary>Cannot control '{0}' service on computer '{1}'.</summary>
+        </member>
+        <member name="T:Microsoft.Win32.SafeHandles.SafeServiceHandle">
+            <summary>
+            Used to wrap handles gotten from OpenSCManager or OpenService
+            </summary>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,198 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Devices.Dialogs.Move_Device_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+            <MudDialog>
+                <TitleContent>
+                    <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+                </TitleContent>
+                <DialogContent>
+               
+                    <MudText Class="pa-0 ma-0">@Localizer["text"]</MudText>
+
+                    <MudSelect T="string" @bind-Value=target_group_name Label="@Localizer["target_group"]" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var group in groups_list)
+                        {
+                            <MudSelectItem Value="@group" />
+                        }
+                    </MudSelect>
+
+                </DialogContent>
+
+                <DialogActions>
+                    <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton Size="Size.Small" OnClick="Move_Device" Variant="@Variant.Filled" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(target_group_name))" >@Localizer["move"]</MudButton>
+            </DialogActions>
+            </MudDialog>
+
+        </Authorized>
+    </AuthorizeView>
+
+@code {
+
+    private string target_group_name = null;
+    private string target_group_id = null;
+
+    private List<string> groups_list = new List<string> { };
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string tenant_id { get; set; }
+    [Parameter] public string location_id { get; set; }
+    [Parameter] public string device_id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logging.Handler.Debug("Move_Devices_Dialog", "tenant_id", tenant_id);
+        Logging.Handler.Debug("Move_Devices_Dialog", "location_id", location_id);
+
+        await Get_Groups();
+        StateHasChanged();
+    }
+
+    private async Task Get_Groups()
+    {
+        string query = "SELECT * FROM `groups` WHERE location_id = @location_id AND tenant_id = @tenant_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@tenant_id", tenant_id);
+            command.Parameters.AddWithValue("@location_id", location_id);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                        groups_list.Add(reader["name"].ToString() ?? "");
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Groups", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    // Get group_id from group_name
+    private async Task Get_Group_ID()
+    {
+        string query = "SELECT * FROM `groups` WHERE name = @group_name AND location_id = @location_id AND tenant_id = @tenant_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@tenant_id", tenant_id);
+            command.Parameters.AddWithValue("@location_id", location_id);
+            command.Parameters.AddWithValue("@group_name", target_group_name);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                        target_group_id = reader["id"].ToString() ?? "";
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Group_ID", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Move_Device()
+    {
+        await Get_Group_ID();
+
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        if (String.IsNullOrEmpty(target_group_name))
+            this.Snackbar.Add("Ungültige Eingabe.", Severity.Error);
+        else
+        {
+            bool success = false;
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                string execute_query = "UPDATE devices SET group_id = @group_id, group_name = @group_name WHERE id = @device_id AND location_id = @location_id AND tenant_id = @tenant_id;";
+
+                MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+                cmd.Parameters.AddWithValue("@location_id", location_id);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+                cmd.Parameters.AddWithValue("@group_name", target_group_name);
+                cmd.Parameters.AddWithValue("@group_id", target_group_id);
+                cmd.ExecuteNonQuery();
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/location_settings -> Add_Policy_Dialog.OK", "Result", ex.Message);
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            if (success)
+            {
+                //this.Snackbar.Add("Gerät verschoben.", Severity.Success);
+                this.MudDialog.Close(DialogResult.Ok("success"));
+            }
+            else
+            {
+                this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+                this.MudDialog.Close(DialogResult.Ok("error"));
+            }
+        }  
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Redirect(string path)
+    {        
+        NavigationManager.NavigateTo(Application_Paths.redirect_path);
+        NavigationManager.NavigateTo(path);
+    }
+
+}

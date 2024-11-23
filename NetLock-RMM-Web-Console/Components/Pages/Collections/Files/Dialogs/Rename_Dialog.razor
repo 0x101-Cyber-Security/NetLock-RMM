@@ -1,0 +1,97 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using System.Net;
+@using System.Text;
+@using System.Text.RegularExpressions;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Collections.Files.Dialogs.Rename_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="Name" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+
+    </DialogContent>
+    <DialogActions>
+
+        <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string files_selected_path { get; set; }
+    [Parameter] public string guid { get; set; }
+
+    private string name = String.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        name = files_selected_path.Substring(files_selected_path.LastIndexOf("\\") + 1);
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        try
+        {
+            // Create the JSON object (command, path)
+            var jsonObject = new { command = "rename", path = files_selected_path, name = name, guid = guid };
+            var jsonContent = new StringContent(JsonSerializer.Serialize(jsonObject), Encoding.UTF8, "application/json");
+
+            string api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+            using (var httpClient = new HttpClient())
+            {
+                // Set the API key in the header
+                httpClient.DefaultRequestHeaders.Add("x-api-key", api_key);
+
+                // Debug output for the upload URL
+                Logging.Handler.Debug("/manage_files", "OK", NetLock_RMM_Web_Console.Configuration.File_Server.Connection_String + "/admin/files/command" + Uri.EscapeDataString(files_selected_path));
+
+                // POST request with JSON data
+                var response = await httpClient.PostAsync(NetLock_RMM_Web_Console.Configuration.File_Server.Connection_String + "/admin/files/command", jsonContent);
+
+                // Process the answer
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    Logging.Handler.Debug("/manage_files -> OK", "result", result);
+
+                    if (result == "Unauthorized.")
+                    {
+                        Snackbar.Add(Localizer["unauthorized"], Severity.Error);
+                        return;
+                    }
+                }
+                else
+                {
+                    Logging.Handler.Error("/manage_files -> OK", "response", response.StatusCode.ToString());
+                    Snackbar.Add(Localizer["error"], Severity.Error);
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> OK", "", ex.ToString());
+            Snackbar.Add(Localizer["error"], Severity.Error);
+        }
+
+        this.MudDialog.Close(DialogResult.Ok("success"));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

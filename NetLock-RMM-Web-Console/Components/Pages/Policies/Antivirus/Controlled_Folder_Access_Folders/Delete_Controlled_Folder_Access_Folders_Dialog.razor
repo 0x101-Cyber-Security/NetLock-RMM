@@ -1,0 +1,101 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Policies.Antivirus.Controlled_Folder_Access_Folders.Delete_Controlled_Folder_Access_Folders_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="OK" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private string policy_name = String.Empty;
+    private string folder_name = String.Empty;
+    private string folders_json = String.Empty;
+    private string folders_updated_json = String.Empty;
+
+    public class Folders
+    {
+        public string folder { get; set; }
+        public string description { get; set; }
+        public string date { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        policy_name = await localStorage.GetItemAsync<string>("policy_name");
+        folder_name = await localStorage.GetItemAsync<string>("temp_antivirus_controlled_folder_access_folder");
+        folders_json = await localStorage.GetItemAsync<string>("temp_antivirus_controlled_folder_access_folders_json");
+        Logging.Handler.Debug("/Policy_Settings (Delete_Controlled_Folder_Access_Folders_Dialog) -> OnInitializedAsync", "folders_json", folders_json);
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        try
+        {
+            //Get folder
+            List<Folders> folders = JsonSerializer.Deserialize<List<Folders>>(folders_json);
+
+            //Remove it
+            folders.RemoveAll(folder => folder.folder == folder_name);
+
+            folders_updated_json = JsonSerializer.Serialize(folders, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("/Policy_Settings (Delete_Controlled_Folder_Access_Folders_Dialog) -> OK", "folders_updated_json", folders_updated_json);
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings (Delete_Controlled_Folder_Access_Folders_Dialog) -> OK", "folders_updated_json", folders_updated_json);
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok(folders_updated_json));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

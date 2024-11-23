@@ -1,0 +1,126 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Tenants.Dialogs.Location_Management.Edit_Location_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog Style="width: 800px">
+            <TitleContent>
+                <MudText Ty po="Typo.h6">@Localizer["edit"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudTextField Label="Name" T="string" @bind-Value="@name" Immediate="@true" />
+                <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
+
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton Size="Size.Small" OnClick="@OK" Variant="@Variant.Filled" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string tenant_id { get; set; }
+    [Parameter] public string location_id { get; set; }
+    [Parameter] public string name { get; set; }
+    [Parameter] public string description { get; set; }
+
+    protected override async void OnInitialized()
+    {
+        
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        if (!String.IsNullOrEmpty(name))
+        {
+            //Add if not existing
+
+            bool success = false;
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                // Get author from session storage
+                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+                var author = await sessionStorage.GetAsync<string>("username");
+
+                await conn.OpenAsync();
+
+                string execute_query = @"
+                UPDATE `locations` SET name = @name, description = @description, author = @author WHERE id = @location_id AND tenant_id = @tenant_id;
+                UPDATE `groups` SET location_id = @location_id WHERE location_id = @location_id AND tenant_id = @tenant_id;
+                UPDATE `devices` SET location_name = @name WHERE location_id = @location_id AND tenant_id = @tenant_id;";
+
+                MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+                cmd.Parameters.AddWithValue("@location_id", location_id);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@author", author.Value);
+                cmd.Parameters.AddWithValue("@description", description);
+                
+                cmd.ExecuteNonQuery();
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/location_settings -> OK", "Result", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            if (success)
+            {
+                await localStorage.SetItemAsync("location_name", name);
+
+                this.Snackbar.Add(Localizer["saved"], Severity.Success);
+
+                Thread.Sleep(1000);
+                NavigationManager.Refresh();
+            }
+            else
+                this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+
+            this.MudDialog.Close(DialogResult.Ok(String.Empty));
+            this.MudDialog.Close(DialogResult.Cancel());
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Redirect(string path)
+    {
+        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo(path);
+    }
+}

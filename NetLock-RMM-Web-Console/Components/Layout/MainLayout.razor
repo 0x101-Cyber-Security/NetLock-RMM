@@ -1,0 +1,313 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inherits LayoutComponentBase
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject IStringLocalizer<Layout.MainLayout> Localizer
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject ProtectedSessionStorage SessionStorage
+
+<MudThemeProvider Theme="@_theme" @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
+
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+
+    <AuthorizeView>
+        <Authorized>
+            <MudAppBar Dense="true" Color="Color.Inherit" Elevation="1">
+                <MudImage Src="media/images/NetLock-RMM-Logo-Transparent.svg" Alt="Favicon" Width="35" Height="35" Class="mr-3" />
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+
+                <!-- Only show the title on larger screens -->
+                <MudText Typo="Typo.h5" Class="ml-3 d-none d-md-flex">NetLock RMM</MudText>
+
+                <!-- Version for larger screens -->
+                <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary d-none d-md-flex">
+                    @Application_Settings.version
+                </MudText>
+
+                <MudSpacer />
+
+                <!-- Normal icon buttons for larger screens -->
+                <div class="d-none d-md-flex">
+                    <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
+                    <MudIconButton Icon="@Icons.Material.Filled.InstallDesktop" Color="Color.Inherit" Title="Agent Download" OnClick="Agent_Download_Dialog" />
+                    <MudIconButton Href="https://github.com/0x101-Cyber-Security/NetLock-RMM/issues" Target="_blank" Icon="@Icons.Material.Filled.BugReport" Color="Color.Inherit" Title="@Localizer["report_a_bug"]" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.GitHub" Color="Color.Inherit" Href="https://github.com/0x101-Cyber-Security/NetLock-RMM" Title="GitHub" Target="_blank" />
+                    <MudIconButton Icon="@Icons.Material.Filled.MenuBook" Color="Color.Inherit" Href="https://docs.netlockrmm.com/en/home" Title="@Localizer["documentation"]" Target="_blank" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Support" Color="Color.Inherit" Href="https://members.netlockrmm.com/" Title="Support" Target="_blank" />
+                    <MudIconButton Icon="@Icons.Custom.Brands.Discord" Color="Color.Inherit" Href="https://discord.gg/HqUpZgtX4U" Title="Discord" Target="_blank" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Title="@Localizer["logout"]" Href="/logout" Class="d-none d-md-flex" />
+                </div>
+
+                <!-- Dropdown menu for mobile view -->
+                <MudMenu Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Class="d-md-none">
+                    <MudMenuItem OnClick="Agent_Download_Dialog">@Localizer["agent_download"]</MudMenuItem>
+                    <MudMenuItem OnClick="@DarkModeToggle">Dark mode</MudMenuItem>
+                    <MudMenuItem Href="https://github.com/0x101-Cyber-Security/NetLock-RMM/issues" Target="_blank">@Localizer["report_a_bug"]</MudMenuItem>
+                    <MudMenuItem Href="https://github.com/0x101-Cyber-Security/NetLock-RMM" Target="_blank">GitHub</MudMenuItem>
+                    <MudMenuItem Href="https://docs.netlockrmm.com/en/home" Target="_blank">@Localizer["documentation"]</MudMenuItem>
+                    <MudMenuItem Href="https://members.netlockrmm.com" Target="_blank">@Localizer["support"]</MudMenuItem>
+                    <MudMenuItem Href="https://discord.gg/HqUpZgtX4U" Target="_blank">Discord</MudMenuItem>
+                    <MudMenuItem Href="/logout">@Localizer["logout"]</MudMenuItem>
+                    <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit"  Class="d-none d-md-flex" />
+                </MudMenu>
+            </MudAppBar>
+
+            <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+                <NavMenu />
+            </MudDrawer>
+
+        </Authorized>
+    </AuthorizeView>
+
+    <MudMainContent Class="mt-16 pa-4">
+        @Body
+    </MudMainContent>
+
+
+</MudLayout>
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+    private MudTheme? _theme = null;
+    private MudThemeProvider _mudThemeProvider;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _theme = new()
+        {
+            PaletteLight = _lightPalette,
+            PaletteDark = _darkPalette,
+            LayoutProperties = new LayoutProperties()
+        };
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _isDarkMode = await _mudThemeProvider.GetSystemPreference();
+
+            StateHasChanged();
+
+            await Check_Server_Health();
+        }
+    }
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+    private readonly PaletteLight _lightPalette = new()
+        {
+            Primary = "#910012",
+            Black = "#110e2d",
+            AppbarText = "#424242",
+            AppbarBackground = "rgba(255,255,255,0.8)",
+            DrawerBackground = "#ffffff",
+            GrayLight = "#e8e8e8",
+            GrayLighter = "#f9f9f9",
+        };
+
+    private readonly PaletteDark _darkPalette = new()
+        {
+            Primary = "#ED0D32",              // Helles Rot als Primärfarbe
+            Surface = "#2B2B2B",              // Hintergrundfarbe für Oberflächen wie Karten (dunkles Grau)
+            Background = "#141414",           // Hintergrundfarbe für die gesamte Seite (sehr dunkles Grau)
+            BackgroundGray = "#2B2B2B",       // Leicht heller Hintergrund für Sekundärflächen (dunkles Grau)
+            AppbarText = "#FFFFFF",           // Textfarbe in der AppBar (weiß)
+            AppbarBackground = "3a3a3a", // Transparente schwarze Hintergrundfarbe für AppBar
+            DrawerBackground = "#3a3a3a",     // Hintergrundfarbe für das Drawer-Menü (dunkles Grau)
+            ActionDefault = "#FFFFFF",        // Standardfarbe für Aktionen wie Schaltflächen (weiß)
+            ActionDisabled = "#9999994d",     // Farbe für deaktivierte Aktionen (grau mit Transparenz)
+            ActionDisabledBackground = "#605f6d4d", // Hintergrundfarbe für deaktivierte Aktionen
+            TextPrimary = "#FFFFFF",          // Primäre Textfarbe für bessere Lesbarkeit (weiß)
+            TextSecondary = "#FFFFFF",        // Sekundäre Textfarbe für weniger wichtige Informationen (weiß)
+            TextDisabled = "#FFFFFF",         // Farbe für deaktivierten Text (weiß mit Transparenz)
+            DrawerIcon = "#FFFFFF",           // Farbe für Icons im Drawer-Menü (weiß)
+            DrawerText = "#FFFFFF",           // Farbe für Text im Drawer-Menü (weiß)
+            GrayLight = "#383838",            // Helle Grautöne für Sekundäre Flächen
+            GrayLighter = "#2B2B2B",          // Noch hellerer Grauton für Hintergründe
+            Info = "rgb(12,128,223)",         // Farbe für Informationsmeldungen (blau)
+            Success = "#00A344",              // Erfolgsfarbe (grün)
+            Warning = "#D68100",              // Warnfarbe (orange)
+            Error = "#ff3f5f",                // Fehlerfarbe (rot)
+            LinesDefault = "#2B2B2B",         // Farbe für Linien und Rahmen (dunkles Grau)
+            TableLines = "#2B2B2B",           // Farbe für Tabellenlinien (dunkles Grau)
+            Divider = "#2B2B2B",              // Farbe für Trenner (dunkles Grau)
+            OverlayLight = "#14141480",       // Transparente Überlagerung für modale Fenster oder Popups
+        };
+
+
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.LightMode,
+        false => Icons.Material.Outlined.DarkMode,
+    };
+
+    // Open Agent Download Dialog
+    private async Task Agent_Download_Dialog()
+    {
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        var result = await this.DialogService.Show<Layout.Agent_Download.Agent_Download_Dialog>(string.Empty, options).Result;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/MainLayout -> Event_Details_Dialog", "Result", result.Data.ToString());
+    }
+
+    // Check servers health
+    private async Task Check_Server_Health()
+    {
+        // Check if user is authenticated
+        var username = await SessionStorage.GetAsync<string>("username");
+        var password = await SessionStorage.GetAsync<string>("password");
+        
+        if(!await Classes.Authentication.User.Verify_User(username.Value, password.Value))
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM servers;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+
+            Logging.Handler.Debug("/mainlayout", "Check_Server_Health", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        DateTime lastHeartbeat;
+
+                        // Check if the last hearthbeat is older than 10 minutes
+                        if (DateTime.TryParse(reader["hearthbeat"].ToString(), out lastHeartbeat))
+                        {
+                            if ((DateTime.Now - lastHeartbeat).TotalMinutes > 5)
+                            {
+                                await DialogService.ShowMessageBox(
+                                    Localizer["warning"],
+                                    Localizer["the following netlock rmm backend server seems to be down:"]
+                                    + " Name: " + reader["name"].ToString()
+                                    + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
+                                    + " " + Localizer["last hearthbeat"] + ": " + reader["hearthbeat"].ToString(),
+                                    yesText: Localizer["dismiss"],
+                                    options: options
+                                );
+                            }
+                        }
+
+                        // Check if cpu usage is above 90%
+                        if (int.TryParse(reader["cpu_usage"].ToString(), out int cpu_usage))
+                        {
+                            if (cpu_usage > 90)
+                            {
+                                await DialogService.ShowMessageBox(
+                                    Localizer["warning"],
+                                    Localizer["the following netlock rmm backend server seems to have high cpu usage:"]
+                                    + " Name: " + reader["name"].ToString()
+                                    + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
+                                    + " " + Localizer["cpu usage"] + ": " + reader["cpu_usage"].ToString() + "%",
+                                    yesText: Localizer["dismiss"],
+                                    options: options
+                                );
+                            }
+                        }
+
+                        // Check if ram usage is above 90%
+                        if (int.TryParse(reader["ram_usage"].ToString(), out int ram_usage))
+                        {
+                            if (ram_usage > 90)
+                            {
+                                await DialogService.ShowMessageBox(
+                                    Localizer["warning"],
+                                    Localizer["the following netlock rmm backend server seems to have high ram usage:"]
+                                    + " Name: " + reader["name"].ToString()
+                                    + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
+                                    + " " + Localizer["ram usage"] + ": " + reader["ram_usage"].ToString() + "%",
+                                    yesText: Localizer["dismiss"],
+                                    options: options
+                                );
+                            }
+                        }
+
+                        // Check if disk space is below 5%
+                        if (int.TryParse(reader["disk_usage"].ToString(), out int disk_space))
+                        {
+                            if (disk_space > 90)
+                            {
+                                await DialogService.ShowMessageBox(
+                                    Localizer["warning"],
+                                    Localizer["the following netlock rmm backend server seems to have low disk space:"]
+                                    + " Name: " + reader["name"].ToString()
+                                    + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
+                                    + " " + Localizer["disk space used"] + ": " + reader["disk_usage"].ToString() + "%",
+                                    yesText: Localizer["dismiss"],
+                                    options: options
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/mainlayout", "Check_Server_Health", ex.ToString());
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+}
+
+

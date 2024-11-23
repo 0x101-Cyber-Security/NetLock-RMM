@@ -1,0 +1,104 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Policies.Antivirus.Scan_Jobs.Add_Scan_Job_Directory_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="@Localizer["directory"]" T="string" @bind-Value="directory" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string scan_directories_json { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logging.Handler.Debug("/Policy_Settings (Add_Scan_Job_Directory_Dialog) -> OnInitializedAsync", "scan_directories_json", scan_directories_json);
+    }
+
+    string updatedJson = String.Empty;
+
+    private string directory = String.Empty;
+    private string description = String.Empty;
+
+    public class Directories
+    {
+        public string id { get; set; }
+        public string date { get; set; }
+        public string directory { get; set; }
+        public string description { get; set; }
+    }
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(directory))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        try
+        {
+            List<Directories> directories = JsonSerializer.Deserialize<List<Directories>>(scan_directories_json);
+
+            // Neue Ausnahme hinzufügen
+            directories.Add(new Directories
+                {
+                    id = Randomizer.Handler.Standard(6),
+                    date = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"),
+                    directory = directory,
+                    description = description,
+                });
+
+            // Konvertieren der Liste in JSON
+            updatedJson = JsonSerializer.Serialize(directories, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("/Policy_Settings (Add_Scan_Job_Directory_Dialog) -> OK", "Update existing JSON (updatedJson)", updatedJson);
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings (Add_Scan_Job_Directory_Dialog) -> OK", "Update existing JSON", ex.ToString());
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok(updatedJson));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

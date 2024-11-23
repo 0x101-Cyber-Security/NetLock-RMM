@@ -1,0 +1,486 @@
+﻿@page "/system_logs"
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+
+<AuthorizeView>
+    <Authorized>
+
+        @if (permissions_settings_enabled && permissions_settings_protocols_enabled)
+        {
+            <MudText Typo="Typo.h5">Currently for dev purposes only. Please ignore. It will later be used for auditing & more.</MudText>
+
+            <MudButton Class="mt-5" Size="Size.Medium" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FileDownload" OnClick="@Show_Export_Table_Dialog">Daten exportieren</MudButton>
+
+            <MudTable Class="mt-5" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@system_logs_mysql_data" Filter="new Func<System_Logs_Entity, bool>(System_Logs_Notifications_Table_Filter_Func)">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="system_logs_table_search_string" Placeholder="Suche" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh Sortable="true" @onclick="() => system_logs_table_sorted_column = (nameof(System_Logs_Entity.type))" style="white-space: nowrap;">Typ</MudTh>
+                    <MudTh Sortable="true" @onclick="() => system_logs_table_sorted_column = (nameof(System_Logs_Entity.date))" style="white-space: nowrap;">Datum</MudTh>
+                    <MudTh Sortable="true" @onclick="() => system_logs_table_sorted_column = (nameof(System_Logs_Entity.reported_by))" style="white-space: nowrap;">Melder</MudTh>
+                    <MudTh Sortable="true" @onclick="() => system_logs_table_sorted_column = (nameof(System_Logs_Entity._event))" style="white-space: nowrap;">Event</MudTh>
+                    <MudTh Sortable="true" @onclick="() => system_logs_table_sorted_column = (nameof(System_Logs_Entity.content))" style="white-space: nowrap;">Inhalt</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate Context="system_logs_row">
+
+                    <MudTd DataLabel="Typ" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.LogoDev" Size="Size.Small" />&nbsp;@system_logs_row.type
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Datum" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" />&nbsp;@system_logs_row.date
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Author" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.SupportAgent" Size="Size.Small" />&nbsp;@system_logs_row.reported_by
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Event" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.PendingActions" Size="Size.Small" />&nbsp;@system_logs_row._event
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Inhalt" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />&nbsp;@system_logs_row.content
+                        </span>
+                    </MudTd>
+
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000 }" RowsPerPageString="Protokolle" />
+                </PagerContent>
+            </MudTable>
+        }
+
+    </Authorized>
+</AuthorizeView>
+
+<style>
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_json = String.Empty;
+    private string permissions_tenants_json = String.Empty;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private bool permissions_settings_enabled = false;
+    private bool permissions_settings_protocols_enabled = false;
+
+    public class Permissions_Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+    }
+
+    private async Task Get_Permissions()
+    {
+        //Extract user info from users session storage
+        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+        var username = await sessionStorage.GetAsync<string>("username");
+        var password = await sessionStorage.GetAsync<string>("password");
+
+        Logging.Handler.Debug("/system_logs -> Permissions_Load", "username", username.Value ?? String.Empty);
+
+        //if user info empty, force logout
+        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
+        {
+            Logging.Handler.Debug("/system_logs -> Permissions_Load", "sessions storage data", "empty, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Check if user info is valid, if not, force logout
+        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
+        {
+            Logging.Handler.Debug("/system_logs -> Permissions_Load", "verify user", "incorrect data, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Get permissions
+        string query = "SELECT * FROM `accounts` WHERE username = @username;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@username", username.Value);
+
+            Logging.Handler.Debug("/system_logs -> Permissions_Load", "query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
+                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            Logging.Handler.Debug("/system_logs -> Permissions_Load", "permissions_json", permissions_json);
+
+            //Extract permissions
+            if (!String.IsNullOrEmpty(permissions_json))
+            {
+                using (JsonDocument document = JsonDocument.Parse(permissions_json))
+                {
+                    //settings_enabled
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("settings_enabled");
+                        permissions_settings_enabled = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/system_logs -> Permissions_Load", "permissions_json (settings_enabled)", ex.Message);
+                    }
+
+                    //settings_protocols_enabled
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("settings_protocols_enabled");
+                        permissions_settings_protocols_enabled = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/system_logs -> Permissions_Load", "permissions_json (settings_protocols_enabled)", ex.Message);
+                    }
+                }
+            }
+            else if (permissions_json == "[]")
+            {
+                Logging.Handler.Debug("/system_logs -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+            else
+            {
+                Logging.Handler.Debug("/system_logs -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+
+            //Extract tenants from json
+            permissions_tenants_list.Clear();
+            if (!String.IsNullOrEmpty(permissions_tenants_json))
+            {
+                //Set the activation state for the tenants
+                try
+                {
+                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
+
+                    foreach (var tenant in tenants_activation_state_list)
+                    {
+                        Logging.Handler.Debug("/system_logs -> Permissions_Load", "foreach tenant", tenant.id);
+
+                        permissions_tenants_list.Add(tenant.id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/system_logs -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
+                }
+            }
+            else
+            {
+                Logging.Handler.Debug("/system_logs -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/system_logs -> Permissions_Load", "general_error (force logout)", ex.Message);
+            NavigationManager.NavigateTo("/logout", true);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        await Get_Permissions();
+        //Check permissions
+        if (!permissions_settings_enabled || !permissions_settings_protocols_enabled)
+        {
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        system_logs_mysql_data = await Get_System_Logs_Overview();
+
+        StateHasChanged();
+    }
+
+    public List<System_Logs_Entity> system_logs_mysql_data;
+
+    public class System_Logs_Entity
+    {
+        public string type { get; set; } = string.Empty;
+        public string date { get; set; } = string.Empty;
+        public string reported_by { get; set; } = string.Empty;
+        public string _event { get; set; } = string.Empty;
+        public string content { get; set; } = string.Empty;
+    }
+
+    private string system_logs_table_view_port = "70vh";
+    private string system_logs_table_sorted_column;
+    private string system_logs_table_search_string = "";
+
+    private bool System_Logs_Notifications_Table_Filter_Func(System_Logs_Entity row)
+    {
+        if (string.IsNullOrEmpty(system_logs_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.date.Contains(system_logs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.type.Contains(system_logs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.reported_by.Contains(system_logs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row._event.Contains(system_logs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.content.Contains(system_logs_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private async Task<List<System_Logs_Entity>> Get_System_Logs_Overview()
+    {
+        List<System_Logs_Entity> result = new List<System_Logs_Entity>();
+
+        try
+        {
+            // Lese alle Zeilen aus der Datei
+            string[] lines = await File.ReadAllLinesAsync(Application_Paths.logs_dir + @"\system_logs.txt");
+
+            // Verarbeite jede Zeile als JSON und füge das Ergebnis zur Liste hinzu
+            foreach (var line in lines)
+            {
+                try
+                {
+                    System_Logs_Entity entity = JsonSerializer.Deserialize<System_Logs_Entity>(line);
+                    result.Add(entity);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("System_Logs", "Get_System_Logs_Overview", ex.Message);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Get_System_Logs_Overview", ex.Message);
+        }
+
+        return result;
+    }
+
+    private async Task Show_Export_Table_Dialog()
+    {
+        var options = new DialogOptions
+        {
+            
+            MaxWidth = MaxWidth.Small,
+            BackgroundClass = "dialog-blurring",
+
+        };
+
+        var result = await this.DialogService.Show<Settings.System_Logs.Export_Table_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        if (result != null && result.Data != null)
+        {
+            if (result.Data.ToString() == "JSON")
+                await Export_Data_Json();
+            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
+                await Export_Data_Spreadsheet();
+            else if (result.Data.ToString() == "XML")
+                await Export_Data_XML();
+            else if (result.Data.ToString() == "HTML")
+                await Export_Data_HTML();
+        }
+    }
+
+    private async Task Export_Data_Json()
+    {
+        try
+        {
+            // Erstellen eines JSON-Strings aus den MudTable-Einträgen
+            string jsonContent = JsonSerializer.Serialize(system_logs_mysql_data, new JsonSerializerOptions { WriteIndented = true });
+
+            // Aufruf der JavaScript-Funktion für den Export als .txt
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "system_logs.json", jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_Json", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_XML()
+    {
+        try
+        {
+            if (system_logs_mysql_data == null || system_logs_mysql_data.Count == 0)
+            {
+                // Keine Daten zum Exportieren
+                return;
+            }
+
+            var serializer = new XmlSerializer(typeof(List<System_Logs_Entity>));
+
+            using (var memoryStream = new MemoryStream())
+            {
+                // Konvertiere die Daten in das XML-Format
+                serializer.Serialize(memoryStream, system_logs_mysql_data);
+
+                // Setze die Position des MemoryStream auf den Anfang
+                memoryStream.Position = 0;
+
+                // Lese den Inhalt des MemoryStream in einen String
+                using (var streamReader = new StreamReader(memoryStream))
+                {
+                    string xmlContent = await streamReader.ReadToEndAsync();
+
+                    // Hier wird JavaScript-Interop verwendet, um den XML-Inhalt herunterzuladen
+                    await JSRuntime.InvokeVoidAsync("exportToTxt", "system_logs.xml", xmlContent, "text/xml");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_XML", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_HTML()
+    {
+        try
+        {
+            if (system_logs_mysql_data == null || system_logs_mysql_data.Count == 0)
+            {
+                // Keine Daten zum Exportieren
+                return;
+            }
+
+            StringBuilder htmlBuilder = new StringBuilder();
+            htmlBuilder.Append("<table border='1'>");
+            htmlBuilder.Append("<tr>");
+            htmlBuilder.Append("<th>Typ</th>");
+            htmlBuilder.Append("<th>Datum</th>");
+            htmlBuilder.Append("<th>Melder</th>");
+            htmlBuilder.Append("<th>Event</th>");
+            htmlBuilder.Append("<th>Inhalt</th>");
+            htmlBuilder.Append("</tr>");
+
+            foreach (var entry in system_logs_mysql_data)
+            {
+                htmlBuilder.Append("<tr>");
+                htmlBuilder.Append($"<td>{entry.type}</td>");
+                htmlBuilder.Append($"<td>{entry.date}</td>");
+                htmlBuilder.Append($"<td>{entry.reported_by}</td>");
+                htmlBuilder.Append($"<td>{entry._event}</td>");
+                htmlBuilder.Append($"<td>{entry.content}</td>");
+                htmlBuilder.Append("</tr>");
+            }
+
+            htmlBuilder.Append("</table>");
+
+            string htmlContent = htmlBuilder.ToString();
+
+            // Hier wird JavaScript-Interop verwendet, um den HTML-Inhalt herunterzuladen
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "system_logs.html", htmlContent, "text/html");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_HTML", ex.Message);
+        }
+    }
+
+    private async Task Export_Data_Spreadsheet()
+    {
+        try
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
+
+                int headerRow = 1;
+                worksheet.Cells[headerRow, 1].Value = "Type";
+                worksheet.Cells[headerRow, 2].Value = "Date";
+                worksheet.Cells[headerRow, 3].Value = "Reported By";
+                worksheet.Cells[headerRow, 4].Value = "Event";
+                worksheet.Cells[headerRow, 5].Value = "Content";
+
+                int dataRow = headerRow + 1;
+                foreach (var entry in system_logs_mysql_data)
+                {
+                    worksheet.Cells[dataRow, 1].Value = entry.type;
+                    worksheet.Cells[dataRow, 2].Value = entry.date;
+                    worksheet.Cells[dataRow, 3].Value = entry.reported_by;
+                    worksheet.Cells[dataRow, 4].Value = entry._event;
+                    worksheet.Cells[dataRow, 5].Value = entry.content;
+
+                    dataRow++;
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
+                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", "system_logs.xlsx", Convert.ToBase64String(stream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Export_Data_Spreadsheet", ex.Message);
+        }
+    }
+}

@@ -1,0 +1,54 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using OfficeOpenXml;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Policies.Dialogs.Export_Data_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Localizer["export_data"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
+        <MudSelect T="string" @bind-Value=this.type Label="@Localizer["file_format"]" AnchorOrigin="Origin.BottomCenter">
+            <MudSelectItem Value="@("JSON")" />
+            <MudSelectItem Value="@("Spreadsheet (.xlsx)")" />
+            <MudSelectItem Value="@("XML")" />
+            <MudSelectItem Value="@("HTML")" />
+        </MudSelect>
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Size="@Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+        <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["export"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private string type = string.Empty;
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(type))
+            return true;
+        else
+            return false;
+    }
+
+    private void OK()
+    {
+        this.MudDialog.Close(DialogResult.Ok(type));
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+}

@@ -1,0 +1,73 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Devices.Dialogs.Remote_Shell.Remote_Shell_History_Details_Dialog> Localizer
+
+<style>
+
+    .monaco-editor {
+        flex-grow: 1;
+        height: 50vh;
+        width: 100%; /* Each editor takes half of the screen width */
+    }
+
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudTextField Label="@Localizer["date"]" T="string" @bind-Value="@date" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="@Localizer["author"]" T="string" @bind-Value="@author" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="true" />
+
+        <MudText Class="mt-3" Typo="Typo.h6">@Localizer["result"]</MudText>
+        <StandaloneCodeEditor Id="remote_shell-editor-output" CssClass="monaco-editor" @ref="remote_shell_output_editor" ConstructionOptions="Remote_Shell_Editor_Construction_Options" />
+
+        <MudText Class="mt-3" Typo="Typo.h6">@Localizer["command"]</MudText>
+        <StandaloneCodeEditor Id="remote_shell-editor-command" CssClass="monaco-editor" @ref="remote_shell_command_editor" ConstructionOptions="Remote_Shell_Editor_Construction_Options" />
+    </DialogContent>
+    <DialogActions>
+        
+        <MudButton OnClick="@Cancel" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["close"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string date { get; set; }
+    [Parameter] public string author { get; set; }
+    [Parameter] public string command { get; set; }
+    [Parameter] public string result { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+    }
+
+    private StandaloneCodeEditor remote_shell_command_editor = new StandaloneCodeEditor();
+    private StandaloneCodeEditor remote_shell_output_editor = new StandaloneCodeEditor();
+
+    private StandaloneEditorConstructionOptions Remote_Shell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "powershell",
+                ReadOnly = true,
+                Value = editor == remote_shell_command_editor ? command : result
+            };
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+}

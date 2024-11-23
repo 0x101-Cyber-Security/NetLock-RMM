@@ -1,0 +1,338 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Collections.Scripts.Dialogs.Delete_Script_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h5">@Localizer["warning"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="OK" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        Logging.Handler.Debug("/manage_scripts (Delete_Script_Dialog) -> OnInitializedAsync", "id", id);
+    }
+
+    private async Task Update_Jobs_Script()
+    {
+        string query = "SELECT * FROM jobs WHERE script_id = @script_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@script_id", id);
+
+            Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Prepared_Query", query); //Output prepared query
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (id)", reader["id"].ToString() ?? String.Empty); //Output the JSON
+                        Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (json)", reader["json"].ToString() ?? String.Empty); //Output the JSON
+
+                        // Deserialize into a dictionary
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var jsonObj = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(reader["json"].ToString(), options);
+
+                        Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (json script_id)", jsonObj["script_id"].ToString());
+                        Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (json script)", jsonObj["script"].ToString());
+
+                        // Create a new dictionary to update the JSON values
+                        var updatedJsonObj = new Dictionary<string, object>();
+
+                        // Copy existing values to the new dictionary
+                        foreach (var kvp in jsonObj)
+                        {
+                            updatedJsonObj[kvp.Key] = kvp.Value;
+                        }
+
+                        // Customize the "script"
+                        updatedJsonObj["script_id"] = 0;
+                        updatedJsonObj["script"] = "";
+
+                        // Serialize back to JSON
+                        string updatedJson = JsonSerializer.Serialize(updatedJsonObj, new JsonSerializerOptions { WriteIndented = true });
+
+                        Logging.Handler.Debug("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (updatedJson)", updatedJson); //Output the JSON
+
+                        // Update the MySQL entry
+                        using (var updateConn = new MySqlConnection(Configuration.MySQL.Connection_String))
+                        {
+                            await updateConn.OpenAsync();
+                            using (var updateCommand = new MySqlCommand("UPDATE jobs SET json = @json WHERE id = @id;", updateConn))
+                            {
+                                updateCommand.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand.Parameters.AddWithValue("@json", updatedJson);
+                                await updateCommand.ExecuteNonQueryAsync();
+                            }
+
+                            using (var updateCommand2 = new MySqlCommand("UPDATE jobs SET script_id = 0 WHERE id = @id;", updateConn))
+                            {
+                                updateCommand2.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand2.Parameters.AddWithValue("@script_id", id);
+                                await updateCommand2.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts Delete_Script_Dialog) -> Update_Jobs_Script", "MySQL_Query", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Update_Sensors_Script()
+    {
+        string query = "SELECT * FROM sensors WHERE script_id = @script_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@script_id", id);
+
+            Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Prepared_Query", query); //Output prepared query
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (id)", reader["id"].ToString() ?? String.Empty); //Output the JSON
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (json)", reader["json"].ToString() ?? String.Empty); //Output the JSON
+
+                        // Deserialize into a dictionary
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var jsonObj = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(reader["json"].ToString(), options);
+
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (json script_id)", jsonObj["script_id"].ToString());
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (json script)", jsonObj["script"].ToString());
+
+                        // Create a new dictionary to update the JSON values
+                        var updatedJsonObj = new Dictionary<string, object>();
+
+                        // Copy existing values to the new dictionary
+                        foreach (var kvp in jsonObj)
+                        {
+                            updatedJsonObj[kvp.Key] = kvp.Value;
+                        }
+
+                        // Customize the "script"
+                        updatedJsonObj["script_id"] = 0;
+                        updatedJsonObj["script"] = "";
+
+                        // Serialize back to JSON
+                        string updatedJson = JsonSerializer.Serialize(updatedJsonObj, new JsonSerializerOptions { WriteIndented = true });
+
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (updatedJson)", updatedJson); //Output the JSON
+
+                        // Update the MySQL entry
+                        using (var updateConn = new MySqlConnection(Configuration.MySQL.Connection_String))
+                        {
+                            await updateConn.OpenAsync();
+                            using (var updateCommand = new MySqlCommand("UPDATE sensors SET json = @json WHERE id = @id;", updateConn))
+                            {
+                                updateCommand.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand.Parameters.AddWithValue("@json", updatedJson);
+                                await updateCommand.ExecuteNonQueryAsync();
+                            }
+
+                            using (var updateCommand2 = new MySqlCommand("UPDATE sensors SET script_id = 0 WHERE id = @id;", updateConn))
+                            {
+                                updateCommand2.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand2.Parameters.AddWithValue("@script_id", id);
+                                await updateCommand2.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Script", "MySQL_Query", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Update_Sensors_Action_Script()
+    {
+        string query = "SELECT * FROM sensors WHERE script_action_id = @script_action_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@script_action_id", id);
+
+            Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Prepared_Query", query); //Output prepared query
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Result (id)", reader["id"].ToString() ?? String.Empty); //Output the JSON
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Result (json)", reader["json"].ToString() ?? String.Empty); //Output the JSON
+
+                        // Deserialize into a dictionary
+                        var options = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+                        var jsonObj = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(reader["json"].ToString(), options);
+
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Result (json script_action_id)", jsonObj["script_action_id"].ToString());
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Result (json script_action)", jsonObj["script_action"].ToString());
+
+                        // Create a new dictionary to update the JSON values
+                        var updatedJsonObj = new Dictionary<string, object>();
+
+                        // Copy existing values to the new dictionary
+                        foreach (var kvp in jsonObj)
+                        {
+                            updatedJsonObj[kvp.Key] = kvp.Value;
+                        }
+
+                        // Customize the "script"
+                        updatedJsonObj["script_action_id"] = 0;
+                        updatedJsonObj["script_action"] = "";
+
+                        // Serialize back to JSON
+                        string updatedJson = JsonSerializer.Serialize(updatedJsonObj, new JsonSerializerOptions { WriteIndented = true });
+
+                        Logging.Handler.Debug("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Result (updatedJson)", updatedJson); //Output the JSON
+
+                        // Update the MySQL entry
+                        using (var updateConn = new MySqlConnection(Configuration.MySQL.Connection_String))
+                        {
+                            await updateConn.OpenAsync();
+                            using (var updateCommand = new MySqlCommand("UPDATE sensors SET json = @json WHERE id = @id;", updateConn))
+                            {
+                                updateCommand.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand.Parameters.AddWithValue("@json", updatedJson);
+                                await updateCommand.ExecuteNonQueryAsync();
+                            }
+
+                            using (var updateCommand2 = new MySqlCommand("UPDATE sensors SET script_action_id = 0 WHERE id = @id;", updateConn))
+                            {
+                                updateCommand2.Parameters.AddWithValue("@id", reader["id"].ToString());
+                                updateCommand2.Parameters.AddWithValue("@script_action_id", id);
+                                await updateCommand2.ExecuteNonQueryAsync();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors Delete_Script_Dialog) -> Update_Sensors_Action_Script", "MySQL_Query", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await Update_Jobs_Script();
+            await Update_Sensors_Script();
+            await Update_Sensors_Action_Script();
+
+            await conn.OpenAsync();
+
+            string execute_query = "DELETE FROM scripts WHERE id = @id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("id", id);
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts (Delete_Script_Dialog) -> OK", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            this.MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

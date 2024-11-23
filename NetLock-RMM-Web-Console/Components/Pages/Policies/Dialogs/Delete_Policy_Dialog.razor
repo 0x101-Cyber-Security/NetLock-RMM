@@ -1,0 +1,85 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Policies.Dialogs.Delete_Policy_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="Delete" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+
+    private async Task Delete()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "DELETE FROM `policies` WHERE policy_name = @policy_name; UPDATE devices SET policy_name = '-' WHERE policy_name = @policy_name;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+
+            cmd.Parameters.AddWithValue("@policy_name", await localStorage.GetItemAsync<string>("policy_name"));
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Policy_Management.Delete_Policy_Dialog", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            //this.Snackbar.Add("Gelöscht.", Severity.Success);
+
+            NavigationManager.Refresh();
+        }
+        else
+            this.Snackbar.Add("error_occurred", Severity.Error);
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

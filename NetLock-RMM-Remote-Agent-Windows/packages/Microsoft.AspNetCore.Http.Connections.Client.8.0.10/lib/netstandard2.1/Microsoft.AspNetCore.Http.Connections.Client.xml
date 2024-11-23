@@ -1,0 +1,431 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.AspNetCore.Http.Connections.Client</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection">
+            <summary>
+            Used to make a connection to an ASP.NET Core ConnectionHandler using an HTTP-based transport.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.Transport">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.Features">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.ConnectionId">
+            <summary>
+            Gets or sets the connection ID.
+            </summary>
+            <remarks>
+            The connection ID is set when the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> is started and should not be set by user code.
+            If the connection was created with <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.SkipNegotiation"/> set to <c>true</c>
+            then the connection ID will be <c>null</c>.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.Items">
+            <inheritdoc />
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.Microsoft#AspNetCore#Connections#Features#IConnectionInherentKeepAliveFeature#HasInherentKeepAlive">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.#ctor(System.Uri)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> class.
+            </summary>
+            <param name="url">The URL to connect to.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.#ctor(System.Uri,Microsoft.AspNetCore.Http.Connections.HttpTransportType)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> class.
+            </summary>
+            <param name="url">The URL to connect to.</param>
+            <param name="transports">A bitmask combining one or more <see cref="T:Microsoft.AspNetCore.Http.Connections.HttpTransportType"/> values that specify what transports the client should use.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.#ctor(System.Uri,Microsoft.AspNetCore.Http.Connections.HttpTransportType,Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> class.
+            </summary>
+            <param name="url">The URL to connect to.</param>
+            <param name="transports">A bitmask combining one or more <see cref="T:Microsoft.AspNetCore.Http.Connections.HttpTransportType"/> values that specify what transports the client should use.</param>
+            <param name="loggerFactory">The logger factory.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.#ctor(Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions,Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> class.
+            </summary>
+            <param name="httpConnectionOptions">The connection options to use.</param>
+            <param name="loggerFactory">The logger factory.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.StartAsync(System.Threading.CancellationToken)">
+            <summary>
+            Starts the connection.
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous start.</returns>
+            <remarks>
+            A connection cannot be restarted after it has stopped. To restart a connection
+            a new instance should be created using the same options.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.StartAsync(Microsoft.AspNetCore.Connections.TransferFormat,System.Threading.CancellationToken)">
+            <summary>
+            Starts the connection using the specified transfer format.
+            </summary>
+            <param name="transferFormat">The transfer format the connection should use.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous start.</returns>
+            <remarks>
+            A connection cannot be restarted after it has stopped. To restart a connection
+            a new instance should be created using the same options.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.DisposeAsync">
+            <summary>
+            Disposes the connection.
+            </summary>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous dispose.</returns>
+            <remarks>
+            A connection cannot be restarted after it has stopped. To restart a connection
+            a new instance should be created using the same options.
+            </remarks>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionFactory">
+            <summary>
+            A factory for creating <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> instances.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionFactory.#ctor(Microsoft.Extensions.Options.IOptions{Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions},Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionFactory"/> class.
+            </summary>
+            <param name="options">The connection options.</param>
+            <param name="loggerFactory">The logger factory.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionFactory.ConnectAsync(System.Net.EndPoint,System.Threading.CancellationToken)">
+            <summary>
+            Creates a new connection to an <see cref="T:Microsoft.AspNetCore.Connections.UriEndPoint"/>.
+            </summary>
+            <param name="endPoint">The <see cref="T:Microsoft.AspNetCore.Connections.UriEndPoint"/> to connect to.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.ValueTask`1" /> that represents the asynchronous connect, yielding the <see cref="T:Microsoft.AspNetCore.Connections.ConnectionContext" /> for the new connection when completed.
+            </returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions">
+            <summary>
+            Options used to configure a <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection"/> instance.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions"/> class.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.HttpMessageHandlerFactory">
+            <summary>
+            Gets or sets a delegate for wrapping or replacing the <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.HttpMessageHandlerFactory"/>
+            that will make HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.WebSocketFactory">
+            <summary>
+            Gets or sets a delegate for wrapping or replacing the <see cref="T:System.Net.WebSockets.WebSocket"/>
+            that will be used for the WebSocket transport.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Headers">
+            <summary>
+            Gets or sets a collection of headers that will be sent with HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.TransportMaxBufferSize">
+            <summary>
+            Gets or sets the maximum buffer size for data read by the application before backpressure is applied.
+            </summary>
+            <remarks>
+            The default value is 1MB.
+            </remarks>
+            <value>
+            The default value is 1MB.
+            </value>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.ApplicationMaxBufferSize">
+            <summary>
+            Gets or sets the maximum buffer size for data written by the application before backpressure is applied.
+            </summary>
+            <remarks>
+            The default value is 1MB.
+            </remarks>
+            <value>
+            The default value is 1MB.
+            </value>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.ClientCertificates">
+            <summary>
+            Gets or sets a collection of client certificates that will be sent with HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Cookies">
+            <summary>
+            Gets or sets a collection of cookies that will be sent with HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Url">
+            <summary>
+            Gets or sets the URL used to send HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Transports">
+            <summary>
+            Gets or sets a bitmask combining one or more <see cref="T:Microsoft.AspNetCore.Http.Connections.HttpTransportType"/> values that specify what transports the client should use to send HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.SkipNegotiation">
+            <summary>
+            Gets or sets a value indicating whether negotiation is skipped when connecting to the server.
+            </summary>
+            <remarks>
+            Negotiation can only be skipped when using the <see cref="F:Microsoft.AspNetCore.Http.Connections.HttpTransportType.WebSockets"/> transport.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.AccessTokenProvider">
+            <summary>
+            Gets or sets an access token provider that will be called to return a token for each HTTP request.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.CloseTimeout">
+            <summary>
+            Gets or sets a close timeout.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Credentials">
+            <summary>
+            Gets or sets the credentials used when making HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Proxy">
+            <summary>
+            Gets or sets the proxy used when making HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.UseDefaultCredentials">
+            <summary>
+            Gets or sets a value indicating whether default credentials are used when making HTTP requests.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.DefaultTransferFormat">
+            <summary>
+            Gets or sets the default <see cref="T:Microsoft.AspNetCore.Connections.TransferFormat" /> to use if <see cref="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.StartAsync(System.Threading.CancellationToken)"/>
+            is called instead of <see cref="M:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.StartAsync(Microsoft.AspNetCore.Connections.TransferFormat,System.Threading.CancellationToken)"/>.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.WebSocketConfiguration">
+            <summary>
+            Gets or sets a delegate that will be invoked with the <see cref="T:System.Net.WebSockets.ClientWebSocketOptions"/> object used
+            to configure the WebSocket when using the WebSockets transport.
+            </summary>
+            <remarks>
+            This delegate is invoked after headers from <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Headers"/> and the access token from <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.AccessTokenProvider"/>
+            has been applied.
+            <para />
+            If <c>ClientWebSocketOptions.HttpVersion</c> is set to <c>2.0</c> or higher, some options like <see cref="P:System.Net.WebSockets.ClientWebSocketOptions.Cookies"/> will not be applied. Instead use <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.Cookies"/> or the corresponding option on <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions"/>.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions.UseStatefulReconnect">
+            <summary>
+            Setting to enable Stateful Reconnect between client and server, this allows reconnecting that preserves messages sent while disconnected.
+            Also preserves the <see cref="P:Microsoft.AspNetCore.Http.Connections.Client.HttpConnection.ConnectionId"/> when the reconnect is successful.
+            </summary>
+            <remarks>
+            Only works with WebSockets transport currently.
+            </remarks>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.NoTransportSupportedException">
+            <summary>
+            Exception thrown during negotiate when there are no supported transports between the client and server.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.NoTransportSupportedException.#ctor(System.String)">
+            <summary>
+            Constructs the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.NoTransportSupportedException"/> exception with the provided <paramref name="message"/>.
+            </summary>
+            <param name="message">Message of the exception.</param>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.TransportFailedException">
+            <summary>
+            Exception thrown during negotiate when a transport fails to connect.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.TransportFailedException.TransportType">
+            <summary>
+            The name of the transport that failed to connect.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.TransportFailedException.#ctor(System.String,System.String,System.Exception)">
+            <summary>
+            Constructs a <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.TransportFailedException"/>.
+            </summary>
+            <param name="transportType">The name of the transport that failed to connect.</param>
+            <param name="message">The reason the transport failed.</param>
+            <param name="innerException">An optional extra exception if one was thrown while trying to connect.</param>
+        </member>
+        <member name="T:Microsoft.AspNetCore.Http.Connections.Client.WebSocketConnectionContext">
+            <summary>
+            Used to make a connection to an SignalR using a WebSocket-based transport.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Http.Connections.Client.WebSocketConnectionContext.#ctor(System.Uri,Microsoft.AspNetCore.Http.Connections.Client.HttpConnectionOptions)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.Http.Connections.Client.WebSocketConnectionContext"/> class.
+            </summary>
+            <param name="uri">The URL to connect to.</param>
+            <param name="options">The connection options to use.</param>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.WebSocketConnectionContext.Uri">
+            <summary>
+            Gets the URL to connect to.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.Http.Connections.Client.WebSocketConnectionContext.Options">
+            <summary>
+            Gets the connection options to use.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentNullThrowHelper.ThrowIfNull(System.Object,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
+            <param name="argument">The reference type argument to validate as non-null.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfZero(System.Int32,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is zero.</summary>
+            <param name="value">The argument to validate as non-zero.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfNegative(System.Int32,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative.</summary>
+            <param name="value">The argument to validate as non-negative.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfNegative(System.Int64,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative.</summary>
+            <param name="value">The argument to validate as non-negative.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfNegativeOrZero(System.Int32,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is negative or zero.</summary>
+            <param name="value">The argument to validate as non-zero or non-negative.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfGreaterThan``1(``0,``0,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is greater than <paramref name="other"/>.</summary>
+            <param name="value">The argument to validate as less or equal than <paramref name="other"/>.</param>
+            <param name="other">The value to compare with <paramref name="value"/>.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfGreaterThanOrEqual``1(``0,``0,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is greater than or equal <paramref name="other"/>.</summary>
+            <param name="value">The argument to validate as less than <paramref name="other"/>.</param>
+            <param name="other">The value to compare with <paramref name="value"/>.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfLessThan``1(``0,``0,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is less than <paramref name="other"/>.</summary>
+            <param name="value">The argument to validate as greatar than or equal than <paramref name="other"/>.</param>
+            <param name="other">The value to compare with <paramref name="value"/>.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentOutOfRangeThrowHelper.ThrowIfLessThanOrEqual``1(``0,``0,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentOutOfRangeException"/> if <paramref name="value"/> is less than or equal <paramref name="other"/>.</summary>
+            <param name="value">The argument to validate as greatar than than <paramref name="other"/>.</param>
+            <param name="other">The value to compare with <paramref name="value"/>.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="value"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ObjectDisposedThrowHelper.ThrowIf(System.Boolean,System.Object)">
+            <summary>Throws an <see cref="T:System.ObjectDisposedException"/> if the specified <paramref name="condition"/> is <see langword="true"/>.</summary>
+            <param name="condition">The condition to evaluate.</param>
+            <param name="instance">The object whose type's full name should be included in any resulting <see cref="T:System.ObjectDisposedException"/>.</param>
+            <exception cref="T:System.ObjectDisposedException">The <paramref name="condition"/> is <see langword="true"/>.</exception>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ObjectDisposedThrowHelper.ThrowIf(System.Boolean,System.Type)">
+            <summary>Throws an <see cref="T:System.ObjectDisposedException"/> if the specified <paramref name="condition"/> is <see langword="true"/>.</summary>
+            <param name="condition">The condition to evaluate.</param>
+            <param name="type">The type whose full name should be included in any resulting <see cref="T:System.ObjectDisposedException"/>.</param>
+            <exception cref="T:System.ObjectDisposedException">The <paramref name="condition"/> is <see langword="true"/>.</exception>
+        </member>
+        <member name="T:System.Runtime.Versioning.OSPlatformAttribute">
+            <summary>
+            Base type for all platform-specific API attributes.
+            </summary>
+        </member>
+        <member name="T:System.Runtime.Versioning.TargetPlatformAttribute">
+            <summary>
+            Records the platform that the project targeted.
+            </summary>
+        </member>
+        <member name="T:System.Runtime.Versioning.SupportedOSPlatformAttribute">
+             <summary>
+             Records the operating system (and minimum version) that supports an API. Multiple attributes can be
+             applied to indicate support on multiple operating systems.
+             </summary>
+             <remarks>
+             Callers can apply a <see cref="T:System.Runtime.Versioning.SupportedOSPlatformAttribute" />
+             or use guards to prevent calls to APIs on unsupported operating systems.
+            
+             A given platform should only be specified once.
+             </remarks>
+        </member>
+        <member name="T:System.Runtime.Versioning.UnsupportedOSPlatformAttribute">
+            <summary>
+            Marks APIs that were removed in a given operating system version.
+            </summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String)">
+            <summary>Initializes the attribute with a field or property member.</summary>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String[])">
+            <summary>Initializes the attribute with the list of field and property members.</summary>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values when returning with the specified return value condition.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String)">
+            <summary>Initializes the attribute with the specified return value condition and a field or property member.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String[])">
+            <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+    </members>
+</doc>

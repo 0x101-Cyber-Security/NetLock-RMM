@@ -1,0 +1,617 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Layout.Agent_Download.Agent_Download_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["agent_server_configurations"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudButton Class="ml-2 mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
+
+        <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]">
+            @{ 
+                foreach (var name in agent_package_configurations_list)
+                {
+                    <MudSelectItem Value="@name" />
+                }
+            }
+        </MudSelect>
+
+        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@ssl" @bind-Value:after="Update_Ports" Label="SSL" Color="Color.Primary" />
+
+        <div style="display: flex; align-items: center;">
+            <MudText Typo="Typo.h6">@Localizer["target_server"]</MudText>
+
+            <MudTooltip Text="@Localizer["text"]">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+            </MudTooltip>
+        </div>
+
+        <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+        <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+        <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+        <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+        <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+        
+        <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
+            @{
+                foreach (var name in tenants_list)
+                {
+                    <MudSelectItem Value="@name" />
+                }
+            }
+        </MudSelect>
+
+        <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
+            @{
+                foreach (var name in locations_list)
+                {
+                    <MudSelectItem Value="@name" />
+                }
+            }
+        </MudSelect>
+
+        <MudSelect Class="mt-2" T="string" Label="@Localizer["language"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="language" Required="true" RequiredError="@Localizer["required"]">
+            <MudSelectItem Value="@("en-US")" />
+            <MudSelectItem Value="@("de-DE")" />
+        </MudSelect>
+
+    </DialogContent>
+    <DialogActions>
+
+        <MudButton OnClick="Update_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["save"]</MudButton>
+        <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download"]</MudButton>
+        <!-- <MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">Herunterladen</MudButton> -->
+
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    public static List<string> agent_package_configurations_list = new List<string> { };
+    public static List<string> tenants_list = new List<string> { };
+    public static List<string> locations_list = new List<string> { };
+
+    private string name = String.Empty;
+    private bool ssl = false;
+    private string package_guid = String.Empty;
+    private string communication_servers = String.Empty;
+    private string remote_servers = String.Empty;
+    private string update_servers = String.Empty;
+    private string trust_servers = String.Empty;
+    private string file_servers = String.Empty;
+    private string tenant_name = String.Empty;
+    private string tenant_guid = String.Empty;
+    private string tenant_id = String.Empty;
+    private string location_name = String.Empty;
+    private string location_guid = String.Empty;
+    private string location_id = String.Empty;
+    private string language = String.Empty;
+    private string operating_system = String.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Get_Tenants();
+        await Get_Configurations();
+    }
+    
+    // Update ports
+    private async Task Update_Ports()
+    {
+        if (ssl)
+        {
+            if (communication_servers.Contains(":"))
+            {
+                string[] communication_servers_split = communication_servers.Split(':');
+
+                if (communication_servers_split[1] != "7443")
+                    communication_servers = communication_servers_split[0] + ":7443";
+            }
+
+            if (remote_servers.Contains(":"))
+            {
+                string[] remote_servers_split = remote_servers.Split(':');
+
+                if (remote_servers_split[1] != "7443")
+                    remote_servers = remote_servers_split[0] + ":7443";
+            }
+
+            if (update_servers.Contains(":"))
+            {
+                string[] update_servers_split = update_servers.Split(':');
+
+                if (update_servers_split[1] != "7443")
+                    update_servers = update_servers_split[0] + ":7443";
+            }
+
+            if (trust_servers.Contains(":"))
+            {
+                string[] trust_servers_split = trust_servers.Split(':');
+
+                if (trust_servers_split[1] != "7443")
+                    trust_servers = trust_servers_split[0] + ":7443";
+            }
+        }
+        else
+        {
+            if (communication_servers.Contains(":"))
+            {
+                string[] communication_servers_split = communication_servers.Split(':');
+
+                if (communication_servers_split[1] != "7080")
+                    communication_servers = communication_servers_split[0] + ":7080";
+            }
+
+            if (remote_servers.Contains(":"))
+            {
+                string[] remote_servers_split = remote_servers.Split(':');
+
+                if (remote_servers_split[1] != "7080")
+                    remote_servers = remote_servers_split[0] + ":7080";
+            }
+
+            if (update_servers.Contains(":"))
+            {
+                string[] update_servers_split = update_servers.Split(':');
+
+                if (update_servers_split[1] != "7080")
+                    update_servers = update_servers_split[0] + ":7080";
+            }
+
+            if (trust_servers.Contains(":"))
+            {
+                string[] trust_servers_split = trust_servers.Split(':');
+
+                if (trust_servers_split[1] != "7080")
+                    trust_servers = trust_servers_split[0] + ":7080";
+            }
+
+            if (file_servers.Contains(":"))
+            {
+                string[] file_servers_split = file_servers.Split(':');
+
+                if (file_servers_split[1] != "7080")
+                    file_servers = file_servers_split[0] + ":7080";
+            }
+        }
+    }
+
+    // Get tenants
+    private async Task Get_Tenants()
+    {
+        tenants_list.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `tenants`;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+
+            DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                {
+                    tenants_list.Add(reader["name"].ToString() ?? String.Empty);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Tenants", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Get tenant id from tenants by name
+    private async Task Get_Tenant_Id(string tenant_name)
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `tenants` WHERE name = @tenant_name;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@tenant_name", tenant_name);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        tenant_id = reader["id"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Tenant_Id", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        await Get_Locations(tenant_id);
+    }
+
+    // Get Locations
+    private async Task Get_Locations(string tenant_id)
+    {
+        locations_list.Clear();
+        location_name = String.Empty;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `locations` WHERE tenant_id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+
+            DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                {
+                    locations_list.Add(reader["name"].ToString() ?? String.Empty);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Locations", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Get location id from locations by name
+    private async Task Get_Location_Id(string location_name)
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `locations` WHERE name = @location_name;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@location_name", location_name);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        location_id = reader["id"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Location_Id", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Get Configurations
+    private async Task Get_Configurations()
+    {
+        agent_package_configurations_list.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `agent_package_configurations`;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+
+            DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                {
+                    agent_package_configurations_list.Add(reader["name"].ToString() ?? String.Empty);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Get Configuration
+    private async Task Get_Configuration(string name)
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        string ssl_converted = String.Empty;
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM agent_package_configurations WHERE name = @name;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", name);
+
+            Logging.Handler.Debug("Example", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        name = reader["name"].ToString() ?? String.Empty;
+                        communication_servers = reader["communication_servers"].ToString() ?? String.Empty;
+                        remote_servers = reader["remote_servers"].ToString() ?? String.Empty;
+                        update_servers = reader["update_servers"].ToString() ?? String.Empty;
+                        trust_servers = reader["trust_servers"].ToString() ?? String.Empty;
+                        file_servers = reader["file_servers"].ToString() ?? String.Empty;
+                        tenant_id = reader["tenant_id"].ToString() ?? String.Empty;
+                        location_id = reader["location_id"].ToString() ?? String.Empty;
+                        language = reader["language"].ToString() ?? String.Empty;
+                        ssl = reader["ssl"].ToString() == "1";
+                        package_guid = reader["guid"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        await Get_Names();
+        await Get_Guids();
+    }
+
+    // Get tenant & location name by id
+    private async Task Get_Names()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `tenants` WHERE id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        tenant_name = reader["name"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            query = "SELECT * FROM `locations` WHERE id = @location_id;";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@location_id", location_id);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        location_name = reader["name"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Names", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Get tenant guid & location guid by id
+    private async Task Get_Guids()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM `tenants` WHERE id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        tenant_guid = reader["guid"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            query = "SELECT * FROM `locations` WHERE id = @location_id;";
+
+            cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@location_id", location_id);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        location_guid = reader["guid"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Get_Guids", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+
+    // Update Configuration
+    private async Task Update_Configuration()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "UPDATE agent_package_configurations SET `ssl` = @ssl, communication_servers = @communication_servers, remote_servers = @remote_servers, update_servers = @update_servers, trust_servers = @trust_servers, file_servers = @file_servers, tenant_id = @tenant_id, location_id = @location_id, language = @language WHERE name = @name;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@communication_servers", communication_servers);
+            cmd.Parameters.AddWithValue("@remote_servers", remote_servers);
+            cmd.Parameters.AddWithValue("@update_servers", update_servers);
+            cmd.Parameters.AddWithValue("@trust_servers", trust_servers);
+            cmd.Parameters.AddWithValue("@file_servers", file_servers);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+            cmd.Parameters.AddWithValue("@location_id", location_id);
+            cmd.Parameters.AddWithValue("@language", language);
+            cmd.Parameters.AddWithValue("@ssl", ssl ? 1 : 0);
+
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Update_Configuration", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    // Download Configuration
+    private async Task Download_Configuration()
+    {
+        await Get_Guids();
+
+        try
+        {
+            // Create the JSON object
+            var jsonObject = new
+            {
+                ssl = ssl,
+                package_guid = package_guid,
+                communication_servers = communication_servers,
+                remote_servers = remote_servers,
+                update_servers = update_servers,
+                trust_servers = trust_servers,
+                file_servers = file_servers,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid,
+                language = language,
+                access_key = String.Empty,
+                authorized = false,
+            };
+
+            // Convert the object into a JSON string
+            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "json", json);
+
+            // Use the JavaScript interop to download the JSON string as a file
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "server_config.json", json);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Download_Configuration", "Result", ex.Message);
+        }
+    }
+
+    private async Task Add_Agent_Configuration_Dialog()
+    {
+        var options = new DialogOptions
+            {
+
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        var result = await this.DialogService.Show<Layout.Agent_Download.Add_Agent_Configuration_Dialog>(string.Empty, options).Result;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/MainLayout -> Event_Details_Dialog", "Result", result.Data.ToString());
+
+        if (result.Data.ToString() == "success")
+            await Get_Configurations();
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

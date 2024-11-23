@@ -1,0 +1,89 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using OfficeOpenXml;
+@using System.Text.Json.Nodes;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Shared.Membership_Reminder_Dialog> Localizer
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudCard Class="mt-5">
+            <MudCardHeader>
+                <MudText Typo="Typo.h5">@Localizer["subtitle"]</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+
+                <MudText>
+                    @Localizer["text"]
+                </MudText>
+
+                <br />
+
+                <MudText>
+                    @Localizer["membership_info_text"]
+                </MudText>
+
+                <br />
+
+                <MudText>@Localizer["greetings"]</MudText>
+
+                <MudButton Class="mt-5" FullWidth="true" Variant="Variant.Filled" Color="Color.Default" Href="https://members.netlockrmm.com/products/memberships">@Localizer["open_source_text"]</MudButton>
+
+                <MudText Class="mt-5" Align="Align.Center">@Localizer["or text"]</MudText>
+            </MudCardContent>
+            <MudCardActions>
+                <MudButton FullWidth="true" Variant="Variant.Filled" Color="Color.Info" Href="https://netlockrmm.com/memberships.html">@Localizer["Explore our Membership options!"]</MudButton>
+                <MudButton FullWidth="true" Class="ml-2" Variant="Variant.Filled" Color="Color.Info" Href="https://netlockrmm.com/cloud.html">@Localizer["Discover more about our NetLock RMM Cloud version!"]</MudButton>
+            </MudCardActions>
+        </MudCard>
+
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Size="@Size.Small" Variant="Variant.Filled" Color="Color.Primary" OnClick="OK">@Localizer["dismiss"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+
+    private void OK()
+    {
+        try
+        {
+            string json = File.ReadAllText("appsettings.json");
+
+            // Parse JSON into a JsonNode
+            var jsonObject = JsonNode.Parse(json) as JsonObject;
+
+            // Update the Membership_Reminder value
+            if (jsonObject != null && jsonObject["Webinterface"]?["Membership_Reminder"] != null)
+            {
+                jsonObject["Webinterface"]["Membership_Reminder"] = false; // Set to true or false as desired
+
+                // Serialize the JSON with updated values and save back to the file
+                var options = new JsonSerializerOptions { WriteIndented = true };
+                File.WriteAllText("appsettings.json", jsonObject.ToJsonString(options));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Check_Member_Ship_Reminder", "Error", ex.ToString());
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

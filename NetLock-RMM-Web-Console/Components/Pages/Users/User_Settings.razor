@@ -1,0 +1,1467 @@
+﻿@page "/user_settings"
+
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json.Nodes;
+@using System.Text.Json;
+@using System.Globalization;
+@using NetLock_RMM_Web_Console.Classes.Authentication;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Users.User_Settings> Localizer
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+    
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+        
+        @if (permissions_system_users_enabled && permissions_system_users_manage)
+        {
+            <MudText Typo="Typo.h5">@Localizer["title"]: @username</MudText>
+
+            <MudButton Class="mt-5 mr-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/users">@Localizer["back"]</MudButton>
+
+            @if (permissions_system_users_edit)
+            {
+                <MudButton Class="mt-5 mr-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Update_User" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save">@Localizer["save"]</MudButton>
+            }
+
+            @if (permissions_system_users_delete)
+            {
+                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Delete_User_Dialog" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">@Localizer["delete"]</MudButton>                
+            }
+            
+            <MudTabs Class="mt-5" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default">
+                <MudTabPanel Text="@Localizer["account_settings"]">
+
+                    <MudPaper>
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["access_data"]</MudText>
+
+                        <MudTextField Class="ml-2" Label="@Localizer["username"]" T="string" @bind-Value="@username" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" Variant="Variant.Filled" Style="max-width: 500px" />
+                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Reset_Password_Dialog" Color="Color.Warning" StartIcon="@Icons.Material.Filled.LockReset">@Localizer["reset_password"]</MudButton>
+
+                        <MudTextField Class="ml-2 mt-2" Label="@Localizer["mail_address"]" T="string" @bind-Value="@mail" Immediate="@true" Variant="Variant.Filled" Style="max-width: 500px" />
+                        <MudTextField Class="ml-2 mt-2" Label="@Localizer["phone"]" T="string" @bind-Value="@phone" Immediate="@true" Variant="Variant.Filled" Style="max-width: 500px" />
+
+                        <MudSelect Class="ml-2 mt-3 mb-2" T="string" @bind-Value="role" Label="@Localizer["role"]" AnchorOrigin="Origin.BottomCenter" Style="max-width: 500px">
+                            <MudSelectItem Value="@("Administrator")" />
+                            <!--<MudSelectItem Value="@("Moderator")" />-->
+                        </MudSelect>
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-3" Typo="Typo.h5">@Localizer["two_factor_enabled"]</MudText>
+
+                        <MudSwitch Class="ml-2 mt-2" T="bool" @bind-Value="@two_factor_enabled" Label="@Localizer["two_factor_enabled"]" Color="Color.Primary" Style="max-width: 500px" />
+
+                        <MudButton Class="ml-2 mt-2 mb-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Reset_Two_Factor_Authentication" Color="Color.Warning" StartIcon="@Icons.Material.Filled.LockReset">@Localizer["reset"]</MudButton>
+                    </MudPaper>
+
+                </MudTabPanel>
+
+                <MudTabPanel Text="@Localizer["permissions"]">
+
+                    <MudPaper>
+
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["assigned_tenants"]</MudText>
+
+                        <MudTooltip Text="@Localizer["export_data"]">
+                            <!--<MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Table_Dialog"></MudIconButton>-->
+                        </MudTooltip>
+
+                        <MudTable Class="mt-0" Height="25vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@tenants_mysql_data" Filter="new Func<Tenants_Entity, bool>(Tenants_Table_Filter_Func)">
+                            <ToolBarContent>
+                                <MudTextField @bind-Value="tenants_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+                            <HeaderContent>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.enabled)" style="white-space: nowrap;">@Localizer["enabled"]</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.company)" style="white-space: nowrap;">@Localizer["company"]</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.author)" style="white-space: nowrap;">@Localizer["author"]</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Tenants_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["date"]</MudTableSortLabel></MudTh>
+                            </HeaderContent>
+                            <RowTemplate Context="tenants_row">
+
+                                <MudTd DataLabel="@Localizer["enabled"]" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        <MudCheckBox T="bool" @bind-Value="tenants_row.enabled" Color="Color.Primary" />
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="Name" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@tenants_row.name
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="@Localizer["company"]" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@tenants_row.company
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@tenants_row.description
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="@Localizer["author"]" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@tenants_row.author
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="@Localizer["date"]" @onclick="() => Tenants_RowClickHandler(tenants_row)" class="@Tenants_GetRowClass(tenants_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@tenants_row.date
+                                    </span>
+                                </MudTd>
+
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="Einträge pro Seite" />
+                            </PagerContent>
+                        </MudTable>
+
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["tenant_management"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@tenants_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["tenants"]</MudText>
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["locations"]</MudText>
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_locations_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_locations_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_locations_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_locations_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["groups"]</MudText>
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_groups_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_groups_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@tenants_groups_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["authorized_devices"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@devices_authorized_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_deauthorize" Label="@Localizer["deauthorize"]" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_move" Label="@Localizer["move"]" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_general" Label="@Localizer["general"]" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_software" Label="Software" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_task_manager" Label="Task Manager" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_antivirus" Label="Antivirus" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_events" Label="@Localizer["events"]" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_remote_shell" Label="Remote Shell" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_remote_file_browser" Label="Remote File Browser" Color="Color.Primary" Style="max-width: 500px" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_remote_control" Label="Remote Control" Color="Color.Primary" Style="max-width: 500px" />
+
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["unauthorized_devices"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@devices_unauthorized_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@devices_unauthorized_authorize" Label="@Localizer["authorize"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">Dashboard</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@dashboard_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["automation"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@automation_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@automation_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@automation_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@automation_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["policies"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@policies_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@policies_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@policies_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@policies_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@policies_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["collections"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Antivirus: Kontrollierter Ordnerzugriff</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    @*
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Antivirus: Kontrollierter Ordnerzugriff (Prozesse)</MudText>
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_processes_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_processes_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_processes_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    *@
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">@Localizer["sensors"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_sensors_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_sensors_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_sensors_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_sensors_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">@Localizer["scripts"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_scripts_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_scripts_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_scripts_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_scripts_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Jobs</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_jobs_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_jobs_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_jobs_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_jobs_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">@Localizer["files"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_files_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_files_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_files_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_files_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_files_netlock" Label="NetLock" Color="Color.Primary" />
+
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["events"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@events_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["user_management"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@users_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@users_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@users_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@users_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@users_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                    <MudPaper Class="mt-5">
+
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["settings"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["notifications"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">@Localizer["e_mail"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_test" Label="Testalarm" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_smtp" Label="@Localizer["smtp_settings"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_mail_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Microsoft Teams</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_microsoft_teams_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_microsoft_teams_test" Label="Testalarm" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_microsoft_teams_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_microsoft_teams_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_microsoft_teams_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Telegram</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_telegram_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_telegram_test" Label="Testalarm" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_telegram_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_telegram_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_telegram_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">ntfy.sh</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_test" Label="Testalarm" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h5">@Localizer["system_settings"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_system_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h5">@Localizer["system_protocols"]</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_protocols_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                    </MudPaper>
+
+                </MudTabPanel>
+
+            </MudTabs>
+        }
+
+    </Authorized>
+ </AuthorizeView>
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_system_json = String.Empty;
+    private string permissions_system_tenants_json = String.Empty;
+    public static List<string> permissions_system_tenants_list = new List<string> { };
+
+    private bool permissions_system_users_enabled = false;
+    private bool permissions_system_users_manage = false;
+    private bool permissions_system_users_edit = false;
+    private bool permissions_system_users_delete = false;
+
+    public class Permissions_Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+    }
+
+    private async Task Get_Permissions_System()
+    {
+        //Extract user info from users session storage
+        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+        var username = await sessionStorage.GetAsync<string>("username");
+        var password = await sessionStorage.GetAsync<string>("password");
+
+        Logging.Handler.Debug("/user_settings -> Permissions_Load", "username", username.Value ?? String.Empty);
+
+        //if user info empty, force logout
+        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
+        {
+            Logging.Handler.Debug("/user_settings -> Permissions_Load", "sessions storage data", "empty, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Check if user info is valid, if not, force logout
+        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
+        {
+            Logging.Handler.Debug("/user_settings -> Permissions_Load", "verify user", "incorrect data, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Get permissions_system
+        string query = "SELECT * FROM `accounts` WHERE username = @username;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@username", username.Value);
+
+            Logging.Handler.Debug("/user_settings -> Permissions_Load", "query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        permissions_system_json = reader["permissions"].ToString() ?? String.Empty;
+                        permissions_system_tenants_json = reader["tenants"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", permissions_system_json);
+
+            //Extract permissions_system
+            if (!String.IsNullOrEmpty(permissions_system_json))
+            {
+                using (JsonDocument document = JsonDocument.Parse(permissions_system_json))
+                {
+                    //users_enabled
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("users_enabled");
+                        permissions_system_users_enabled = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_enabled)", ex.Message);
+                    }
+
+                    //users_manage
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("users_manage");
+                        permissions_system_users_manage = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_manage)", ex.Message);
+                    }
+
+                    //users_edit
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("users_edit");
+                        permissions_system_users_edit = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_edit)", ex.Message);
+                    }
+
+                    //users_delete
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("users_delete");
+                        permissions_system_users_delete = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_delete)", ex.Message);
+                    }
+                }
+            }
+            else if (permissions_system_json == "[]")
+            {
+                Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+            else
+            {
+                Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+
+            //Extract tenants from json
+            permissions_system_tenants_list.Clear();
+            if (!String.IsNullOrEmpty(permissions_system_tenants_json))
+            {
+                //Set the activation state for the tenants
+                try
+                {
+                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_system_tenants_json);
+
+                    foreach (var tenant in tenants_activation_state_list)
+                    {
+                        Logging.Handler.Debug("/user_settings -> Permissions_Load", "foreach tenant", tenant.id);
+
+                        permissions_system_tenants_list.Add(tenant.id);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/user_settings -> Permissions_Load (permissions_system_tenants_json deserialize)", "Result", ex.Message);
+                }
+            }
+            else
+            {
+                Logging.Handler.Debug("/user_settings -> Permissions_Load (permissions_system_tenants_json deserialize)", "Result", "Empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Permissions_Load", "general_error (force logout)", ex.Message);
+            NavigationManager.NavigateTo("/logout", true);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        await Get_Permissions_System();
+
+        //Check permissions
+        if (!permissions_system_users_enabled || !permissions_system_users_manage)
+        {
+            Logging.Handler.Error("/user_settings -> Get_Permissions_System", "permissions_system_users_enabled", permissions_system_users_enabled.ToString());
+            Logging.Handler.Error("/user_settings -> Get_Permissions_System", "permissions_system_users_manage", permissions_system_users_manage.ToString());
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        username = await localStorage.GetItemAsync<string>("temp_username");
+        old_username = username;
+
+        await Load_User();
+        await Get_Tenants_Overview();
+        await Get_Permissions();
+
+        StateHasChanged();
+    }
+
+    private string username = String.Empty;
+    private string old_username = String.Empty;
+    private string mail = String.Empty;
+    private string phone = String.Empty;
+    private string role = String.Empty;
+    private bool two_factor_enabled = false;
+
+
+    //permissions
+    private string permissions_json = String.Empty;
+
+    //dashboard
+    private bool dashboard_enabled = false;
+
+    //permissions: devices
+    private bool devices_authorized_enabled = false;
+    private bool devices_general = false;
+    private bool devices_software = false;
+    private bool devices_task_manager = false;
+    private bool devices_antivirus = false;
+    private bool devices_events = false;
+    private bool devices_remote_shell = false;
+    private bool devices_remote_file_browser = false;
+    private bool devices_remote_control = false;
+    private bool devices_deauthorize = false;
+    private bool devices_move = false;
+
+    private bool devices_unauthorized_enabled = false;
+    private bool devices_unauthorized_authorize = false;
+
+    //permissions: tenants
+    private bool tenants_enabled = false;
+    private bool tenants_add = false;
+    private bool tenants_manage = false;
+    private bool tenants_edit = false;
+    private bool tenants_delete = false;
+    private bool tenants_locations_add = false;
+    private bool tenants_locations_manage = false;
+    private bool tenants_locations_edit = false;
+    private bool tenants_locations_delete = false;
+    private bool tenants_groups_add = false;
+    private bool tenants_groups_edit = false;
+    private bool tenants_groups_delete = false;
+
+    //permissions: automation
+    private bool automation_enabled = false;
+    private bool automation_add = false;
+    private bool automation_edit = false;
+    private bool automation_delete = false;
+
+    //permissions: policies
+    private bool policies_enabled = false;
+    private bool policies_add = false;
+    private bool policies_manage = false;
+    private bool policies_edit = false;
+    private bool policies_delete = false;
+
+    //permissions: collections
+    private bool collections_enabled = false;
+
+    //permissions: collections -> acfa
+    private bool collections_antivirus_controlled_folder_access_enabled = false;
+    private bool collections_antivirus_controlled_folder_access_add = false;
+    private bool collections_antivirus_controlled_folder_access_manage = false;
+    private bool collections_antivirus_controlled_folder_access_edit = false;
+    private bool collections_antivirus_controlled_folder_access_delete = false;
+    private bool collections_antivirus_controlled_folder_access_processes_add = false;
+    private bool collections_antivirus_controlled_folder_access_processes_edit = false;
+    private bool collections_antivirus_controlled_folder_access_processes_delete = false;
+
+    //permissions: collections -> sensors
+    private bool collections_sensors_enabled = false;
+    private bool collections_sensors_add = false;
+    private bool collections_sensors_edit = false;
+    private bool collections_sensors_delete = false;
+
+    //permissions: collections -> scripts
+    private bool collections_scripts_enabled = false;
+    private bool collections_scripts_add = false;
+    private bool collections_scripts_edit = false;
+    private bool collections_scripts_delete = false;
+
+    //permissions: collections -> jobs
+    private bool collections_jobs_enabled = false;
+    private bool collections_jobs_add = false;
+    private bool collections_jobs_edit = false;
+    private bool collections_jobs_delete = false;
+
+    //permissions: collections -> files
+    private bool collections_files_enabled = false;
+    private bool collections_files_add = false;
+    private bool collections_files_edit = false;
+    private bool collections_files_delete = false;
+    private bool collections_files_netlock = false;
+    
+    //permissions: events
+    private bool events_enabled = false;
+
+    //permissions: users
+    private bool users_enabled = false;
+    private bool users_add = false;
+    private bool users_manage = false;
+    private bool users_edit = false;
+    private bool users_delete = false;
+
+    //permissions: settings
+    private bool settings_enabled = false;
+
+    //permissions: settings -> notifications
+    private bool settings_notifications_enabled = false;
+
+    //permissions: settings -> notifications -> mail
+    private bool settings_notifications_mail_enabled = false;
+    private bool settings_notifications_mail_add = false;
+    private bool settings_notifications_mail_smtp = false;
+    private bool settings_notifications_mail_test = false;
+    private bool settings_notifications_mail_edit = false;
+    private bool settings_notifications_mail_delete = false;
+
+    //permissions: settings -> notifications -> ms teams
+    private bool settings_notifications_microsoft_teams_enabled = false;
+    private bool settings_notifications_microsoft_teams_add = false;
+    private bool settings_notifications_microsoft_teams_test = false;
+    private bool settings_notifications_microsoft_teams_edit = false;
+    private bool settings_notifications_microsoft_teams_delete = false;
+
+    //permissions: settings -> notifications -> telegram
+    private bool settings_notifications_telegram_enabled = false;
+    private bool settings_notifications_telegram_add = false;
+    private bool settings_notifications_telegram_test = false;
+    private bool settings_notifications_telegram_edit = false;
+    private bool settings_notifications_telegram_delete = false;
+
+    //permissions: settings -> notifications -> ntfysh
+    private bool settings_notifications_ntfysh_enabled = false;
+    private bool settings_notifications_ntfysh_add = false;
+    private bool settings_notifications_ntfysh_test = false;
+    private bool settings_notifications_ntfysh_edit = false;
+    private bool settings_notifications_ntfysh_delete = false;
+
+    private bool settings_system_enabled = false;
+    private bool settings_protocols_enabled = false;
+
+    public class Permissions
+    {       
+        //permissions: dashboard
+        public bool dashboard_enabled { get; set; }
+
+        //permissions: devices
+        public bool devices_authorized_enabled { get; set; }
+        public bool devices_general { get; set; }
+        public bool devices_software { get; set; }
+        public bool devices_task_manager { get; set; }
+        public bool devices_antivirus { get; set; }
+        public bool devices_events { get; set; }
+        public bool devices_remote_shell { get; set; }
+        public bool devices_remote_file_browser { get; set; }
+        public bool devices_remote_control { get; set; }
+        public bool devices_deauthorize { get; set; }
+        public bool devices_move { get; set; }
+
+        public bool devices_unauthorized_enabled { get; set; }
+        public bool devices_unauthorized_authorize { get; set; }
+
+        //permissions: tenants
+        public bool tenants_enabled { get; set; }
+        public bool tenants_add { get; set; }
+        public bool tenants_manage { get; set; }
+        public bool tenants_edit { get; set; }
+        public bool tenants_delete { get; set; }
+        public bool tenants_locations_add { get; set; }
+        public bool tenants_locations_manage { get; set; }
+        public bool tenants_locations_edit { get; set; }
+        public bool tenants_locations_delete { get; set; }
+        public bool tenants_groups_add { get; set; }
+        public bool tenants_groups_edit { get; set; }
+        public bool tenants_groups_delete { get; set; }
+
+        //permissions: automation
+        public bool automation_enabled { get; set; }
+        public bool automation_add { get; set; }
+        public bool automation_edit { get; set; }
+        public bool automation_delete { get; set; }
+
+        //permissions: policies
+        public bool policies_enabled { get; set; }
+        public bool policies_add { get; set; }
+        public bool policies_manage { get; set; }
+        public bool policies_edit { get; set; }
+        public bool policies_delete { get; set; }
+
+        //permissions: collections
+        public bool collections_enabled { get; set; }
+
+        //permissions: collections -> acfa
+        public bool collections_antivirus_controlled_folder_access_enabled { get; set; }
+        public bool collections_antivirus_controlled_folder_access_add { get; set; }
+        public bool collections_antivirus_controlled_folder_access_manage { get; set; }
+        public bool collections_antivirus_controlled_folder_access_edit { get; set; }
+        public bool collections_antivirus_controlled_folder_access_delete { get; set; }
+        public bool collections_antivirus_controlled_folder_access_processes_add { get; set; }
+        public bool collections_antivirus_controlled_folder_access_processes_edit { get; set; }
+        public bool collections_antivirus_controlled_folder_access_processes_delete { get; set; }
+
+        //permissions: collections -> sensors
+        public bool collections_sensors_enabled { get; set; }
+        public bool collections_sensors_add { get; set; }
+        public bool collections_sensors_edit { get; set; }
+        public bool collections_sensors_delete { get; set; }
+
+        //permissions: collections -> scripts
+        public bool collections_scripts_enabled { get; set; }
+        public bool collections_scripts_add { get; set; }
+        public bool collections_scripts_edit { get; set; }
+        public bool collections_scripts_delete { get; set; }
+
+        //permissions: collections -> jobs
+        public bool collections_jobs_enabled { get; set; }
+        public bool collections_jobs_add { get; set; }
+        public bool collections_jobs_edit { get; set; }
+        public bool collections_jobs_delete { get; set; }
+
+        //permissions: collections -> files
+        public bool collections_files_enabled { get; set; }
+        public bool collections_files_add { get; set; }
+        public bool collections_files_edit { get; set; }
+        public bool collections_files_delete { get; set; }
+        public bool collections_files_netlock { get; set; }
+
+        //permissions: events
+        public bool events_enabled { get; set; }
+
+        //permissions: users
+        public bool users_enabled { get; set; }
+        public bool users_add { get; set; }
+        public bool users_manage { get; set; }
+        public bool users_edit { get; set; }
+        public bool users_delete { get; set; }
+
+        //permissions: settings
+        public bool settings_enabled { get; set; }
+
+        //permissions: settings -> notifications
+        public bool settings_notifications_enabled { get; set; }
+
+        //permissions: settings -> notifications -> mail
+        public bool settings_notifications_mail_enabled { get; set; }
+        public bool settings_notifications_mail_add { get; set; }
+        public bool settings_notifications_mail_smtp { get; set; }
+        public bool settings_notifications_mail_test { get; set; }
+        public bool settings_notifications_mail_edit { get; set; }
+        public bool settings_notifications_mail_delete { get; set; }
+
+        //permissions: settings -> notifications -> ms teams
+        public bool settings_notifications_microsoft_teams_enabled { get; set; }
+        public bool settings_notifications_microsoft_teams_add { get; set; }
+        public bool settings_notifications_microsoft_teams_test { get; set; }
+        public bool settings_notifications_microsoft_teams_edit { get; set; }
+        public bool settings_notifications_microsoft_teams_delete { get; set; }
+
+        //permissions: settings -> notifications -> telegram
+        public bool settings_notifications_telegram_enabled { get; set; }
+        public bool settings_notifications_telegram_add { get; set; }
+        public bool settings_notifications_telegram_test { get; set; }
+        public bool settings_notifications_telegram_edit { get; set; }
+        public bool settings_notifications_telegram_delete { get; set; }
+
+        //permissions: settings -> notifications -> ntfysh
+        public bool settings_notifications_ntfysh_enabled { get; set; }
+        public bool settings_notifications_ntfysh_add { get; set; }
+        public bool settings_notifications_ntfysh_test { get; set; }
+        public bool settings_notifications_ntfysh_edit { get; set; }
+        public bool settings_notifications_ntfysh_delete { get; set; }
+
+        public bool settings_system_enabled { get; set; }
+        public bool settings_protocols_enabled { get; set; }
+    }
+
+    private async Task Load_User()
+    {
+        int two_factor_enabled_int = 0;
+
+        string query = "SELECT * FROM accounts WHERE username = @username;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@username", username);
+
+            Logging.Handler.Debug("/user_settings -> Load_User", "query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        username = reader["username"].ToString() ?? String.Empty;
+                        mail = reader["mail"].ToString() ?? String.Empty;
+                        phone = reader["phone"].ToString() ?? String.Empty;
+                        role = reader["role"].ToString() ?? String.Empty;
+                        two_factor_enabled_int = Convert.ToInt32(reader["two_factor_enabled"].ToString());
+                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
+                        tenants_json = reader["tenants"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            //convert
+            two_factor_enabled = two_factor_enabled_int == 1;
+
+            //empty tenants json
+            if (String.IsNullOrEmpty(tenants_json))
+                tenants_json = "[]";
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Load_User", "Result", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Update_User()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        //Create permissions json
+        Permissions permissions = new Permissions
+            {
+                //dashboard
+                dashboard_enabled = dashboard_enabled,
+
+                //permissions: devices
+                devices_authorized_enabled = devices_authorized_enabled,
+                devices_general = devices_general,
+                devices_software = devices_software,
+                devices_task_manager = devices_task_manager,
+                devices_antivirus = devices_antivirus,
+                devices_events = devices_events,
+                devices_remote_shell = devices_remote_shell,
+                devices_remote_file_browser = devices_remote_file_browser,
+                devices_remote_control = devices_remote_control,
+                devices_deauthorize = devices_deauthorize,
+                devices_move = devices_move,
+
+                devices_unauthorized_enabled = devices_unauthorized_enabled,
+                devices_unauthorized_authorize = devices_unauthorized_authorize,
+
+                //permissions: tenants
+                tenants_enabled = tenants_enabled,
+                tenants_add = tenants_add,
+                tenants_manage = tenants_manage,
+                tenants_edit = tenants_edit,
+                tenants_delete = tenants_delete,
+                tenants_locations_add = tenants_locations_add,
+                tenants_locations_manage = tenants_locations_manage,
+                tenants_locations_edit = tenants_locations_edit,
+                tenants_locations_delete = tenants_locations_delete,
+                tenants_groups_add = tenants_groups_add,
+                tenants_groups_edit = tenants_groups_edit,
+                tenants_groups_delete = tenants_groups_delete,
+
+                //permissions: automation
+                automation_enabled = automation_enabled,
+                automation_add = automation_add,
+                automation_edit = automation_edit,
+                automation_delete = automation_delete,
+
+                //permissions: policies
+                policies_enabled = policies_enabled,
+                policies_add = policies_add,
+                policies_manage = policies_manage,
+                policies_edit = policies_edit,
+                policies_delete = policies_delete,
+
+                //permissions: collections
+                collections_enabled = collections_enabled,
+
+                //permissions: collections -> acfa
+                collections_antivirus_controlled_folder_access_enabled = collections_antivirus_controlled_folder_access_enabled,
+                collections_antivirus_controlled_folder_access_add = collections_antivirus_controlled_folder_access_add,
+                collections_antivirus_controlled_folder_access_manage = collections_antivirus_controlled_folder_access_manage,
+                collections_antivirus_controlled_folder_access_edit = collections_antivirus_controlled_folder_access_edit,
+                collections_antivirus_controlled_folder_access_delete = collections_antivirus_controlled_folder_access_delete,
+                collections_antivirus_controlled_folder_access_processes_add = collections_antivirus_controlled_folder_access_processes_add,
+                collections_antivirus_controlled_folder_access_processes_edit = collections_antivirus_controlled_folder_access_processes_edit,
+                collections_antivirus_controlled_folder_access_processes_delete = collections_antivirus_controlled_folder_access_processes_delete,
+
+                //permissions: collections -> sensors
+                collections_sensors_enabled = collections_sensors_enabled,
+                collections_sensors_add = collections_sensors_add,
+                collections_sensors_edit = collections_sensors_edit,
+                collections_sensors_delete = collections_sensors_delete,
+
+                //permissions: collections -> scripts
+                collections_scripts_enabled = collections_scripts_enabled,
+                collections_scripts_add = collections_scripts_add,
+                collections_scripts_edit = collections_scripts_edit,
+                collections_scripts_delete = collections_scripts_delete,
+
+                //permissions: collections -> jobs
+                collections_jobs_enabled = collections_jobs_enabled,
+                collections_jobs_add = collections_jobs_add,
+                collections_jobs_edit = collections_jobs_edit,
+                collections_jobs_delete = collections_jobs_delete,
+
+                //permissions: collections -> files
+                collections_files_enabled = collections_files_enabled,
+                collections_files_add = collections_files_add,
+                collections_files_edit = collections_files_edit,
+                collections_files_delete = collections_files_delete,
+                collections_files_netlock = collections_files_netlock,
+
+                //permissions: events
+                events_enabled = events_enabled,
+
+                //permissions: users
+                users_enabled = users_enabled,
+                users_add = users_add,
+                users_manage = users_manage,
+                users_edit = users_edit,
+                users_delete = users_delete,
+
+                //permissions: settings
+                settings_enabled = settings_enabled,
+
+                //permissions: settings -> notifications
+                settings_notifications_enabled = settings_notifications_enabled,
+
+                //permissions: settings -> notifications -> mail
+                settings_notifications_mail_enabled = settings_notifications_mail_enabled,
+                settings_notifications_mail_add = settings_notifications_mail_add,
+                settings_notifications_mail_smtp = settings_notifications_mail_smtp,
+                settings_notifications_mail_test = settings_notifications_mail_test,
+                settings_notifications_mail_edit = settings_notifications_mail_edit,
+                settings_notifications_mail_delete = settings_notifications_mail_delete,
+
+                //permissions: settings -> notifications -> ms teams
+                settings_notifications_microsoft_teams_enabled = settings_notifications_microsoft_teams_enabled,
+                settings_notifications_microsoft_teams_add = settings_notifications_microsoft_teams_add,
+                settings_notifications_microsoft_teams_test = settings_notifications_microsoft_teams_test,
+                settings_notifications_microsoft_teams_edit = settings_notifications_microsoft_teams_edit,
+                settings_notifications_microsoft_teams_delete = settings_notifications_microsoft_teams_delete,
+
+                //permissions: settings -> notifications -> telegram
+                settings_notifications_telegram_enabled = settings_notifications_telegram_enabled,
+                settings_notifications_telegram_add = settings_notifications_telegram_add,
+                settings_notifications_telegram_test = settings_notifications_telegram_test,
+                settings_notifications_telegram_edit = settings_notifications_telegram_edit,
+                settings_notifications_telegram_delete = settings_notifications_telegram_delete,
+
+                //permissions: settings -> notifications -> ntfysh
+                settings_notifications_ntfysh_enabled = settings_notifications_ntfysh_enabled,
+                settings_notifications_ntfysh_add = settings_notifications_ntfysh_add,
+                settings_notifications_ntfysh_test = settings_notifications_ntfysh_test,
+                settings_notifications_ntfysh_edit = settings_notifications_ntfysh_edit,
+                settings_notifications_ntfysh_delete = settings_notifications_ntfysh_delete,
+
+                //permissions: settings_system
+                settings_system_enabled = settings_system_enabled,
+                settings_protocols_enabled = settings_protocols_enabled,
+            };
+
+        permissions_json = JsonSerializer.Serialize(permissions, new JsonSerializerOptions { WriteIndented = true });
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        #region Tenants
+
+        //Create enabled tenant jsons
+        try
+        {
+            List<Tenants_Activation_State> tenant_data_list = tenants_mysql_data
+                .Where(tenant => tenant.enabled)
+                .Select(tenant => new Tenants_Activation_State
+                    {
+                        id = tenant.id,
+                        guid = tenant.guid
+                    })
+                .ToList();
+
+            tenants_json = JsonSerializer.Serialize(tenant_data_list, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("/user_settings -> Update_User (Create new tenant_json)", "Result", tenants_json);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Update_User (Create new tenant_json)", "Result", ex.Message);
+        }
+
+        #endregion
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE accounts SET username = @username, mail = @mail, phone = @phone, role = @role, two_factor_enabled = @two_factor_enabled, permissions = @permissions, tenants = @tenants WHERE username = @old_username;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@old_username", old_username);
+            cmd.Parameters.AddWithValue("@mail", mail);
+            cmd.Parameters.AddWithValue("@phone", phone);
+            cmd.Parameters.AddWithValue("@role", role);
+            cmd.Parameters.AddWithValue("@two_factor_enabled", two_factor_enabled);
+            cmd.Parameters.AddWithValue("@permissions", permissions_json);
+            cmd.Parameters.AddWithValue("@tenants", tenants_json);
+
+            cmd.ExecuteNonQuery();
+
+            Logging.Handler.Debug("/user_settings -> Update_User", "result", old_username);
+
+            this.Snackbar.Add("Gespeichert.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Save_User", "Result", ex.Message);
+            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task Reset_Two_Factor_Authentication()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "UPDATE accounts SET two_factor_account_secret_key = '' WHERE username = @old_username;";
+
+            Logging.Handler.Debug("/user_settings -> Reset_Two_Factor_Authentication", "query", query);
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@username", username);
+            cmd.Parameters.AddWithValue("@old_username", old_username);
+
+            cmd.ExecuteNonQuery();
+
+            Logging.Handler.Debug("/user_settings -> Reset_Two_Factor_Authentication", "result", old_username);
+            this.Snackbar.Add("Gespeichert.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Reset_Two_Factor_Authentication", "result", ex.Message);
+            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task Get_Permissions()
+    {
+        //Extract permissions_json
+        try
+        {
+            Logging.Handler.Debug("/user_settings -> Get_Permissions (Extract)", "permissions_json", permissions_json);
+
+            JsonDocument jsonDocument = JsonDocument.Parse(permissions_json);
+
+            //dashboard
+            dashboard_enabled = jsonDocument.RootElement.GetProperty("dashboard_enabled").GetBoolean();
+
+            //permissions: devices
+            devices_authorized_enabled = jsonDocument.RootElement.GetProperty("devices_authorized_enabled").GetBoolean();
+            devices_general = jsonDocument.RootElement.GetProperty("devices_general").GetBoolean();
+            devices_software = jsonDocument.RootElement.GetProperty("devices_software").GetBoolean();
+            devices_task_manager = jsonDocument.RootElement.GetProperty("devices_task_manager").GetBoolean();
+            devices_antivirus = jsonDocument.RootElement.GetProperty("devices_antivirus").GetBoolean();
+            devices_events = jsonDocument.RootElement.GetProperty("devices_events").GetBoolean();
+            devices_remote_shell = jsonDocument.RootElement.GetProperty("devices_remote_shell").GetBoolean();
+            devices_remote_file_browser = jsonDocument.RootElement.GetProperty("devices_remote_file_browser").GetBoolean();
+            devices_remote_control = jsonDocument.RootElement.GetProperty("devices_remote_control").GetBoolean();
+            devices_deauthorize = jsonDocument.RootElement.GetProperty("devices_deauthorize").GetBoolean();
+            devices_move = jsonDocument.RootElement.GetProperty("devices_move").GetBoolean();
+
+            devices_unauthorized_enabled = jsonDocument.RootElement.GetProperty("devices_unauthorized_enabled").GetBoolean();
+            devices_unauthorized_authorize = jsonDocument.RootElement.GetProperty("devices_unauthorized_authorize").GetBoolean();
+
+            //permissions: tenants
+            tenants_enabled = jsonDocument.RootElement.GetProperty("tenants_enabled").GetBoolean();
+            tenants_add = jsonDocument.RootElement.GetProperty("tenants_add").GetBoolean();
+            tenants_manage = jsonDocument.RootElement.GetProperty("tenants_manage").GetBoolean();
+            tenants_edit = jsonDocument.RootElement.GetProperty("tenants_edit").GetBoolean();
+            tenants_delete = jsonDocument.RootElement.GetProperty("tenants_delete").GetBoolean();
+            tenants_locations_add = jsonDocument.RootElement.GetProperty("tenants_locations_add").GetBoolean();
+            tenants_locations_manage = jsonDocument.RootElement.GetProperty("tenants_locations_manage").GetBoolean();
+            tenants_locations_edit = jsonDocument.RootElement.GetProperty("tenants_locations_edit").GetBoolean();
+            tenants_locations_delete = jsonDocument.RootElement.GetProperty("tenants_locations_delete").GetBoolean();
+            tenants_groups_add = jsonDocument.RootElement.GetProperty("tenants_groups_add").GetBoolean();
+            tenants_groups_edit = jsonDocument.RootElement.GetProperty("tenants_groups_edit").GetBoolean();
+            tenants_groups_delete = jsonDocument.RootElement.GetProperty("tenants_groups_delete").GetBoolean();
+
+            //permissions: automation
+            automation_enabled = jsonDocument.RootElement.GetProperty("automation_enabled").GetBoolean();
+            automation_add = jsonDocument.RootElement.GetProperty("automation_add").GetBoolean();
+            automation_edit = jsonDocument.RootElement.GetProperty("automation_edit").GetBoolean();
+            automation_delete = jsonDocument.RootElement.GetProperty("automation_delete").GetBoolean();
+
+            //permissions: policies
+            policies_enabled = jsonDocument.RootElement.GetProperty("policies_enabled").GetBoolean();
+            policies_add = jsonDocument.RootElement.GetProperty("policies_add").GetBoolean();
+            policies_manage = jsonDocument.RootElement.GetProperty("policies_manage").GetBoolean();
+            policies_edit = jsonDocument.RootElement.GetProperty("policies_edit").GetBoolean();
+            policies_delete = jsonDocument.RootElement.GetProperty("policies_delete").GetBoolean();
+
+            //permissions: collections
+            collections_enabled = jsonDocument.RootElement.GetProperty("collections_enabled").GetBoolean();
+
+            //permissions: collections -> acfa
+            collections_antivirus_controlled_folder_access_enabled = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_enabled").GetBoolean();
+            collections_antivirus_controlled_folder_access_add = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_add").GetBoolean();
+            collections_antivirus_controlled_folder_access_manage = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_manage").GetBoolean();
+            collections_antivirus_controlled_folder_access_edit = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_edit").GetBoolean();
+            collections_antivirus_controlled_folder_access_delete = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_delete").GetBoolean();
+            collections_antivirus_controlled_folder_access_processes_add = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_processes_add").GetBoolean();
+            collections_antivirus_controlled_folder_access_processes_edit = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_processes_edit").GetBoolean();
+            collections_antivirus_controlled_folder_access_processes_delete = jsonDocument.RootElement.GetProperty("collections_antivirus_controlled_folder_access_processes_delete").GetBoolean();
+
+            //permissions: collections -> sensors
+            collections_sensors_enabled = jsonDocument.RootElement.GetProperty("collections_sensors_enabled").GetBoolean();
+            collections_sensors_add = jsonDocument.RootElement.GetProperty("collections_sensors_add").GetBoolean();
+            collections_sensors_edit = jsonDocument.RootElement.GetProperty("collections_sensors_edit").GetBoolean();
+            collections_sensors_delete = jsonDocument.RootElement.GetProperty("collections_sensors_delete").GetBoolean();
+
+            //permissions: collections -> scripts
+            collections_scripts_enabled = jsonDocument.RootElement.GetProperty("collections_scripts_enabled").GetBoolean();
+            collections_scripts_add = jsonDocument.RootElement.GetProperty("collections_scripts_add").GetBoolean();
+            collections_scripts_edit = jsonDocument.RootElement.GetProperty("collections_scripts_edit").GetBoolean();
+            collections_scripts_delete = jsonDocument.RootElement.GetProperty("collections_scripts_delete").GetBoolean();
+
+            //permissions: collections -> jobs
+            collections_jobs_enabled = jsonDocument.RootElement.GetProperty("collections_jobs_enabled").GetBoolean();
+            collections_jobs_add = jsonDocument.RootElement.GetProperty("collections_jobs_add").GetBoolean();
+            collections_jobs_edit = jsonDocument.RootElement.GetProperty("collections_jobs_edit").GetBoolean();
+            collections_jobs_delete = jsonDocument.RootElement.GetProperty("collections_jobs_delete").GetBoolean();
+
+            //permissions: collections -> files
+            collections_files_enabled = jsonDocument.RootElement.GetProperty("collections_files_enabled").GetBoolean();
+            collections_files_add = jsonDocument.RootElement.GetProperty("collections_files_add").GetBoolean();
+            collections_files_edit = jsonDocument.RootElement.GetProperty("collections_files_edit").GetBoolean();
+            collections_files_delete = jsonDocument.RootElement.GetProperty("collections_files_delete").GetBoolean();
+            collections_files_netlock = jsonDocument.RootElement.GetProperty("collections_files_netlock").GetBoolean();
+
+            //permissions: events
+            events_enabled = jsonDocument.RootElement.GetProperty("events_enabled").GetBoolean();
+
+            //permissions: users
+            users_enabled = jsonDocument.RootElement.GetProperty("users_enabled").GetBoolean();
+            users_add = jsonDocument.RootElement.GetProperty("users_add").GetBoolean();
+            users_manage = jsonDocument.RootElement.GetProperty("users_manage").GetBoolean();
+            users_edit = jsonDocument.RootElement.GetProperty("users_edit").GetBoolean();
+            users_delete = jsonDocument.RootElement.GetProperty("users_delete").GetBoolean();
+
+            //permissions: settings
+            settings_enabled = jsonDocument.RootElement.GetProperty("settings_enabled").GetBoolean();
+
+            //permissions: settings -> notifications
+            settings_notifications_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_enabled").GetBoolean();
+
+            //permissions: settings -> notifications -> mail    
+            settings_notifications_mail_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_mail_enabled").GetBoolean();
+            settings_notifications_mail_add = jsonDocument.RootElement.GetProperty("settings_notifications_mail_add").GetBoolean();
+            settings_notifications_mail_smtp = jsonDocument.RootElement.GetProperty("settings_notifications_mail_smtp").GetBoolean();
+            settings_notifications_mail_test = jsonDocument.RootElement.GetProperty("settings_notifications_mail_test").GetBoolean();
+            settings_notifications_mail_edit = jsonDocument.RootElement.GetProperty("settings_notifications_mail_edit").GetBoolean();
+            settings_notifications_mail_delete = jsonDocument.RootElement.GetProperty("settings_notifications_mail_delete").GetBoolean();
+
+            //permissions: settings -> notifications -> ms teams
+            settings_notifications_microsoft_teams_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_microsoft_teams_enabled").GetBoolean();
+            settings_notifications_microsoft_teams_add = jsonDocument.RootElement.GetProperty("settings_notifications_microsoft_teams_add").GetBoolean();
+            settings_notifications_microsoft_teams_test = jsonDocument.RootElement.GetProperty("settings_notifications_microsoft_teams_test").GetBoolean();
+            settings_notifications_microsoft_teams_edit = jsonDocument.RootElement.GetProperty("settings_notifications_microsoft_teams_edit").GetBoolean();
+            settings_notifications_microsoft_teams_delete = jsonDocument.RootElement.GetProperty("settings_notifications_microsoft_teams_delete").GetBoolean();
+
+            //permissions: settings -> notifications -> telegram
+            settings_notifications_telegram_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_telegram_enabled").GetBoolean();
+            settings_notifications_telegram_add = jsonDocument.RootElement.GetProperty("settings_notifications_telegram_add").GetBoolean();
+            settings_notifications_telegram_test = jsonDocument.RootElement.GetProperty("settings_notifications_telegram_test").GetBoolean();
+            settings_notifications_telegram_edit = jsonDocument.RootElement.GetProperty("settings_notifications_telegram_edit").GetBoolean();
+            settings_notifications_telegram_delete = jsonDocument.RootElement.GetProperty("settings_notifications_telegram_delete").GetBoolean();
+
+            //permissions: settings -> notifications -> ntfysh
+            settings_notifications_ntfysh_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_enabled").GetBoolean();
+            settings_notifications_ntfysh_add = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_add").GetBoolean();
+            settings_notifications_ntfysh_test = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_test").GetBoolean();
+            settings_notifications_ntfysh_edit = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_edit").GetBoolean();
+            settings_notifications_ntfysh_delete = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_delete").GetBoolean();
+
+            settings_system_enabled = jsonDocument.RootElement.GetProperty("settings_system_enabled").GetBoolean();
+            settings_protocols_enabled = jsonDocument.RootElement.GetProperty("settings_protocols_enabled").GetBoolean();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Get_Permissions (Extract)", "permissions_json", ex.Message);
+        }
+    }
+
+    #region Tenants
+
+    private string tenants_json = "[ ]";
+
+    public List<Tenants_Entity> tenants_mysql_data; //Datasource for table
+
+    public class Tenants_Entity
+    {
+        public bool enabled { get; set; } = false;
+        public string id { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+        public string name { get; set; } = String.Empty;
+        public string description { get; set; } = String.Empty;
+        public string author { get; set; } = String.Empty;
+        public string date { get; set; } = String.Empty;
+        public string company { get; set; } = String.Empty;
+    }
+
+    public class Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+    }
+
+    private string tenants_table_sorted_column;
+    private string tenants_table_search_string = String.Empty;
+
+    private bool Tenants_Table_Filter_Func(Tenants_Entity row)
+    {
+        if (string.IsNullOrEmpty(tenants_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.name.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.description.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.author.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.date.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.company.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string tenants_selectedRowContent = ""; // Saving content of selected row
+
+    // Executes on row click
+    private void Tenants_RowClickHandler(Tenants_Entity row)
+    {
+        tenants_selectedRowContent = row.name;
+    }
+
+    private string Tenants_GetRowClass(Tenants_Entity row)
+    {
+        return row.name == tenants_selectedRowContent ? "selected-row" : "";
+    }
+
+    private async Task Get_Tenants_Overview()
+    {
+        tenants_mysql_data = new List<Tenants_Entity>();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Tenants_Entity entity = new Tenants_Entity
+                            {
+                                id = reader["id"].ToString() ?? String.Empty,
+                                guid = reader["guid"].ToString() ?? String.Empty,
+                                name = reader["name"].ToString() ?? String.Empty,
+                                description = reader["description"].ToString() ?? String.Empty,
+                                author = reader["author"].ToString() ?? String.Empty,
+                                date = reader["date"].ToString() ?? String.Empty,
+                                company = reader["company"].ToString() ?? String.Empty,
+                            };
+
+                        tenants_mysql_data.Add(entity);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Get_Tenants_Overview", "Result", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+
+        //Set the activation state for the tenants
+        try
+        {
+            List<Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Tenants_Activation_State>>(tenants_json);
+
+            foreach (var tenant in tenants_mysql_data)
+            {
+                Logging.Handler.Debug("/user_settings -> Get_Tenants_Overview", "activation_state (tenants)", tenant.name);
+
+                foreach (var activation_state in tenants_activation_state_list)
+                {
+                    Logging.Handler.Debug("/user_settings -> Get_Tenants_Overview", "activation_state (policy)", activation_state.id);
+
+                    if (activation_state.id == tenant.id)
+                    {
+                        Logging.Handler.Debug("/user_settings -> Get_Tenants_Overview", "activation_state (enable)", activation_state.id);
+
+                        tenant.enabled = true;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/user_settings -> Get_Tenants_Overview (tenants_json deserialize)", "Result", ex.Message);
+        }
+    }
+
+    private async Task Export_Tenants_Table_Dialog()
+    {
+        //await Show_Export_Table_Dialog("tenants");
+    }
+
+    #endregion
+
+    private bool delete_user_dialog_open = false;
+
+    private async Task Delete_User_Dialog()
+    {
+        if (delete_user_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("username", username);
+
+        delete_user_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Users.Dialogs.Delete_User_Dialog>(string.Empty, parameters, options).Result;
+
+        delete_user_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/user_settings -> Delete_User_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            NavigationManager.NavigateTo("/manage_users", true);
+        }
+    }
+
+    private bool reset_password_dialog_open = false;
+
+    private async Task Reset_Password_Dialog()
+    {
+        if (reset_password_dialog_open)
+            return;
+
+        await localStorage.SetItemAsync("temp_username", username);
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("username", username);
+
+        reset_password_dialog_open = true;
+
+        var result = await DialogService.Show<Pages.Users.Dialogs.Reset_Password_User_Dialog>(string.Empty, parameters, options).Result;
+
+        reset_password_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/user_settings -> Reset_Password_Dialog", "Result", result.Data.ToString());
+    }
+}

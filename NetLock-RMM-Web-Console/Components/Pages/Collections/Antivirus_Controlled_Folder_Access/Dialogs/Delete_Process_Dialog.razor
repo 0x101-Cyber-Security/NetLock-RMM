@@ -1,0 +1,118 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Collections.Antivirus_Controlled_Folder_Access.Dialogs.Delete_Process_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h5">@Localizer["warning"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="OK" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+    [Parameter] public string antivirus_controlled_folder_access_processes_json { get; set; }
+
+    private string processes_json = String.Empty;
+    private string processes_updated_json = String.Empty;
+
+    public class Processes
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string date { get; set; }
+        public string description { get; set; }
+        public string author { get; set; }
+        public string process_path { get; set; }
+        public string company { get; set; }
+        public string product { get; set; }
+        public string copyright { get; set; }
+        public string brand { get; set; }
+        public string product_version { get; set; }
+        public string file_version { get; set; }
+        public string file_sha1 { get; set; }
+        public string file_md5 { get; set; }
+        public string file_sha256 { get; set; }
+        public string file_sha512 { get; set; }
+        public string cert_owner { get; set; }
+        public string cert_issuer { get; set; }
+        public string cert_begin_date { get; set; }
+        public string cert_end_date { get; set; }
+        public string cert_public_key { get; set; }
+        public string cert_serial_key { get; set; }
+        public string cert_sha1 { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        processes_json = antivirus_controlled_folder_access_processes_json;
+        Logging.Handler.Debug("/Policy_Settings (Delete_Controlled_Folder_Access_Processes_Dialog) -> OnInitializedAsync", "processes_json", processes_json);
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        try
+        {
+            //Get folder
+            List<Processes> processes = JsonSerializer.Deserialize<List<Processes>>(processes_json);
+
+            //Remove it
+            processes.RemoveAll(folder => folder.id == id);
+
+            processes_updated_json = JsonSerializer.Serialize(processes, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("/Policy_Settings (Delete_Controlled_Folder_Access_Processes_Dialog) -> OK", "processes_updated_json", processes_updated_json);
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings (Delete_Controlled_Folder_Access_Processes_Dialog) -> OK", "processes_updated_json", processes_updated_json);
+        }
+
+        if (success)
+        {
+            this.MudDialog.Close(DialogResult.Ok(processes_updated_json));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            this.MudDialog.Close(DialogResult.Ok("error"));
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

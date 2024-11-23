@@ -1,0 +1,679 @@
+﻿@page "/tenant_settings"
+
+@using MySqlConnector
+@using System.Data.Common
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IJSRuntime JSRuntime
+@inject IStringLocalizer<Pages.Tenants.Tenant_Settings> Localizer
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+        
+        @{
+            if (permissions_tenants_enabled && permissions_tenants_manage)
+            {
+                <MudText Typo="Typo.h4">@Localizer["title"] (@name)</MudText>
+
+                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/tenants">@Localizer["back"]</MudButton>
+
+                if (permissions_tenants_edit)
+                {
+                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Edit_Form" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit">@Localizer["edit"]</MudButton>
+                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Save_Settings" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save">@Localizer["save"]</MudButton>
+                }
+
+                if (permissions_tenants_delete)
+                {
+                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Show_Delete_Tenant_Dialog" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete">@Localizer["delete"]</MudButton>
+                }
+                
+                <MudPaper Class="pa-0 ma- mt-5">
+
+                    <MudText Class="pa-2" Typo="Typo.h5" Align="Align.Left">@Localizer["general_information"]</MudText>
+
+                    <MudTextField Class="pa-2" Label="Name" Variant="Variant.Filled" T="string" @bind-Value="@name" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["company"]" Variant="Variant.Filled" T="string" @bind-Value="@company" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["description"]" Variant="Variant.Filled" T="string" @bind-Value="@description" Disabled="@input_disabled" Immediate="@true" />
+                    <MudText Class="pa-2 ma-0 mt-5" Typo="Typo.h6">@Localizer["contact_persons"]</MudText>
+                    <MudTextField Class="pa-2" Label="@Localizer["contact_person_one"]" Variant="Variant.Filled" T="string" @bind-Value="@contact_person_one" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["contact_person_two"]" Variant="Variant.Filled" T="string" @bind-Value="@contact_person_two" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["contact_person_three"]" Variant="Variant.Filled" T="string" @bind-Value="@contact_person_three" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["contact_person_four"]" Variant="Variant.Filled" T="string" @bind-Value="@contact_person_four" Disabled="@input_disabled" Immediate="@true" />
+                    <MudTextField Class="pa-2" Label="@Localizer["contact_person_five"]" Variant="Variant.Filled" T="string" @bind-Value="@contact_person_five" Disabled="@input_disabled" Immediate="@true" />
+
+                </MudPaper>
+
+                if (permissions_tenants_locations_add)
+                {
+                    <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Add_Location_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.GroupAdd">@Localizer["add_location"]</MudButton>
+                }
+
+                if (permissions_tenants_locations_manage)
+                {
+                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Settings" @onclick="@(() => Update_Selected_Location(location_selectedRowContent))">@Localizer["manage"]</MudButton>
+                }
+
+                <MudPaper Class="pa-0 mt-5">
+
+                    <MudText Class="pa-2" Typo="Typo.h5" Align="Align.Left">@Localizer["locations"]</MudText>
+
+                    <MudTable Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@locations_mysql_data" Filter="new Func<Locations_Entity, bool>(Tenants_Notifications_Table_Filter_Func)">
+                        <ToolBarContent>
+                            <MudTextField @bind-Value="tenants_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Locations_Entity, object>(x => x.location_name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Locations_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["created"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Locations_Entity, object>(x => x.author)" style="white-space: nowrap;">@Localizer["author"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Locations_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="locations_row">
+
+                            <MudTd DataLabel="Name" @onclick="() => Tenants_Notifications_RowClickHandler(locations_row)" @ondblclick="() => Tenants_Notifications_RowDblClickHandler(locations_row)" class="@Tenants_Notifications_GetRowClass(locations_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.LocationCity" Size="Size.Small" />&nbsp;@locations_row.location_name
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["created"]" @onclick="() => Tenants_Notifications_RowClickHandler(locations_row)" @ondblclick="() => Tenants_Notifications_RowDblClickHandler(locations_row)" class="@Tenants_Notifications_GetRowClass(locations_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" />&nbsp;@locations_row.date
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["author"]" @onclick="() => Tenants_Notifications_RowClickHandler(locations_row)" @ondblclick="() => Tenants_Notifications_RowDblClickHandler(locations_row)" class="@Tenants_Notifications_GetRowClass(locations_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.SupportAgent" Size="Size.Small" />&nbsp;@locations_row.author
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["description"]" @onclick="() => Tenants_Notifications_RowClickHandler(locations_row)" @ondblclick="() => Tenants_Notifications_RowDblClickHandler(locations_row)" class="@Tenants_Notifications_GetRowClass(locations_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />&nbsp;@locations_row.description
+                                </span>
+                            </MudTd>
+
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudPaper>
+            }
+        }
+
+    </Authorized>
+</AuthorizeView>
+
+<style>
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }   
+</style>
+
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_json = String.Empty;
+    private string permissions_tenants_json = String.Empty;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private bool permissions_tenants_enabled = false;
+    private bool permissions_tenants_manage = false;
+    private bool permissions_tenants_edit = false;
+    private bool permissions_tenants_delete = false;
+    private bool permissions_tenants_locations_add = false;
+    private bool permissions_tenants_locations_manage = false;
+
+    public class Permissions_Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+    }
+
+    private async Task Get_Permissions()
+    {
+        //Extract user info from users session storage
+        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+        var username = await sessionStorage.GetAsync<string>("username");
+        var password = await sessionStorage.GetAsync<string>("password");
+
+        Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "username", username.Value ?? String.Empty);
+
+        //if user info empty, force logout
+        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
+        {
+            Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "sessions storage data", "empty, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Check if user info is valid, if not, force logout
+        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
+        {
+            Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "verify user", "incorrect data, force logout");
+
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
+        //Get permissions
+        string query = "SELECT * FROM `accounts` WHERE username = @username;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@username", username.Value);
+
+            Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
+                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "permissions_json", permissions_json);
+
+            //Extract permissions
+            if (!String.IsNullOrEmpty(permissions_json))
+            {
+                using (JsonDocument document = JsonDocument.Parse(permissions_json))
+                {
+                    //tenants_enabled
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_enabled");
+                        permissions_tenants_enabled = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_enabled)", ex.Message);
+                    }
+
+                    //tenants_manage
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_manage");
+                        permissions_tenants_manage = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_manage)", ex.Message);
+                    }
+
+                    //tenants_edit
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_edit");
+                        permissions_tenants_edit = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_edit)", ex.Message);
+                    }
+
+                    //tenants_delete
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_delete");
+                        permissions_tenants_delete = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_delete)", ex.Message);
+                    }
+
+                    //tenants_locations_add
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_locations_add");
+                        permissions_tenants_locations_add = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_locations_add)", ex.Message);
+                    }
+
+                    //tenants_locations_manage
+                    try
+                    {
+                        JsonElement element = document.RootElement.GetProperty("tenants_locations_manage");
+                        permissions_tenants_locations_manage = element.GetBoolean();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/tenant_settings -> Permissions_Load", "permissions_json (permissions_tenants_locations_manage)", ex.Message);
+                    }
+                }
+            }
+            else if (permissions_json == "[]")
+            {
+                Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+            else
+            {
+                Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "permissions_json", "Empty, logout user");
+                NavigationManager.NavigateTo("/logout", true);
+            }
+
+            //Extract tenants from json
+            permissions_tenants_list.Clear();
+            if (!String.IsNullOrEmpty(permissions_tenants_json))
+            {
+                //Set the activation state for the tenants
+                try
+                {
+                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
+
+                    foreach (var tenant in tenants_activation_state_list)
+                    {
+                        Logging.Handler.Debug("/tenant_settings -> Permissions_Load", "foreach tenant", tenant.guid);
+
+                        permissions_tenants_list.Add(tenant.guid);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/tenant_settings -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
+                }
+            }
+            else
+            {
+                Logging.Handler.Debug("/tenant_settings -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/tenant_settings -> Permissions_Load", "general_error (force logout)", ex.Message);
+            NavigationManager.NavigateTo("/logout", true);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        tenant_guid = await localStorage.GetItemAsync<string>("tenant_guid");
+
+        await Get_Permissions();
+        //Check permissions
+        if (!permissions_tenants_enabled || !permissions_tenants_manage || !permissions_tenants_list.Contains(tenant_guid))
+            NavigationManager.NavigateTo("/logout", true);
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await Get_Tenant_Settings();
+        await Get_Locations_Overview();
+
+        StateHasChanged();
+    }
+
+    private bool input_disabled = true;
+    private string tenant_guid = String.Empty;
+
+    private string id = String.Empty;
+    private string name = String.Empty;
+    private string name_old = String.Empty;
+    private string guid = String.Empty;
+    private string date = String.Empty;
+    private string author = String.Empty;
+    private string description = String.Empty;
+    private string company = String.Empty;
+    private string contact_person_one = String.Empty;
+    private string contact_person_two = String.Empty;
+    private string contact_person_three = String.Empty;
+    private string contact_person_four = String.Empty;
+    private string contact_person_five = String.Empty;
+
+    public class Locations_Entity
+    {
+        public string id { get; set; } = String.Empty;
+        public string location_name { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+        public string date { get; set; } = String.Empty;
+        public string author { get; set; } = String.Empty;
+        public string description { get; set; } = String.Empty;
+    }
+
+    public List<Locations_Entity> locations_mysql_data;
+
+    private string tenants_table_view_port = "70vh";
+    private string tenants_table_sorted_column;
+    private string tenants_table_search_string = "";
+
+    private bool Tenants_Notifications_Table_Filter_Func(Locations_Entity row)
+    {
+        if (string.IsNullOrEmpty(tenants_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.location_name.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.date.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.author.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.description.Contains(tenants_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string location_selectedRowContent = "";
+
+    private void Tenants_Notifications_RowClickHandler(Locations_Entity row)
+    {
+        location_selectedRowContent = row.guid;
+    }
+
+    private async void Tenants_Notifications_RowDblClickHandler(Locations_Entity row)
+    {
+        await Update_Selected_Location(row.guid);
+    }
+
+    private string Tenants_Notifications_GetRowClass(Locations_Entity row)
+    {
+        return row.guid == location_selectedRowContent ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private bool show_delete_tenant_dialog_open = false;
+
+    private async Task Show_Delete_Tenant_Dialog()
+    {
+        if (show_delete_tenant_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("tenant_id", id);
+
+        show_delete_tenant_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Tenants.Dialogs.Tenant_Management.Delete_Tenant_Dialog>(string.Empty, parameters, options).Result;
+
+        show_delete_tenant_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+    }
+
+    private bool add_location_dialog_open = false;
+
+    private async Task Add_Location_Dialog()
+    {
+        if (add_location_dialog_open)
+            return;
+
+        var options = new DialogOptions
+        {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("tenant_id", id);
+
+        add_location_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Tenants.Dialogs.Location_Management.Add_Location_Dialog>(string.Empty, parameters, options).Result;
+
+        add_location_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/tenant_settings -> Add_Location_Dialog", "Result", result.Data.ToString() ?? String.Empty);
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            await Get_Locations_Overview();
+        }
+    }
+
+    private async Task Edit_Form()
+    {
+        if (input_disabled)
+            input_disabled = false;
+        else
+            input_disabled = true;
+    }
+
+    private async Task Get_Tenant_Settings()
+    {
+        string query = "SELECT * FROM tenants WHERE guid = @tenant_guid;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@tenant_guid", tenant_guid);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        id = reader["id"].ToString() ?? String.Empty;
+                        name = reader["name"].ToString() ?? String.Empty;
+                        name_old = reader["name"].ToString() ?? String.Empty;
+                        guid = reader["guid"].ToString() ?? String.Empty;
+                        date = reader["date"].ToString() ?? String.Empty;
+                        author = reader["author"].ToString() ?? String.Empty;
+                        description = reader["description"].ToString() ?? String.Empty;
+                        company = reader["company"].ToString() ?? String.Empty;
+                        contact_person_one = reader["contact_person_one"].ToString() ?? String.Empty;
+                        contact_person_two = reader["contact_person_two"].ToString() ?? String.Empty;
+                        contact_person_three = reader["contact_person_three"].ToString() ?? String.Empty;
+                        contact_person_four = reader["contact_person_four"].ToString() ?? String.Empty;
+                        contact_person_five = reader["contact_person_five"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Tenant_Settings", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Get_Locations_Overview()
+    {
+        locations_mysql_data = new List<Locations_Entity>();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `locations` WHERE tenant_id = '" + id + "';", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Locations_Entity entity = new Locations_Entity
+                            {
+                                id = reader["id"].ToString() ?? String.Empty,
+                                location_name = reader["name"].ToString() ?? String.Empty,
+                                guid = reader["guid"].ToString() ?? String.Empty,
+                                date = reader["date"].ToString() ?? "",
+                                author = reader["author"].ToString() ?? String.Empty,
+                                description = reader["description"].ToString() ?? String.Empty,
+                            };
+
+                        locations_mysql_data.Add(entity);
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Locations_Overview", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Save_Settings()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            // Get author from session storage
+            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+            var author = await sessionStorage.GetAsync<string>("username");
+
+            await conn.OpenAsync();
+
+            string execute_query = @"UPDATE tenants SET name = @tenant_name, description = @description, author = @author, company = @company_name, contact_person_one = @contact_person_one, contact_person_two = @contact_person_two, contact_person_three = @contact_person_three, contact_person_four = @contact_person_four, contact_person_five = @contact_person_five WHERE id = @tenant_id;
+                UPDATE devices SET tenant_name = @tenant_name WHERE tenant_id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", id);
+            cmd.Parameters.AddWithValue("@tenant_name", name);
+            cmd.Parameters.AddWithValue("@tenant_name_old", name_old);
+            cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            cmd.Parameters.AddWithValue("@author", author.Value);
+            cmd.Parameters.AddWithValue("@description", description);
+            cmd.Parameters.AddWithValue("@company_name", company);
+            cmd.Parameters.AddWithValue("@contact_person_one", contact_person_one);
+            cmd.Parameters.AddWithValue("@contact_person_two", contact_person_two);
+            cmd.Parameters.AddWithValue("@contact_person_three", contact_person_three);
+            cmd.Parameters.AddWithValue("@contact_person_four", contact_person_four);
+            cmd.Parameters.AddWithValue("@contact_person_five", contact_person_five);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Add_Policy_Dialog", "Result", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            await localStorage.SetItemAsync("tenant_name", name);
+            
+            Snackbar.Add(Localizer["saved"], Severity.Success);
+            input_disabled = true;
+
+            Thread.Sleep(1000);
+            NavigationManager.Refresh();
+        }
+        else
+            Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+    }
+
+    private async Task Update_Selected_Location(string location_guid)
+    {
+        await localStorage.SetItemAsync("tenant_guid", guid);
+        await localStorage.SetItemAsync("location_guid", location_guid);
+
+        NavigationManager.NavigateTo("/location_settings");
+    }
+}

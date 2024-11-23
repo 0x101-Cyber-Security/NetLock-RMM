@@ -1,0 +1,100 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IStringLocalizer<Pages.Tenants.Dialogs.Tenant_Management.Delete_Tenant_Dialog> Localizer
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+    
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>@Localizer["text"]</MudText>
+            </DialogContent>
+                    
+            <DialogActions>
+                <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="Delete" Variant="@Variant.Filled" Color="@Color.Error">@Localizer["delete"]</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string tenant_id { get; set; }
+
+    private async Task Delete()
+    {
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = @"
+                DELETE FROM tenants WHERE id = @tenant_id;
+                DELETE FROM `locations` WHERE tenant_id = @tenant_id;
+                DELETE FROM `groups` WHERE tenant_id = @tenant_id;
+                DELETE FROM devices WHERE tenant_id = @tenant_id;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+
+            cmd.ExecuteNonQuery();
+
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Add_Policy_Dialog", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            this.Snackbar.Add(Localizer["deleted"], Severity.Success);
+
+            Redirect("/manage_tenants", true);
+        }
+        else
+        {
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+
+    private void Redirect(string path, bool refresh)
+    {
+        NavigationManager.NavigateTo(Application_Paths.redirect_path);
+        NavigationManager.NavigateTo(path);
+
+        if (refresh)
+            NavigationManager.Refresh(true);
+    }
+}

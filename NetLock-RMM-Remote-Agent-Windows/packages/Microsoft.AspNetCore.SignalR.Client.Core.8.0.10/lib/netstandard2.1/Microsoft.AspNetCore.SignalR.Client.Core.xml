@@ -1,0 +1,2050 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.AspNetCore.SignalR.Client.Core</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnection">
+            <summary>
+            A connection used to invoke hub methods on a SignalR Server.
+            </summary>
+            <remarks>
+            A <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> should be created using <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder"/>.
+            Before hub methods can be invoked the connection must be started using <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StartAsync(System.Threading.CancellationToken)"/>.
+            Clean up a connection using <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StopAsync(System.Threading.CancellationToken)"/> or <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.DisposeAsync"/>.
+            </remarks>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnection.DefaultServerTimeout">
+            <summary>
+            The default timeout which specifies how long to wait for a message before closing the connection. Default is 30 seconds.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnection.DefaultHandshakeTimeout">
+            <summary>
+            The default timeout which specifies how long to wait for the handshake to respond before closing the connection. Default is 15 seconds.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnection.DefaultKeepAliveInterval">
+            <summary>
+            The default interval that the client will send keep alive messages to let the server know to not close the connection. Default is 15 second interval.
+            </summary>
+        </member>
+        <member name="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Closed">
+             <summary>
+             Occurs when the connection is closed. The connection could be closed due to an error or due to either the server or client intentionally
+             closing the connection without error.
+             </summary>
+             <remarks>
+             If this event was triggered from a connection error, the <see cref="T:System.Exception"/> that occurred will be passed in as the
+             sole argument to this handler. If this event was triggered intentionally by either the client or server, then
+             the argument will be <see langword="null"/>.
+             </remarks>
+             <example>
+             The following example attaches a handler to the <see cref="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Closed"/> event, and checks the provided argument to determine
+             if there was an error:
+            
+             <code>
+             connection.Closed += (exception) =>
+             {
+                 if (exception == null)
+                 {
+                     Console.WriteLine("Connection closed without error.");
+                 }
+                 else
+                 {
+                     Console.WriteLine($"Connection closed due to an error: {exception}");
+                 }
+             };
+             </code>
+             </example>
+        </member>
+        <member name="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Reconnecting">
+             <summary>
+             Occurs when the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> starts reconnecting after losing its underlying connection.
+             </summary>
+             <remarks>
+             The <see cref="T:System.Exception"/> that occurred will be passed in as the sole argument to this handler.
+             </remarks>
+             <example>
+             The following example attaches a handler to the <see cref="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Reconnecting"/> event, and checks the provided argument to log the error.
+            
+             <code>
+             connection.Reconnecting += (exception) =>
+             {
+                 Console.WriteLine($"Connection started reconnecting due to an error: {exception}");
+             };
+             </code>
+             </example>
+        </member>
+        <member name="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Reconnected">
+             <summary>
+             Occurs when the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> successfully reconnects after losing its underlying connection.
+             </summary>
+             <remarks>
+             The <see cref="T:System.String"/> parameter will be the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/>'s new ConnectionId or null if negotiation was skipped.
+             </remarks>
+             <example>
+             The following example attaches a handler to the <see cref="E:Microsoft.AspNetCore.SignalR.Client.HubConnection.Reconnected"/> event, and checks the provided argument to log the ConnectionId.
+            
+             <code>
+             connection.Reconnected += (connectionId) =>
+             {
+                 Console.WriteLine($"Connection successfully reconnected. The ConnectionId is now: {connectionId}");
+             };
+             </code>
+             </example>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnection.ServerTimeout">
+            <summary>
+            Gets or sets the server timeout interval for the connection.
+            </summary>
+            <remarks>
+            The client times out if it hasn't heard from the server for `this` long.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnection.KeepAliveInterval">
+            <summary>
+            Gets or sets the interval at which the client sends ping messages.
+            </summary>
+            <remarks>
+            Sending any message resets the timer to the start of the interval.
+            </remarks>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnection.HandshakeTimeout">
+            <summary>
+            Gets or sets the timeout for the initial handshake.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnection.ConnectionId">
+            <summary>
+            Gets the connection's current Id. This value will be cleared when the connection is stopped and will have a new value every time the connection is (re)established.
+            This value will be null if the negotiation step is skipped via HttpConnectionOptions or if the WebSockets transport is explicitly specified because the
+            client skips negotiation in that case as well.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnection.State">
+            <summary>
+            Indicates the state of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> to the server.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.#ctor(Microsoft.AspNetCore.Connections.IConnectionFactory,Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol,System.Net.EndPoint,System.IServiceProvider,Microsoft.Extensions.Logging.ILoggerFactory,Microsoft.AspNetCore.SignalR.Client.IRetryPolicy)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> class.
+            </summary>
+            <param name="connectionFactory">The <see cref="T:Microsoft.AspNetCore.Connections.IConnectionFactory" /> used to create a connection each time <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StartAsync(System.Threading.CancellationToken)" /> is called.</param>
+            <param name="protocol">The <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol" /> used by the connection.</param>
+            <param name="endPoint">The <see cref="T:System.Net.EndPoint"/> to connect to.</param>
+            <param name="serviceProvider">An <see cref="T:System.IServiceProvider"/> containing the services provided to this <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> instance.</param>
+            <param name="loggerFactory">The logger factory.</param>
+            <param name="reconnectPolicy">
+            The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IRetryPolicy"/> that controls the timing and number of reconnect attempts.
+            The <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> will not reconnect if the <paramref name="reconnectPolicy"/> is null.
+            </param>
+            <remarks>
+            The <see cref="T:System.IServiceProvider"/> used to initialize the connection will be disposed when the connection is disposed.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.#ctor(Microsoft.AspNetCore.Connections.IConnectionFactory,Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol,System.Net.EndPoint,System.IServiceProvider,Microsoft.Extensions.Logging.ILoggerFactory)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> class.
+            </summary>
+            <param name="connectionFactory">The <see cref="T:Microsoft.AspNetCore.Connections.IConnectionFactory" /> used to create a connection each time <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StartAsync(System.Threading.CancellationToken)" /> is called.</param>
+            <param name="protocol">The <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol" /> used by the connection.</param>
+            <param name="endPoint">The <see cref="T:System.Net.EndPoint"/> to connect to.</param>
+            <param name="serviceProvider">An <see cref="T:System.IServiceProvider"/> containing the services provided to this <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> instance.</param>
+            <param name="loggerFactory">The logger factory.</param>
+            <remarks>
+            The <see cref="T:System.IServiceProvider"/> used to initialize the connection will be disposed when the connection is disposed.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StartAsync(System.Threading.CancellationToken)">
+            <summary>
+            Starts a connection to the server.
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous start.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StopAsync(System.Threading.CancellationToken)">
+            <summary>
+            Stops a connection to the server.
+            </summary>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous stop.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.DisposeAsync">
+            <summary>
+            Disposes the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/>.
+            </summary>
+            <returns>A <see cref="T:System.Threading.Tasks.ValueTask"/> that represents the asynchronous dispose.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.On(System.String,System.Type[],System.Func{System.Object[],System.Object,System.Threading.Tasks.Task{System.Object}},System.Object)">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="parameterTypes">The parameters types expected by the hub method.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <param name="state">A state object that will be passed to the handler.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+            <remarks>
+            This is a low level method for registering a handler. Using an <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/> <c>On</c> extension method is recommended.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.On(System.String,System.Type[],System.Func{System.Object[],System.Object,System.Threading.Tasks.Task},System.Object)">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="parameterTypes">The parameters types expected by the hub method.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <param name="state">A state object that will be passed to the handler.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+            <remarks>
+            This is a low level method for registering a handler. Using an <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/> <c>On</c> extension method is recommended.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.Remove(System.String)">
+            <summary>
+            Removes all handlers associated with the method with the specified method name.
+            </summary>
+            <param name="methodName">The name of the hub method from which handlers are being removed</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StreamAsChannelCoreAsync(System.String,System.Type,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="returnType">The return type of the server method.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+            <remarks>
+            This is a low level method for invoking a streaming hub method on the server. Using an <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/> <c>StreamAsChannelAsync</c> extension method is recommended.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.InvokeCoreAsync(System.String,System.Type,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="returnType">The return type of the server method.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns an <see cref="T:System.Object"/> for the hub method return value.
+            </returns>
+            <remarks>
+            This is a low level method for invoking a hub method on the server. Using an <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/> <c>InvokeAsync</c> extension method is recommended.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.SendCoreAsync(System.String,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+            <remarks>
+            This is a low level method for invoking a hub method on the server. Using an <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/> <c>SendAsync</c> extension method is recommended.
+            </remarks>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnection.StreamAsyncCore``1(System.String,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder">
+            <summary>
+            A builder for configuring <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> instances.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.Services">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder"/> class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.Build">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.GetHashCode">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.Equals(System.Object)">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.ToString">
+            <inheritdoc />
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilder.GetType">
+            <summary>
+            Gets the <see cref="T:System.Type"/> of the current instance.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions">
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.ConfigureLogging(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,System.Action{Microsoft.Extensions.Logging.ILoggingBuilder})">
+            <summary>
+            Adds a delegate for configuring the provided <see cref="T:Microsoft.Extensions.Logging.ILoggingBuilder"/>. This may be called multiple times.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <param name="configureLogging">The delegate that configures the <see cref="T:Microsoft.Extensions.Logging.ILoggingBuilder"/>.</param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithAutomaticReconnect(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder)">
+            <summary>
+            Configures the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> to automatically attempt to reconnect if the connection is lost.
+            The client will wait the default 0, 2, 10 and 30 seconds respectively before trying up to four reconnect attempts.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithAutomaticReconnect(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,System.TimeSpan[])">
+            <summary>
+            Configures the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> to automatically attempt to reconnect if the connection is lost.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <param name="reconnectDelays">
+            An array containing the delays before trying each reconnect attempt.
+            The length of the array represents how many failed reconnect attempts it takes before the client will stop attempting to reconnect.
+            </param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithAutomaticReconnect(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,Microsoft.AspNetCore.SignalR.Client.IRetryPolicy)">
+            <summary>
+            Configures the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> to automatically attempt to reconnect if the connection is lost.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <param name="retryPolicy">An <see cref="T:Microsoft.AspNetCore.SignalR.Client.IRetryPolicy"/> that controls the timing and number of reconnect attempts.</param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithServerTimeout(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,System.TimeSpan)">
+            <summary>
+            Configures ServerTimeout for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection" />.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <param name="timeout">ServerTimeout for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/>.</param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithKeepAliveInterval(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,System.TimeSpan)">
+            <summary>
+            Configures KeepAliveInterval for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection" />.
+            </summary>
+            <param name="hubConnectionBuilder">The <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder" /> to configure.</param>
+            <param name="interval">KeepAliveInterval for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/>.</param>
+            <returns>The same instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder"/> for chaining.</returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions">
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+            <summary>
+            Extension methods for <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions"/>.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action)">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``2(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``3(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``4(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2,``3})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``5(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2,``3,``4})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``6(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2,``3,``4,``5})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``7(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2,``3,``4,``5,``6})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``8(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Action{``0,``1,``2,``3,``4,``5,``6,``7})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="T8">The eighth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Type[],System.Func{System.Object[],System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="parameterTypes">The parameters types expected by the hub method.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``2(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``3(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``4(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``5(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``6(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``7(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``8(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,``7,System.Threading.Tasks.Task})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="T8">The eighth argument type.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and argument.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="arg10">The tenth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeCoreAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="arg10">The tenth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.InvokeCoreAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <typeparamref name="TResult"/> for the hub method return value.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Type[],System.Func{System.Object[],System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="parameterTypes">The parameters types expected by the hub method.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{System.Threading.Tasks.Task{``0}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``2(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``3(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``4(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``5(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``6(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``7(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``8(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,``7})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``9(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,``7,``8})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="T8">The eighth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``2(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,System.Threading.Tasks.Task{``1}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``3(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,System.Threading.Tasks.Task{``2}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``4(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,System.Threading.Tasks.Task{``3}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``5(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,System.Threading.Tasks.Task{``4}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``6(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,System.Threading.Tasks.Task{``5}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``7(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,System.Threading.Tasks.Task{``6}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``8(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,System.Threading.Tasks.Task{``7}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.On``9(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Func{``0,``1,``2,``3,``4,``5,``6,``7,System.Threading.Tasks.Task{``8}})">
+            <summary>
+            Registers a handler that will be invoked when the hub method with the specified method name is invoked.
+            Returns value returned by handler to server if the server requests a result.
+            </summary>
+            <typeparam name="T1">The first argument type.</typeparam>
+            <typeparam name="T2">The second argument type.</typeparam>
+            <typeparam name="T3">The third argument type.</typeparam>
+            <typeparam name="T4">The fourth argument type.</typeparam>
+            <typeparam name="T5">The fifth argument type.</typeparam>
+            <typeparam name="T6">The sixth argument type.</typeparam>
+            <typeparam name="T7">The seventh argument type.</typeparam>
+            <typeparam name="T8">The eighth argument type.</typeparam>
+            <typeparam name="TResult">The return type the handler returns.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the hub method to define.</param>
+            <param name="handler">The handler that will be raised when the hub method is invoked.</param>
+            <returns>A subscription that can be disposed to unsubscribe from the hub method.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and argument.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.SendAsync(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a hub method on the server using the specified method name and arguments.
+            Does not wait for a response from the receiver.
+            </summary>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="arg10">The tenth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.</returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name and return type.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="arg10">The tenth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsChannelCoreAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object[],System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and arguments.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="args">The arguments used to invoke the server method.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Threading.Tasks.Task`1"/> that represents the asynchronous invoke.
+            The <see cref="P:System.Threading.Tasks.Task`1.Result"/> property returns a <see cref="T:System.Threading.Channels.ChannelReader`1"/> for the streamed hub method values.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name and return type.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionExtensions.StreamAsync``1(Microsoft.AspNetCore.SignalR.Client.HubConnection,System.String,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            Invokes a streaming hub method on the server using the specified method name, return type and argument.
+            </summary>
+            <typeparam name="TResult">The return type of the streaming server method.</typeparam>
+            <param name="hubConnection">The hub connection.</param>
+            <param name="methodName">The name of the server method to invoke.</param>
+            <param name="arg1">The first argument.</param>
+            <param name="arg2">The second argument.</param>
+            <param name="arg3">The third argument.</param>
+            <param name="arg4">The fourth argument.</param>
+            <param name="arg5">The fifth argument.</param>
+            <param name="arg6">The sixth argument.</param>
+            <param name="arg7">The seventh argument.</param>
+            <param name="arg8">The eighth argument.</param>
+            <param name="arg9">The ninth argument.</param>
+            <param name="arg10">The tenth argument.</param>
+            <param name="cancellationToken">The token to monitor for cancellation requests. The default value is <see cref="P:System.Threading.CancellationToken.None" />.</param>
+            <returns>
+            A <see cref="T:System.Collections.Generic.IAsyncEnumerable`1"/> that represents the stream.
+            </returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionOptions">
+            <summary>
+            Configures options for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection" />.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnectionOptions.ServerTimeout">
+            <summary>
+            Configures ServerTimeout for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection" />.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnectionOptions.KeepAliveInterval">
+            <summary>
+            Configures KeepAliveInterval for the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection" />.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.HubConnectionOptions.StatefulReconnectBufferSize">
+            <summary>
+            Amount of serialized messages in bytes we'll buffer when using Stateful Reconnect until applying backpressure to sends from the client.
+            </summary>
+            <remarks>Defaults to 100,000 bytes.</remarks>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.HubConnectionState">
+            <summary>
+            Describes the current state of the <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> to the server.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Disconnected">
+            <summary>
+            The hub connection is disconnected.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connected">
+            <summary>
+            The hub connection is connected.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connecting">
+            <summary>
+            The hub connection is connecting.
+            </summary>
+        </member>
+        <member name="F:Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Reconnecting">
+            <summary>
+            The hub connection is reconnecting.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder">
+            <summary>
+            A builder abstraction for configuring <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> instances.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder.Build">
+            <summary>
+            Creates a <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/>.
+            </summary>
+            <returns>
+            A <see cref="T:Microsoft.AspNetCore.SignalR.Client.HubConnection"/> built using the configured options.
+            </returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.IRetryPolicy">
+            <summary>
+            An abstraction that controls when the client attempts to reconnect and how many times it does so.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Client.IRetryPolicy.NextRetryDelay(Microsoft.AspNetCore.SignalR.Client.RetryContext)">
+            <summary>
+            If passed to <see cref="M:Microsoft.AspNetCore.SignalR.Client.HubConnectionBuilderExtensions.WithAutomaticReconnect(Microsoft.AspNetCore.SignalR.Client.IHubConnectionBuilder,Microsoft.AspNetCore.SignalR.Client.IRetryPolicy)"/>,
+            this will be called after the transport loses a connection to determine if and for how long to wait before the next reconnect attempt.
+            </summary>
+            <param name="retryContext">
+            Information related to the next possible reconnect attempt including the number of consecutive failed retries so far, time spent
+            reconnecting so far and the error that lead to this reconnect attempt.
+            </param>
+            <returns>
+            A <see cref="T:System.TimeSpan"/> representing the amount of time to wait from now before starting the next reconnect attempt.
+            <see langword="null" /> tells the client to stop retrying and close.
+            </returns>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Client.RetryContext">
+            <summary>
+            The context passed to <see cref="M:Microsoft.AspNetCore.SignalR.Client.IRetryPolicy.NextRetryDelay(Microsoft.AspNetCore.SignalR.Client.RetryContext)"/> to help the policy determine
+            how long to wait before the next retry and whether there should be another retry at all.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.RetryContext.PreviousRetryCount">
+            <summary>
+            The number of consecutive failed retries so far.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.RetryContext.ElapsedTime">
+            <summary>
+            The amount of time spent retrying so far.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Client.RetryContext.RetryReason">
+            <summary>
+            The error precipitating the current retry if any.
+            </summary>
+        </member>
+        <member name="T:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage">
+            <summary>
+            Represents a serialization cache for a single message.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage.Message">
+            <summary>
+            Gets the hub message for the serialization cache.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage.#ctor(System.Collections.Generic.IReadOnlyList{Microsoft.AspNetCore.SignalR.Internal.SerializedMessage})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage"/> class.
+            </summary>
+            <param name="messages">A collection of already serialized messages to cache.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage.#ctor(Microsoft.AspNetCore.SignalR.Protocol.HubMessage)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage"/> class.
+            </summary>
+            <param name="message">The hub message for the cache. This will be serialized with an <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol"/> in <see cref="M:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage.GetSerializedMessage(Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol)"/> to get the message's serialized representation.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Internal.SerializedHubMessage.GetSerializedMessage(Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol)">
+            <summary>
+            Gets the serialized representation of the <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.HubMessage"/> using the specified <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.IHubProtocol"/>.
+            </summary>
+            <param name="protocol">The protocol used to create the serialized representation.</param>
+            <returns>The serialized representation of the <see cref="T:Microsoft.AspNetCore.SignalR.Protocol.HubMessage"/>.</returns>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Internal.SerializedMessage.ProtocolName">
+            <summary>
+            Gets the protocol of the serialized message.
+            </summary>
+        </member>
+        <member name="P:Microsoft.AspNetCore.SignalR.Internal.SerializedMessage.Serialized">
+            <summary>
+            Gets the serialized representation of the message.
+            </summary>
+        </member>
+        <member name="M:Microsoft.AspNetCore.SignalR.Internal.SerializedMessage.#ctor(System.String,System.ReadOnlyMemory{System.Byte})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.AspNetCore.SignalR.Internal.SerializedMessage"/> class.
+            </summary>
+            <param name="protocolName">The protocol of the serialized message.</param>
+            <param name="serialized">The serialized representation of the message.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ArgumentNullThrowHelper.ThrowIfNull(System.Object,System.String)">
+            <summary>Throws an <see cref="T:System.ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
+            <param name="argument">The reference type argument to validate as non-null.</param>
+            <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ObjectDisposedThrowHelper.ThrowIf(System.Boolean,System.Object)">
+            <summary>Throws an <see cref="T:System.ObjectDisposedException"/> if the specified <paramref name="condition"/> is <see langword="true"/>.</summary>
+            <param name="condition">The condition to evaluate.</param>
+            <param name="instance">The object whose type's full name should be included in any resulting <see cref="T:System.ObjectDisposedException"/>.</param>
+            <exception cref="T:System.ObjectDisposedException">The <paramref name="condition"/> is <see langword="true"/>.</exception>
+        </member>
+        <member name="M:Microsoft.AspNetCore.Shared.ObjectDisposedThrowHelper.ThrowIf(System.Boolean,System.Type)">
+            <summary>Throws an <see cref="T:System.ObjectDisposedException"/> if the specified <paramref name="condition"/> is <see langword="true"/>.</summary>
+            <param name="condition">The condition to evaluate.</param>
+            <param name="type">The type whose full name should be included in any resulting <see cref="T:System.ObjectDisposedException"/>.</param>
+            <exception cref="T:System.ObjectDisposedException">The <paramref name="condition"/> is <see langword="true"/>.</exception>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String)">
+            <summary>Initializes the attribute with a field or property member.</summary>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.#ctor(System.String[])">
+            <summary>Initializes the attribute with the list of field and property members.</summary>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+        <member name="T:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute">
+            <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values when returning with the specified return value condition.</summary>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String)">
+            <summary>Initializes the attribute with the specified return value condition and a field or property member.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="member">
+            The field or property member that is promised to be not-null.
+            </param>
+        </member>
+        <member name="M:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.#ctor(System.Boolean,System.String[])">
+            <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>
+            <param name="returnValue">
+            The return value condition. If the method returns this value, the associated parameter will not be null.
+            </param>
+            <param name="members">
+            The list of field and property members that are promised to be not-null.
+            </param>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.ReturnValue">
+            <summary>Gets the return value condition.</summary>
+        </member>
+        <member name="P:System.Diagnostics.CodeAnalysis.MemberNotNullWhenAttribute.Members">
+            <summary>Gets field or property member names.</summary>
+        </member>
+    </members>
+</doc>
