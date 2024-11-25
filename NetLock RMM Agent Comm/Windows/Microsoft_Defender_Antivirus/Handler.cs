@@ -8,6 +8,8 @@ using System.Diagnostics;
 using System.Timers;
 using Global.Helper;
 using System.IO;
+using NetLock_RMM_Agent_Comm;
+using Windows.Workers;
 
 namespace Windows.Microsoft_Defender_Antivirus
 {
@@ -18,12 +20,12 @@ namespace Windows.Microsoft_Defender_Antivirus
             //If enabled, apply managed settings
             try
             {
-                if (!String.IsNullOrEmpty(Service.policy_antivirus_settings_json) && !String.IsNullOrEmpty(Service.policy_antivirus_scan_jobs_json) && !String.IsNullOrEmpty(Service.policy_antivirus_exclusions_json))
+                if (!String.IsNullOrEmpty(Windows_Worker.policy_antivirus_settings_json) && !String.IsNullOrEmpty(Windows_Worker.policy_antivirus_scan_jobs_json) && !String.IsNullOrEmpty(Windows_Worker.policy_antivirus_exclusions_json))
                 {
                     bool enabled = false;
                     bool security_center_tray = false;
 
-                    using (JsonDocument document = JsonDocument.Parse(Service.policy_antivirus_settings_json))
+                    using (JsonDocument document = JsonDocument.Parse(Windows_Worker.policy_antivirus_settings_json))
                     {
                         JsonElement enabled_element = document.RootElement.GetProperty("enabled");
                         enabled = Convert.ToBoolean(enabled_element.ToString());
@@ -39,7 +41,7 @@ namespace Windows.Microsoft_Defender_Antivirus
                             Kill_Security_Center_Tray_Icon();
 
 
-                        Service.microsoft_defender_antivirus_notifications_json = Get_Notifications_Json();
+                        Windows_Worker.microsoft_defender_antivirus_notifications_json = Get_Notifications_Json();
 
                         Set_Settings.Do();
                         Eventlog_Crawler.Do();
@@ -53,7 +55,7 @@ namespace Windows.Microsoft_Defender_Antivirus
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Microsoft_Defender_AntiVirus.Handler.Initalization", "General Error", ex.ToString());
+                Logging.Error("Microsoft_Defender_AntiVirus.Handler.Initalization", "General Error", ex.ToString());
             }
         }
 
@@ -61,7 +63,7 @@ namespace Windows.Microsoft_Defender_Antivirus
         {
             if (Process.GetProcessesByName("SecurityHealthSystray").Length > 0)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Is present. Kill it...");
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Is present. Kill it...");
 
                 try
                 {
@@ -72,11 +74,11 @@ namespace Windows.Microsoft_Defender_Antivirus
                     cmd_process.Start();
                     cmd_process.WaitForExit();
 
-                    Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Killed successfully.");
+                    Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Killed successfully.");
                 }
                 catch (Exception ex)
                 {
-                    Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Couldn't kill it: " + ex.ToString());
+                    Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Initalization", "Check security center tray icon presence", "Couldn't kill it: " + ex.ToString());
                 }
             }
         }
@@ -126,7 +128,7 @@ namespace Windows.Microsoft_Defender_Antivirus
             {
                 bool check_hourly_signatures = false;
 
-                using (JsonDocument document = JsonDocument.Parse(Service.policy_antivirus_settings_json))
+                using (JsonDocument document = JsonDocument.Parse(Windows_Worker.policy_antivirus_settings_json))
                 {
                     JsonElement check_hourly_signatures_element = document.RootElement.GetProperty("check_hourly_signatures");
                     check_hourly_signatures = Convert.ToBoolean(check_hourly_signatures_element.ToString());
@@ -134,14 +136,14 @@ namespace Windows.Microsoft_Defender_Antivirus
 
                 if (check_hourly_signatures)
                 {
-                    Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Execute", "Before");
-                    PowerShell.Execute_Command("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Update-MpSignature", 60);
-                    Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Execute", "After");
+                    Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Execute", "Before");
+                    Helper.PowerShell.Execute_Command("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Update-MpSignature", 60);
+                    Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_Antivirus.Check_Hourly_Sig_Updates", "Execute", "After");
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Microsoft_Defender_AntiVirus.Handler.Microsoft_Defender_Check_Hourly_Sig_Updates", "General Error", ex.ToString());
+                Logging.Error("Microsoft_Defender_AntiVirus.Handler.Microsoft_Defender_Check_Hourly_Sig_Updates", "General Error", ex.ToString());
             }
         }
 
@@ -158,11 +160,11 @@ namespace Windows.Microsoft_Defender_Antivirus
                     File.Copy(path, backup_path);
                 }
 
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Backup_Eventlog", "Status", "Done.");
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Backup_Eventlog", "Status", "Done.");
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Backup_Eventlog", "Couldnt backup it.", ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Backup_Eventlog", "Couldnt backup it.", ex.ToString());
             }
         }
 
@@ -175,7 +177,7 @@ namespace Windows.Microsoft_Defender_Antivirus
                 bool notifications_netlock_telegram = false;
                 bool notifications_netlock_ntfy_sh = false;
 
-                using (JsonDocument document = JsonDocument.Parse(Service.policy_antivirus_settings_json))
+                using (JsonDocument document = JsonDocument.Parse(Windows_Worker.policy_antivirus_settings_json))
                 {
                     JsonElement notifications_netlock_mail_element = document.RootElement.GetProperty("notifications_netlock_mail");
                     notifications_netlock_mail = notifications_netlock_mail_element.GetBoolean();
@@ -193,13 +195,13 @@ namespace Windows.Microsoft_Defender_Antivirus
                 // Create notifications_json
                 string notifications_json = "{\"mail\":" + notifications_netlock_mail.ToString().ToLower() + ",\"microsoft_teams\":" + notifications_netlock_microsoft_teams.ToString().ToLower() + ",\"telegram\":" + notifications_netlock_telegram.ToString().ToLower() + ",\"ntfy_sh\":" + notifications_netlock_ntfy_sh.ToString().ToLower() + "}";
 
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "Notifications Json", notifications_json);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "Notifications Json", notifications_json);
 
                 return notifications_json;
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "General Error", ex.ToString());
+                Logging.Error("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "General Error", ex.ToString());
                 return String.Empty;
             }
         }

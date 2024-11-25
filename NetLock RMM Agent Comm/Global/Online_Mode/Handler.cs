@@ -727,10 +727,10 @@ namespace Global.Online_Mode
                                 Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json = policy_antivirus_controlled_folder_access_ruleset_element.ToString();
 
                                 JsonElement policy_sensors_json_element = document.RootElement.GetProperty("policy_sensors_json");
-                                Windows_Worker.policy_sensors_json = policy_sensors_json_element.ToString();
+                                Device_Worker.policy_sensors_json = policy_sensors_json_element.ToString();
 
                                 JsonElement policy_jobs_json_element = document.RootElement.GetProperty("policy_jobs_json");
-                                Windows_Worker.policy_jobs_json = policy_jobs_json_element.ToString();
+                                Device_Worker.policy_jobs_json = policy_jobs_json_element.ToString();
                             }
 
                             // Insert into policy database
@@ -759,8 +759,8 @@ namespace Global.Online_Mode
                                 "'" + Windows_Worker.policy_antivirus_scan_jobs_json + "'," + //policy_antivirus_scan_jobs_json
                                 "'" + Windows_Worker.policy_antivirus_controlled_folder_access_folders_json + "'," + //policy_antivirus_controlled_folder_access_folders_json
                                 "'" + Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json + "'," + //policy_antivirus_controlled_folder_access_ruleset_json
-                                "'" + Windows_Worker.policy_sensors_json + "'," + //policy_sensors_json
-                                "'" + Windows_Worker.policy_jobs_json + "'" + //policy_jobs_json
+                                "'" + Device_Worker.policy_sensors_json + "'," + //policy_sensors_json
+                                "'" + Device_Worker.policy_jobs_json + "'" + //policy_jobs_json
 
                                 ");"
                                 , db_conn);

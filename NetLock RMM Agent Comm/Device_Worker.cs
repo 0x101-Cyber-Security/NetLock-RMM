@@ -63,6 +63,10 @@ namespace NetLock_RMM_Agent_Comm
         public static bool sync_active = true;
         public static bool events_processing = false; //Tells that the events are currently being processed and tells the Init to wait until its finished
 
+        // Policy
+        public static string policy_sensors_json = string.Empty;
+        public static string policy_jobs_json = string.Empty;
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             while (!stoppingToken.IsCancellationRequested)

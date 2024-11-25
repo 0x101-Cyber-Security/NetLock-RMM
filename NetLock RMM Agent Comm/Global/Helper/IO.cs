@@ -28,7 +28,7 @@ namespace Global.Helper
             catch (Exception ex)
             {
                 Logging.Error("Helper.IO.Get_SHA512", "General error", ex.ToString());
-                return ex.ToString());
+                return ex.ToString();
             }
         }
 

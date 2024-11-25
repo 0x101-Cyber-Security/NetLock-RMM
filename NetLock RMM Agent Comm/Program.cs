@@ -6,7 +6,12 @@ var builder = Host.CreateApplicationBuilder(args);
 
 // Check if debug mode
 if (Global.Helper.Logging.Check_Debug_Mode()) // debug_mode
+{
+    Console.WriteLine("Debug mode enabled");
     Global.Configuration.Agent.debug_mode = true;
+}
+
+Global.Configuration.Agent.debug_mode = true;
 
 // Read server_config.json
 if (Convert.ToBoolean(Global.Initialization.Server_Config.Load(1))) // ssl

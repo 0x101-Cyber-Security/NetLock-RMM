@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "jG+2Jlkcm84=",
+  "dgSpecHash": "rO1OkhIa4YQ=",
   "success": true,
   "projectFilePath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
   "expectedPackageFiles": [
@@ -52,6 +52,7 @@
     "C:\\Users\\NicoMak\\.nuget\\packages\\system.security.accesscontrol\\6.0.1\\system.security.accesscontrol.6.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\system.security.cryptography.protecteddata\\9.0.0\\system.security.cryptography.protecteddata.9.0.0.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\system.security.principal.windows\\5.0.0\\system.security.principal.windows.5.0.0.nupkg.sha512",
+    "C:\\Users\\NicoMak\\.nuget\\packages\\system.serviceprocess.servicecontroller\\9.0.0\\system.serviceprocess.servicecontroller.9.0.0.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\taskscheduler\\2.11.0\\taskscheduler.2.11.0.nupkg.sha512"
   ],
   "logs": [

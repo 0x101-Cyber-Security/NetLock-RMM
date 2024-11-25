@@ -126,14 +126,14 @@ namespace Windows.Initialization.Health
         {
             try
             {
-                Workers.Windows_Worker.events_data_table.Columns.Clear();
-                Workers.Windows_Worker.events_data_table.Columns.Add("severity");
-                Workers.Windows_Worker.events_data_table.Columns.Add("reported_by");
-                Workers.Windows_Worker.events_data_table.Columns.Add("event");
-                Workers.Windows_Worker.events_data_table.Columns.Add("description");
-                Workers.Windows_Worker.events_data_table.Columns.Add("type");
-                Workers.Windows_Worker.events_data_table.Columns.Add("language");
-                Workers.Windows_Worker.events_data_table.Columns.Add("notification_json");
+                Device_Worker.events_data_table.Columns.Clear();
+                Device_Worker.events_data_table.Columns.Add("severity");
+                Device_Worker.events_data_table.Columns.Add("reported_by");
+                Device_Worker.events_data_table.Columns.Add("event");
+                Device_Worker.events_data_table.Columns.Add("description");
+                Device_Worker.events_data_table.Columns.Add("type");
+                Device_Worker.events_data_table.Columns.Add("language");
+                Device_Worker.events_data_table.Columns.Add("notification_json");
 
                 Logging.Debug("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", "Done.");
             }

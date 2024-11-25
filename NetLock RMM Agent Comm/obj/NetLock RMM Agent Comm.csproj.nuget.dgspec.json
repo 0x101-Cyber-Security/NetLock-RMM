@@ -66,6 +66,10 @@
               "target": "Package",
               "version": "[9.0.0, )"
             },
+            "System.ServiceProcess.ServiceController": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
             "TaskScheduler": {
               "target": "Package",
               "version": "[2.11.0, )"

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Win32;
-using NetLock_Agent.Helper;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -8,8 +7,12 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Global.Helper;
+using Windows.Workers;
+using Microsoft.Win32.TaskScheduler;
+using NetLock_RMM_Agent_Comm;
 
-namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
+namespace Windows.Microsoft_Defender_Antivirus
 {    
     //Part of NetLock Legacy. Needs code quality improvements in future. Code has been adjusted to work with new NetLock RMM
 
@@ -76,7 +79,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
             bool parser_dnsovertcp = false;
             bool controlled_folder_access_enabled = false;
 
-            using (JsonDocument document = JsonDocument.Parse(Service.policy_antivirus_settings_json))
+            using (JsonDocument document = JsonDocument.Parse(Windows_Worker.policy_antivirus_settings_json))
             {
                 JsonElement security_center_element = document.RootElement.GetProperty("security_center");
                 security_center = Convert.ToBoolean(security_center_element.ToString());
@@ -146,56 +149,56 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
             //windows_defender_antivirus_g_ui_security_center
             if (security_center && Check_Settings.Microsoft_Defender_Antivirus_G_Ui_Security_Center() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_ui_security_center", "Set-MpPreference -UILockdown $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_ui_security_center", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_ui_security_center", "Set-MpPreference -UILockdown $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_ui_security_center", "False");
             }
             else if (security_center == false && Check_Settings.Microsoft_Defender_Antivirus_G_Ui_Security_Center() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_ui_security_center", "Set-MpPreference -UILockdown $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_ui_security_center", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_ui_security_center", "Set-MpPreference -UILockdown $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_ui_security_center", "True");
             }
 
             //windows_defender_antivirus_g_u_allw_metrd_updates
             if (allow_metered_updates && Check_Settings.Microsoft_Defender_Antivirus_G_U_Allw_Metrd_Updates() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_u_allw_metrd_updates", "Set-MpPreference -MeteredConnectionUpdates $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_u_allw_metrd_updates", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_u_allw_metrd_updates", "Set-MpPreference -MeteredConnectionUpdates $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_u_allw_metrd_updates", "True");
             }
             else if (allow_metered_updates == false && Check_Settings.Microsoft_Defender_Antivirus_G_U_Allw_Metrd_Updates() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_u_allw_metrd_updates", "Set-MpPreference -MeteredConnectionUpdates $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_u_allw_metrd_updates", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_u_allw_metrd_updates", "Set-MpPreference -MeteredConnectionUpdates $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_u_allw_metrd_updates", "False");
             }
 
             //windows_defender_antivirus_g_m_del_quaran_six_months
             if (delete_quarantine_six_months && Check_Settings.Microsoft_Defender_Antivirus_G_M_Del_Quaran_Six_Months() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_m_del_quaran_six_months", "Set-MpPreference -QuarantinePurgeItemsAfterDelay 180", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_m_del_quaran_six_months", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_m_del_quaran_six_months", "Set-MpPreference -QuarantinePurgeItemsAfterDelay 180", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_m_del_quaran_six_months", "True");
             }
             else if (delete_quarantine_six_months == false && Check_Settings.Microsoft_Defender_Antivirus_G_M_Del_Quaran_Six_Months() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_g_m_del_quaran_six_months", "Set-MpPreference -QuarantinePurgeItemsAfterDelay 9999", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_m_del_quaran_six_months", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_g_m_del_quaran_six_months", "Set-MpPreference -QuarantinePurgeItemsAfterDelay 9999", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_g_m_del_quaran_six_months", "False");
             }
 
             //windows_defender_antivirus_s_real_time_pro_direction
             if (Check_Settings.Microsoft_Defender_Antivirus_Scan_Direction() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_real_time_pro_direction", "Set-MpPreference -RealTimeScanDirection " + scan_direction, 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_real_time_pro_direction", "Update");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_real_time_pro_direction", "Set-MpPreference -RealTimeScanDirection " + scan_direction, 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_real_time_pro_direction", "Update");
             }
 
             //windows_defender_antivirus_s_fs_file_hash_computation
             if (file_hash_computing && Check_Settings.Microsoft_Defender_Antivirus_S_Fs_File_Hash_Computation() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_file_hash_computation", "Set-MpPreference -EnableFileHashComputation $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_file_hash_computation", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_file_hash_computation", "Set-MpPreference -EnableFileHashComputation $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_file_hash_computation", "True");
             }
             else if (file_hash_computing == false && Check_Settings.Microsoft_Defender_Antivirus_S_Fs_File_Hash_Computation() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_file_hash_computation", "Set-MpPreference -EnableFileHashComputation $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_file_hash_computation", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_file_hash_computation", "Set-MpPreference -EnableFileHashComputation $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_file_hash_computation", "False");
             }
 
             //windows_defender_antivirus_s_fs_block_at_first_seen // tempoary disabled due to possiuble fp
@@ -215,109 +218,109 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
             //windows_defender_antivirus_s_fs_scan_mails
             if (scan_mails && Check_Settings.Microsoft_Defender_Antivirus_S_Fs_Scan_Mails() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_scan_mails", "Set-MpPreference -DisableEmailScanning $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_scan_mails", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_scan_mails", "Set-MpPreference -DisableEmailScanning $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_scan_mails", "False");
             }
             else if (scan_mails == false && Check_Settings.Microsoft_Defender_Antivirus_S_Fs_Scan_Mails() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_scan_mails", "Set-MpPreference -DisableEmailScanning $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_scan_mails", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_fs_scan_mails", "Set-MpPreference -DisableEmailScanning $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_fs_scan_mails", "True");
             }
 
             //windows_defender_antivirus_s_net_scan_network_files
             if (net_scan_network_files && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Scan_Network_Files() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_scan_network_files", "Set-MpPreference -DisableScanningNetworkFiles $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_scan_network_files", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_scan_network_files", "Set-MpPreference -DisableScanningNetworkFiles $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_scan_network_files", "False");
             }
             else if (net_scan_network_files == false && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Scan_Network_Files() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_scan_network_files", "Set-MpPreference -DisableScanningNetworkFiles $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_scan_network_files", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_scan_network_files", "Set-MpPreference -DisableScanningNetworkFiles $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_scan_network_files", "True");
             }
 
             //windows_defender_antivirus_s_net_filter_incoming_connections
             if (net_filter_incoming_connections && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Filter_Incoming_Connections() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_filter_incoming_connections", "Set-MpPreference -DisableInboundConnectionFiltering $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_filter_incoming_connections", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_filter_incoming_connections", "Set-MpPreference -DisableInboundConnectionFiltering $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_filter_incoming_connections", "False");
             }
             else if (net_filter_incoming_connections == false && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Filter_Incoming_Connections() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_filter_incoming_connections", "Set-MpPreference -DisableInboundConnectionFiltering $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_filter_incoming_connections", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_filter_incoming_connections", "Set-MpPreference -DisableInboundConnectionFiltering $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_filter_incoming_connections", "True");
             }
 
             //windows_defender_antivirus_s_net_datagram_processing
             if (net_datagram_processing && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Datagram_Processing() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_datagram_processing", "Set-MpPreference -DisableDatagramProcessing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_datagram_processing", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_datagram_processing", "Set-MpPreference -DisableDatagramProcessing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_datagram_processing", "False");
             }
             else if (net_datagram_processing == false && Check_Settings.Microsoft_Defender_Antivirus_S_Net_Datagram_Processing() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_datagram_processing", "Set-MpPreference -DisableDatagramProcessing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_datagram_processing", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_net_datagram_processing", "Set-MpPreference -DisableDatagramProcessing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_net_datagram_processing", "True");
             }
 
             //windows_defender_antivirus_s_parser_tls
             if (parser_tls && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_TLS() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_tls", "Set-MpPreference -DisableTlsParsing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_tls", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_tls", "Set-MpPreference -DisableTlsParsing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_tls", "False");
             }
             else if (parser_tls == false && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_TLS() == false)
             {
-                PowerShell.Execute_Command("wicrosoft_defender_antivirus_s_parser_tls", "Set-MpPreference -DisableTlsParsing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_tls", "True");
+                Helper.PowerShell.Execute_Command("wicrosoft_defender_antivirus_s_parser_tls", "Set-MpPreference -DisableTlsParsing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_tls", "True");
             }
 
             //windows_defender_antivirus_s_parser_ssh
             if (parser_ssh && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_SSH() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_ssh", "Set-MpPreference -DisableSshParsing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_ssh", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_ssh", "Set-MpPreference -DisableSshParsing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_ssh", "False");
             }
             else if (parser_ssh == false && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_SSH() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_ssh", "Set-MpPreference -DisableSshParsing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_ssh", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_ssh", "Set-MpPreference -DisableSshParsing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_ssh", "True");
             }
 
             //windows_defender_antivirus_s_parser_http
             if (parser_http && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_HTTP() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_http", "Set-MpPreference -DisableHttpParsing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_http", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_http", "Set-MpPreference -DisableHttpParsing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_http", "False");
             }
             else if (parser_http == false && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_HTTP() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_http", "Set-MpPreference -DisableHttpParsing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_http", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_http", "Set-MpPreference -DisableHttpParsing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_http", "True");
             }
 
             //windows_defender_antivirus_s_parser_dns
             if (parser_dns && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_DNS() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dns", "Set-MpPreference -DisableDnsParsing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dns", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dns", "Set-MpPreference -DisableDnsParsing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dns", "False");
             }
             else if (parser_dns == false && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_DNS() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dns", "Set-MpPreference -DisableDnsParsing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dns", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dns", "Set-MpPreference -DisableDnsParsing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dns", "True");
             }
 
             //windows_defender_antivirus_s_parser_dnsovertcp
             if (parser_dnsovertcp && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_DNSOverTCP() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dnsovertcp", "Set-MpPreference -DisableDnsOverTcpParsing $false", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dnsovertcp", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dnsovertcp", "Set-MpPreference -DisableDnsOverTcpParsing $false", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dnsovertcp", "False");
             }
             else if (parser_dnsovertcp == false && Check_Settings.Microsoft_Defender_Antivirus_S_Parser_DNSOverTCP() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dnsovertcp", "Set-MpPreference -DisableDnsOverTcpParsing $true", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dnsovertcp", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_s_parser_dnsovertcp", "Set-MpPreference -DisableDnsOverTcpParsing $true", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_s_parser_dnsovertcp", "True");
             }
 
             //Set Windows Defender File and Path Exclusions
@@ -326,7 +329,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 //List<string> exclusion_list = new List<string> { };
                 List<string> exclusion_temp_list = new List<string> { };
 
-                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Service.policy_antivirus_exclusions_json);
+                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Windows_Worker.policy_antivirus_exclusions_json);
 
                 // We first delete all existing exclusions that are not on the current exclusions list, to make sure there is no persistence
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Exclusions\Paths"))
@@ -336,14 +339,14 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                         // Überprüfe, ob ein Exclusion_Item mit dem Wert des Namens in der Liste vorhanden ist
                         if (exclusionItems.Any(item => (item.exclusion == ValueOfName) && (item.type == "file" || item.type == "directory")))
                         {
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Exists: " + ValueOfName);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Exists: " + ValueOfName);
                             exclusion_temp_list.Add(ValueOfName);
                         }
                         else
                         {
                             // Lösche den Registryeintrag, da er nicht in der aktuellen Ausschlussliste vorhanden ist
-                            PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file", "Remove-MpPreference -ExclusionPath '" + ValueOfName + "' -Force", 30);
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Remove: " + ValueOfName);
+                            Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file", "Remove-MpPreference -ExclusionPath '" + ValueOfName + "' -Force", 30);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Remove: " + ValueOfName);
                         }
                     }
                 }
@@ -351,18 +354,18 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 //And here we re-add current exclusions
                 foreach (var exclusion in exclusionItems)
                 {
-                    Logging.Handler.Microsoft_Defender_Antivirus("foreach", "", exclusion.exclusion);
+                    Logging.Microsoft_Defender_Antivirus("foreach", "", exclusion.exclusion);
 
                     if (!exclusion_temp_list.Contains(exclusion.exclusion) && exclusion.type == "file" || exclusion.type == "directory")
                     {
-                        PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file", "Add-MpPreference -ExclusionPath '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
-                        Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
+                        Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file", "Add-MpPreference -ExclusionPath '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
+                        Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "General error" + ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file", "General error" + ex.ToString());
             }
 
             //Set Windows Defender File Extension Exclusions
@@ -371,7 +374,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 //List<string> exclusion_list = new List<string> { };
                 List<string> exclusion_temp_list = new List<string> { };
 
-                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Service.policy_antivirus_exclusions_json);
+                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Windows_Worker.policy_antivirus_exclusions_json);
 
                 // We first delete all existing exclusions that are not on the current exclusions list, to make sure there is no persistence
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Exclusions\Extensions"))
@@ -386,8 +389,8 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                         else
                         {
                             // Lösche den Registryeintrag, da er nicht in der aktuellen Ausschlussliste vorhanden ist
-                            PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file_ext", "Remove-MpPreference -ExclusionExtension  '" + ValueOfName + "' -Force", 30);
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "Remove: " + ValueOfName);
+                            Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file_ext", "Remove-MpPreference -ExclusionExtension  '" + ValueOfName + "' -Force", 30);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "Remove: " + ValueOfName);
                         }
                     }
                 }
@@ -397,14 +400,14 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 {
                     if (!exclusion_temp_list.Contains(exclusion.exclusion) && exclusion.type == "extension")
                     {
-                        PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file_ext", "Add-MpPreference -ExclusionExtension  '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
-                        Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
+                        Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_file_ext", "Add-MpPreference -ExclusionExtension  '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
+                        Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "General error" + ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_file_ext", "General error" + ex.ToString());
             }
 
             //Set Windows Defender Process Exclusions
@@ -413,7 +416,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 //List<string> exclusion_list = new List<string> { };
                 List<string> exclusion_temp_list = new List<string> { };
 
-                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Service.policy_antivirus_exclusions_json);
+                List<Exclusion_Item> exclusionItems = JsonSerializer.Deserialize<List<Exclusion_Item>>(Windows_Worker.policy_antivirus_exclusions_json);
 
                 // We first delete all existing exclusions that are not on the current exclusions list, to make sure there is no persistence
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Exclusions\Processes"))
@@ -428,8 +431,8 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                         else
                         {
                             // Lösche den Registryeintrag, da er nicht in der aktuellen Ausschlussliste vorhanden ist
-                            PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_process", "Remove-MpPreference -ExclusionProcess  '" + ValueOfName + "' -Force", 30);
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "Remove: " + ValueOfName);
+                            Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_process", "Remove-MpPreference -ExclusionProcess  '" + ValueOfName + "' -Force", 30);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "Remove: " + ValueOfName);
                         }
                     }
                 }
@@ -439,26 +442,26 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 {
                     if (!exclusion_temp_list.Contains(exclusion.exclusion) && exclusion.type == "process")
                     {
-                        PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_process", "Add-MpPreference -ExclusionProcess  '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
-                        Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
+                        Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_sexc_process", "Add-MpPreference -ExclusionProcess  '" + exclusion.exclusion.Replace(@"\\", @"\") + "' -Force", 30);
+                        Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "Add: " + exclusion.exclusion.Replace(@"\\", @"\"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "General error" + ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_sexc_process", "General error" + ex.ToString());
             }
 
             //microsoft_defender_antivirus_contr_folder_acc_enabled
             if (controlled_folder_access_enabled && Check_Settings.Microsoft_Defender_AntiVirus_Contr_Folder_Acc_Enabled() == false)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_enabled", "Set-MpPreference -EnableControlledFolderAccess Enabled", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_enabled", "True");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_enabled", "Set-MpPreference -EnableControlledFolderAccess Enabled", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_enabled", "True");
             }
             else if (controlled_folder_access_enabled == false && Check_Settings.Microsoft_Defender_AntiVirus_Contr_Folder_Acc_Enabled() == true)
             {
-                PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_enabled", "Set-MpPreference -EnableControlledFolderAccess Disabled", 30);
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_enabled", "False");
+                Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_enabled", "Set-MpPreference -EnableControlledFolderAccess Disabled", 30);
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_enabled", "False");
             }
 
             //Set Windows Defender Controlled Folder Access Directories
@@ -467,7 +470,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 //List<string> exclusion_list = new List<string> { };
                 List<string> directory_temp_list = new List<string> { };
 
-                List<Directory_Item> directoryItems = JsonSerializer.Deserialize<List<Directory_Item>>(Service.policy_antivirus_controlled_folder_access_folders_json);
+                List<Directory_Item> directoryItems = JsonSerializer.Deserialize<List<Directory_Item>>(Windows_Worker.policy_antivirus_controlled_folder_access_folders_json);
 
                 // We first delete all existing exclusions that are not on the current exclusions list, to make sure there is no persistence
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Windows Defender Exploit Guard\Controlled Folder Access\ProtectedFolders"))
@@ -482,8 +485,8 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                         else
                         {
                             // Lösche den Registryeintrag, da er nicht in der aktuellen Ausschlussliste vorhanden ist
-                            PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_dirs", "Remove-MpPreference -ControlledFolderAccessProtectedFolders '" + ValueOfName + "' -Force", 30);
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "Remove: " + ValueOfName);
+                            Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_dirs", "Remove-MpPreference -ControlledFolderAccessProtectedFolders '" + ValueOfName + "' -Force", 30);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "Remove: " + ValueOfName);
                         }
                     }
                 }
@@ -493,14 +496,14 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 {
                     if (!directory_temp_list.Contains(exclusion.folder))
                     {
-                        PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_dirs", "Add-MpPreference -ControlledFolderAccessProtectedFolders '" + exclusion.folder.Replace(@"\\", @"\") + "' -Force", 30);
-                        Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "Add: " + exclusion.folder.Replace(@"\\", @"\"));
+                        Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_dirs", "Add-MpPreference -ControlledFolderAccessProtectedFolders '" + exclusion.folder.Replace(@"\\", @"\") + "' -Force", 30);
+                        Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "Add: " + exclusion.folder.Replace(@"\\", @"\"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "General error" + ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_dirs", "General error" + ex.ToString());
             }
 
             //Set Windows Defender Controlled Folder Access Applications
@@ -509,7 +512,7 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 List<string> process_list = new List<string> { };
                 List<string> process_temp_list = new List<string> { };
 
-                List<Processes> processItems = JsonSerializer.Deserialize<List<Processes>>(Service.policy_antivirus_controlled_folder_access_ruleset_json);
+                List<Processes> processItems = JsonSerializer.Deserialize<List<Processes>>(Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json);
 
                 //Add each whitelisted process to the list
                 foreach (var process in processItems)
@@ -528,8 +531,8 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                             process_temp_list.Add(ValueOfName);
                         else //If it is not on the current apps list, delete it from registry.
                         {
-                            PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_apps", "Remove-MpPreference -ControlledFolderAccessAllowedApplications '" + ValueOfName + "' -Force", 30);
-                            Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "Remove: " + ValueOfName);
+                            Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_apps", "Remove-MpPreference -ControlledFolderAccessAllowedApplications '" + ValueOfName + "' -Force", 30);
+                            Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "Remove: " + ValueOfName);
                         }
                     }
                 }
@@ -539,14 +542,14 @@ namespace NetLock_RMM_Comm_Agent_Windows.Microsoft_Defender_Antivirus
                 {
                     if (process_temp_list.Contains(process) == false)
                     {
-                        PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_apps", "Add-MpPreference -ControlledFolderAccessAllowedApplications '" + process.Replace(@"\\", @"\") + "' -Force", 30);
-                        Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "Add: " + process.Replace(@"\\", @"\"));
+                        Helper.PowerShell.Execute_Command("microsoft_defender_antivirus_contr_folder_acc_apps", "Add-MpPreference -ControlledFolderAccessAllowedApplications '" + process.Replace(@"\\", @"\") + "' -Force", 30);
+                        Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "Add: " + process.Replace(@"\\", @"\"));
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "General error" + ex.ToString());
+                Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Set_Settings.Do", "microsoft_defender_antivirus_contr_folder_acc_apps", "General error" + ex.ToString());
             }
         }
     }

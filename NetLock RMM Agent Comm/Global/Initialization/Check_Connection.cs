@@ -10,9 +10,9 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Runtime.InteropServices;
-using NetLock_RMM_Agent_Comm.Windows;
 using Global.Helper;
 using System.Runtime.CompilerServices;
+using NetLock_RMM_Agent_Comm;
 
 namespace Global.Initialization
 {
@@ -34,8 +34,8 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.communication_server = value;
-                            Windows_Worker.communication_server_status = true;
+                            Device_Worker.communication_server = value;
+                            Device_Worker.communication_server_status = true;
                         }
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Communication server connection successful.", "");
@@ -45,7 +45,7 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.communication_server_status = false;
+                            Device_Worker.communication_server_status = false;
                         }
                         
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Communication server connection failed.", "");
@@ -64,8 +64,8 @@ namespace Global.Initialization
                     { 
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.remote_server = value;
-                            Windows_Worker.remote_server_status = true;
+                            Device_Worker.remote_server = value;
+                            Device_Worker.remote_server_status = true;
                         }
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Remote server connection successful.", "");
@@ -75,7 +75,7 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.remote_server_status = false;
+                            Device_Worker.remote_server_status = false;
                         }
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Remote server connection failed.", "");
@@ -94,8 +94,8 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.update_server = value;
-                            Windows_Worker.update_server_status = true;
+                            Device_Worker.update_server = value;
+                            Device_Worker.update_server_status = true;
                         }
                         
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Update server connection successful.", "");
@@ -105,7 +105,7 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.update_server_status = false;
+                            Device_Worker.update_server_status = false;
                         }
                         
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Update server connection failed.", "");
@@ -124,8 +124,8 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.trust_server = value;
-                            Windows_Worker.trust_server_status = true;
+                            Device_Worker.trust_server = value;
+                            Device_Worker.trust_server_status = true;
                         }
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Trust server connection successful.", "");
@@ -135,7 +135,7 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.trust_server_status = false;
+                            Device_Worker.trust_server_status = false;
                         }
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Trust server connection failed.", "");
@@ -154,8 +154,8 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.file_server = value;
-                            Windows_Worker.file_server_status = true;
+                            Device_Worker.file_server = value;
+                            Device_Worker.file_server_status = true;
                         }
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "File server connection successful.", "");
@@ -165,7 +165,7 @@ namespace Global.Initialization
                     {
                         if (OperatingSystem.IsWindows())
                         {
-                            Windows_Worker.file_server_status = false;
+                            Device_Worker.file_server_status = false;
                         }
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "File server connection failed.", "");

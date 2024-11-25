@@ -91,7 +91,7 @@ namespace Global.Offline_Mode
                         //sensors_json
                         try
                         {
-                            Windows_Worker.policy_sensors_json = reader["sensors_json"].ToString();
+                            Device_Worker.policy_sensors_json = reader["sensors_json"].ToString();
                         }
                         catch (Exception ex)
                         {
@@ -102,7 +102,7 @@ namespace Global.Offline_Mode
                         //jobs_json
                         try
                         {
-                            Windows_Worker.policy_jobs_json = reader["jobs_json"].ToString();
+                            Device_Worker.policy_jobs_json = reader["jobs_json"].ToString();
                         }
                         catch (Exception ex)
                         {

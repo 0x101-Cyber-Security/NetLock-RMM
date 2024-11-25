@@ -46,9 +46,7 @@ namespace Windows.Workers
         public static string policy_antivirus_scan_jobs_json = string.Empty;
         public static string policy_antivirus_controlled_folder_access_folders_json = string.Empty;
         public static string policy_antivirus_controlled_folder_access_ruleset_json = string.Empty;
-        public static string policy_sensors_json = string.Empty;
-        public static string policy_jobs_json = string.Empty;
-
+        
         // Microsoft Defender Antivirus
         public static string microsoft_defender_antivirus_notifications_json = string.Empty;
 
@@ -314,7 +312,7 @@ namespace Windows.Workers
                 if (!jobs_time_scheduler_timer_running)
                 {
                     jobs_time_scheduler_timer = new System.Timers.Timer(30000); //Check every thirty seconds
-                    jobs_time_scheduler_timer.Elapsed += new ElapsedEventHandler(Jobs.Handler.Scheduler_Tick);
+                    jobs_time_scheduler_timer.Elapsed += new ElapsedEventHandler(Global.Jobs.Handler.Scheduler_Tick);
                     jobs_time_scheduler_timer.Enabled = true;
                     jobs_time_scheduler_timer_running = true;
                 }
@@ -330,7 +328,7 @@ namespace Windows.Workers
                 if (!sensors_time_scheduler_timer_running)
                 {
                     sensors_time_scheduler_timer = new System.Timers.Timer(30000); //Check every thirty seconds
-                    sensors_time_scheduler_timer.Elapsed += new ElapsedEventHandler(Sensors.Handler.Scheduler_Tick);
+                    sensors_time_scheduler_timer.Elapsed += new ElapsedEventHandler(Global.Sensors.Handler.Scheduler_Tick);
                     sensors_time_scheduler_timer.Enabled = true;
                     sensors_time_scheduler_timer_running = true;
                 }

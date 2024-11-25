@@ -4,6 +4,7 @@ using System.Linq;
 using System.Management;
 using System.Text;
 using System.Threading.Tasks;
+using Global.Helper;
 
 namespace Windows.Helper
 {
@@ -25,7 +26,7 @@ namespace Windows.Helper
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Helper.WMI_Handler.Search", $"Scope: {scope} Query: {queryString}", $"Failed: {ex.Message}");
+                Logging.Error("Helper.WMI_Handler.Search", $"Scope: {scope} Query: {queryString}", $"Failed: {ex.ToString()}");
                 return "-";
             }
         }
