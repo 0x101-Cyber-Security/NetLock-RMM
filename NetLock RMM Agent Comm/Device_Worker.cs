@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -52,6 +53,15 @@ namespace NetLock_RMM_Agent_Comm
         public static string ram = string.Empty;
         public static string ram_usage = string.Empty;
         public static string tpm = string.Empty;
+
+        //Datatables
+        public static DataTable events_data_table = new DataTable();
+
+        // Status
+        public static bool connection_status = false;
+        public static bool first_sync = true;
+        public static bool sync_active = true;
+        public static bool events_processing = false; //Tells that the events are currently being processed and tells the Init to wait until its finished
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {

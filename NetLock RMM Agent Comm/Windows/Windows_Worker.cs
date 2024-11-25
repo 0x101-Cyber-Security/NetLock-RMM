@@ -32,10 +32,6 @@ namespace Windows.Workers
         public static System.Timers.Timer sensors_time_scheduler_timer;
 
         // Status
-        public static bool connection_status = false;
-        public static bool first_sync = true;
-        public static bool sync_active = true;
-        public static bool events_processing = false; //Tells that the events are currently being processed and tells the Init to wait until its finished
         //public static bool process_events = false; //Indicates if events should be processed. Its being locked by the client settings loader
         public static bool microsoft_defender_antivirus_events_crawling = false;
         public static bool microsoft_defender_antivirus_events_timer_running = false;
@@ -55,9 +51,6 @@ namespace Windows.Workers
 
         // Microsoft Defender Antivirus
         public static string microsoft_defender_antivirus_notifications_json = string.Empty;
-
-        //Datatables
-        public static DataTable events_data_table = new DataTable();
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -170,7 +163,7 @@ namespace Windows.Workers
             await Global.Initialization.Check_Connection.Check_Servers();
 
             // Online mode
-            if (communication_server_status)
+            if (Device_Worker.communication_server_status)
             {
                 Logging.Debug("Windows.Windows_Worker.Initialize", "connection_status", "Online mode.");
 
@@ -182,7 +175,7 @@ namespace Windows.Workers
                 }
 
                 //If first run, skip module init (pre boot) and load client settings first
-                if (File.Exists(Application_Paths.just_installed) == false && forced == false && first_sync == true) //Enable the Preboot Modules to block shit on system boot
+                if (File.Exists(Application_Paths.just_installed) == false && forced == false && Device_Worker.first_sync == true) //Enable the Preboot Modules to block shit on system boot
                     Pre_Boot();
                 if (File.Exists(Application_Paths.just_installed) && forced == false) //Force the sync & set the config because its the first run (justinstalled.txt)
                     forced = true;
@@ -190,46 +183,46 @@ namespace Windows.Workers
                     forced = true;
 
                 // Check version
-                bool up2date = await Initialization.Version.Check_Version();
+                bool up2date = await Global.Initialization.Version.Check_Version();
 
                 if (up2date) // No update required. Continue logic
                 {
                     // Authenticate online
-                    string auth_result = await Online_Mode.Handler.Authenticate();
+                    string auth_result = await Global.Online_Mode.Handler.Authenticate();
 
                     // Check authorization status
                     // if (auth_result == "authorized" || auth_result == "not_synced" || auth_result == "synced")
-                    if (authorized)
+                    if (Device_Worker.authorized)
                     {
                         // Update device information
-                        await Online_Mode.Handler.Update_Device_Information();
+                        await Global.Online_Mode.Handler.Update_Device_Information();
                     }
 
                     // Check sync status
-                    if (authorized && auth_result == "not_synced" || authorized && forced)
+                    if (Device_Worker.authorized && auth_result == "not_synced" || Device_Worker.authorized && forced)
                     {
                         // Set synced flag in registry to not synced
                         Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "0");
 
                         // Sync
-                        await Online_Mode.Handler.Policy();
+                        await Global.Online_Mode.Handler.Policy();
 
                         // Sync done. Set synced flag in registry to prevent re-sync
                         Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "1");
                     }
-                    else if (authorized && auth_result == "synced")
+                    else if (Device_Worker.authorized && auth_result == "synced")
                     {
                         // placeholder, nothing to do here right now
                     }
                 }
                 else // Outdated. Trigger update
                 {
-                    await Initialization.Version.Update();
+                    await Global.Initialization.Version.Update();
                 }
             }
             else // Offline mode
             {
-                Offline_Mode.Handler.Policy();
+                Global.Offline_Mode.Handler.Policy();
             }
 
             // Trigger module handler
@@ -238,24 +231,24 @@ namespace Windows.Workers
 
         private void Pre_Boot()
         {
-            if (authorized)
+            if (Device_Worker.authorized)
             {
-                Logging.Handler.Debug("Service.Pre_Boot", "", "Authorized.");
+                Logging.Debug("Service.Pre_Boot", "", "Authorized.");
                 //prepare_rulesets();
-                Offline_Mode.Handler.Policy();
+                Global.Offline_Mode.Handler.Policy();
                 Module_Handler();
             }
-            else if (!authorized)
+            else if (!Device_Worker.authorized)
             {
-                Logging.Handler.Debug("Service.Pre_Boot", "", "Not authorized.");
+                Logging.Debug("Service.Pre_Boot", "", "Not authorized.");
             }
         }
 
         private void Module_Handler()
         {
-            Logging.Handler.Debug("Service.Module_Handler", "Start", "Module_Handler");
+            Logging.Debug("Service.Module_Handler", "Start", "Module_Handler");
 
-            if (!authorized)
+            if (!Device_Worker.authorized)
                 return;
 
             // Antivirus
@@ -274,7 +267,7 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Module_Handler", "Start microsoft_defender_antivirus_events_timer", ex.ToString());
+                Logging.Error("Service.Module_Handler", "Start microsoft_defender_antivirus_events_timer", ex.ToString());
             }
 
             //Start Windows Defender AntiVirus: Check hourly for sig updates timer
@@ -293,7 +286,7 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("OnStart", "Start Windows_Defender_Check_Hourly_Sig_Updates_Timer", ex.Message);
+                Logging.Error("OnStart", "Start Windows_Defender_Check_Hourly_Sig_Updates_Timer", ex.ToString());
             }
 
             //Start Windows Defender AntiVirus Scan Job Timer, trigger every ten seconds
@@ -309,7 +302,7 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Module_Handler", "Start microsoft_defender_antivirus_events_timer", ex.ToString());
+                Logging.Error("Service.Module_Handler", "Start microsoft_defender_antivirus_events_timer", ex.ToString());
             }
 
             // IF THE DEFENDER IS SCANNING, THIS WILL DELAY THE TIMER EXECUTION BELOW
@@ -328,7 +321,7 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Module_Handler", "Start jobs_time_scheduler_timer", ex.ToString());
+                Logging.Error("Service.Module_Handler", "Start jobs_time_scheduler_timer", ex.ToString());
             }
 
             //Start sensors timer, trigger every thirty seconds
@@ -344,27 +337,27 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Module_Handler", "Start jobs_time_scheduler_timer", ex.ToString());
+                Logging.Error("Service.Module_Handler", "Start jobs_time_scheduler_timer", ex.ToString());
             }
 
-            Logging.Handler.Debug("Service.Module_Handler", "Stop", "Module_Handler");
+            Logging.Debug("Service.Module_Handler", "Stop", "Module_Handler");
         }
 
         private async void Process_Events_Timer_Tick(object source, ElapsedEventArgs e)
         {
-            Logging.Handler.Debug("Service.Process_Events_Tick", "Start", "");
+            Logging.Debug("Service.Process_Events_Tick", "Start", "");
 
-            if (authorized && events_processing == false)
+            if (Device_Worker.authorized && Device_Worker.events_processing == false)
             {
-                events_processing = true;
+                Device_Worker.events_processing = true;
 
-                Logger.Consume_Events();
-                await Logger.Process_Events();
+                Global.Events.Logger.Consume_Events();
+                await Global.Events.Logger.Process_Events();
 
-                events_processing = false;
+                Device_Worker.events_processing = false;
             }
 
-            Logging.Handler.Debug("Service.Process_Events_Tick", "Stop", "");
+            Logging.Debug("Service.Process_Events_Tick", "Stop", "");
         }
 
 
@@ -379,10 +372,10 @@ namespace Windows.Workers
         {
             try
             {
-                Logging.Handler.Local_Server("Service.Local_Server_Start", "Start", "Starting server...");
+                Logging.Local_Server("Service.Local_Server_Start", "Start", "Starting server...");
                 TcpListener listener = new TcpListener(IPAddress.Parse("127.0.0.1"), Port);
                 listener.Start();
-                Logging.Handler.Local_Server("Service.Local_Server_Start", "Start", "Server started. Waiting for connection...");
+                Logging.Local_Server("Service.Local_Server_Start", "Start", "Server started. Waiting for connection...");
 
                 while (!_cancellationTokenSource.Token.IsCancellationRequested)
                 {
@@ -395,13 +388,13 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Local_Server_Start", "Start", ex.ToString());
+                Logging.Error("Service.Local_Server_Start", "Start", ex.ToString());
             }
         }
 
         private async Task Local_Server_Handle_Client(TcpClient client, CancellationToken cancellationToken)
         {
-            Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Start", "Handling client...");
+            Logging.Local_Server("Service.Local_Server_Handle_Client", "Start", "Handling client...");
 
             _client = client;
             _stream = _client.GetStream();
@@ -417,23 +410,23 @@ namespace Windows.Workers
                         break;
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Start", $"Received message: {message}");
+                    Logging.Local_Server("Service.Local_Server_Handle_Client", "Start", $"Received message: {message}");
 
                     // Process the message and optionally send a response
                     await Local_Server_Send_Message("Message received.");
 
                     if (message == "get_device_identity")
                     {
-                        Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Get device identity", $"device_identity${device_identity_json}${ssl}${remote_server}${file_server}");
+                        Logging.Local_Server("Service.Local_Server_Handle_Client", "Get device identity", $"device_identity${Device_Worker.device_identity_json}${Global.Configuration.Agent.ssl}${Device_Worker.remote_server}${Device_Worker.file_server}");
 
-                        if (!string.IsNullOrEmpty(device_identity_json))
-                            await Local_Server_Send_Message($"device_identity${device_identity_json}${ssl}${remote_server}${file_server}");
+                        if (!string.IsNullOrEmpty(Device_Worker.device_identity_json))
+                            await Local_Server_Send_Message($"device_identity${Device_Worker.device_identity_json}${Global.Configuration.Agent.ssl}${Device_Worker.remote_server}${Device_Worker.file_server}");
                     }
 
                     // Force sync
                     if (message == "sync")
                     {
-                        Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Sync requested.", "");
+                        Logging.Local_Server("Service.Local_Server_Handle_Client", "Sync requested.", "");
                         await Initialize(true);
                     }
 
@@ -441,7 +434,7 @@ namespace Windows.Workers
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Local_Server_Handle_Client", "Error", ex.ToString());
+                Logging.Error("Service.Local_Server_Handle_Client", "Error", ex.ToString());
             }
             finally
             {
@@ -459,14 +452,14 @@ namespace Windows.Workers
                     byte[] messageBytes = Encoding.UTF8.GetBytes(message);
                     await _stream.WriteAsync(messageBytes, 0, messageBytes.Length);
                     await _stream.FlushAsync();
-                    Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Start", $"Sent message: {message}");
+                    Logging.Local_Server("Service.Local_Server_Handle_Client", "Start", $"Sent message: {message}");
                 }
                 else
-                    Logging.Handler.Local_Server("Service.Local_Server_Handle_Client", "Start", "No client connected to send the message.");
+                    Logging.Local_Server("Service.Local_Server_Handle_Client", "Start", "No client connected to send the message.");
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Service.Local_Server_Handle_Client", "Start", ex.ToString());
+                Logging.Error("Service.Local_Server_Handle_Client", "Start", ex.ToString());
             }
         }
 

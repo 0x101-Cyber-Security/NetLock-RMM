@@ -19,6 +19,7 @@ using Windows.Workers;
 using System.Management;
 using NetLock_RMM_Agent_Comm;
 using System.Reflection.PortableExecutable;
+using System.Data.SQLite;
 
 namespace Global.Online_Mode
 {
@@ -230,7 +231,6 @@ namespace Global.Online_Mode
             public bool realtimetprotectionenabled { get; set; }
         }
 
-
         public static async Task<string> Authenticate()
         {
             try
@@ -304,8 +304,6 @@ namespace Global.Online_Mode
                     Device_Worker.tpm = Windows.Helper.WMI.Search("root\\cimv2\\Security\\MicrosoftTpm", "SELECT IsEnabled_InitialValue FROM Win32_Tpm", "IsEnabled_InitialValue");
                     Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
                 }
-
-                //tpm data to much for a one liner. Needs own table in web console and therefore a own json object
 
                 //Create JSON
                 Device_Identity identity = new Device_Identity
@@ -459,7 +457,7 @@ namespace Global.Online_Mode
                     location_guid = Configuration.Agent.location_guid,
                     tenant_guid = Configuration.Agent.tenant_guid,
                     access_key = Device_Worker.access_key,
-                    hwid = Global.Configuration.Agent.hwid,
+                    hwid = Configuration.Agent.hwid,
                     ip_address_internal = Device_Worker.ip_address_internal,
                     operating_system = Device_Worker.operating_system,
                     domain = Device_Worker.domain,
@@ -489,7 +487,7 @@ namespace Global.Online_Mode
 
                 string disks_json = Device_Information.Hardware.Disks();
 
-                string antivirus_products_json = Device_Information.Windows.Antivirus_Products();
+                string antivirus_products_json = Windows.Helper.Windows.Antivirus_Products();
 
                 string applications_installed_json = Device_Information.Software.Applications_Installed();
 
@@ -501,7 +499,7 @@ namespace Global.Online_Mode
 
                 string applications_drivers_json = Device_Information.Software.Applications_Drivers();
 
-                string antivirus_information_json = Device_Information.Windows.Antivirus_Information();
+                string antivirus_information_json = Windows.Helper.Windows.Antivirus_Information();
 
                 // Erstelle das JSON-Objekt
                 var jsonObject = new
@@ -523,46 +521,46 @@ namespace Global.Online_Mode
 
                 // Konvertiere das Objekt in ein JSON-String
                 string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
-                Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "json", json);
+                Logging.Debug("Online_Mode.Handler.Update_Device_Information", "json", json);
 
                 // Create a HttpClient instance
                 using (var httpClient = new HttpClient())
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Service.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
 
-                    Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "communication_server", Service.http_https + Service.communication_server + "/Agent/Windows/Update_Device_Information");
+                    Logging.Debug("Online_Mode.Handler.Update_Device_Information", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Update_Device_Information");
 
                     // Send the JSON data to the server
-                    var response = await httpClient.PostAsync(Service.http_https + Service.communication_server + "/Agent/Windows/Update_Device_Information", new StringContent(json, Encoding.UTF8, "application/json"));
+                    var response = await httpClient.PostAsync(Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Update_Device_Information", new StringContent(json, Encoding.UTF8, "application/json"));
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
                         // Request was successful, handle the response
                         var result = await response.Content.ReadAsStringAsync();
-                        Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "result", result);
+                        Logging.Debug("Online_Mode.Handler.Update_Device_Information", "result", result);
 
                         // Parse the JSON response
                         if (result == "authorized" || result == "synced" || result == "not_synced")
                         {
-                            if (!Service.authorized)
+                            if (!Device_Worker.authorized)
                             {
                                 // Write the new authorization status to the server config JSON
                                 var new_server_config = new
                                 {
-                                    ssl = Service.ssl,
-                                    package_guid = Service.package_guid,
-                                    communication_servers = Service.communication_servers,
-                                    remote_servers = Service.remote_servers,
-                                    update_servers = Service.update_servers,
-                                    trust_servers = Service.trust_servers,
-                                    file_servers = Service.file_servers,
-                                    tenant_guid = Service.tenant_guid,
-                                    location_guid = Service.location_guid,
-                                    language = Service.language,
-                                    access_key = Service.access_key,
+                                    ssl = Configuration.Agent.ssl,
+                                    package_guid = Configuration.Agent.package_guid,
+                                    communication_servers = Configuration.Agent.communication_servers,
+                                    remote_servers = Configuration.Agent.remote_servers,
+                                    update_servers = Configuration.Agent.update_servers,
+                                    trust_servers = Configuration.Agent.trust_servers,
+                                    file_servers = Configuration.Agent.file_servers,
+                                    tenant_guid = Configuration.Agent.tenant_guid,
+                                    location_guid = Configuration.Agent.location_guid,
+                                    language = Configuration.Agent.language,
+                                    access_key = Device_Worker.access_key,
                                     authorized = true,
                                 };
 
@@ -571,27 +569,27 @@ namespace Global.Online_Mode
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
 
-                                Service.authorized = true;
+                                Device_Worker.authorized = true;
                             }
                         }
                         else if (result == "unauthorized")
                         {
-                            if (Service.authorized)
+                            if (Device_Worker.authorized)
                             {
                                 // Write the new authorization status to the server config JSON
                                 var new_server_config = new
                                 {
-                                    ssl = Service.ssl,
-                                    package_guid = Service.package_guid,
-                                    communication_servers = Service.communication_servers,
-                                    remote_servers = Service.remote_servers,
-                                    update_servers = Service.update_servers,
-                                    trust_servers = Service.trust_servers,
-                                    file_servers = Service.file_servers,
-                                    tenant_guid = Service.tenant_guid,
-                                    location_guid = Service.location_guid,
-                                    language = Service.language,
-                                    access_key = Service.access_key,
+                                    ssl = Configuration.Agent.ssl,
+                                    package_guid = Configuration.Agent.package_guid,
+                                    communication_servers = Configuration.Agent.communication_servers,
+                                    remote_servers = Configuration.Agent.remote_servers,
+                                    update_servers = Configuration.Agent.update_servers,
+                                    trust_servers = Configuration.Agent.trust_servers,
+                                    file_servers = Configuration.Agent.file_servers,
+                                    tenant_guid = Configuration.Agent.tenant_guid,
+                                    location_guid = Configuration.Agent.location_guid,
+                                    language = Configuration.Agent.language,
+                                    access_key = Device_Worker.access_key,
                                     authorized = false,
                                 };
 
@@ -600,7 +598,7 @@ namespace Global.Online_Mode
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
 
-                                Service.authorized = false;
+                                Device_Worker.authorized = false;
                             }
                         }
 
@@ -609,14 +607,14 @@ namespace Global.Online_Mode
                     else
                     {
                         // Request failed, handle the error
-                        Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "request", "Request failed: " + response.StatusCode + " " + response.Content.ToString());
+                        Logging.Debug("Online_Mode.Handler.Update_Device_Information", "request", "Request failed: " + response.StatusCode + " " + response.Content.ToString());
                         return "invalid";
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Online_Mode.Handler.Update_Device_Information", "General error", ex.ToString());
+                Logging.Error("Online_Mode.Handler.Update_Device_Information", "General error", ex.ToString());
                 return "invalid";
             }
         }
@@ -629,27 +627,27 @@ namespace Global.Online_Mode
                 Device_Identity identity = new Device_Identity
                 {
                     agent_version = Application_Settings.version,
-                    package_guid = Service.package_guid,
-                    device_name = Service.device_name,
-                    location_guid = Service.location_guid,
-                    tenant_guid = Service.tenant_guid,
-                    access_key = Service.access_key,
-                    hwid = Service.hwid,
-                    ip_address_internal = Service.ip_address_internal,
-                    operating_system = Service.operating_system,
-                    domain = Service.domain,
-                    antivirus_solution = Service.antivirus_solution,
-                    firewall_status = Service.firewall_status.ToString(),
-                    architecture = Service.architecture,
-                    last_boot = Service.last_boot,
-                    timezone = Service.timezone,
-                    cpu = Service.cpu,
-                    cpu_usage = Service.cpu_usage,
-                    mainboard = Service.mainboard,
-                    gpu = Service.gpu,
-                    ram = Service.ram,
-                    ram_usage = Service.ram_usage,
-                    tpm = Service.tpm,
+                    package_guid = Configuration.Agent.package_guid,
+                    device_name = Configuration.Agent.device_name,
+                    location_guid = Configuration.Agent.location_guid,
+                    tenant_guid = Configuration.Agent.tenant_guid,
+                    access_key = Device_Worker.access_key,
+                    hwid = Configuration.Agent.hwid,
+                    ip_address_internal = Device_Worker.ip_address_internal,
+                    operating_system = Device_Worker.operating_system,
+                    domain = Device_Worker.domain,
+                    antivirus_solution = Device_Worker.antivirus_solution,
+                    firewall_status = Device_Worker.firewall_status.ToString(),
+                    architecture = Device_Worker.architecture,
+                    last_boot = Device_Worker.last_boot,
+                    timezone = Device_Worker.timezone,
+                    cpu = Device_Worker.cpu,
+                    cpu_usage = Device_Worker.cpu_usage,
+                    mainboard = Device_Worker.mainboard,
+                    gpu = Device_Worker.gpu,
+                    ram = Device_Worker.ram,
+                    ram_usage = Device_Worker.ram_usage,
+                    tpm = Device_Worker.tpm,
                 };
 
                 // Create the object that contains the device_identity object
@@ -657,45 +655,45 @@ namespace Global.Online_Mode
 
                 // Serialize the object to a JSON string
                 string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
-                Logging.Handler.Debug("Online_Mode.Handler.Policy", "json", json);
+                Logging.Debug("Online_Mode.Handler.Policy", "json", json);
 
                 // Create a HttpClient instance
                 using (var httpClient = new HttpClient())
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Service.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
 
-                    Logging.Handler.Debug("Online_Mode.Handler.Policy", "communication_server", Service.http_https + Service.communication_server + "/Agent/Windows/Policy");
+                    Logging.Debug("Online_Mode.Handler.Policy", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Policy");
 
                     // Send the JSON data to the server
-                    var response = await httpClient.PostAsync(Service.http_https + Service.communication_server + "/Agent/Windows/Policy", new StringContent(json, Encoding.UTF8, "application/json"));
+                    var response = await httpClient.PostAsync(Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Policy", new StringContent(json, Encoding.UTF8, "application/json"));
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
                     {
                         // Request was successful, handle the response
                         var result = await response.Content.ReadAsStringAsync();
-                        Logging.Handler.Debug("Online_Mode.Handler.Policy", "result", result);
+                        Logging.Debug("Online_Mode.Handler.Policy", "result", result);
 
                         if (result == "unauthorized")
                         {
-                            if (Service.authorized)
+                            if (Device_Worker.authorized)
                             {
                                 // Write the new authorization status to the server config JSON
                                 var new_server_config = new
                                 {
-                                    ssl = Service.ssl,
-                                    package_guid = Service.package_guid,
-                                    communication_servers = Service.communication_servers,
-                                    remote_servers = Service.remote_servers,
-                                    update_servers = Service.update_servers,
-                                    trust_servers = Service.trust_servers,
-                                    file_servers = Service.file_servers,
-                                    tenant_guid = Service.tenant_guid,
-                                    location_guid = Service.location_guid,
-                                    language = Service.language,
-                                    access_key = Service.access_key,
+                                    ssl = Configuration.Agent.ssl,
+                                    package_guid = Configuration.Agent.package_guid,
+                                    communication_servers = Configuration.Agent.communication_servers,
+                                    remote_servers = Configuration.Agent.remote_servers,
+                                    update_servers = Configuration.Agent.update_servers,
+                                    trust_servers = Configuration.Agent.trust_servers,
+                                    file_servers = Configuration.Agent.file_servers,
+                                    tenant_guid = Configuration.Agent.tenant_guid,
+                                    location_guid = Configuration.Agent.location_guid,
+                                    language = Configuration.Agent.language,
+                                    access_key = Device_Worker.access_key,
                                     authorized = false,
                                 };
 
@@ -704,7 +702,7 @@ namespace Global.Online_Mode
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
 
-                                Service.authorized = false;
+                                Device_Worker.authorized = false;
                             }
                         }
                         
@@ -714,31 +712,31 @@ namespace Global.Online_Mode
                             using (JsonDocument document = JsonDocument.Parse(result))
                             {
                                 JsonElement policy_antivirus_settings_element = document.RootElement.GetProperty("antivirus_settings_json");
-                                Service.policy_antivirus_settings_json = policy_antivirus_settings_element.ToString();
+                                Windows_Worker.policy_antivirus_settings_json = policy_antivirus_settings_element.ToString();
 
                                 JsonElement policy_antivirus_exclusions_element = document.RootElement.GetProperty("antivirus_exclusions_json");
-                                Service.policy_antivirus_exclusions_json = policy_antivirus_exclusions_element.ToString();
+                                Windows_Worker.policy_antivirus_exclusions_json = policy_antivirus_exclusions_element.ToString();
 
                                 JsonElement policy_antivirus_scan_jobs_element = document.RootElement.GetProperty("antivirus_scan_jobs_json");
-                                Service.policy_antivirus_scan_jobs_json = policy_antivirus_scan_jobs_element.ToString();
+                                Windows_Worker.policy_antivirus_scan_jobs_json = policy_antivirus_scan_jobs_element.ToString();
 
                                 JsonElement policy_antivirus_controlled_folder_access_folders_element = document.RootElement.GetProperty("antivirus_controlled_folder_access_folders_json");
-                                Service.policy_antivirus_controlled_folder_access_folders_json = policy_antivirus_controlled_folder_access_folders_element.ToString();
+                                Windows_Worker.policy_antivirus_controlled_folder_access_folders_json = policy_antivirus_controlled_folder_access_folders_element.ToString();
 
                                 JsonElement policy_antivirus_controlled_folder_access_ruleset_element = document.RootElement.GetProperty("antivirus_controlled_folder_access_ruleset_json");
-                                Service.policy_antivirus_controlled_folder_access_ruleset_json = policy_antivirus_controlled_folder_access_ruleset_element.ToString();
+                                Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json = policy_antivirus_controlled_folder_access_ruleset_element.ToString();
 
                                 JsonElement policy_sensors_json_element = document.RootElement.GetProperty("policy_sensors_json");
-                                Service.policy_sensors_json = policy_sensors_json_element.ToString();
+                                Windows_Worker.policy_sensors_json = policy_sensors_json_element.ToString();
 
                                 JsonElement policy_jobs_json_element = document.RootElement.GetProperty("policy_jobs_json");
-                                Service.policy_jobs_json = policy_jobs_json_element.ToString();
+                                Windows_Worker.policy_jobs_json = policy_jobs_json_element.ToString();
                             }
 
                             // Insert into policy database
                             Initialization.Database.NetLock_Data_Setup();
 
-                            Logging.Handler.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
+                            Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
 
                             using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String)) // Remove old policy and insert new policy
                             {
@@ -756,13 +754,13 @@ namespace Global.Online_Mode
 
                                 ") VALUES (" +
 
-                                "'" + Service.policy_antivirus_settings_json + "', " + //policy_antivirus_settings_json
-                                "'" + Service.policy_antivirus_exclusions_json + "'," + //policy_antivirus_exclusions_json
-                                "'" + Service.policy_antivirus_scan_jobs_json + "'," + //policy_antivirus_scan_jobs_json
-                                "'" + Service.policy_antivirus_controlled_folder_access_folders_json + "'," + //policy_antivirus_controlled_folder_access_folders_json
-                                "'" + Service.policy_antivirus_controlled_folder_access_ruleset_json + "'," + //policy_antivirus_controlled_folder_access_ruleset_json
-                                "'" + Service.policy_sensors_json + "'," + //policy_sensors_json
-                                "'" + Service.policy_jobs_json + "'" + //policy_jobs_json
+                                "'" + Windows_Worker.policy_antivirus_settings_json + "', " + //policy_antivirus_settings_json
+                                "'" + Windows_Worker.policy_antivirus_exclusions_json + "'," + //policy_antivirus_exclusions_json
+                                "'" + Windows_Worker.policy_antivirus_scan_jobs_json + "'," + //policy_antivirus_scan_jobs_json
+                                "'" + Windows_Worker.policy_antivirus_controlled_folder_access_folders_json + "'," + //policy_antivirus_controlled_folder_access_folders_json
+                                "'" + Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json + "'," + //policy_antivirus_controlled_folder_access_ruleset_json
+                                "'" + Windows_Worker.policy_sensors_json + "'," + //policy_sensors_json
+                                "'" + Windows_Worker.policy_jobs_json + "'" + //policy_jobs_json
 
                                 ");"
                                 , db_conn);
@@ -772,12 +770,12 @@ namespace Global.Online_Mode
                                 db_conn.Close();
                                 db_conn.Dispose();
 
-                                Logging.Handler.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Done." + Environment.NewLine);
+                                Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Done." + Environment.NewLine);
                             }
                         }
                         else if (result == "no_assigned_policy_found" || result == "unauthorized") // Remove old policy
                         {
-                            Logging.Handler.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
+                            Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
 
                             using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String))
                             {
@@ -790,7 +788,7 @@ namespace Global.Online_Mode
                                 db_conn.Close();
                                 db_conn.Dispose();
 
-                                Logging.Handler.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Done." + Environment.NewLine);
+                                Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Done." + Environment.NewLine);
                             }
                         }
 
@@ -799,14 +797,14 @@ namespace Global.Online_Mode
                     else
                     {
                         // Request failed, handle the error
-                        Logging.Handler.Debug("Online_Mode.Handler.Policy", "request", "Request failed: " + response.Content);
+                        Logging.Debug("Online_Mode.Handler.Policy", "request", "Request failed: " + response.Content);
                         return "invalid";
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Online_Mode.Handler.Policy", "General error", ex.ToString());
+                Logging.Error("Online_Mode.Handler.Policy", "General error", ex.ToString());
                 return "invalid";
             }
         }
