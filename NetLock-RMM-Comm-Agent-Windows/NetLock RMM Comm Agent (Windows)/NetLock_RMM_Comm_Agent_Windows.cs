@@ -531,5 +531,5 @@ namespace NetLock_RMM_Comm_Agent_Windows
         }       
 
         #endregion
-}
+    }
 }

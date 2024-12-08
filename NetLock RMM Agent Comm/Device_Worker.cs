@@ -67,13 +67,14 @@ namespace NetLock_RMM_Agent_Comm
         public static string policy_sensors_json = string.Empty;
         public static string policy_jobs_json = string.Empty;
 
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.Run(async () =>
         {
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                //_logger.LogInformation("Device Worker running at: {time}", DateTimeOffset.Now);
 
-            }await Task.Delay(1000, stoppingToken);
-        }
+            }
+            await Task.Delay(5000, stoppingToken);
+        });
     }
 }

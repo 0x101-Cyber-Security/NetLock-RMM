@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,28 +17,28 @@ namespace NetLock_RMM_Agent_Comm
         public static string c_temp_installer_path = c_temp_installer_dir + @"\NetLock RMM Agent Installer (Windows).exe";
 
         // NetLock Paths
-        public static string netlock_service_exe = @"C:\Program Files\0x101 Cyber Security\NetLock RMM\NetLock RMM Comm Agent Windows\NetLock RMM Comm Agent Windows.exe";
-        public static string netlock_health_service_exe = @"C:\Program Files\0x101 Cyber Security\NetLock RMM\Health\NetLock RMM Health Agent.exe";
-        public static string netlock_installer_exe = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Installer\Installer.exe";
-        public static string netlock_uninstaller_exe = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Uninstaller\Uninstaller.exe";
-        public static string netlock_user_process_exe = @"C:\Program Files\0x101 Cyber Security\NetLock RMM\User Process\NetLock RMM User Process.exe";
+        public static string netlock_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "NetLock RMM Comm Agent Windows", "NetLock RMM Comm Agent Windows.exe");
+        public static string netlock_health_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health", "NetLock RMM Health Agent.exe");
+        public static string netlock_installer_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Installer", "Installer.exe");
+        public static string netlock_uninstaller_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Uninstaller", "Uninstaller.exe");
+        public static string netlock_user_process_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Process", "NetLock RMM User Process.exe");
 
-        public static string program_data = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent";
-        public static string program_data_logs = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Logs";
-        public static string program_data_installer = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Installer";
-        public static string program_data_updates = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Updates";
-        public static string program_data_temp = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Temp";
-        public static string program_data_updates_service_package = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Updates\comm_agent.package";
-        public static string program_data_server_config_json = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\server_config.json";
-        public static string program_data_debug_txt = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\debug.txt";
-        public static string program_data_scripts = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Scripts";
-        public static string program_data_sensors = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Sensors";
+        public static string program_data = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent");
+        public static string program_data_logs = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Logs");
+        public static string program_data_installer = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Installer");
+        public static string program_data_updates = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Updates");
+        public static string program_data_temp = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Temp");
+        public static string program_data_updates_service_package = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Updates", "comm_agent.package");
+        public static string program_data_server_config_json = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "server_config.json");
+        public static string program_data_debug_txt = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "debug.txt");
+        public static string program_data_scripts = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Scripts");
+        public static string program_data_sensors = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Sensors");
         public static string program_data_microsoft_defender_antivirus_eventlog_backup = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Microsoft Defender Antivirus\Microsoft-Windows-Windows Defender Operational.bak";
         public static string program_data_microsoft_defender_antivirus_scan_jobs = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Microsoft Defender Antivirus\Scan Jobs";
-        public static string program_data_jobs = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\Jobs";
+        public static string program_data_jobs = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Jobs");
 
-        public static string program_data_netlock_policy_database = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\policy.nlock";
-        public static string program_data_netlock_events_database = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\events.nlock";
+        public static string program_data_netlock_policy_database = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "policy.nlock");
+        public static string program_data_netlock_events_database = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "events.nlock");
 
         // Installer
         public static string installer_package_url = "/private/downloads/netlock/installer.package";
@@ -54,6 +56,38 @@ namespace NetLock_RMM_Agent_Comm
         public static string hklm_run_directory_reg_path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
         // Other
-        public static string just_installed = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Comm Agent\just_installed.txt";
+        public static string just_installed = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "just_installed.txt");
+
+        private static string GetBasePath_CommonApplicationData()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "/var";
+            }
+            else
+            {
+                throw new NotSupportedException("Unsupported OS");
+            }
+        }
+
+        private static string GetBasePath_ProgramFiles()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "/usr";
+            }
+            else
+            {
+                throw new NotSupportedException("Unsupported OS");
+            }
+        }
     }
 }

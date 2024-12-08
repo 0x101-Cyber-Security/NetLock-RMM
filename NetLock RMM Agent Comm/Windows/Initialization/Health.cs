@@ -60,7 +60,7 @@ namespace Windows.Initialization.Health
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Check_Directories", "", ex.Message);
+                Logging.Error("Initialization.Health.Check_Directories", "", ex.ToString());
             }
         }
 
@@ -93,20 +93,6 @@ namespace Windows.Initialization.Health
             Microsoft_Defender_Firewall.Handler.NetLock_Uninstaller_Rule();
         }
 
-        // Check if the databases are in place
-        public static void Check_Databases()
-        {
-            /*
-            // Check if the databases are in place
-            if (!File.Exists(Application_Paths.program_data_netlock_policy_database))
-                Database.NetLock_Data_Setup();
-
-            // Check if the events database is in place
-            if (!File.Exists(Application_Paths.program_data_netlock_events_database))
-                Database.NetLock_Events_Setup();
-            */
-        }
-
         public static void Clean_Service_Restart()
         {
             Logging.Debug("Initialization.Health.Clean_Service_Restart", "Starting.", "");
@@ -126,6 +112,9 @@ namespace Windows.Initialization.Health
         {
             try
             {
+
+                // removed events table because it is now global in Device_Worker with the multi platform support
+                /*
                 Device_Worker.events_data_table.Columns.Clear();
                 Device_Worker.events_data_table.Columns.Add("severity");
                 Device_Worker.events_data_table.Columns.Add("reported_by");
@@ -134,6 +123,7 @@ namespace Windows.Initialization.Health
                 Device_Worker.events_data_table.Columns.Add("type");
                 Device_Worker.events_data_table.Columns.Add("language");
                 Device_Worker.events_data_table.Columns.Add("notification_json");
+                */
 
                 Logging.Debug("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", "Done.");
             }

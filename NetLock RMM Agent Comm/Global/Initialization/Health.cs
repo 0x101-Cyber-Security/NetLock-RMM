@@ -59,7 +59,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Check_Directories", "", ex.Message);
+                Logging.Error("Initialization.Health.Check_Directories", "", ex.ToString());
             }
         }
 
@@ -78,7 +78,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Check_Registry", "", ex.Message);
+                Logging.Error("Initialization.Health.Check_Registry", "", ex.ToString());
             }
         }
 
@@ -132,11 +132,11 @@ namespace Global.Initialization
                 Device_Worker.events_data_table.Columns.Add("language");
                 Device_Worker.events_data_table.Columns.Add("notification_json");
 
-                Logging.Debug("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", "Done.");
+                Logging.Debug("Global.Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", "Done.");
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", ex.ToString());
+                Logging.Error("Global.Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", ex.ToString());
             }
         }
 

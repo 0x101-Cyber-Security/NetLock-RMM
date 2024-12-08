@@ -35,7 +35,7 @@ namespace Global.Initialization
                     }
                     catch (Exception ex)
                     {
-                        Logging.Error("Initialization.Database.NetLock_Data_Setup", "check_db", "Failed deleting DB: " + ex.Message);
+                        Logging.Error("Initialization.Database.NetLock_Data_Setup", "check_db", "Failed deleting DB: " + ex.ToString());
                     }
 
                     Thread.Sleep(500);
@@ -56,7 +56,7 @@ namespace Global.Initialization
                 }
                 catch (Exception ex)
                 {
-                    Logging.Error("Initialization.Database.NetLock_Data_Setup", "create_db (data)", ex.Message);
+                    Logging.Error("Initialization.Database.NetLock_Data_Setup", "create_db (data)", ex.ToString());
                 }
 
                 GC.Collect();
@@ -151,13 +151,13 @@ namespace Global.Initialization
                 }
                 catch (Exception ex)
                 {
-                    Logging.Error("Initialization.Database.NetLock_Data_Setup", "create_application_control_ruleset", ex.Message);
+                    Logging.Error("Initialization.Database.NetLock_Data_Setup", "create_application_control_ruleset", ex.ToString());
                     NetLock_Data_Setup();
                 }
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Database.NetLock_Data_Setup", "check_db", ex.Message);
+                Logging.Error("Initialization.Database.NetLock_Data_Setup", "check_db", ex.ToString());
                 NetLock_Data_Setup();
             }
         }
@@ -209,7 +209,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Database.NetLock_Events_Setup", "create_db general (events)", ex.Message);
+                Logging.Error("Initialization.Database.NetLock_Events_Setup", "create_db general (events)", ex.ToString());
             }
         }
     }
