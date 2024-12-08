@@ -12,7 +12,7 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 ## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
 ## [Live Demo](https://netlockrmm.com/demo.html)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
-## [LinkedIn Company](https://www.linkedin.com/company/0x101-cyber-security/about)
+## [LinkedIn Company](https://www.linkedin.com/company/netlockrmm/about)
 ## [LinkedIn Developer](https://www.linkedin.com/in/nico-mak/)
 
 ## Features? We have plenty of them. Here is a small preview
