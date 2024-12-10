@@ -14,7 +14,6 @@ using System.Text.Json;
 using System.Runtime.CompilerServices;
 using NetLock_RMM_Agent_Comm;
 using System.Diagnostics;
-using Windows.Workers;
 
 namespace Windows.Microsoft_Defender_Antivirus
 {

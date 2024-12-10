@@ -120,11 +120,7 @@
                 {
                     this.Snackbar.Configuration.ShowCloseIcon = true;
                     this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
-                    //this.Snackbar.Add("Erfolgreich hinzugefügt.", Severity.Success);
-
-                    Thread.Sleep(1000);
-
-                    NavigationManager.Refresh();
+                    this.Snackbar.Add(Localizer["successful"], Severity.Success);
                 }
                 else
                 {

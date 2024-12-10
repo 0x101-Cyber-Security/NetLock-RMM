@@ -9,7 +9,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Global.Helper;
-using Windows.Workers;
 
 namespace Global.Offline_Mode
 {
@@ -20,7 +19,7 @@ namespace Global.Offline_Mode
             Device_Worker.sync_active = true;
             bool error = false;
 
-            Logging.Debug("Offline_Mode.Handler.Policy", "Start", "");
+            Logging.Debug("Global.Offline_Mode.Handler.Policy", "Start", "");
 
             try
             {
@@ -41,7 +40,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (antivirus_settings_json). Because of the following error, online settings will be requested.", ex.ToString());
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (antivirus_settings_json). Because of the following error, online settings will be requested.", ex.ToString());
                         }
 
                         //policy_antivirus_exclusions_json
@@ -52,7 +51,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (antivirus_exclusions_json). Because of the following error, online settings will be requested.", ex.ToString());
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (antivirus_exclusions_json). Because of the following error, online settings will be requested.", ex.ToString());
                         }
 
                         //antivirus_scan_jobs_json
@@ -63,7 +62,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (antivirus_scan_jobs_json). Because of the following error, online settings will be requested.", ex.ToString());
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (antivirus_scan_jobs_json). Because of the following error, online settings will be requested.", ex.ToString());
                         }
 
                         //antivirus_controlled_folder_access_folders_json
@@ -74,7 +73,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (antivirus_controlled_folder_access_folders_json). Because of the following error, online settings will be requested.", ex.ToString());
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (antivirus_controlled_folder_access_folders_json). Because of the following error, online settings will be requested.", ex.ToString());
                         }
 
                         //antivirus_controlled_folder_access_ruleset_json
@@ -85,7 +84,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (antivirus_controlled_folder_access_ruleset_json). Because of the following error, online settings will be requested.", ex.ToString());
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (antivirus_controlled_folder_access_ruleset_json). Because of the following error, online settings will be requested.", ex.ToString());
                         }
 
                         //sensors_json
@@ -96,7 +95,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (sensors_json). Because of the following error, online settings will be requested.", ex.Message);
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (sensors_json). Because of the following error, online settings will be requested.", ex.Message);
                         }
 
                         //jobs_json
@@ -107,7 +106,7 @@ namespace Global.Offline_Mode
                         catch (Exception ex)
                         {
                             error = true;
-                            Logging.Error("Offline_Mode.Handler.Policy", "Read failed (jobs_json). Because of the following error, online settings will be requested.", ex.Message);
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (jobs_json). Because of the following error, online settings will be requested.", ex.Message);
                         }
                     }
 
@@ -118,20 +117,20 @@ namespace Global.Offline_Mode
             }
             catch (Exception ex)
             {
-                Logging.Error("Offline_Mode.Handler.Policy", "Read. Because of the following error, online settings will be requested.", ex.Message);
+                Logging.Error("Global.Offline_Mode.Handler.Policy", "Read. Because of the following error, online settings will be requested.", ex.Message);
                 error = true;
             }
 
             //If any error occured. Get Online Settings
             if (error)
             {
-                Logging.Error("Offline_Mode.Handler.Policy", "A clean service restart will be performed.", "");
+                Logging.Error("Global.Offline_Mode.Handler.Policy", "A clean service restart will be performed.", "");
                 Initialization.Health.Clean_Service_Restart();
             }
 
             Device_Worker.sync_active = false;
 
-            Logging.Debug("Offline_Mode.Handler.Policy", "Stop", "");
+            Logging.Debug("Global.Offline_Mode.Handler.Policy", "Stop", "");
         }
     }
 }

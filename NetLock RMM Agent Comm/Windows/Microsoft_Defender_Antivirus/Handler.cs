@@ -9,7 +9,6 @@ using System.Timers;
 using Global.Helper;
 using System.IO;
 using NetLock_RMM_Agent_Comm;
-using Windows.Workers;
 
 namespace Windows.Microsoft_Defender_Antivirus
 {

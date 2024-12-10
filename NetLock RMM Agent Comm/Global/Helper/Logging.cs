@@ -61,7 +61,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Debug.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Debug.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -85,7 +85,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Error.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Error.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -114,7 +114,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Microsoft_Defender_Firewall.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Microsoft_Defender_Firewall.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -143,7 +143,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Device_Information.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Device_Information.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -172,7 +172,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Microsoft_Defender_Antivirus.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Microsoft_Defender_Antivirus.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -201,7 +201,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\PowerShell.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "PowerShell.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -230,7 +230,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Registry.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Registry.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -259,7 +259,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Jobs.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Jobs.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -288,7 +288,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Sensors.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Sensors.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -317,7 +317,7 @@ namespace Global.Helper
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.program_data_logs + @"\Local_Server.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Local_Server.txt"), log_json + Environment.NewLine);
             }
             catch
             { }

@@ -11,7 +11,6 @@ using System.Runtime.Remoting;
 //using NetLock_RMM_Comm_Agent_Windows.Events;
 using System.Management;
 using NetLock_RMM_Agent_Comm;
-using Windows.Workers;
 using System.Configuration;
 
 namespace Windows.Microsoft_Defender_Antivirus

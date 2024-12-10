@@ -431,6 +431,8 @@
         await this.DialogService.Show<Dialogs.Add_Policy_Dialog>(string.Empty, new DialogParameters(), options).Result;
 
         add_policy_dialog_open = false;
+
+        policies_mysql_data = await Get_Policy_Overview();
     }
 
     private async Task Update_Selected_Policy(string id)

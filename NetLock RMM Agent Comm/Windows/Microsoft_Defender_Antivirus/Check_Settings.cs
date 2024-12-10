@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Global.Helper;
-using Windows.Workers;
+using NetLock_RMM_Agent_Comm;
 
 namespace Windows.Microsoft_Defender_Antivirus
 {    

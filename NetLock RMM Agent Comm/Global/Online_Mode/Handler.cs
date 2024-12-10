@@ -15,7 +15,6 @@ using NetFwTypeLib;
 using System.Diagnostics;
 using System.Runtime;
 using Global.Helper;
-using Windows.Workers;
 using System.Management;
 using NetLock_RMM_Agent_Comm;
 using System.Reflection.PortableExecutable;

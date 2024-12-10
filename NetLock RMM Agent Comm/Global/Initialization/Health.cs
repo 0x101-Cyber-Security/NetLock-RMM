@@ -37,14 +37,6 @@ namespace Global.Initialization
                 if (!Directory.Exists(Application_Paths.program_data_temp))
                     Directory.CreateDirectory(Application_Paths.program_data_temp);
 
-                // C Temp
-                if (!Directory.Exists(Application_Paths.c_temp))
-                    Directory.CreateDirectory(Application_Paths.c_temp);
-
-                // Microsoft Defender Antivirus
-                if (!Directory.Exists(Application_Paths.program_data_microsoft_defender_antivirus_scan_jobs))
-                    Directory.CreateDirectory(Application_Paths.program_data_microsoft_defender_antivirus_scan_jobs);
-
                 // Jobs
                 if (!Directory.Exists(Application_Paths.program_data_jobs))
                     Directory.CreateDirectory(Application_Paths.program_data_jobs);
@@ -59,7 +51,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Check_Directories", "", ex.ToString());
+                Logging.Error("Global.Initialization.Health.Check_Directories", "", ex.ToString());
             }
         }
 
@@ -78,7 +70,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
-                Logging.Error("Initialization.Health.Check_Registry", "", ex.ToString());
+                Logging.Error("Global.Initialization.Health.Check_Registry", "", ex.ToString());
             }
         }
 
@@ -106,7 +98,7 @@ namespace Global.Initialization
 
         public static void Clean_Service_Restart()
         {
-            Logging.Debug("Initialization.Health.Clean_Service_Restart", "Starting.", "");
+            Logging.Debug("Global.Initialization.Health.Clean_Service_Restart", "Starting.", "");
 
             Process cmd_process = new Process();
             cmd_process.StartInfo.UseShellExecute = true;
@@ -116,7 +108,7 @@ namespace Global.Initialization
             cmd_process.Start();
             cmd_process.WaitForExit();
 
-            Logging.Error("Initialization.Health.Clean_Service_Restart", "Stopping.", "");
+            Logging.Error("Global.Initialization.Health.Clean_Service_Restart", "Stopping.", "");
         }
 
         public static void Setup_Events_Virtual_Datatable()

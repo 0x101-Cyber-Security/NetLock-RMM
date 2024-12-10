@@ -18,26 +18,6 @@ namespace Windows.Initialization.Health
         {
             try
             {
-                // Program Data
-                if (!Directory.Exists(Application_Paths.program_data))
-                    Directory.CreateDirectory(Application_Paths.program_data);
-
-                // Logs
-                if (!Directory.Exists(Application_Paths.program_data_logs))
-                    Directory.CreateDirectory(Application_Paths.program_data_logs);
-
-                // Installer
-                if (!Directory.Exists(Application_Paths.program_data_installer))
-                    Directory.CreateDirectory(Application_Paths.program_data_installer);
-
-                // Updates
-                if (!Directory.Exists(Application_Paths.program_data_updates))
-                    Directory.CreateDirectory(Application_Paths.program_data_updates);
-
-                // NetLock Temp
-                if (!Directory.Exists(Application_Paths.program_data_temp))
-                    Directory.CreateDirectory(Application_Paths.program_data_temp);
-
                 // C Temp
                 if (!Directory.Exists(Application_Paths.c_temp))
                     Directory.CreateDirectory(Application_Paths.c_temp);
@@ -45,18 +25,6 @@ namespace Windows.Initialization.Health
                 // Microsoft Defender Antivirus
                 if (!Directory.Exists(Application_Paths.program_data_microsoft_defender_antivirus_scan_jobs))
                     Directory.CreateDirectory(Application_Paths.program_data_microsoft_defender_antivirus_scan_jobs);
-
-                // Jobs
-                if (!Directory.Exists(Application_Paths.program_data_jobs))
-                    Directory.CreateDirectory(Application_Paths.program_data_jobs);
-
-                // Scripts
-                if (!Directory.Exists(Application_Paths.program_data_scripts))
-                    Directory.CreateDirectory(Application_Paths.program_data_scripts);
-
-                // Sensors
-                if (!Directory.Exists(Application_Paths.program_data_sensors))
-                    Directory.CreateDirectory(Application_Paths.program_data_sensors);
             }
             catch (Exception ex)
             {
@@ -106,31 +74,6 @@ namespace Windows.Initialization.Health
             cmd_process.WaitForExit();
 
             Logging.Error("Initialization.Health.Clean_Service_Restart", "Stopping.", "");
-        }
-
-        public static void Setup_Events_Virtual_Datatable()
-        {
-            try
-            {
-
-                // removed events table because it is now global in Device_Worker with the multi platform support
-                /*
-                Device_Worker.events_data_table.Columns.Clear();
-                Device_Worker.events_data_table.Columns.Add("severity");
-                Device_Worker.events_data_table.Columns.Add("reported_by");
-                Device_Worker.events_data_table.Columns.Add("event");
-                Device_Worker.events_data_table.Columns.Add("description");
-                Device_Worker.events_data_table.Columns.Add("type");
-                Device_Worker.events_data_table.Columns.Add("language");
-                Device_Worker.events_data_table.Columns.Add("notification_json");
-                */
-
-                Logging.Debug("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", "Done.");
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", ex.ToString());
-            }
         }
 
         public static void User_Process()

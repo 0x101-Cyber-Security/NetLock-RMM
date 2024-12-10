@@ -1,0 +1,86 @@
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\appsettings.Development.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\appsettings.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\NetLock RMM Agent Comm.exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\NetLock RMM Agent Comm.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\NetLock RMM Agent Comm.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\NetLock RMM Agent Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\NetLock RMM Agent Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\EntityFramework.SqlServer.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\EntityFramework.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.CommandLine.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.Json.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Configuration.UserSecrets.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Diagnostics.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Physical.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Hosting.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.Configuration.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.Console.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.Debug.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Logging.EventSource.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Options.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Data.SQLite.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.CodeDom.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Configuration.ConfigurationManager.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Data.SqlClient.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Data.SQLite.EF6.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Diagnostics.PerformanceCounter.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Management.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.Security.Cryptography.ProtectedData.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\System.ServiceProcess.ServiceController.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Win32.TaskScheduler.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\de\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\es\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\fr\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\it\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\ja\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\pl\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\ru\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\sv\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\tr\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\zh-CN\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\zh-Hant\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win-arm64\native\sni.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win-x64\native\sni.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win-x86\native\sni.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\linux-x64\native\SQLite.Interop.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\osx-x64\native\SQLite.Interop.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win-x64\native\SQLite.Interop.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win-x86\native\SQLite.Interop.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\unix\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\netcoreapp2.1\System.Data.SqlClient.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.PerformanceCounter.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Management.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.csproj.AssemblyReference.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\Interop.NetFwTypeLib.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.csproj.ResolveComReference.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.AssemblyInfoInputs.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.AssemblyInfo.cs
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.csproj.CoreCompileInputs.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.sourcelink.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock .D706EACC.Up2Date
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\refint\NetLock RMM Agent Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\NetLock RMM Agent Comm.genruntimeconfig.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\ref\NetLock RMM Agent Comm.dll
