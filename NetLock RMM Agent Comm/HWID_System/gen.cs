@@ -14,6 +14,16 @@
                 var windowsId = WindowsId.GetWindowsId();
                 HW_UID = windowsId + cpuId;
             }
+            else if (OperatingSystem.IsLinux())
+            {
+                var cpuId = "esfiohfuisehf";
+                var linuxId = "fizhfuiesuf";
+                HW_UID = linuxId + cpuId;
+            }
+            else
+            {
+                HW_UID = "Unknown";
+            }
         }
     }
 }

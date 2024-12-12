@@ -159,85 +159,95 @@ namespace NetLock_RMM_Agent_Comm
 
         private async Task Initialize(bool forced)
         {
-            Logging.Debug("Device_Worker.Initialize", "Initialize", "Start");
-
-            //Disable start timer to prevent concurrent executions
-            if (start_timer.Enabled)
-                start_timer.Dispose();
-
-            // Check if connection to communication server is available
-            await Global.Initialization.Check_Connection.Check_Servers();
-
-            // Online mode
-            if (communication_server_status)
+            try
             {
-                Logging.Debug("Device_Worker.Initialize", "connection_status", "Online mode.");
+                Logging.Debug("Device_Worker.Initialize", "Initialize", "Start");
 
-                //Force client sync if settings are missing
-                if (File.Exists(Application_Paths.program_data_netlock_policy_database) == false || File.Exists(Application_Paths.program_data_netlock_events_database) == false)
+                //Disable start timer to prevent concurrent executions
+                if (start_timer.Enabled)
+                    start_timer.Dispose();
+
+                // Check if connection to communication server is available
+                await Global.Initialization.Check_Connection.Check_Servers();
+
+                Logging.Debug("Device_Worker.Initialize", "", "COMM SERVER: " + Device_Worker.communication_server.ToString());
+                Logging.Debug("Device_Worker.Initialize", "", "Connection checked: " + communication_server_status.ToString());
+
+                // Online mode
+                if (communication_server_status)
                 {
-                    Global.Initialization.Database.NetLock_Events_Setup(); //Create events database if its not existing (cause it was deleted somehow)
-                    forced = true;
-                }
+                    Logging.Debug("Device_Worker.Initialize", "connection_status", "Online mode.");
 
-                //If first run, skip module init (pre boot) and load client settings first
-                if (File.Exists(Application_Paths.just_installed) == false && forced == false && first_sync == true) //Enable the Preboot Modules to block shit on system boot
-                    Pre_Boot();
-                if (File.Exists(Application_Paths.just_installed) && forced == false) //Force the sync & set the config because its the first run (justinstalled.txt)
-                    forced = true;
-                else if (Windows.Helper.Registry.HKLM_Read_Value(Application_Paths.netlock_reg_path, "Synced") == "0" || Windows.Helper.Registry.HKLM_Read_Value(Application_Paths.netlock_reg_path, "Synced") == null)
-                    forced = true;
-
-                Logging.Debug("Device_Worker.Initialize", "forced (sync)", forced.ToString());
-
-                // Check version
-                bool up2date = await Global.Initialization.Version.Check_Version();
-
-                if (up2date) // No update required. Continue logic
-                {
-                    // Authenticate online
-                    string auth_result = await Global.Online_Mode.Handler.Authenticate();
-
-                    // Check authorization status
-                    // if (auth_result == "authorized" || auth_result == "not_synced" || auth_result == "synced")
-                    if (authorized)
+                    //Force client sync if settings are missing
+                    if (File.Exists(Application_Paths.program_data_netlock_policy_database) == false || File.Exists(Application_Paths.program_data_netlock_events_database) == false)
                     {
-                        // Update device information
-                        await Global.Online_Mode.Handler.Update_Device_Information();
+                        Global.Initialization.Database.NetLock_Events_Setup(); //Create events database if its not existing (cause it was deleted somehow)
+                        forced = true;
                     }
 
-                    // Check sync status
-                    if (authorized && auth_result == "not_synced" || authorized && forced)
+                    //If first run, skip module init (pre boot) and load client settings first
+                    if (File.Exists(Application_Paths.just_installed) == false && forced == false && first_sync == true) //Enable the Preboot Modules to block shit on system boot
+                        Pre_Boot();
+                    if (File.Exists(Application_Paths.just_installed) && forced == false) //Force the sync & set the config because its the first run (justinstalled.txt)
+                        forced = true;
+                    else if (Windows.Helper.Registry.HKLM_Read_Value(Application_Paths.netlock_reg_path, "Synced") == "0" || Windows.Helper.Registry.HKLM_Read_Value(Application_Paths.netlock_reg_path, "Synced") == null)
+                        forced = true;
+
+                    Logging.Debug("Device_Worker.Initialize", "forced (sync)", forced.ToString());
+
+                    // Check version
+                    bool up2date = await Global.Initialization.Version.Check_Version();
+
+                    if (up2date) // No update required. Continue logic
                     {
-                        // Set synced flag in registry to not synced
-                        Windows.Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "0");
+                        // Authenticate online
+                        string auth_result = await Global.Online_Mode.Handler.Authenticate();
 
-                        // Sync
-                        await Global.Online_Mode.Handler.Policy();
+                        // Check authorization status
+                        // if (auth_result == "authorized" || auth_result == "not_synced" || auth_result == "synced")
+                        if (authorized)
+                        {
+                            // Update device information
+                            await Global.Online_Mode.Handler.Update_Device_Information();
+                        }
 
-                        // Sync done. Set synced flag in registry to prevent re-sync
-                        Windows.Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "1");
+                        // Check sync status
+                        if (authorized && auth_result == "not_synced" || authorized && forced)
+                        {
+                            // Set synced flag in registry to not synced
+                            Windows.Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "0");
 
-                        first_sync = false;
+                            // Sync
+                            await Global.Online_Mode.Handler.Policy();
+
+                            // Sync done. Set synced flag in registry to prevent re-sync
+                            Windows.Helper.Registry.HKLM_Write_Value(Application_Paths.netlock_reg_path, "Synced", "1");
+
+                            first_sync = false;
+                        }
+                        else if (authorized && auth_result == "synced")
+                        {
+                            // placeholder, nothing to do here right now
+                            first_sync = false;
+                        }
                     }
-                    else if (authorized && auth_result == "synced")
+                    else // Outdated. Trigger update
                     {
-                        // placeholder, nothing to do here right now
-                        first_sync = false;
+                        await Global.Initialization.Version.Update();
                     }
                 }
-                else // Outdated. Trigger update
+                else // Offline mode
                 {
-                    await Global.Initialization.Version.Update();
+                    Global.Offline_Mode.Handler.Policy();
                 }
+
+                // Trigger module handler
+                Module_Handler();
             }
-            else // Offline mode
+            catch (Exception ex)
             {
-                Global.Offline_Mode.Handler.Policy();
+                Logging.Error("Device_Worker.Initialize", "Initialize", ex.ToString());
             }
-
-            // Trigger module handler
-            Module_Handler();
         }
 
         private void Pre_Boot()

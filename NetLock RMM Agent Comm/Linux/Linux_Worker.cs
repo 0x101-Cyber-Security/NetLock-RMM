@@ -29,10 +29,10 @@ namespace NetLock_RMM_Agent_Comm
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                _logger.LogInformation("Linux Worker running at: {time}", DateTimeOffset.Now);
-
                 if (first_run)
                 {
+                    _logger.LogInformation("Linux Worker running at: {time}", DateTimeOffset.Now);
+
                     Logging.Debug("Linux.ExecuteAsync", "Linux Worker running at: " + DateTimeOffset.Now, "");
 
                     // Setup synchronize timer
@@ -67,7 +67,11 @@ namespace NetLock_RMM_Agent_Comm
 
         private async void Initialize_Timer_Tick(object sender, ElapsedEventArgs e)
         {
+            Logging.Debug("Linux_Worker.Initialize", "Initialize", "Start");
+
             await Initialize(false);
+
+            Logging.Debug("Linux_Worker.Initialize", "Initialize", "Stop");
         }
 
         private async Task Initialize(bool forced)

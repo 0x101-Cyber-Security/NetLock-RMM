@@ -14,11 +14,56 @@ using static Global.Online_Mode.Handler;
 using Global.Helper;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using NetLock_RMM_Agent_Comm.Linux.Helper;
+using NetLock_RMM_Agent_Comm;
+using System.Runtime.Versioning;
 
 namespace Global.Device_Information
 {
     internal class Hardware
     {
+        public static string CPU_Name()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Name FROM Win32_Processor", "Name");
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    string cpu_name = string.Empty;
+                    // Read the CPU information from the /proc/cpuinfo file
+                    string cpuInfoFile = "/proc/cpuinfo";
+                    if (File.Exists(cpuInfoFile))
+                    {
+                        // Read the file contents
+                        string[] cpuInfoLines = File.ReadAllLines(cpuInfoFile);
+                        // Search for the "model name" line
+                        foreach (string line in cpuInfoLines)
+                        {
+                            if (line.StartsWith("model name"))
+                            {
+                                // Extract the CPU name
+                                cpu_name = line.Split(':')[1].Trim();
+                                break;
+                            }
+                        }
+                    }
+                    return cpu_name;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Name", "General error.", ex.ToString());
+                    return "N/A";
+                }
+            }
+            else
+            {
+                return "N/A";
+            }
+        }
+
         public static string CPU_Information()
         {
             string cpu_information_json = string.Empty;
@@ -50,7 +95,7 @@ namespace Global.Device_Information
                         }
 
                         int numberOfSockets = uniqueSockets.Count;
-                       
+
                         try
                         {
                             CPU_Information cpuInfo = new CPU_Information
@@ -159,20 +204,41 @@ namespace Global.Device_Information
 
         public static string CPU_Usage()
         {
-            try
+            if (OperatingSystem.IsWindows())
             {
-                // CPU-Nutzung unter Windows
-                PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-                cpuCounter.NextValue(); // Ignore first measurement
-                Thread.Sleep(1000); // Wait 1 second
+                try
+                {
+                    // CPU utilisation under Windows
+                    PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                    cpuCounter.NextValue(); // Ignore first measurement
+                    Thread.Sleep(1000); // Wait 1 second
 
-                int cpuUsage = Convert.ToInt32(Math.Round(cpuCounter.NextValue()));
+                    int cpuUsage = Convert.ToInt32(Math.Round(cpuCounter.NextValue()));
 
-                return cpuUsage.ToString();
+                    return cpuUsage.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
+                    return "0";
+                }
             }
-            catch (Exception ex)
+            else if (OperatingSystem.IsLinux())
             {
-                Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
+                try
+                {
+                    // CPU utilisation under Linux
+                    string cpuUsage = File.ReadAllText("/proc/loadavg").Split(' ')[0];
+                    return cpuUsage;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
+                    return "0";
+                }
+            }
+            else
+            {
                 return "0";
             }
         }
@@ -270,14 +336,14 @@ namespace Global.Device_Information
                     name = name,
                     available = available,
                     assured = assured,
-                    cache = cache, 
-                    outsourced_pool = outsourced_pool, 
-                    not_outsourced_pool = not_outsourced_pool, 
-                    speed = speed, 
+                    cache = cache,
+                    outsourced_pool = outsourced_pool,
+                    not_outsourced_pool = not_outsourced_pool,
+                    speed = speed,
                     slots = slots,
                     slots_used = slots_used.ToString(),
-                    form_factor = form_factor, 
-                    hardware_reserved = hardware_reserved, 
+                    form_factor = form_factor,
+                    hardware_reserved = hardware_reserved,
                 };
 
                 ram_information_json = JsonSerializer.Serialize(ramInfo, new JsonSerializerOptions { WriteIndented = true });
@@ -296,23 +362,44 @@ namespace Global.Device_Information
 
         public static string RAM_Usage()
         {
-            try
+            if (OperatingSystem.IsWindows())
             {
-                ulong totalVisibleMemorySize = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
-                ulong freePhysicalMemory = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
+                try
+                {
+                    ulong totalVisibleMemorySize = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
+                    ulong freePhysicalMemory = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
 
-                float usedMemory = totalVisibleMemorySize - freePhysicalMemory;
-                float usedMemoryPercentage = ((float)usedMemory / totalVisibleMemorySize) * 100;
+                    float usedMemory = totalVisibleMemorySize - freePhysicalMemory;
+                    float usedMemoryPercentage = ((float)usedMemory / totalVisibleMemorySize) * 100;
 
-                int usedMemoryPercentageInt = Convert.ToInt32(Math.Round(usedMemoryPercentage));
+                    int usedMemoryPercentageInt = Convert.ToInt32(Math.Round(usedMemoryPercentage));
 
-                Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());
+                    Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());
 
-                return usedMemoryPercentageInt.ToString();
+                    return usedMemoryPercentageInt.ToString();
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
+                    return "0";
+                }
             }
-            catch (Exception ex)
+            else if (OperatingSystem.IsLinux())    
             {
-                Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
+                try
+                {
+                    // RAM utilisation under Linux
+                    string ramUsage = Linux.Helper.Bash.Execute_Command("free | grep Mem | awk '{print $3/$2 * 100}'");
+                    return ramUsage;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
+                    return "0";
+                }
+            }
+            else
+            {
                 return "0";
             }
         }
@@ -494,6 +581,33 @@ namespace Global.Device_Information
             }
         }
 
+        public static string RAM_Total()
+        {
+            // Get RAM
+            string _ram = string.Empty;
+
+            try
+            {
+                if (OperatingSystem.IsWindows())
+                {
+                    _ram = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT TotalPhysicalMemory FROM Win32_ComputerSystem", "TotalPhysicalMemory");
+                    _ram = Math.Round(Convert.ToDouble(_ram) / 1024 / 1024 / 1024).ToString();
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    _ram = Linux.Helper.Bash.Execute_Command("grep MemTotal /proc/meminfo | awk '{print $2}'");
+                    _ram = Math.Round(Convert.ToDouble(_ram) / 1024 / 1024).ToString();
+                }
+
+                return _ram;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.Hardware.RAM_Total", "General error.", ex.ToString());
+                return "N/A";
+            }
+        }
+
         public static int RAM_Utilization()
         {
             try
@@ -506,7 +620,7 @@ namespace Global.Device_Information
 
                 int usedMemoryPercentageInt = Convert.ToInt32(Math.Round(usedMemoryPercentage));
 
-                Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());           
+                Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());
 
                 return usedMemoryPercentageInt;
             }
@@ -516,6 +630,8 @@ namespace Global.Device_Information
                 return 0;
             }
         }
+
+
 
         public static int Drive_Usage(int type, char drive_letter) // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
         {
@@ -599,6 +715,102 @@ namespace Global.Device_Information
             {
                 Logging.Error("Device_Information.Hardware.Drive_Usage", "General error.", ex.ToString());
                 return 0;
+            }
+        }
+
+        public static string Mainboard_Name()
+        {
+            string _mainboard = "N/A";
+            string mainboard_manufacturer = "N/A";
+
+            if (OperatingSystem.IsWindows())
+            {
+                _mainboard = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Product FROM Win32_BaseBoard", "Product");
+                mainboard_manufacturer = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Manufacturer FROM Win32_BaseBoard", "Manufacturer");
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    if (File.Exists("/sys/class/dmi/id/board_name"))
+                    {
+                        _mainboard = Linux.Helper.Bash.Execute_Command("cat /sys/class/dmi/id/board_name");
+                    }
+                    else if (File.Exists("/sys/devices/virtual/dmi/id/board_name"))
+                    {
+                        _mainboard = Linux.Helper.Bash.Execute_Command("cat /sys/devices/virtual/dmi/id/board_name");
+                    }
+
+                    if (File.Exists("/sys/class/dmi/id/board_vendor"))
+                    {
+                        mainboard_manufacturer = Linux.Helper.Bash.Execute_Command("cat /sys/class/dmi/id/board_vendor");
+                    }
+                    else if (File.Exists("/sys/devices/virtual/dmi/id/board_vendor"))
+                    {
+                        mainboard_manufacturer = Linux.Helper.Bash.Execute_Command("cat /sys/devices/virtual/dmi/id/board_vendor");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.Mainboard_Name", "General error.", ex.ToString());
+                }
+            }
+           
+            return $"{mainboard_manufacturer} ({_mainboard})";
+        }
+
+        public static string GPU_Name()
+        {
+            string gpu = "N/A";
+
+            if (OperatingSystem.IsWindows())
+            {
+                // Get GPU
+                gpu = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Name FROM Win32_VideoController", "Name");
+                Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                // Get GPU
+                try
+                {
+                    // Read the GPU information from the /proc/ directory
+                    string[] gpuInfoLines = File.ReadAllLines("/proc/driver/nvidia/gpus/0/information");
+                    foreach (string line in gpuInfoLines)
+                    {
+                        if (line.StartsWith("Model:"))
+                        {
+                            gpu = line.Split(':')[1].Trim();
+                            break;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.GPU_Name", "General error.", ex.ToString());
+                }
+
+                Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
+            }
+         
+            return gpu;
+        }
+
+        public static string TPM_Status()
+        {
+            if (OperatingSystem.IsWindows()) 
+            {
+                // Get TPM status
+                string tpm_status = Windows.Helper.WMI.Search("root\\cimv2\\Security\\MicrosoftTpm", "SELECT IsEnabled_InitialValue FROM Win32_Tpm", "IsEnabled_InitialValue");
+                return tpm_status;
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                return "N/A";
+            }
+            else
+            {
+                return "N/A";
             }
         }
     }

@@ -32,22 +32,16 @@ namespace Global.Initialization
 
                     if (await Hostname_IP_Port(value, "communication_servers"))
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.communication_server = value;
-                            Device_Worker.communication_server_status = true;
-                        }
+                        Device_Worker.communication_server = value;
+                        Device_Worker.communication_server_status = true;
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Communication server connection successful.", "");
                         break;
                     }
                     else
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.communication_server_status = false;
-                        }
-                        
+                        Device_Worker.communication_server_status = false;
+
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Communication server connection failed.", "");
                     }
                 }
@@ -61,22 +55,16 @@ namespace Global.Initialization
                     value.Trim();
 
                     if (await Hostname_IP_Port(value, "remote_servers"))
-                    { 
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.remote_server = value;
-                            Device_Worker.remote_server_status = true;
-                        }
+                    {
+                        Device_Worker.remote_server = value;
+                        Device_Worker.remote_server_status = true;
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Remote server connection successful.", "");
                         break;
                     }
                     else
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.remote_server_status = false;
-                        }
+                        Device_Worker.remote_server_status = false;
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Remote server connection failed.", "");
                     }
@@ -92,22 +80,16 @@ namespace Global.Initialization
 
                     if (await Hostname_IP_Port(value, "update_servers"))
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.update_server = value;
-                            Device_Worker.update_server_status = true;
-                        }
-                        
+                        Device_Worker.update_server = value;
+                        Device_Worker.update_server_status = true;
+
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Update server connection successful.", "");
                         break;
                     }
                     else
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.update_server_status = false;
-                        }
-                        
+                        Device_Worker.update_server_status = false;
+
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Update server connection failed.", "");
                     }
                 }
@@ -122,21 +104,15 @@ namespace Global.Initialization
 
                     if (await Hostname_IP_Port(value, "trust_servers"))
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.trust_server = value;
-                            Device_Worker.trust_server_status = true;
-                        }
+                        Device_Worker.trust_server = value;
+                        Device_Worker.trust_server_status = true;
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "Trust server connection successful.", "");
                         break;
                     }
                     else
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.trust_server_status = false;
-                        }
+                        Device_Worker.trust_server_status = false;
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "Trust server connection failed.", "");
                     }
@@ -152,21 +128,15 @@ namespace Global.Initialization
 
                     if (await Hostname_IP_Port(value, "file_servers"))
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.file_server = value;
-                            Device_Worker.file_server_status = true;
-                        }
+                        Device_Worker.file_server = value;
+                        Device_Worker.file_server_status = true;
 
                         Logging.Debug("Initialization.Check_Connection.Check_Servers", "File server connection successful.", "");
                         break;
                     }
                     else
                     {
-                        if (OperatingSystem.IsWindows())
-                        {
-                            Device_Worker.file_server_status = false;
-                        }
+                        Device_Worker.file_server_status = false;
 
                         Logging.Error("Initialization.Check_Connection.Check_Servers", "File server connection failed.", "");
                     }
@@ -209,7 +179,7 @@ namespace Global.Initialization
                 Logging.Debug("Initialization.Check_Connection.Hostname_IP_Port", "Port", "Port could not be extracted.");
             }
 
-            // Check main communication server
+            // Check connection to serve´r
             try
             {
                 using (var client = new TcpClient())
@@ -222,7 +192,7 @@ namespace Global.Initialization
                         // Connect to the main communication server
                         await client.ConnectAsync(server_match.Groups[1].Value, Convert.ToInt32(port_match.Groups[0].Value));
 
-                        Logging.Debug("Initialization.Check_Connection.Hostname_IP_Port", "Hostname_IP_Port", "Connection to communication server successful");
+                        Logging.Debug("Initialization.Check_Connection.Hostname_IP_Port", "Hostname_IP_Port", "Connection to server successful: " + server);
 
                         return true;
                     }

@@ -19,6 +19,8 @@ using System.Management;
 using NetLock_RMM_Agent_Comm;
 using System.Reflection.PortableExecutable;
 using System.Data.SQLite;
+using NetLock_RMM_Agent_Comm.Linux.Helper;
+using System.Data.Entity.Core.Mapping;
 
 namespace Global.Online_Mode
 {
@@ -241,7 +243,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ip_address_internal", Device_Worker.ip_address_internal);
 
                     // Get Windows version
-                    Device_Worker.operating_system = Device_Information.OS.Windows_Version();
+                    Device_Worker.operating_system = Device_Information.OS.Version();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "operating_system", Device_Worker.operating_system);
 
                     // Get DOMAIN
@@ -261,9 +263,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "architecture", Device_Worker.architecture);
 
                     // Get last boot
-                    string _last_boot = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT LastBootUpTime FROM Win32_OperatingSystem", "LastBootUpTime");
-                    DateTime last_boot_datetime = ManagementDateTimeConverter.ToDateTime(_last_boot);
-                    Device_Worker.last_boot = last_boot_datetime.ToString("dd.MM.yyyy HH:mm:ss");
+                    Device_Worker.last_boot = Device_Information.OS.Get_Last_Boot_Time();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "last_boot", Device_Worker.last_boot);
 
                     // Get timezone
@@ -271,7 +271,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "timezone", Device_Worker.timezone);
 
                     // Get CPU
-                    Device_Worker.cpu = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Name FROM Win32_Processor", "Name");
+                    Device_Worker.cpu = Device_Information.Hardware.CPU_Name();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu", Device_Worker.cpu);
 
                     // Get CPU usage
@@ -279,19 +279,15 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu_usage", Device_Worker.cpu_usage);
 
                     // Get Mainboard
-                    string _mainboard = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Product FROM Win32_BaseBoard", "Product");
-                    string mainboard_manufacturer = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Manufacturer FROM Win32_BaseBoard", "Manufacturer");
-
-                    Device_Worker.mainboard = _mainboard + " (" + mainboard_manufacturer + ")";
+                    Device_Worker.mainboard = Device_Information.Hardware.Mainboard_Name();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "mainboard", Device_Worker.mainboard);
 
                     // Get GPU
-                    Device_Worker.gpu = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT Name FROM Win32_VideoController", "Name");
+                    Device_Worker.gpu = Device_Information.Hardware.GPU_Name();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
 
                     // Get RAM
-                    string _ram = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT TotalPhysicalMemory FROM Win32_ComputerSystem", "TotalPhysicalMemory");
-                    Device_Worker.ram = Math.Round(Convert.ToDouble(_ram) / 1024 / 1024 / 1024).ToString();
+                    Device_Worker.ram = Device_Information.Hardware.RAM_Total();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram", Device_Worker.ram);
 
                     // Get RAM usage
@@ -299,8 +295,69 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram_usage", Device_Worker.ram_usage);
 
                     // Get TPM
-                    //string tpm_IsActivated_InitialValue = WMI.Search("root\\CIMV2", "SELECT IsActivated_InitialValue FROM Win32_Tpm", "IsActivated_InitialValue");
-                    Device_Worker.tpm = Windows.Helper.WMI.Search("root\\cimv2\\Security\\MicrosoftTpm", "SELECT IsEnabled_InitialValue FROM Win32_Tpm", "IsEnabled_InitialValue");
+                    Device_Worker.tpm = Device_Information.Hardware.TPM_Status();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    // Get ip_address_internal
+                    Device_Worker.ip_address_internal = Network.Get_Local_IP_Address();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "ip_address_internal", Device_Worker.ip_address_internal);
+
+                    // Get Windows version
+                    Device_Worker.operating_system = Device_Information.OS.Version();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "operating_system", Device_Worker.operating_system);
+
+                    // Get DOMAIN
+                    Device_Worker.domain = Environment.UserDomainName;
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "domain", Device_Worker.domain);
+
+                    // Get Antivirus solution
+                    Device_Worker.antivirus_solution = "-";
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "antivirus_solution", Device_Worker.antivirus_solution);
+
+                    // Get Firewall status
+                    Device_Worker.firewall_status = false;
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "firewall_status", Device_Worker.firewall_status.ToString());
+
+                    // Get Architecture
+                    Device_Worker.architecture = Environment.Is64BitOperatingSystem ? "x64" : "x86";
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "architecture", Device_Worker.architecture);
+
+                    // Get last boot
+                    Device_Worker.last_boot = Device_Information.OS.Get_Last_Boot_Time();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "last_boot", Device_Worker.last_boot);
+
+                    // Get timezone
+                    Device_Worker.timezone = Globalization.Local_Time_Zone();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "timezone", Device_Worker.timezone);
+
+                    // Get CPU
+                    Device_Worker.cpu = Global.Device_Information.Hardware.CPU_Name();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "cpu", Device_Worker.cpu);
+
+                    // Get CPU usage
+                    Device_Worker.cpu_usage = Device_Information.Hardware.CPU_Usage();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "cpu_usage", Device_Worker.cpu_usage);
+
+                    // Get Mainboard
+                    Device_Worker.mainboard = Device_Information.Hardware.Mainboard_Name();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "mainboard", Device_Worker.mainboard);
+
+                    // Get GPU
+                    Device_Worker.gpu = Device_Information.Hardware.GPU_Name();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
+
+                    // Get RAM
+                    Device_Worker.ram = Device_Information.Hardware.RAM_Total();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "ram", Device_Worker.ram);
+
+                    // Get RAM usage
+                    Device_Worker.ram_usage = Device_Information.Hardware.RAM_Usage();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "ram_usage", Device_Worker.ram_usage);
+
+                    // Get TPM
+                    Device_Worker.tpm = Device_Information.Hardware.TPM_Status();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
                 }
 

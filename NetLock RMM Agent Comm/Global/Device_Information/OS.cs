@@ -8,45 +8,87 @@ using static Global.Online_Mode.Handler;
 using Windows.Helper;
 using Global.Helper;
 using System.Text.Json;
+using NetLock_RMM_Agent_Comm;
 
 namespace Global.Device_Information
 {
     internal class OS
     {
-        public static string Windows_Version()
+        public static string Version()
         {
-            string operating_system = "-";
-
-            try
+            if (OperatingSystem.IsWindows())
             {
-                bool windows11 = false;
+                string operating_system = "-";
 
-                string _CurrentBuild = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild");
-                string _ProductName = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName");
-                string _DisplayVersion = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
+                try
+                {
+                    bool windows11 = false;
 
-                int CurrentBuild = Convert.ToInt32(_CurrentBuild);
+                    string _CurrentBuild = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "CurrentBuild");
+                    string _ProductName = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "ProductName");
+                    string _DisplayVersion = Registry.HKLM_Read_Value("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", "DisplayVersion");
 
-                // If the build number is greater than or equal to 22000, it is Windows 11. Older windows 11 versions had wrong product names, stating they are windows 11. Knowlege from NetLock Legacy
-                if (CurrentBuild > 22000 || CurrentBuild == 22000)
-                    windows11 = true;
+                    int CurrentBuild = Convert.ToInt32(_CurrentBuild);
 
-                if (windows11 == true)
-                    operating_system = "Windows 11" + " (" + _DisplayVersion + ")";
-                else
-                    operating_system = _ProductName + " (" + _DisplayVersion + ")";
+                    // If the build number is greater than or equal to 22000, it is Windows 11. Older windows 11 versions had wrong product names, stating they are windows 11. Knowlege from NetLock Legacy
+                    if (CurrentBuild > 22000 || CurrentBuild == 22000)
+                        windows11 = true;
 
-                if (operating_system == null)
-                    operating_system = "";
+                    if (windows11 == true)
+                        operating_system = "Windows 11" + " (" + _DisplayVersion + ")";
+                    else
+                        operating_system = _ProductName + " (" + _DisplayVersion + ")";
 
-                return operating_system;
+                    if (operating_system == null)
+                        operating_system = "";
+
+                    return operating_system;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("NetLock_RMM_Comm_Agent_Windows.Helper.Windows.Windows_Version", "Collect windows product name & version", ex.ToString());
+                    return "-";
+                }
             }
-            catch (Exception ex)
+
+            if (OperatingSystem.IsLinux())
             {
-                Logging.Error("NetLock_RMM_Comm_Agent_Windows.Helper.Windows.Windows_Version", "Collect windows product name & version", ex.Message);
-                return "-";
+                try
+                {
+                    string osReleaseFile = "/etc/os-release";
+                    if (!File.Exists(osReleaseFile))
+                    {
+                        throw new FileNotFoundException("OS release file not found.");
+                    }
+
+                    string[] lines = File.ReadAllLines(osReleaseFile);
+                    string version = "-";
+                    string name = "-";
+
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("NAME="))
+                        {
+                            name = line.Replace("NAME=", "").Replace("\"", "").Trim();
+                        }
+                        if (line.StartsWith("VERSION="))
+                        {
+                            version = line.Replace("VERSION=", "").Replace("\"", "").Trim();
+                        }
+                    }
+
+                    return $"{name} {version}";
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("LinuxHelper.UbuntuVersion", "Error retrieving Ubuntu version", ex.Message);
+                    return "-";
+                }
             }
+
+            return "-";
         }
+
 
         public static string Antivirus_Products()
         {
@@ -83,7 +125,7 @@ namespace Global.Device_Information
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Windows.Antivirus_Products", "Collect antivirus products", ex.Message);
+                Logging.Error("Device_Information.Windows.Antivirus_Products", "Collect antivirus products", ex.ToString());
                 return "[]";
             }
         }
@@ -134,8 +176,54 @@ namespace Global.Device_Information
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Windows.Antivirus_Information", "Collect antivirus information", ex.Message);
+                Logging.Error("Device_Information.Windows.Antivirus_Information", "Collect antivirus information", ex.ToString());
                 return "{}";
+            }
+        }
+
+        public static string Get_Last_Boot_Time()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                try
+                {
+                    string _last_boot = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT LastBootUpTime FROM Win32_OperatingSystem", "LastBootUpTime");
+                    DateTime last_boot_datetime = ManagementDateTimeConverter.ToDateTime(_last_boot);
+                    return last_boot_datetime.ToString("dd.MM.yyyy HH:mm:ss");
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Windows.Get_Last_Boot_Time", "Error retrieving last boot time", ex.Message);
+                    return null;
+                }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    // Read uptime from /proc/uptime
+                    string uptimeContent = File.ReadAllText("/proc/uptime");
+                    string[] parts = uptimeContent.Split(' ');
+                    double uptimeSeconds = double.Parse(parts[0]);
+
+                    // Calculate the last boot time
+                    DateTime lastBootTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(uptimeSeconds));
+
+                    // Format the last boot time
+                    string formattedBootTime = lastBootTime.ToString("dd.MM.yyyy HH:mm:ss");
+
+                    // Log and return the result
+                    return formattedBootTime;
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine($"Error retrieving last boot time: {ex.ToString()}");
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
             }
         }
     }

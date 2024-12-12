@@ -237,27 +237,6 @@ namespace Global.Initialization
             }
         }
 
-        public static string Access_Key()
-        {
-            try
-            {
-                string server_config_json = File.ReadAllText(Application_Paths.program_data_server_config_json);
-                Logging.Debug("Server_Config_Handler", "Server_Config_Handler.Load (server_config_json)", server_config_json);
-                // Parse the JSON
-                using (JsonDocument document = JsonDocument.Parse(server_config_json))
-                {
-                    JsonElement element = document.RootElement.GetProperty("access_key");
-                    Logging.Debug("Server_Config_Handler", "Server_Config_Handler.Load (access_key)", element.ToString());
-                    return element.ToString();
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Server_Config_Handler", "Server_Config_Handler.Load (access_key)", ex.ToString());
-                return "error";
-            }
-        }
-
         public static bool Authorized()
         {
             try
@@ -289,7 +268,7 @@ namespace Global.Initialization
         }
 
 
-        public static string Access_Key(int _return_type)
+        public static string Access_Key()
         {
             try
             {
@@ -306,7 +285,7 @@ namespace Global.Initialization
                 }
                 
                 // Check if the access key is valid
-                if (access_key == string.Empty)
+                if (String.IsNullOrEmpty(access_key))
                 {
                     Logging.Debug("Server_Config_Handler", "Server_Config_Handler.Load", "Access key is empty");
 

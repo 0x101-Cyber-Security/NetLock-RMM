@@ -251,13 +251,17 @@
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.SimCard" Title="Status" Size="Size.Small" />&nbsp;@Localizer["gpu"]: @gpu</MudText>
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Memory" Title="Status" Size="Size.Small" />&nbsp;@Localizer["ram"]: @ram (GB)</MudText>
 
-                                            @if (firewall_status == "True")
+                                            @if (tpm == "True")
                                             {
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.HeatPump" Title="Status" Size="Size.Small" />&nbsp;TPM: @Localizer["enabled"]</MudText>
                                             }
-                                            else
+                                            else if (tpm == "False")
                                             {
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.HeatPump" Title="Status" Size="Size.Small" />&nbsp;TPM: @Localizer["disabled"]</MudText>
+                                            }
+                                            else
+                                            {
+                                                <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.HeatPump" Title="Status" Size="Size.Small" />&nbsp;TPM: @tpm</MudText>
                                             }
 
                                             <MudExpansionPanel Class="mt-0 custom-expansion-panel" @bind-Expanded="device_information_general_history_expanded" @bind-Expanded:after="async () => { await Device_Information_General_History_Table_Submit_Picker(); }">
