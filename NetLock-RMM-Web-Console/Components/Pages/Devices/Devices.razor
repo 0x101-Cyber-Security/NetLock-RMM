@@ -97,12 +97,35 @@
                         <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
                     </HeaderContent>
                     <RowTemplate Context="row">
-                        <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
-                            <span style="display: flex; align-items: center;">
-                                <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" class="desktop-icon" />&nbsp;@row.device_name
-                            </span>
-                        </MudTd>
 
+                        @{
+                            if (@row.platform == "Windows")
+                            {
+                                <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        <MudIcon Icon="@Icons.Custom.Brands.MicrosoftWindows" Size="Size.Small" class="desktop-icon" />&nbsp;@row.device_name
+                                    </span>
+                                </MudTd>
+                            }
+                            else if (@row.platform == "Linux")
+                            {
+                                <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        <MudIcon Icon="@Icons.Custom.Brands.Linux" Size="Size.Small" class="desktop-icon" />&nbsp;@row.device_name
+                                    </span>
+                                </MudTd>
+                            }
+                            else if (@row.platform == "MacOS")
+                            {
+                                <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        <MudIcon Icon="@Icons.Custom.Brands.Apple" Size="Size.Small" class="desktop-icon" />&nbsp;@row.device_name
+                                    </span>
+                                </MudTd>
+                            }
+                        }
+
+                        
                         <MudTd DataLabel="@Localizer["tenant"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center;">
                                 <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Small" class="desktop-icon" />&nbsp;@row.tenant_name
@@ -153,6 +176,9 @@
 
                         <MudTd DataLabel="@Localizer["firewall"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center;">
+                                
+                            @if (row.platform == "Windows")
+                            {
                                 @if (row.firewall_status == "True")
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.Fireplace" Color="Color.Success" Size="Size.Small" class="desktop-icon" /><span>&nbsp;</span>@Localizer["enabled"]
@@ -161,6 +187,12 @@
                                 {
                                     <MudIcon Icon="@Icons.Material.Filled.Fireplace" Color="Color.Warning" Size="Size.Small" class="desktop-icon" /><span>&nbsp;</span>@Localizer["disabled"]
                                 }
+                            }
+                            else
+                            {
+                                <MudIcon Icon="@Icons.Material.Filled.Fireplace" Color="Color.Default" Size="Size.Small" class="desktop-icon" /><span>&nbsp; -</span>
+                            }
+                            
                             </span>
                         </MudTd>
 
@@ -233,14 +265,24 @@
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Pages" Title="Status" Size="Size.Small" />&nbsp;@Localizer["architecture"]: @architecture</MudText>
 
                                             <MudText Class="mt-5 ml-2" Typo="Typo.h6">@Localizer["security"]</MudText>                  
-                                            @if (firewall_status == "True")
+                                            
+                                            @if (platform == "Windows")
                                             {
-                                                <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Fireplace" Title="Status" Color="Color.Success" Size="Size.Small" />&nbsp;Firewall: @Localizer["enabled"]</MudText>
+                                                @if (firewall_status == "True")
+                                                {
+                                                    <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Fireplace" Title="Status" Color="Color.Success" Size="Size.Small" />&nbsp;Firewall: @Localizer["enabled"]</MudText>
+                                                }
+                                                else
+                                                {
+                                                    <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Fireplace" Title="Status"Color="Color.Warning" Size="Size.Small" />&nbsp;Firewall: @Localizer["disabled"]</MudText>
+                                                }
                                             }
                                             else
                                             {
-                                                <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Fireplace" Title="Status"Color="Color.Warning" Size="Size.Small" />&nbsp;Firewall: @Localizer["disabled"]</MudText>
+                                                <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Fireplace" Title="Status"Color="Color.Default" Size="Size.Small" />&nbsp;Firewall: -</MudText>
                                             }
+                                            
+                                          
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Coronavirus" Title="Status" Size="Size.Small" />&nbsp;Antivirus: @antivirus_solution</MudText>
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.AvTimer" Title="Status" Size="Size.Small" />&nbsp;@Localizer["last_boot"]: @last_boot</MudText>
                                                 <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Map" Title="Status" Size="Size.Small" />&nbsp;@Localizer["timezone"]: @timezone</MudText>
@@ -1475,7 +1517,10 @@
                                             </MudExpansionPanel>
                                         </MudPaper>
 
-                                        <MudPaper Class="mt-5">
+                                        @if (platform == "Windows")
+                                        {
+                                            <MudPaper Class="mt-5">
+
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.h6">@Localizer["antivirus_products"]</MudText>
 
                                             <MudTable FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@antivirus_products_mysql_data" Filter="new Func<Antivirus_Products_Entity, bool>(Antivirus_Products_Table_Filter_Func)">
@@ -1613,6 +1658,7 @@
                                             </MudExpansionPanel>
 
                                         </MudPaper>
+                                        }
 
                                         <MudPaper Class="mt-5">
                                             <MudText Class="ml-2" Typo="Typo.h6">@Localizer["notes"]</MudText>
@@ -1907,73 +1953,218 @@
 
                                         </MudTabPanel>
 
-                                            <MudTabPanel Text="@Localizer["Cronjobs"]">
+                                            @if (platform == "hideasplaceholder")
+                                            {
+                                                                    <MudTabPanel Text="@Localizer["Cronjobs"]">
 
+                                                                    <MudPaper>
+
+                                                                        <MudTooltip Text="@Localizer["export_data"]">
+                                                                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_Table_Dialog"></MudIconButton>
+                                                                        </MudTooltip>
+
+                                                                        <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@cronjobs_mysql_data" Filter="new Func<Cronjobs_Entity, bool>(Cronjobs_Table_Filter_Func)">
+                                                                            <ToolBarContent>
+                                                                                <MudTextField @bind-Value="cronjobs_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                                                            </ToolBarContent>
+                                                                            <HeaderContent>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.name)">Name</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.version)">Version</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_date)">@Localizer["installation_date"]</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_path)">@Localizer["installation_path"]</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.vendor)">@Localizer["manufacturer"]</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                                <MudTh Style="white-space: nowrap;">
+                                                                                    <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.uninstallation_string)">@Localizer["uninstallation_command"]</MudTableSortLabel>
+                                                                                </MudTh>
+                                                                            </HeaderContent>
+                                                                            <RowTemplate Context="cronjobs_row">
+
+                                                                                <MudTd DataLabel="Name" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.name
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                                <MudTd DataLabel="Version" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.version
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                                <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.installation_date
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                                <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.installation_path
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                                <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.vendor
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                                <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                                    <span style="display: flex; align-items: center;">
+                                                                                        &nbsp;@cronjobs_row.uninstallation_string
+                                                                                    </span>
+                                                                                </MudTd>
+
+                                                                            </RowTemplate>
+                                                                            <PagerContent>
+                                                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                                            </PagerContent>
+                                                                        </MudTable>
+
+                                                                    </MudPaper>
+
+                                                                    <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="cronjobs_history_expanded" @bind-Expanded:after="async () => { await Cronjobs_History_Table_Submit_Picker(); }">
+                                                                        <TitleContent>
+                                                                            <div class="d-flex">
+                                                                                <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                                                                                <MudText>@Localizer["history"]</MudText>
+                                                                            </div>
+                                                                        </TitleContent>
+
+                                                                        <ChildContent>
+
+                                                                            <div style="display: flex; align-items: center;">
+                                                                                <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="cronjobs_history_table_picker" @bind-DateRange="cronjobs_history_table_dateRange">
+                                                                                    <PickerActions Context="pickerActionsContext">
+                                                                                        <MudButton Class="mr-auto align-self-start" OnClick="@(() => cronjobs_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                                                        <MudButton OnClick="@(() => cronjobs_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                                                        <MudButton Color="Color.Primary" @onclick="async () => { await Cronjobs_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                                                    </PickerActions>
+                                                                                </MudDateRangePicker>
+
+                                                                                <MudTooltip Text="@Localizer["export_data"]">
+                                                                                    <MudIconButton Class="ml-2 mt-S" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_History_Table_Dialog"></MudIconButton>
+                                                                                </MudTooltip>
+                                                                            </div>
+
+                                                                            <MudTable Class="mt-2" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@cronjobs_history_mysql_data" GroupBy="@cronjobs_groupDefinition" Filter="new Func<Cronjobs_History_Entity, bool>(Cronjobs_History_Table_Filter_Func)">
+                                                                                <ToolBarContent>
+                                                                                    <MudTextField Class="mt-0" @bind-Value="cronjobs_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                                                </ToolBarContent>
+                                                                                <HeaderContent>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_date))" style="white-space: nowrap;">@Localizer["installation_date"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_path))" style="white-space: nowrap;">@Localizer["installation_path"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.vendor))" style="white-space: nowrap;">@Localizer["manufacturer"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.uninstallation_string))" style="white-space: nowrap;">@Localizer["uninstallation_command"]</MudTh>
+                                                                                </HeaderContent>
+                                                                                <GroupHeaderTemplate Context="groupContext">
+                                                                                    <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
+                                                                                </GroupHeaderTemplate>
+                                                                                <RowTemplate Context="cronjobs_history_row">
+
+                                                                                    <MudTd DataLabel="Name" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.name
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="Version" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.version
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.installation_date
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.installation_path
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.vendor
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@cronjobs_history_row.uninstallation_string
+                                                                                        </span>
+                                                                                    </MudTd>
+
+                                                                                </RowTemplate>
+                                                                                <PagerContent>
+                                                                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                                                </PagerContent>
+                                                                            </MudTable>
+                                                                        </ChildContent>
+                                                                    </MudExpansionPanel>
+
+                                                                </MudTabPanel>
+                                            }
+
+                                        @if (platform == "Windows")
+                                        {
+                                            <MudTabPanel Text="Logon">
                                                 <MudPaper>
-
                                                     <MudTooltip Text="@Localizer["export_data"]">
-                                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_Table_Dialog"></MudIconButton>
+                                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Application_Logon_Table_Dialog"></MudIconButton>
                                                     </MudTooltip>
 
-                                                    <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@cronjobs_mysql_data" Filter="new Func<Cronjobs_Entity, bool>(Cronjobs_Table_Filter_Func)">
+                                                    <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@application_logon_mysql_data" Filter="new Func<Application_Logon_Entity, bool>(Application_Logon_Table_Filter_Func)">
                                                         <ToolBarContent>
-                                                            <MudTextField @bind-Value="cronjobs_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                                            <MudTextField @bind-Value="application_logon_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                                                         </ToolBarContent>
                                                         <HeaderContent>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.name)">Name</MudTableSortLabel>
-                                                            </MudTh>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.version)">Version</MudTableSortLabel>
-                                                            </MudTh>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_date)">@Localizer["installation_date"]</MudTableSortLabel>
-                                                            </MudTh>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_path)">@Localizer["installation_path"]</MudTableSortLabel>
-                                                            </MudTh>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.vendor)">@Localizer["manufacturer"]</MudTableSortLabel>
-                                                            </MudTh>
-                                                            <MudTh Style="white-space: nowrap;">
-                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.uninstallation_string)">@Localizer["uninstallation_command"]</MudTableSortLabel>
-                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.command)">@Localizer["command"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.user)">@Localizer["user"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.user_sid)">@Localizer["user_sid"]</MudTableSortLabel></MudTh>
                                                         </HeaderContent>
-                                                        <RowTemplate Context="cronjobs_row">
 
-                                                            <MudTd DataLabel="Name" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                        <RowTemplate Context="application_logon_row">
+
+                                                            <MudTd DataLabel="Name" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.name
+                                                                    &nbsp;@application_logon_row.name
                                                                 </span>
                                                             </MudTd>
 
-                                                            <MudTd DataLabel="Version" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                            <MudTd DataLabel="@Localizer["path"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.version
+                                                                    &nbsp;@application_logon_row.path
                                                                 </span>
                                                             </MudTd>
 
-                                                            <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                            <MudTd DataLabel="@Localizer["command"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.installation_date
+                                                                    &nbsp;@application_logon_row.command
                                                                 </span>
                                                             </MudTd>
 
-                                                            <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                            <MudTd DataLabel="@Localizer["user"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.installation_path
+                                                                    &nbsp;@application_logon_row.user
                                                                 </span>
                                                             </MudTd>
 
-                                                            <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.vendor
-                                                                </span>
-                                                            </MudTd>
-
-                                                            <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@cronjobs_row.uninstallation_string
+                                                                    &nbsp;@application_logon_row.user_sid
                                                                 </span>
                                                             </MudTd>
 
@@ -1985,7 +2176,7 @@
 
                                                 </MudPaper>
 
-                                                <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="cronjobs_history_expanded" @bind-Expanded:after="async () => { await Cronjobs_History_Table_Submit_Picker(); }">
+                                                <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_logon_history_expanded" @bind-Expanded:after="async () => { await Applications_Logon_History_Table_Submit_Picker(); }" >
                                                     <TitleContent>
                                                         <div class="d-flex">
                                                             <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
@@ -1996,64 +2187,58 @@
                                                     <ChildContent>
 
                                                         <div style="display: flex; align-items: center;">
-                                                            <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="cronjobs_history_table_picker" @bind-DateRange="cronjobs_history_table_dateRange">
+                                                            <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_logon_history_table_picker" @bind-DateRange="applications_logon_history_table_dateRange">
                                                                 <PickerActions Context="pickerActionsContext">
-                                                                    <MudButton Class="mr-auto align-self-start" OnClick="@(() => cronjobs_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                                                    <MudButton OnClick="@(() => cronjobs_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                                                    <MudButton Color="Color.Primary" @onclick="async () => { await Cronjobs_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                                    <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_logon_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                                    <MudButton OnClick="@(() => applications_logon_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                                    <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Logon_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
                                                                 </PickerActions>
                                                             </MudDateRangePicker>
 
                                                             <MudTooltip Text="@Localizer["export_data"]">
-                                                                <MudIconButton Class="ml-2 mt-S" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_History_Table_Dialog"></MudIconButton>
+                                                                <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Logon_History_Table_Dialog"></MudIconButton>
                                                             </MudTooltip>
                                                         </div>
-
-                                                        <MudTable Class="mt-2" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@cronjobs_history_mysql_data" GroupBy="@cronjobs_groupDefinition" Filter="new Func<Cronjobs_History_Entity, bool>(Cronjobs_History_Table_Filter_Func)">
+                                        
+                                                        <MudTable Class="mt-2i" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_logon_history_mysql_data" GroupBy="@applications_logon_history_groupDefinition" Filter="new Func<Applications_Logon_History_Entity, bool>(Applications_Logon_History_Table_Filter_Func)">
                                                             <ToolBarContent>
-                                                                <MudTextField Class="mt-0" @bind-Value="cronjobs_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                                <MudTextField Class="mt-0" @bind-Value="applications_logon_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
                                                             </ToolBarContent>
                                                             <HeaderContent>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_date))" style="white-space: nowrap;">@Localizer["installation_date"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_path))" style="white-space: nowrap;">@Localizer["installation_path"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.vendor))" style="white-space: nowrap;">@Localizer["manufacturer"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.uninstallation_string))" style="white-space: nowrap;">@Localizer["uninstallation_command"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.command))" style="white-space: nowrap;">@Localizer["command"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.user))" style="white-space: nowrap;">@Localizer["user"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.user_sid))" style="white-space: nowrap;">@Localizer["user_sid"]</MudTh>
                                                             </HeaderContent>
                                                             <GroupHeaderTemplate Context="groupContext">
                                                                 <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
                                                             </GroupHeaderTemplate>
-                                                            <RowTemplate Context="cronjobs_history_row">
+                                                            <RowTemplate Context="applications_logon_history_row">
 
-                                                                <MudTd DataLabel="Name" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                <MudTd DataLabel="Name" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
                                                                     <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.name
+                                                                        &nbsp;@applications_logon_history_row.name
                                                                     </span>
                                                                 </MudTd>
-                                                                <MudTd DataLabel="Version" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
                                                                     <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.version
+                                                                        &nbsp;@applications_logon_history_row.path
                                                                     </span>
                                                                 </MudTd>
-                                                                <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                <MudTd DataLabel="@Localizer["command"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
                                                                     <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.installation_date
+                                                                        &nbsp;@applications_logon_history_row.command
                                                                     </span>
                                                                 </MudTd>
-                                                                <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                <MudTd DataLabel="@Localizer["user"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
                                                                     <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.installation_path
+                                                                        &nbsp;@applications_logon_history_row.user
                                                                     </span>
                                                                 </MudTd>
-                                                                <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
                                                                     <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.vendor
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@cronjobs_history_row.uninstallation_string
+                                                                        &nbsp;@applications_logon_history_row.user_sid
                                                                     </span>
                                                                 </MudTd>
 
@@ -2063,131 +2248,81 @@
                                                             </PagerContent>
                                                         </MudTable>
                                                     </ChildContent>
-                                                </MudExpansionPanel>
+                                                </MudExpansionPanel> 
 
                                             </MudTabPanel>
+                                        }
 
-                                        <MudTabPanel Text="Logon">
-                                            <MudPaper>
-                                                <MudTooltip Text="@Localizer["export_data"]">
-                                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Application_Logon_Table_Dialog"></MudIconButton>
-                                                </MudTooltip>
+                                        @if (platform == "Windows")
+                                        {
+                                            <MudTabPanel Text="@Localizer["task_scheduler"]">
+                                                <MudPaper>
 
-                                                <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@application_logon_mysql_data" Filter="new Func<Application_Logon_Entity, bool>(Application_Logon_Table_Filter_Func)">
-                                                    <ToolBarContent>
-                                                        <MudTextField @bind-Value="application_logon_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                                    </ToolBarContent>
-                                                    <HeaderContent>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.command)">@Localizer["command"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.user)">@Localizer["user"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Application_Logon_Entity, object>(x => x.user_sid)">@Localizer["user_sid"]</MudTableSortLabel></MudTh>
-                                                    </HeaderContent>
+                                                    <MudTooltip Text="@Localizer["export_data"]">
+                                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Application_Scheduled_Tasks_Table_Dialog"></MudIconButton>
+                                                    </MudTooltip>
 
-                                                    <RowTemplate Context="application_logon_row">
-
-                                                        <MudTd DataLabel="Name" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@application_logon_row.name
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["path"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@application_logon_row.path
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["command"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@application_logon_row.command
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["user"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@application_logon_row.user
-                                                            </span>
-                                                        </MudTd>
-
-                                                            <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Application_Logon_RowClickHandler(application_logon_row)" class="@Application_Logon_GetRowClass(application_logon_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@application_logon_row.user_sid
-                                                            </span>
-                                                        </MudTd>
-
-                                                    </RowTemplate>
-                                                    <PagerContent>
-                                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                    </PagerContent>
-                                                </MudTable>
-
-                                            </MudPaper>
-
-                                            <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_logon_history_expanded" @bind-Expanded:after="async () => { await Applications_Logon_History_Table_Submit_Picker(); }" >
-                                                <TitleContent>
-                                                    <div class="d-flex">
-                                                        <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
-                                                        <MudText>@Localizer["history"]</MudText>
-                                                    </div>
-                                                </TitleContent>
-
-                                                <ChildContent>
-
-                                                    <div style="display: flex; align-items: center;">
-                                                        <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_logon_history_table_picker" @bind-DateRange="applications_logon_history_table_dateRange">
-                                                            <PickerActions Context="pickerActionsContext">
-                                                                <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_logon_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                                                <MudButton OnClick="@(() => applications_logon_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                                                <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Logon_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
-                                                            </PickerActions>
-                                                        </MudDateRangePicker>
-
-                                                        <MudTooltip Text="@Localizer["export_data"]">
-                                                            <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Logon_History_Table_Dialog"></MudIconButton>
-                                                        </MudTooltip>
-                                                    </div>
-                                        
-                                                    <MudTable Class="mt-2i" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_logon_history_mysql_data" GroupBy="@applications_logon_history_groupDefinition" Filter="new Func<Applications_Logon_History_Entity, bool>(Applications_Logon_History_Table_Filter_Func)">
+                                                    <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@applications_scheduled_tasks_mysql_data" Filter="new Func<Applications_Scheduled_Tasks_Entity, bool>(Applications_Scheduled_Tasks_Table_Filter_Func)">
                                                         <ToolBarContent>
-                                                            <MudTextField Class="mt-0" @bind-Value="applications_logon_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                            <MudTextField @bind-Value="applications_scheduled_tasks_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                                                         </ToolBarContent>
                                                         <HeaderContent>
-                                                            <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.command))" style="white-space: nowrap;">@Localizer["command"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.user))" style="white-space: nowrap;">@Localizer["user"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_logon_history_table_sorted_column = (nameof(Applications_Logon_History_Entity.user_sid))" style="white-space: nowrap;">@Localizer["user_sid"]</MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.status)">Status</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.author)">@Localizer["author"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.folder)">@Localizer["directory"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.user_sid)">@Localizer["user_sid"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.next_execution)">@Localizer["next_execution"]</MudTableSortLabel></MudTh>
+                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.last_execution)">@Localizer["last_execution"]</MudTableSortLabel></MudTh>
                                                         </HeaderContent>
-                                                        <GroupHeaderTemplate Context="groupContext">
-                                                            <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
-                                                        </GroupHeaderTemplate>
-                                                        <RowTemplate Context="applications_logon_history_row">
+                                                        <RowTemplate Context="applications_scheduled_tasks_row">
 
-                                                            <MudTd DataLabel="Name" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
+                                                            <MudTd DataLabel="Name" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_logon_history_row.name
+                                                                    &nbsp;@applications_scheduled_tasks_row.name
                                                                 </span>
                                                             </MudTd>
-                                                                <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
+
+                                                            <MudTd DataLabel="Status" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_logon_history_row.path
+                                                                    &nbsp;@applications_scheduled_tasks_row.status
                                                                 </span>
                                                             </MudTd>
-                                                            <MudTd DataLabel="@Localizer["command"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
+
+                                                            <MudTd DataLabel="@Localizer["author"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_logon_history_row.command
+                                                                    &nbsp;@applications_scheduled_tasks_row.author
                                                                 </span>
                                                             </MudTd>
-                                                            <MudTd DataLabel="@Localizer["user"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
+
+                                                            <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_logon_history_row.user
+                                                                    &nbsp;@applications_scheduled_tasks_row.path
                                                                 </span>
                                                             </MudTd>
-                                                                <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Logon_History_RowClickHandler(applications_logon_history_row)" class="@Applications_Logon_History_GetRowClass(applications_logon_history_row)" style="white-space: nowrap;">
+
+                                                            <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_logon_history_row.user_sid
+                                                                    &nbsp;@applications_scheduled_tasks_row.folder
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@applications_scheduled_tasks_row.user_sid
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["next_execution"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@applications_scheduled_tasks_row.next_execution
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["last_execution"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@applications_scheduled_tasks_row.last_execution
                                                                 </span>
                                                             </MudTd>
 
@@ -2196,182 +2331,104 @@
                                                             <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
                                                         </PagerContent>
                                                     </MudTable>
-                                                </ChildContent>
-                                            </MudExpansionPanel> 
 
-                                        </MudTabPanel>
-                                        <MudTabPanel Text="@Localizer["task_scheduler"]">
-                                            <MudPaper>
+                                                </MudPaper>
 
-                                                <MudTooltip Text="@Localizer["export_data"]">
-                                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Application_Scheduled_Tasks_Table_Dialog"></MudIconButton>
-                                                </MudTooltip>
-
-                                                <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@applications_scheduled_tasks_mysql_data" Filter="new Func<Applications_Scheduled_Tasks_Entity, bool>(Applications_Scheduled_Tasks_Table_Filter_Func)">
-                                                    <ToolBarContent>
-                                                        <MudTextField @bind-Value="applications_scheduled_tasks_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                                    </ToolBarContent>
-                                                    <HeaderContent>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.status)">Status</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.author)">@Localizer["author"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.folder)">@Localizer["directory"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.user_sid)">@Localizer["user_sid"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.next_execution)">@Localizer["next_execution"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Scheduled_Tasks_Entity, object>(x => x.last_execution)">@Localizer["last_execution"]</MudTableSortLabel></MudTh>
-                                                    </HeaderContent>
-                                                    <RowTemplate Context="applications_scheduled_tasks_row">
-
-                                                        <MudTd DataLabel="Name" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.name
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="Status" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.status
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["author"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.author
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.path
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.folder
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.user_sid
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["next_execution"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.next_execution
-                                                            </span>
-                                                        </MudTd>
-
-                                                        <MudTd DataLabel="@Localizer["last_execution"]" @onclick="() => Applications_Scheduled_Tasks_RowClickHandler(applications_scheduled_tasks_row)" class="@Applications_Scheduled_Tasks_GetRowClass(applications_scheduled_tasks_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_scheduled_tasks_row.last_execution
-                                                            </span>
-                                                        </MudTd>
-
-                                                    </RowTemplate>
-                                                    <PagerContent>
-                                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                    </PagerContent>
-                                                </MudTable>
-
-                                            </MudPaper>
-
-                                            <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_scheduled_tasks_history_expanded" @bind-Expanded:after="async () => { await Applications_Scheduled_Tasks_History_Table_Submit_Picker(); }" >
-                                                <TitleContent>
-                                                    <div class="d-flex">
-                                                        <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
-                                                        <MudText>@Localizer["history"]</MudText>
-                                                    </div>
-                                                </TitleContent>
-
-                                                <ChildContent>
-                                                
-                                                        <div style="display: flex; align-items: center;">
-                                                            <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_scheduled_tasks_history_table_picker" @bind-DateRange="applications_scheduled_tasks_history_table_dateRange">
-                                                                <PickerActions Context="pickerActionsContext">
-                                                                    <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_scheduled_tasks_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                                                    <MudButton OnClick="@(() => applications_scheduled_tasks_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                                                    <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Scheduled_Tasks_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
-                                                                </PickerActions>
-                                                            </MudDateRangePicker>
-
-                                                            <MudTooltip Text="@Localizer["export_data"]">
-                                                                <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Scheduled_Tasks_History_Table_Dialog"></MudIconButton>
-                                                            </MudTooltip>
+                                                <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_scheduled_tasks_history_expanded" @bind-Expanded:after="async () => { await Applications_Scheduled_Tasks_History_Table_Submit_Picker(); }" >
+                                                    <TitleContent>
+                                                        <div class="d-flex">
+                                                            <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                                                            <MudText>@Localizer["history"]</MudText>
                                                         </div>
+                                                    </TitleContent>
 
-                                                        <MudTable Class="mt-2" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_scheduled_tasks_history_mysql_data" GroupBy="@applications_scheduled_tasks_history_groupDefinition" Filter="new Func<Applications_Scheduled_Tasks_History_Entity, bool>(Applications_Scheduled_Tasks_History_Table_Filter_Func)">
-                                                            <ToolBarContent>
-                                                                <MudTextField Class="mt-0" @bind-Value="applications_scheduled_tasks_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
-                                                            </ToolBarContent>
-                                                            <HeaderContent>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.status))" style="white-space: nowrap;">Status</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.author))" style="white-space: nowrap;">@Localizer["author"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.folder))" style="white-space: nowrap;">@Localizer["directory"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.user_sid))" style="white-space: nowrap;">@Localizer["user_sid"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.next_execution))" style="white-space: nowrap;">@Localizer["next_execution"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.last_execution))" style="white-space: nowrap;">@Localizer["last_execution"]</MudTh>
-                                                            </HeaderContent>
-                                                            <GroupHeaderTemplate Context="groupContext">
-                                                                <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
-                                                            </GroupHeaderTemplate>
-                                                            <RowTemplate Context="applications_scheduled_tasks_history_row">
+                                                    <ChildContent>
+                                                
+                                                            <div style="display: flex; align-items: center;">
+                                                                <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_scheduled_tasks_history_table_picker" @bind-DateRange="applications_scheduled_tasks_history_table_dateRange">
+                                                                    <PickerActions Context="pickerActionsContext">
+                                                                        <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_scheduled_tasks_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                                        <MudButton OnClick="@(() => applications_scheduled_tasks_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                                        <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Scheduled_Tasks_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                                    </PickerActions>
+                                                                </MudDateRangePicker>
 
-                                                                <MudTd DataLabel="Name" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.name
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="Status" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.status
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["author"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.author
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.path
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.folder
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.user_sid
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["next_execution"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.next_execution
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="@Localizer["last_execution"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_scheduled_tasks_history_row.last_execution
-                                                                    </span>
-                                                                </MudTd>
+                                                                <MudTooltip Text="@Localizer["export_data"]">
+                                                                    <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Scheduled_Tasks_History_Table_Dialog"></MudIconButton>
+                                                                </MudTooltip>
+                                                            </div>
+
+                                                            <MudTable Class="mt-2" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_scheduled_tasks_history_mysql_data" GroupBy="@applications_scheduled_tasks_history_groupDefinition" Filter="new Func<Applications_Scheduled_Tasks_History_Entity, bool>(Applications_Scheduled_Tasks_History_Table_Filter_Func)">
+                                                                <ToolBarContent>
+                                                                    <MudTextField Class="mt-0" @bind-Value="applications_scheduled_tasks_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                                </ToolBarContent>
+                                                                <HeaderContent>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.status))" style="white-space: nowrap;">Status</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.author))" style="white-space: nowrap;">@Localizer["author"]</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.folder))" style="white-space: nowrap;">@Localizer["directory"]</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.user_sid))" style="white-space: nowrap;">@Localizer["user_sid"]</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.next_execution))" style="white-space: nowrap;">@Localizer["next_execution"]</MudTh>
+                                                                    <MudTh Sortable="true" @onclick="() => applications_scheduled_tasks_history_table_sorted_column = (nameof(Applications_Scheduled_Tasks_History_Entity.last_execution))" style="white-space: nowrap;">@Localizer["last_execution"]</MudTh>
+                                                                </HeaderContent>
+                                                                <GroupHeaderTemplate Context="groupContext">
+                                                                    <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
+                                                                </GroupHeaderTemplate>
+                                                                <RowTemplate Context="applications_scheduled_tasks_history_row">
+
+                                                                    <MudTd DataLabel="Name" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.name
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="Status" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.status
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["author"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.author
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.path
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.folder
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["user_sid"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.user_sid
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["next_execution"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.next_execution
+                                                                        </span>
+                                                                    </MudTd>
+                                                                    <MudTd DataLabel="@Localizer["last_execution"]" @onclick="() => Applications_Scheduled_Tasks_History_RowClickHandler(applications_scheduled_tasks_history_row)" class="@Applications_Scheduled_Tasks_History_GetRowClass(applications_scheduled_tasks_history_row)" style="white-space: nowrap;">
+                                                                        <span style="display: flex; align-items: center;">
+                                                                            &nbsp;@applications_scheduled_tasks_history_row.last_execution
+                                                                        </span>
+                                                                    </MudTd>
 
 
-                                                            </RowTemplate>
-                                                            <PagerContent>
-                                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                            </PagerContent>
-                                                        </MudTable>
-                                                </ChildContent>
-                                            </MudExpansionPanel>
-                                        </MudTabPanel>
+                                                                </RowTemplate>
+                                                                <PagerContent>
+                                                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                                </PagerContent>
+                                                            </MudTable>
+                                                    </ChildContent>
+                                                </MudExpansionPanel>
+                                            </MudTabPanel>
+                                        }
+
                                         <MudTabPanel Text="@Localizer["services"]">
                                             <MudPaper>
 
@@ -2536,181 +2593,186 @@
                                                 </ChildContent>
                                             </MudExpansionPanel>
                                         </MudTabPanel>
-                                        <MudTabPanel Text="@Localizer["drivers"]">
-                                            <MudPaper>
 
-                                                <MudTooltip Text="@Localizer["export_data"]">
-                                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Applications_Drivers_Table_Dialog"></MudIconButton>
-                                                </MudTooltip>
+                                        @if (platform == "Windows")
+                                        {
+                                                                <MudTabPanel Text="@Localizer["drivers"]">
+                                                                <MudPaper>
 
-                                                <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@applications_drivers_mysql_data" Filter="new Func<Applications_Drivers_Entity, bool>(Applications_Drivers_Table_Filter_Func)">
-                                                    <ToolBarContent>
-                                                        <MudTextField @bind-Value="applications_drivers_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                                    </ToolBarContent>
-                                                    <HeaderContent>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.display_name)">@Localizer["display_name"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.status)">Status</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.start_type)">@Localizer["start_type"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
-                                                        <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.version)">Version</MudTableSortLabel></MudTh>
-                                                    </HeaderContent>
-                                                    <RowTemplate Context="applications_drivers_row">
+                                                                    <MudTooltip Text="@Localizer["export_data"]">
+                                                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Applications_Drivers_Table_Dialog"></MudIconButton>
+                                                                    </MudTooltip>
 
-                                                        <MudTd DataLabel="@Localizer["display_name"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.display_name
-                                                            </span>
-                                                        </MudTd>
+                                                                    <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@applications_drivers_mysql_data" Filter="new Func<Applications_Drivers_Entity, bool>(Applications_Drivers_Table_Filter_Func)">
+                                                                        <ToolBarContent>
+                                                                            <MudTextField @bind-Value="applications_drivers_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                                                        </ToolBarContent>
+                                                                        <HeaderContent>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.display_name)">@Localizer["display_name"]</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.status)">Status</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.start_type)">@Localizer["start_type"]</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.path)">@Localizer["path"]</MudTableSortLabel></MudTh>
+                                                                            <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<Applications_Drivers_Entity, object>(x => x.version)">Version</MudTableSortLabel></MudTh>
+                                                                        </HeaderContent>
+                                                                        <RowTemplate Context="applications_drivers_row">
 
-                                                        <MudTd DataLabel="Name" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.name
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="@Localizer["display_name"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.display_name
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.description
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="Name" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.name
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="Status" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.status
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="@Localizer["description"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.description
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["type"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.type
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="Status" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.status
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["start_type"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.start_type
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="@Localizer["type"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.type
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.path
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="@Localizer["start_type"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.start_type
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                        <MudTd DataLabel="Version" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@applications_drivers_row.version
-                                                            </span>
-                                                        </MudTd>
+                                                                            <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.path
+                                                                                </span>
+                                                                            </MudTd>
 
-                                                    </RowTemplate>
-                                                    <PagerContent>
-                                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                    </PagerContent>
-                                                </MudTable>
+                                                                            <MudTd DataLabel="Version" @onclick="() => Applications_Drivers_RowClickHandler(applications_drivers_row)" class="@Applications_Drivers_GetRowClass(applications_drivers_row)" style="white-space: nowrap;">
+                                                                                <span style="display: flex; align-items: center;">
+                                                                                    &nbsp;@applications_drivers_row.version
+                                                                                </span>
+                                                                            </MudTd>
 
-                                            </MudPaper>
+                                                                        </RowTemplate>
+                                                                        <PagerContent>
+                                                                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                                        </PagerContent>
+                                                                    </MudTable>
 
-                                            <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_drivers_history_expanded" @bind-Expanded:after="async () => { await Applications_Drivers_History_Table_Submit_Picker(); }">
-                                                <TitleContent>
-                                                    <div class="d-flex">
-                                                        <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
-                                                        <MudText>@Localizer["history"]</MudText>
-                                                    </div>
-                                                </TitleContent>
+                                                                </MudPaper>
 
-                                                <ChildContent>
-                                                        <div style="display: flex; align-items: center;">
-                                                            <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_drivers_history_table_picker" @bind-DateRange="applications_drivers_history_table_dateRange"    >
-                                                                <PickerActions Context="pickerActionsContext">
-                                                                    <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_drivers_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                                                    <MudButton OnClick="@(() => applications_drivers_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                                                    <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Drivers_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
-                                                                </PickerActions>
-                                                            </MudDateRangePicker>
+                                                                <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="applications_drivers_history_expanded" @bind-Expanded:after="async () => { await Applications_Drivers_History_Table_Submit_Picker(); }">
+                                                                    <TitleContent>
+                                                                        <div class="d-flex">
+                                                                            <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                                                                            <MudText>@Localizer["history"]</MudText>
+                                                                        </div>
+                                                                    </TitleContent>
 
-                                                            <MudTooltip Text="@Localizer["export_data"]">
-                                                                <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Drivers_History_Table_Dialog"></MudIconButton>
-                                                            </MudTooltip>
-                                                        </div>
+                                                                    <ChildContent>
+                                                                            <div style="display: flex; align-items: center;">
+                                                                                <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="applications_drivers_history_table_picker" @bind-DateRange="applications_drivers_history_table_dateRange"    >
+                                                                                    <PickerActions Context="pickerActionsContext">
+                                                                                        <MudButton Class="mr-auto align-self-start" OnClick="@(() => applications_drivers_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                                                        <MudButton OnClick="@(() => applications_drivers_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                                                        <MudButton Color="Color.Primary" @onclick="async () => { await Applications_Drivers_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                                                    </PickerActions>
+                                                                                </MudDateRangePicker>
 
-                                                        <MudTable Class="mt-5" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_drivers_history_mysql_data" GroupBy="@applications_drivers_history_groupDefinition" Filter="new Func<Applications_Drivers_History_Entity, bool>(Applications_Drivers_History_Table_Filter_Func)">
-                                                            <ToolBarContent>
-                                                                <MudTextField Class="mt-0" @bind-Value="applications_drivers_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
-                                                            </ToolBarContent>
-                                                            <HeaderContent>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.display_name))" style="white-space: nowrap;">@Localizer["display_name"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.description))" style="white-space: nowrap;">@Localizer["description"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.status))" style="white-space: nowrap;">Status</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.type))" style="white-space: nowrap;">@Localizer["type"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.start_type))" style="white-space: nowrap;">@Localizer["start_type"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
-                                                                <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
-                                                            </HeaderContent>
-                                                            <GroupHeaderTemplate Context="groupContext">
-                                                                <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
-                                                            </GroupHeaderTemplate>
-                                                            <RowTemplate Context="applications_drivers_history_row">
+                                                                                <MudTooltip Text="@Localizer["export_data"]">
+                                                                                    <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default"  @onclick="Trigger_Export_Application_Drivers_History_Table_Dialog"></MudIconButton>
+                                                                                </MudTooltip>
+                                                                            </div>
 
-                                                                <MudTd DataLabel="@Localizer["display_name"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.display_name
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="Name" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.name
-                                                                    </span>
-                                                                </MudTd>
+                                                                            <MudTable Class="mt-5" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@applications_drivers_history_mysql_data" GroupBy="@applications_drivers_history_groupDefinition" Filter="new Func<Applications_Drivers_History_Entity, bool>(Applications_Drivers_History_Table_Filter_Func)">
+                                                                                <ToolBarContent>
+                                                                                    <MudTextField Class="mt-0" @bind-Value="applications_drivers_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                                                </ToolBarContent>
+                                                                                <HeaderContent>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.display_name))" style="white-space: nowrap;">@Localizer["display_name"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.description))" style="white-space: nowrap;">@Localizer["description"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.status))" style="white-space: nowrap;">Status</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.type))" style="white-space: nowrap;">@Localizer["type"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.start_type))" style="white-space: nowrap;">@Localizer["start_type"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.path))" style="white-space: nowrap;">@Localizer["path"]</MudTh>
+                                                                                    <MudTh Sortable="true" @onclick="() => applications_drivers_history_table_sorted_column = (nameof(Applications_Drivers_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
+                                                                                </HeaderContent>
+                                                                                <GroupHeaderTemplate Context="groupContext">
+                                                                                    <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
+                                                                                </GroupHeaderTemplate>
+                                                                                <RowTemplate Context="applications_drivers_history_row">
 
-                                                                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.description
-                                                                    </span>
-                                                                </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["display_name"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.display_name
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="Name" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.name
+                                                                                        </span>
+                                                                                    </MudTd>
 
-                                                                <MudTd DataLabel="Status" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.status
-                                                                    </span>
-                                                                </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["description"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.description
+                                                                                        </span>
+                                                                                    </MudTd>
 
-                                                                <MudTd DataLabel="@Localizer["type"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.type
-                                                                    </span>
-                                                                </MudTd>
+                                                                                    <MudTd DataLabel="Status" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.status
+                                                                                        </span>
+                                                                                    </MudTd>
 
-                                                                <MudTd DataLabel="@Localizer["start_type"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.start_type
-                                                                    </span>
-                                                                </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["type"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.type
+                                                                                        </span>
+                                                                                    </MudTd>
 
-                                                                <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.path
-                                                                    </span>
-                                                                </MudTd>
-                                                                <MudTd DataLabel="Version" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
-                                                                    <span style="display: flex; align-items: center;">
-                                                                        &nbsp;@applications_drivers_history_row.version
-                                                                    </span>
-                                                                </MudTd>
+                                                                                    <MudTd DataLabel="@Localizer["start_type"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.start_type
+                                                                                        </span>
+                                                                                    </MudTd>
 
-                                                            </RowTemplate>
-                                                            <PagerContent>
-                                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                            </PagerContent>
-                                                        </MudTable>
-                                                </ChildContent>
-                                            </MudExpansionPanel>
-                                        </MudTabPanel>
+                                                                                    <MudTd DataLabel="@Localizer["path"]" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.path
+                                                                                        </span>
+                                                                                    </MudTd>
+                                                                                    <MudTd DataLabel="Version" @onclick="() => Applications_Drivers_History_RowClickHandler(applications_drivers_history_row)" class="@Applications_Drivers_History_GetRowClass(applications_drivers_history_row)" style="white-space: nowrap;">
+                                                                                        <span style="display: flex; align-items: center;">
+                                                                                            &nbsp;@applications_drivers_history_row.version
+                                                                                        </span>
+                                                                                    </MudTd>
+
+                                                                                </RowTemplate>
+                                                                                <PagerContent>
+                                                                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                                                </PagerContent>
+                                                                            </MudTable>
+                                                                    </ChildContent>
+                                                                </MudExpansionPanel>
+                                                            </MudTabPanel>
+                                        }
+
                                     </MudTabs>
                                 </MudTabPanel>
                             }
@@ -3020,7 +3082,7 @@
                                 </MudTabPanel>
                             }
 
-                            @if (permissions_devices_antivirus)
+                            @if (permissions_devices_antivirus && platform == "Windows")
                             {
                                 <MudTabPanel Text="Antivirus">
                             
@@ -3602,6 +3664,7 @@
     public string agent_version = String.Empty;
     public string operating_system = String.Empty;
     public string architecture = String.Empty;
+    public string platform = String.Empty;
     public string domain = String.Empty;
     public string antivirus_solution = String.Empty;
     public string firewall_status = String.Empty;
@@ -6300,6 +6363,7 @@
         public string domain { get; set; } = "Empty";
         public string antivirus_solution { get; set; } = "Empty";
         public string firewall_status { get; set; } = "Empty";
+        public string platform { get; set; } = "Empty";
     }
 
     public List<MySQL_Entity> mysql_data;
@@ -6365,6 +6429,7 @@
                                 domain = reader["domain"].ToString() ?? String.Empty,
                                 antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty,
                                 firewall_status = reader["firewall_status"].ToString() ?? String.Empty,
+                                platform = reader["platform"].ToString() ?? String.Empty,
                             };
 
                         mysql_data.Add(entity);
@@ -6412,6 +6477,7 @@
                         operating_system = reader["operating_system"].ToString() ?? String.Empty;
                         domain = reader["domain"].ToString() ?? String.Empty;
                         architecture = reader["architecture"].ToString() ?? String.Empty;
+                        platform = reader["platform"].ToString() ?? String.Empty;
                         antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty;
                         firewall_status = reader["firewall_status"].ToString() ?? String.Empty;
                         last_boot = reader["last_boot"].ToString() ?? String.Empty;
@@ -6963,8 +7029,6 @@
     {
         try
         {
-            Console.WriteLine(task_manager_string);
-
             JsonArray task_manager_array = JsonNode.Parse(task_manager_string).AsArray();
 
             task_manager_mysql_data = new List<Task_Manager_Entity>();

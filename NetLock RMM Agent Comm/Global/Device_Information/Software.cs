@@ -509,57 +509,67 @@ namespace Global.Device_Information
 
         public static string Applications_Drivers()
         {
-            try
+            string applications_drivers_json = String.Empty;
+
+            if (OperatingSystem.IsWindows())
             {
-                // Create a list of JSON strings for each installed driver
-                List<string> applications_driversJsonList = new List<string>();
-
-                // Get all drivers from the Win32_SystemDriver class
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_SystemDriver"))
+                try
                 {
-                    foreach (ManagementObject obj in searcher.Get())
+                    // Create a list of JSON strings for each installed driver
+                    List<string> applications_driversJsonList = new List<string>();
+
+                    // Get all drivers from the Win32_SystemDriver class
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_SystemDriver"))
                     {
-                        try
+                        foreach (ManagementObject obj in searcher.Get())
                         {
-                            //Get image version
-                            var file_info = FileVersionInfo.GetVersionInfo(obj["PathName"].ToString());
-                            string image_version = file_info.FileVersion;
-
-                            // Create driver object
-                            Applications_Drivers driverInfo = new Applications_Drivers
+                            try
                             {
-                                display_name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
-                                name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
-                                description = string.IsNullOrEmpty(obj["Description"].ToString()) ? "N/A" : obj["Description"].ToString(),
-                                status = string.IsNullOrEmpty(obj["state"].ToString()) ? "N/A" : obj["state"].ToString(),
-                                type = string.IsNullOrEmpty(obj["ServiceType"].ToString()) ? "N/A" : obj["ServiceType"].ToString(),
-                                start_type = string.IsNullOrEmpty(obj["StartMode"].ToString()) ? "N/A" : obj["StartMode"].ToString(),
-                                path = string.IsNullOrEmpty(obj["PathName"].ToString()) ? "N/A" : obj["PathName"].ToString(),
-                                version = string.IsNullOrEmpty(image_version) ? "N/A" : image_version,
-                            };
+                                //Get image version
+                                var file_info = FileVersionInfo.GetVersionInfo(obj["PathName"].ToString());
+                                string image_version = file_info.FileVersion;
 
-                            // Serialize the driver object into a JSON string and add it to the list
-                            string driverJson = JsonSerializer.Serialize(driverInfo, new JsonSerializerOptions { WriteIndented = true });
-                            Logging.Device_Information("Device_Information.Software.Applications_Drivers", "driverJson", driverJson);
-                            applications_driversJsonList.Add(driverJson);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Device_Information("Device_Information.Software.Applications_Drivers", "Failed.", ex.Message);
+                                // Create driver object
+                                Applications_Drivers driverInfo = new Applications_Drivers
+                                {
+                                    display_name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
+                                    name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
+                                    description = string.IsNullOrEmpty(obj["Description"].ToString()) ? "N/A" : obj["Description"].ToString(),
+                                    status = string.IsNullOrEmpty(obj["state"].ToString()) ? "N/A" : obj["state"].ToString(),
+                                    type = string.IsNullOrEmpty(obj["ServiceType"].ToString()) ? "N/A" : obj["ServiceType"].ToString(),
+                                    start_type = string.IsNullOrEmpty(obj["StartMode"].ToString()) ? "N/A" : obj["StartMode"].ToString(),
+                                    path = string.IsNullOrEmpty(obj["PathName"].ToString()) ? "N/A" : obj["PathName"].ToString(),
+                                    version = string.IsNullOrEmpty(image_version) ? "N/A" : image_version,
+                                };
+
+                                // Serialize the driver object into a JSON string and add it to the list
+                                string driverJson = JsonSerializer.Serialize(driverInfo, new JsonSerializerOptions { WriteIndented = true });
+                                Logging.Device_Information("Device_Information.Software.Applications_Drivers", "driverJson", driverJson);
+                                applications_driversJsonList.Add(driverJson);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Device_Information("Device_Information.Software.Applications_Drivers", "Failed.", ex.Message);
+                            }
                         }
                     }
-                }
 
-                // Create and log JSON array
-                string applications_drivers_json = "[" + string.Join("," + Environment.NewLine, applications_driversJsonList) + "]";
-                Logging.Device_Information("Device_Information.Software.Applications_Drivers", "applications_drivers_json", applications_drivers_json);
-                return applications_drivers_json;
+                    // Create and log JSON array
+                    applications_drivers_json = "[" + string.Join("," + Environment.NewLine, applications_driversJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Drivers", "applications_drivers_json", applications_drivers_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Drivers", "Collecting failed (general error)", ex.ToString());
+                    applications_drivers_json = "[]";
+                }
             }
-            catch (Exception ex)
+            else if (OperatingSystem.IsLinux())
             {
-                Logging.Error("Device_Information.Software.Applications_Drivers", "Collecting failed (general error)", ex.ToString());
-                return "[]";
+                
             }
+
+            return applications_drivers_json;
         }
 
         public static string Cronjobs()
@@ -574,9 +584,7 @@ namespace Global.Device_Information
                 try
                 {
                     // Verwenden von `awk` oder besserem Parsing-Befehl
-                    string output = Linux.Helper.Bash.Execute_Command(
-    "systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'"
-);
+                    string output = Linux.Helper.Bash.Execute_Command("systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'");
                     // Aufteilen der Ausgabe in Zeilen
                     var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 

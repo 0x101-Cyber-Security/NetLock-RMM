@@ -16,5 +16,6 @@
         public static string http_https { get; set; } = String.Empty;
         public static string device_name { get; set; } = String.Empty;
         public static string hwid { get; set; } = String.Empty;
+        public static string platform { get; set; } = String.Empty;
     }
 }

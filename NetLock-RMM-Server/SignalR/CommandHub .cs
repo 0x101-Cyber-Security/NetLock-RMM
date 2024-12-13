@@ -21,6 +21,7 @@ namespace NetLock_RMM_Server.SignalR
             public string? tenant_guid { get; set; }
             public string? access_key { get; set; }
             public string? hwid { get; set; }
+            public string? platform { get; set; }
             public string? ip_address_internal { get; set; }
             public string? operating_system { get; set; }
             public string? domain { get; set; }

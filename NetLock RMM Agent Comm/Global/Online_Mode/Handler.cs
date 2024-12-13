@@ -34,6 +34,7 @@ namespace Global.Online_Mode
             public string tenant_guid { get; set; }
             public string access_key { get; set; }
             public string hwid { get; set; }
+            public string platform { get; set; }
             public string ip_address_internal { get; set; }
             public string operating_system { get; set; }
             public string domain { get; set; }
@@ -379,7 +380,8 @@ namespace Global.Online_Mode
                     location_guid = Configuration.Agent.location_guid,
                     tenant_guid = Configuration.Agent.tenant_guid,
                     access_key = Device_Worker.access_key,
-                    hwid = Global.Configuration.Agent.hwid,
+                    hwid = Configuration.Agent.hwid,
+                    platform = Configuration.Agent.platform,
                     ip_address_internal = Device_Worker.ip_address_internal,
                     operating_system = Device_Worker.operating_system,
                     domain = Device_Worker.domain,
@@ -523,6 +525,7 @@ namespace Global.Online_Mode
                     tenant_guid = Configuration.Agent.tenant_guid,
                     access_key = Device_Worker.access_key,
                     hwid = Configuration.Agent.hwid,
+                    platform = Configuration.Agent.platform,
                     ip_address_internal = Device_Worker.ip_address_internal,
                     operating_system = Device_Worker.operating_system,
                     domain = Device_Worker.domain,
@@ -701,6 +704,7 @@ namespace Global.Online_Mode
                     tenant_guid = Configuration.Agent.tenant_guid,
                     access_key = Device_Worker.access_key,
                     hwid = Configuration.Agent.hwid,
+                    platform = Configuration.Agent.platform,
                     ip_address_internal = Device_Worker.ip_address_internal,
                     operating_system = Device_Worker.operating_system,
                     domain = Device_Worker.domain,

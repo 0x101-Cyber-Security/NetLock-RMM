@@ -35,12 +35,19 @@ Global.Configuration.Agent.tenant_guid = Global.Initialization.Server_Config.Ten
 Global.Configuration.Agent.location_guid = Global.Initialization.Server_Config.Location_Guid();
 Global.Configuration.Agent.language = Global.Initialization.Server_Config.Language();
 Global.Configuration.Agent.device_name = Environment.MachineName;
-Global.Configuration.Agent.hwid = ENGINE.HW_UID;
+
+if (OperatingSystem.IsWindows())
+    Global.Configuration.Agent.platform = "Windows";
+else if (OperatingSystem.IsLinux())
+    Global.Configuration.Agent.platform = "Linux";
+else if (OperatingSystem.IsMacOS())
+    Global.Configuration.Agent.platform = "MacOS";
 
 builder.Services.AddHostedService<Device_Worker>();
 
 // Get access key
 Device_Worker.access_key = Global.Initialization.Server_Config.Access_Key();
+Global.Configuration.Agent.hwid = ENGINE.HW_UID; // init after access key, because the linux & macos hwid generation is based on the access key
 
 Device_Worker.authorized = Global.Initialization.Server_Config.Authorized();
 

@@ -20,6 +20,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string? tenant_guid { get; set; }
             public string? access_key { get; set; }
             public string? hwid { get; set; }
+            public string? platform { get; set; }
             public string? ip_address_internal { get; set; }
             public string? operating_system { get; set; }
             public string? domain { get; set; }
@@ -111,19 +112,19 @@ namespace NetLock_RMM_Server.Agent.Windows
                         }
                         else if (device_identity.access_key != reader["access_key"].ToString() && device_identity.hwid == reader["hwid"].ToString()) //access key is not correct, but hwid is. Deauthorize the device, set new access key & set not synced
                         {
-                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is not correct, but hwid is. Deauthorize the device, set new access key & set not synced");
+                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is not correct, but hwid is. Deauthorize the device, set new access key & set not synced. Access key: " + device_identity.access_key + " DB access_key: " + reader["access_key"].ToString() + " Device hwid: " + device_identity.hwid + " DB hwid: " + reader["hwid"].ToString());
                             authentification_result = "unauthorized";
                             deauthorize = true;
                         }
                         else if (device_identity.access_key == reader["access_key"].ToString() && device_identity.hwid != reader["hwid"].ToString()) //access key is correct, but hwid is not. Deauthorize the device, set new access key & set not synced
                         {
-                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is correct, but hwid is not. Deauthorize the device, set new access key & set not synced");
+                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is correct, but hwid is not. Deauthorize the device, set new access key & set not synced. Access key: " + device_identity.access_key + " DB access_key: " + reader["access_key"].ToString() + " Device hwid: " + device_identity.hwid + " DB hwid: " + reader["hwid"].ToString());
                             authentification_result = "unauthorized";
                             deauthorize = true;
                         }
-                        else if (device_identity.access_key != reader["access_key"].ToString() && device_identity.hwid != reader["hwid"].ToString()) //access key is not correct, but hwid is not. Deauthorize the device, set new access key & set not synced
+                        else if (device_identity.access_key != reader["access_key"].ToString() && device_identity.hwid != reader["hwid"].ToString()) //access key is not correct & hwid is not. Deauthorize the device, set new access key & set not synced
                         {
-                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is not correct, but hwid is not. Deauthorize the device, set new access key & set not synced");
+                            Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is not correct, but hwid is not. Deauthorize the device, set new access key & set not synced. Access key: " + device_identity.access_key + " DB access_key: " + reader["access_key"].ToString() + " Device hwid: " + device_identity.hwid + " DB hwid: " + reader["hwid"].ToString());
                             authentification_result = "unauthorized";
                             deauthorize = true;
                         }
@@ -139,13 +140,14 @@ namespace NetLock_RMM_Server.Agent.Windows
                     // Deauthorize the device if access key is not correct, but hwid is
                     if (deauthorize)
                     {
-                        string execute_query = "UPDATE `devices` SET access_key = @access_key, authorized = 0, synced = 0 WHERE device_name = @device_name AND location_id = @location_id AND tenant_id = @tenant_id";
+                        string execute_query = "UPDATE `devices` SET access_key = @access_key, hwid = @hwid, authorized = 0, synced = 0 WHERE device_name = @device_name AND location_id = @location_id AND tenant_id = @tenant_id";
 
                         MySqlCommand cmd = new MySqlCommand(execute_query, conn);
                         cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
                         cmd.Parameters.AddWithValue("@location_id", location_id);
                         cmd.Parameters.AddWithValue("@device_name", device_identity.device_name);
                         cmd.Parameters.AddWithValue("@access_key", device_identity.access_key);
+                        cmd.Parameters.AddWithValue("@hwid", device_identity.hwid);
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -165,6 +167,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "`device_name`, " +
                         "`access_key`, " +
                         "`hwid`, " +
+                        "`platform`, " +
                         "`last_access`, " +
                         "`ip_address_internal`, " +
                         "`ip_address_external`, " +
@@ -192,6 +195,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "@device_name, " +
                         "@access_key, " +
                         "@hwid, " +
+                        "@platform, " +
                         "@last_access, " +
                         "@ip_address_internal, " +
                         "@ip_address_external, " +
@@ -221,6 +225,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@device_name", device_identity.device_name);
                     cmd.Parameters.AddWithValue("@access_key", device_identity.access_key);
                     cmd.Parameters.AddWithValue("@hwid", device_identity.hwid);
+                    cmd.Parameters.AddWithValue("@platform", device_identity.platform);
                     cmd.Parameters.AddWithValue("@last_access", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     cmd.Parameters.AddWithValue("@ip_address_internal", device_identity.ip_address_internal);
                     cmd.Parameters.AddWithValue("@ip_address_external", ip_address_external);
@@ -266,6 +271,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "`location_id` = @location_id, " +
                         "`device_name` = @device_name, " +
                         "`access_key` = @access_key, " +
+                        "`platform` = @platform, " +
                         "`authorized` = @authorized, " +
                         "`last_access` = @last_access, " +
                         "`ip_address_internal` = @ip_address_internal, " +
@@ -295,6 +301,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@location_id", location_id);
                     cmd.Parameters.AddWithValue("@device_name", device_identity.device_name);
                     cmd.Parameters.AddWithValue("@access_key", device_identity.access_key);
+                    cmd.Parameters.AddWithValue("@platform", device_identity.platform);
                     cmd.Parameters.AddWithValue("@authorized", authorized);
                     cmd.Parameters.AddWithValue("@last_access", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                     cmd.Parameters.AddWithValue("@ip_address_internal", device_identity.ip_address_internal);
