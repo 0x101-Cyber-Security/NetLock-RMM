@@ -143,7 +143,7 @@ namespace Global.Initialization
 
                 // Start the installer
                 Logging.Debug("Initialization.Version_Handler.Update", "Starting installer", "true");
-                Process.Start(Application_Paths.c_temp_installer_path, $"fix \"{Application_Paths.program_data_server_config_json}\"");
+                Process.Start(Application_Paths.c_temp_installer_path, $"fix \"\"{Application_Paths.program_data_server_config_json}\"\"");
             }
             catch (Exception ex)
             {

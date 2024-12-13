@@ -26,19 +26,21 @@ namespace _x101.HWID_System
                 {
                     // Retrieving hardware data
                     //string motherboard = Linux.Helper.Bash.Execute_Command("cat /sys/class/dmi/id/board_serial");
-                    string cpuInfo = Linux.Helper.Bash.Execute_Command("cat /proc/cpuinfo | grep -m 1 'model name' | awk -F: '{print $2}'").Trim();
+                    //string cpuInfo = Linux.Helper.Bash.Execute_Command("cat /proc/cpuinfo | grep -m 1 'model name' | awk -F: '{print $2}'").Trim();
                     //string macAddress = Linux.Helper.Bash.Execute_Command("cat /sys/class/net/$(ip route show default | awk '/default/ {print $5}')/address");
                     //string diskSerial = Linux.Helper.Bash.Execute_Command("udevadm info --query=property --name=/dev/sda | grep ID_SERIAL_SHORT | awk -F= '{print $2}'");
 
                     // Combining the data
-                    string rawHwid = $"{cpuInfo}-{Device_Worker.access_key}"; // we use the access key to generate the hwid because I yet dont know a better way to generate a hwid on linux, without causing problems in the future
+                    string rawHwid = $"{Device_Worker.access_key}"; // we use the access key to generate the hwid because I yet dont know a better way to generate a hwid on linux, without causing problems in the future
 
-                    // Generate hash
-                    using (SHA256 sha256 = SHA256.Create())
+                    // Generate MD5 hash
+                    using (var md5 = MD5.Create())
                     {
-                        byte[] hashBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(rawHwid));
-                        HW_UID = BitConverter.ToString(hashBytes).Replace("-", "").ToLower();
+                        byte[] hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(rawHwid));
+                        HW_UID = BitConverter.ToString(hashBytes).Replace("-", "");
                     }
+
+                    Console.WriteLine(HW_UID);
                 }
                 catch (Exception ex)
                 {
