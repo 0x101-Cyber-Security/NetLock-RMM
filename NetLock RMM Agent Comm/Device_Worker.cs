@@ -207,6 +207,8 @@ namespace NetLock_RMM_Agent_Comm
                         // if (auth_result == "authorized" || auth_result == "not_synced" || auth_result == "synced")
                         if (authorized)
                         {
+                            Logging.Debug("Device_Worker.Initialize", "authorized", "Authorized. Update device information.");
+
                             // Update device information
                             await Global.Online_Mode.Handler.Update_Device_Information();
                         }

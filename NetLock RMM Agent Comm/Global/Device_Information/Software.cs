@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Diagnostics;
 using Global.Helper;
 using System.Text.Json;
+using System.Xml;
 
 namespace Global.Device_Information
 {
@@ -21,94 +22,192 @@ namespace Global.Device_Information
     {
         public static string Applications_Installed()
         {
-            // Create a list of JSON strings for each installed software
-            List<string> applications_installedJsonList = new List<string>();
+            string applications_installed_json = String.Empty;
 
-            try
+            if (OperatingSystem.IsWindows())
             {
-                //Collect all 32bit installed programs
-                RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-                if (key != null)
+                // Create a list of JSON strings for each installed software
+                List<string> applications_installedJsonList = new List<string>();
+
+                try
                 {
-                    Parallel.ForEach(key.GetSubKeyNames(), subKeyName =>
+                    //Collect all 32bit installed programs
+                    RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
+                    if (key != null)
                     {
-                        RegistryKey subKey = key.OpenSubKey(subKeyName);
-                        if (subKey != null)
+                        Parallel.ForEach(key.GetSubKeyNames(), subKeyName =>
+                        {
+                            RegistryKey subKey = key.OpenSubKey(subKeyName);
+                            if (subKey != null)
+                            {
+                                bool empty = true;
+
+                                string DisplayName_32bit = null;
+                                string DisplayVersion_32bit = null;
+                                string InstallDate_32bit = null;
+                                string InstallLocation_32bit = null;
+                                string Publisher_32bit = null;
+                                string UninstallString_32bit = null;
+
+                                try
+                                {
+                                    DisplayName_32bit = subKey.GetValue("DisplayName").ToString();
+                                    if (!string.IsNullOrEmpty(DisplayName_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    DisplayVersion_32bit = subKey.GetValue("DisplayVersion_32bit").ToString();
+                                    if (!string.IsNullOrEmpty(DisplayVersion_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    InstallDate_32bit = subKey.GetValue("InstallDate").ToString();
+                                    if (!string.IsNullOrEmpty(InstallDate_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    InstallLocation_32bit = subKey.GetValue("InstallLocation").ToString();
+                                    if (!string.IsNullOrEmpty(InstallLocation_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    Publisher_32bit = subKey.GetValue("Publisher").ToString();
+                                    if (!string.IsNullOrEmpty(Publisher_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                try
+                                {
+                                    UninstallString_32bit = subKey.GetValue("UninstallString").ToString();
+                                    if (!string.IsNullOrEmpty(UninstallString_32bit))
+                                        empty = false;
+                                }
+                                catch { }
+
+                                // Überprüfen, ob mindestens ein Wert gefunden wurde
+                                if (!empty)
+                                {
+                                    // Create installed software object
+                                    Applications_Installed applicationInfo = new Applications_Installed
+                                    {
+                                        name = string.IsNullOrEmpty(DisplayName_32bit) ? "N/A" : DisplayName_32bit,
+                                        version = string.IsNullOrEmpty(DisplayVersion_32bit) ? "N/A" : DisplayVersion_32bit,
+                                        installed_date = string.IsNullOrEmpty(InstallDate_32bit) ? "N/A" : InstallDate_32bit,
+                                        installation_path = string.IsNullOrEmpty(InstallLocation_32bit) ? "N/A" : InstallLocation_32bit,
+                                        vendor = string.IsNullOrEmpty(Publisher_32bit) ? "N/A" : Publisher_32bit,
+                                        uninstallation_string = string.IsNullOrEmpty(UninstallString_32bit) ? "N/A" : UninstallString_32bit
+                                    };
+
+                                    // Serialize the process object into a JSON string and add it to the list
+                                    string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
+                                    Logging.Device_Information("Client_Information.Installed_Software.Collect", "applications_installedJson", applications_installedJson);
+                                    lock (applications_installedJsonList)
+                                    {
+                                        applications_installedJsonList.Add(applications_installedJson);
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+
+                    //Collect all 64bit installed programs
+                    RegistryKey localKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
+                    localKey = localKey.OpenSubKey(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall");
+
+                    Parallel.ForEach(localKey.GetSubKeyNames(), entry =>
+                    {
+                        // 64bit
+                        string DisplayName_64bit = null;
+                        string DisplayVersion_64bit = null;
+                        string InstallDate_64bit = null;
+                        string InstallLocation_64bit = null;
+                        string Publisher_64bit = null;
+                        string UninstallString_64bit = null;
+
+                        RegistryKey sub_item = localKey.OpenSubKey(entry);
+                        if (sub_item != null)
                         {
                             bool empty = true;
 
-                            string DisplayName_32bit = null;
-                            string DisplayVersion_32bit = null;
-                            string InstallDate_32bit = null;
-                            string InstallLocation_32bit = null;
-                            string Publisher_32bit = null;
-                            string UninstallString_32bit = null;
-
                             try
                             {
-                                DisplayName_32bit = subKey.GetValue("DisplayName").ToString();
-                                if (!string.IsNullOrEmpty(DisplayName_32bit))
+                                DisplayName_64bit = sub_item.GetValue("DisplayName")?.ToString();
+                                if (!string.IsNullOrEmpty(DisplayName_64bit))
                                     empty = false;
                             }
                             catch { }
 
                             try
                             {
-                                DisplayVersion_32bit = subKey.GetValue("DisplayVersion_32bit").ToString();
-                                if (!string.IsNullOrEmpty(DisplayVersion_32bit))
+                                DisplayVersion_64bit = sub_item.GetValue("DisplayVersion")?.ToString();
+                                if (!string.IsNullOrEmpty(DisplayVersion_64bit))
                                     empty = false;
                             }
                             catch { }
 
                             try
                             {
-                                InstallDate_32bit = subKey.GetValue("InstallDate").ToString();
-                                if (!string.IsNullOrEmpty(InstallDate_32bit))
+                                InstallDate_64bit = sub_item.GetValue("InstallDate")?.ToString();
+                                if (!string.IsNullOrEmpty(InstallDate_64bit))
                                     empty = false;
                             }
                             catch { }
 
                             try
                             {
-                                InstallLocation_32bit = subKey.GetValue("InstallLocation").ToString();
-                                if (!string.IsNullOrEmpty(InstallLocation_32bit))
+                                InstallLocation_64bit = sub_item.GetValue("InstallLocation")?.ToString();
+                                if (!string.IsNullOrEmpty(InstallLocation_64bit))
                                     empty = false;
                             }
                             catch { }
 
                             try
                             {
-                                Publisher_32bit = subKey.GetValue("Publisher").ToString();
-                                if (!string.IsNullOrEmpty(Publisher_32bit))
+                                Publisher_64bit = sub_item.GetValue("Publisher")?.ToString();
+                                if (!string.IsNullOrEmpty(Publisher_64bit))
                                     empty = false;
                             }
                             catch { }
 
                             try
                             {
-                                UninstallString_32bit = subKey.GetValue("UninstallString").ToString();
-                                if (!string.IsNullOrEmpty(UninstallString_32bit))
+                                UninstallString_64bit = sub_item.GetValue("UninstallString")?.ToString();
+                                if (!string.IsNullOrEmpty(UninstallString_64bit))
                                     empty = false;
                             }
                             catch { }
 
-                            // Überprüfen, ob mindestens ein Wert gefunden wurde
                             if (!empty)
                             {
-                                // Create installed software object
+                                // Erstellen des JSON-Objekts
                                 Applications_Installed applicationInfo = new Applications_Installed
                                 {
-                                    name = string.IsNullOrEmpty(DisplayName_32bit) ? "N/A" : DisplayName_32bit,
-                                    version = string.IsNullOrEmpty(DisplayVersion_32bit) ? "N/A" : DisplayVersion_32bit,
-                                    installed_date = string.IsNullOrEmpty(InstallDate_32bit) ? "N/A" : InstallDate_32bit,
-                                    installation_path = string.IsNullOrEmpty(InstallLocation_32bit) ? "N/A" : InstallLocation_32bit,
-                                    vendor = string.IsNullOrEmpty(Publisher_32bit) ? "N/A" : Publisher_32bit,
-                                    uninstallation_string = string.IsNullOrEmpty(UninstallString_32bit) ? "N/A" : UninstallString_32bit
+                                    name = string.IsNullOrEmpty(DisplayName_64bit) ? "N/A" : DisplayName_64bit,
+                                    version = string.IsNullOrEmpty(DisplayVersion_64bit) ? "N/A" : DisplayVersion_64bit,
+                                    installed_date = string.IsNullOrEmpty(InstallDate_64bit) ? "N/A" : InstallDate_64bit,
+                                    installation_path = string.IsNullOrEmpty(InstallLocation_64bit) ? "N/A" : InstallLocation_64bit,
+                                    vendor = string.IsNullOrEmpty(Publisher_64bit) ? "N/A" : Publisher_64bit,
+                                    uninstallation_string = string.IsNullOrEmpty(UninstallString_64bit) ? "N/A" : UninstallString_64bit
                                 };
 
-                                // Serialize the process object into a JSON string and add it to the list
+                                // Serialisieren des JSON-Objekts und Hinzufügen zur Liste
                                 string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
-                                Logging.Device_Information("Client_Information.Installed_Software.Collect", "applications_installedJson", applications_installedJson);
+
+                                // Sichern des Zugriffs auf die gemeinsame Liste
                                 lock (applications_installedJsonList)
                                 {
                                     applications_installedJsonList.Add(applications_installedJson);
@@ -116,111 +215,85 @@ namespace Global.Device_Information
                             }
                         }
                     });
+
+                    // Create and log JSON array
+                    applications_installed_json = "[" + string.Join("," + Environment.NewLine, applications_installedJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_installed_json", applications_installed_json);
                 }
-
-
-                //Collect all 64bit installed programs
-                RegistryKey localKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64);
-                localKey = localKey.OpenSubKey(@"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall");
-
-                Parallel.ForEach(localKey.GetSubKeyNames(), entry =>
+                catch (Exception ex)
                 {
-                    // 64bit
-                    string DisplayName_64bit = null;
-                    string DisplayVersion_64bit = null;
-                    string InstallDate_64bit = null;
-                    string InstallLocation_64bit = null;
-                    string Publisher_64bit = null;
-                    string UninstallString_64bit = null;
+                    Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (general error)", ex.ToString());
+                    applications_installed_json = "[]";
+                }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                string distroInfo = Linux.Helper.Linux.Get_Linux_Distribution().ToLower();
 
-                    RegistryKey sub_item = localKey.OpenSubKey(entry);
-                    if (sub_item != null)
+                if (distroInfo == "ubuntu" || distroInfo == "debian")
+                {
+                    List<string> applications_installedJsonList = new List<string>();
+
+                    try
                     {
-                        bool empty = true;
+                        // Execute the command to get the list of installed packages
+                        var installedPackages = Linux.Helper.Bash.Execute_Command("apt list --installed 2>/dev/null");
 
-                        try
-                        {
-                            DisplayName_64bit = sub_item.GetValue("DisplayName")?.ToString();
-                            if (!string.IsNullOrEmpty(DisplayName_64bit))
-                                empty = false;
-                        }
-                        catch { }
+                        // Split the output into lines
+                        var lines = installedPackages.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
-                        try
+                        // Iterate over each line (excluding the header)
+                        foreach (var line in lines.Skip(1))
                         {
-                            DisplayVersion_64bit = sub_item.GetValue("DisplayVersion")?.ToString();
-                            if (!string.IsNullOrEmpty(DisplayVersion_64bit))
-                                empty = false;
-                        }
-                        catch { }
-
-                        try
-                        {
-                            InstallDate_64bit = sub_item.GetValue("InstallDate")?.ToString();
-                            if (!string.IsNullOrEmpty(InstallDate_64bit))
-                                empty = false;
-                        }
-                        catch { }
-
-                        try
-                        {
-                            InstallLocation_64bit = sub_item.GetValue("InstallLocation")?.ToString();
-                            if (!string.IsNullOrEmpty(InstallLocation_64bit))
-                                empty = false;
-                        }
-                        catch { }
-
-                        try
-                        {
-                            Publisher_64bit = sub_item.GetValue("Publisher")?.ToString();
-                            if (!string.IsNullOrEmpty(Publisher_64bit))
-                                empty = false;
-                        }
-                        catch { }
-
-                        try
-                        {
-                            UninstallString_64bit = sub_item.GetValue("UninstallString")?.ToString();
-                            if (!string.IsNullOrEmpty(UninstallString_64bit))
-                                empty = false;
-                        }
-                        catch { }
-
-                        if (!empty)
-                        {
-                            // Erstellen des JSON-Objekts
-                            Applications_Installed applicationInfo = new Applications_Installed
+                            var details = line.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (details.Length >= 2)
                             {
-                                name = string.IsNullOrEmpty(DisplayName_64bit) ? "N/A" : DisplayName_64bit,
-                                version = string.IsNullOrEmpty(DisplayVersion_64bit) ? "N/A" : DisplayVersion_64bit,
-                                installed_date = string.IsNullOrEmpty(InstallDate_64bit) ? "N/A" : InstallDate_64bit,
-                                installation_path = string.IsNullOrEmpty(InstallLocation_64bit) ? "N/A" : InstallLocation_64bit,
-                                vendor = string.IsNullOrEmpty(Publisher_64bit) ? "N/A" : Publisher_64bit,
-                                uninstallation_string = string.IsNullOrEmpty(UninstallString_64bit) ? "N/A" : UninstallString_64bit
-                            };
+                                string packageName = details[0].Trim();
+                                string packageVersion = details[1].Trim();
+                                string packageStatus = details.Length > 2 ? details[2].Trim() : "N/A";
 
-                            // Serialisieren des JSON-Objekts und Hinzufügen zur Liste
-                            string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
+                                // Here, you would collect the necessary package information into a JSON format
+                                var applicationInfo = new Applications_Installed
+                                {
+                                    name = packageName,
+                                    version = packageVersion,
+                                    installed_date = "N/A",  // apt doesn't provide install date directly, consider using additional logic if needed
+                                    installation_path = "N/A",  // apt doesn't provide path; you might use 'dpkg-query' or similar for that info
+                                    vendor = "N/A",  // Vendor info isn't available directly with 'apt list --installed'
+                                    uninstallation_string = $"sudo apt remove {packageName}"  // Uninstall command
+                                };
 
-                            // Sichern des Zugriffs auf die gemeinsame Liste
-                            lock (applications_installedJsonList)
-                            {
-                                applications_installedJsonList.Add(applications_installedJson);
+                                string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                                lock (applications_installedJsonList)
+                                {
+                                    applications_installedJsonList.Add(applications_installedJson);
+                                }
                             }
                         }
-                    }
-                });
 
-                // Create and log JSON array
-                string applications_installed_json = "[" + string.Join("," + Environment.NewLine, applications_installedJsonList) + "]";
-                Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_installed_json", applications_installed_json);
-                return applications_installed_json;
+                        // Create and log JSON array
+                        applications_installed_json = "[" + string.Join("," + Environment.NewLine, applications_installedJsonList) + "]";
+                        Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_installed_json", applications_installed_json);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (general error)", ex.ToString());
+                        applications_installed_json = "[]";
+                    }
+                }
+                else
+                {
+                    Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (unsupported Linux distribution)", distroInfo);
+                    applications_installed_json = "[]";
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (general error)", ex.ToString());
-                return "[]";
+                applications_installed_json = "[]";
             }
+
+            return applications_installed_json;
         }
 
         public static string Applications_Logon()
@@ -321,51 +394,117 @@ namespace Global.Device_Information
 
         public static string Applications_Services()
         {
-            try
-            {
-                // Create a list of JSON strings for each installed service
-                List<string> applications_servicesJsonList = new List<string>();
+            string applications_services_json = String.Empty;
 
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_Service"))
+            if (OperatingSystem.IsWindows())
+            {
+                try
                 {
-                    foreach (ManagementObject obj in searcher.Get())
+                    // Create a list of JSON strings for each installed service
+                    List<string> applications_servicesJsonList = new List<string>();
+
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_Service"))
+                    {
+                        foreach (ManagementObject obj in searcher.Get())
+                        {
+                            try
+                            {
+                                // Create service object
+                                Applications_Services serviceInfo = new Applications_Services
+                                {
+                                    display_name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
+                                    name = string.IsNullOrEmpty(obj["Name"].ToString()) ? "N/A" : obj["Name"].ToString(),
+                                    status = string.IsNullOrEmpty(obj["State"].ToString()) ? "N/A" : obj["State"].ToString(),
+                                    start_type = string.IsNullOrEmpty(obj["StartMode"].ToString()) ? "N/A" : obj["StartMode"].ToString(),
+                                    login_as = string.IsNullOrEmpty(obj["StartName"].ToString()) ? "N/A" : obj["StartName"].ToString(),
+                                    path = string.IsNullOrEmpty(obj["PathName"].ToString()) ? "N/A" : obj["PathName"].ToString(),
+                                    description = string.IsNullOrEmpty(obj["Description"].ToString()) ? "N/A" : obj["Description"].ToString(),
+                                };
+
+                                // Serialize the service object into a JSON string and add it to the list
+                                string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
+                                Logging.Device_Information("Device_Information.Software.Applications_Services", "serviceJson", serviceJson);
+                                applications_servicesJsonList.Add(serviceJson);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Device_Information("Device_Information.Software.Applications_Services", "Failed.", ex.Message);
+                            }
+                        }
+                    }
+
+                    // Create and log JSON array
+                    applications_services_json = "[" + string.Join("," + Environment.NewLine, applications_servicesJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Services", "applications_services_json", applications_services_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Services", "Collecting failed (general error)", ex.ToString());
+                    applications_services_json = "[]";
+                }
+            }
+            if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    // Create a list of JSON strings for each service
+                    List<string> applications_servicesJsonList = new List<string>();
+
+                    // Execute the systemctl command to list services
+                    string output = Linux.Helper.Bash.Execute_Command("systemctl list-units --type=service --all --no-pager");
+
+                    // Split the output into lines (each line corresponds to a service)
+                    var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var line in lines)
                     {
                         try
                         {
-                            // Create service object
-                            Applications_Services serviceInfo = new Applications_Services
-                            {
-                                display_name = string.IsNullOrEmpty(obj["DisplayName"].ToString()) ? "N/A" : obj["DisplayName"].ToString(),
-                                name = string.IsNullOrEmpty(obj["Name"].ToString()) ? "N/A" : obj["Name"].ToString(),
-                                status = string.IsNullOrEmpty(obj["State"].ToString()) ? "N/A" : obj["State"].ToString(),
-                                start_type = string.IsNullOrEmpty(obj["StartMode"].ToString()) ? "N/A" : obj["StartMode"].ToString(),
-                                login_as = string.IsNullOrEmpty(obj["StartName"].ToString()) ? "N/A" : obj["StartName"].ToString(),
-                                path = string.IsNullOrEmpty(obj["PathName"].ToString()) ? "N/A" : obj["PathName"].ToString(),
-                                description = string.IsNullOrEmpty(obj["Description"].ToString()) ? "N/A" : obj["Description"].ToString(),
-                            };
+                            // Split the line by spaces to get individual fields (columns)
+                            var details = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
 
-                            // Serialize the service object into a JSON string and add it to the list
-                            string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
-                            Logging.Device_Information("Device_Information.Software.Applications_Services", "serviceJson", serviceJson);
-                            applications_servicesJsonList.Add(serviceJson);
+                            if (details.Length >= 5)
+                            {
+                                // Extract the service information
+                                string name = details[0].Trim();
+                                string status = details[3].Trim();
+                                string description = string.Join(" ", details.Skip(4)).Trim();  // Join the remaining parts as description
+
+                                // Collect the service information
+                                Applications_Services serviceInfo = new Applications_Services
+                                {
+                                    name = name,
+                                    status = status,
+                                    description = description,
+                                    display_name = "N/A", // Linux system doesn't always provide a 'DisplayName'
+                                    start_type = "N/A",   // StartType is typically not provided by systemd
+                                    login_as = "N/A",     // Not directly available in systemd output
+                                    path = "N/A"          // Path information is not always available in systemd output
+                                };
+
+                                // Serialize the service object into a JSON string and add it to the list
+                                string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
+                                applications_servicesJsonList.Add(serviceJson);
+                            }
                         }
                         catch (Exception ex)
                         {
-                            Logging.Device_Information("Device_Information.Software.Applications_Services", "Failed.", ex.Message);
+                            Logging.Device_Information("Device_Information.Software.Applications_Services", "Failed to process line.", ex.Message);
                         }
                     }
-                }
 
-                // Create and log JSON array
-                string applications_services_json = "[" + string.Join("," + Environment.NewLine, applications_servicesJsonList) + "]";
-                Logging.Device_Information("Device_Information.Software.Applications_Services", "applications_services_json", applications_services_json);
-                return applications_services_json;
+                    // Create and log the JSON array
+                    applications_services_json = "[" + string.Join("," + Environment.NewLine, applications_servicesJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Services", "applications_services_json", applications_services_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Services", "Collecting failed (general error)", ex.ToString());
+                    applications_services_json = "[]";
+                }
             }
-            catch (Exception ex)
-            {
-                Logging.Error("Device_Information.Software.Applications_Services", "Collecting failed (general error)", ex.ToString());
-                return "[]";
-            }
+
+            return applications_services_json;
         }
 
         public static string Applications_Drivers()
@@ -422,5 +561,78 @@ namespace Global.Device_Information
                 return "[]";
             }
         }
+
+        public static string Cronjobs()
+        {
+            string cronjobsJson = String.Empty;
+
+            // Liste zum Speichern der JSON-Daten für jeden Cronjob
+            List<string> cronjobsJsonList = new List<string>();
+
+            if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    // Verwenden von `awk` oder besserem Parsing-Befehl
+                    string output = Linux.Helper.Bash.Execute_Command(
+    "systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'"
+);
+                    // Aufteilen der Ausgabe in Zeilen
+                    var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var line in lines)
+                    {
+                        // Aufteilen jeder Zeile anhand des Pipesymbols '|'
+                        var details = line.Split('|', StringSplitOptions.RemoveEmptyEntries);
+
+                        // Überprüfen, ob genügend Felder vorhanden sind
+                        if (details.Length >= 7)
+                        {
+                            string cronjobNextRun = details[0].Trim() + " " + details[1].Trim() + " " + details[2].Trim();
+                            string cronjobLeft = details[3].Trim();
+                            string cronjobLastRun = details[4].Trim() + " " + details[5].Trim();
+                            string cronjobPassed = details[6].Trim();
+                            string cronjobUnit = details.Length > 7 ? details[7].Trim() : string.Empty;
+                            string activates = details.Length > 8 ? details[8].Trim() : string.Empty;
+
+                            // Erstellen eines Cronjobs-Objekts
+                            var cronjobInfo = new Cronjobs
+                            {
+                                next = cronjobNextRun,
+                                left = cronjobLeft,
+                                last = cronjobLastRun,
+                                passed = cronjobPassed,
+                                unit = cronjobUnit,
+                                activates = activates
+                            };
+
+                            // JSON-Serialisierung
+                            string cronjobJson = JsonSerializer.Serialize(cronjobInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                            lock (cronjobsJsonList)
+                            {
+                                cronjobsJsonList.Add(cronjobJson);
+                            }
+                        }
+                    }
+
+                    // JSON-Array aus der Liste erstellen
+                    cronjobsJson = "[" + string.Join("," + Environment.NewLine, cronjobsJsonList) + "]";
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Cronjobs", "Collecting failed (general error)", ex.ToString());
+                    cronjobsJson = "[]";
+                }
+            }
+            else
+            {
+                cronjobsJson = "[]";
+            }
+
+            return "[]"; // return empty JSON array till the implementation is done
+        }
+
+
     }
 }

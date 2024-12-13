@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Global.Helper;
 
 namespace Linux.Helper
 {
@@ -32,7 +33,8 @@ namespace Linux.Helper
                 // Log and return the output
                 if (!string.IsNullOrEmpty(error))
                 {
-                    Console.Error.WriteLine($"Error executing command: {error}");
+                    //Console.Error.WriteLine($"Error executing command: {error}");
+                    Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", error);
                     return "-";
                 }
                 else
@@ -42,7 +44,8 @@ namespace Linux.Helper
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error executing command: {ex.ToString()}");
+                Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", ex.ToString());
+                //Console.Error.WriteLine($"Error executing command: {ex.ToString()}");
                 return "-";
             }
         }

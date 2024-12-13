@@ -14,9 +14,11 @@ using static Global.Online_Mode.Handler;
 using Global.Helper;
 using System.Text.Json.Serialization;
 using System.Text.Json;
-using NetLock_RMM_Agent_Comm.Linux.Helper;
 using NetLock_RMM_Agent_Comm;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
+using System.Configuration.Internal;
+using System.Globalization;
 
 namespace Global.Device_Information
 {
@@ -68,81 +70,174 @@ namespace Global.Device_Information
         {
             string cpu_information_json = string.Empty;
 
-            try
+            if (OperatingSystem.IsWindows())
             {
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Processor"))
+                try
                 {
-                    foreach (ManagementObject obj in searcher.Get())
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_Processor"))
                     {
-                        HashSet<string> uniqueSockets = new HashSet<string>();
-
-                        try
+                        foreach (ManagementObject obj in searcher.Get())
                         {
-                            if (obj != null && obj["SocketDesignation"] != null)
-                            {
-                                string socket_designation = obj["SocketDesignation"].ToString();
+                            HashSet<string> uniqueSockets = new HashSet<string>();
 
-                                // Check if the socket_designation is not empty and add to uniqueSockets
-                                if (!string.IsNullOrEmpty(socket_designation))
+                            try
+                            {
+                                if (obj != null && obj["SocketDesignation"] != null)
                                 {
-                                    uniqueSockets.Add(socket_designation);
+                                    string socket_designation = obj["SocketDesignation"].ToString();
+
+                                    // Check if the socket_designation is not empty and add to uniqueSockets
+                                    if (!string.IsNullOrEmpty(socket_designation))
+                                    {
+                                        uniqueSockets.Add(socket_designation);
+                                    }
                                 }
                             }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
-                        }
-
-                        int numberOfSockets = uniqueSockets.Count;
-
-                        try
-                        {
-                            CPU_Information cpuInfo = new CPU_Information
+                            catch (Exception ex)
                             {
-                                name = obj["Name"]?.ToString() ?? "N/A",
-                                socket_designation = obj["SocketDesignation"]?.ToString() ?? "N/A",
-                                processor_id = obj["ProcessorId"]?.ToString() ?? "N/A",
-                                revision = obj["Revision"]?.ToString() ?? "N/A",
-                                usage = obj["LoadPercentage"]?.ToString() ?? "0", // Default to "0" if usage isn't available
-                                voltage = obj["CurrentVoltage"]?.ToString() ?? "N/A",
-                                currentclockspeed = obj["CurrentClockSpeed"]?.ToString() ?? "N/A",
+                                Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                            }
 
-                                // Use fallback if there are any issues retrieving process information
-                                processes = GetSafeProcessCount(),
-                                threads = GetSafeThreadCount(),
-                                handles = GetSafeHandleCount(),
+                            int numberOfSockets = uniqueSockets.Count;
 
-                                maxclockspeed = obj["MaxClockSpeed"]?.ToString() ?? "N/A",
-                                sockets = numberOfSockets.ToString(),
-                                cores = obj["NumberOfCores"]?.ToString() ?? "N/A",
-                                logical_processors = obj["NumberOfLogicalProcessors"]?.ToString() ?? "N/A",
-                                virtualization = obj["VirtualizationFirmwareEnabled"]?.ToString() ?? "N/A",
-                                //l1_cache = SafeCacheSize(obj["L1CacheSize"]),
-                                l1_cache = "N/A",
-                                l2_cache = SafeCacheSize(obj["L2CacheSize"]),
-                                l3_cache = SafeCacheSize(obj["L3CacheSize"])
-                            };
+                            try
+                            {
+                                CPU_Information cpuInfo = new CPU_Information
+                                {
+                                    name = obj["Name"]?.ToString() ?? "N/A",
+                                    socket_designation = obj["SocketDesignation"]?.ToString() ?? "N/A",
+                                    processor_id = obj["ProcessorId"]?.ToString() ?? "N/A",
+                                    revision = obj["Revision"]?.ToString() ?? "N/A",
+                                    usage = obj["LoadPercentage"]?.ToString() ?? "0", // Default to "0" if usage isn't available
+                                    voltage = obj["CurrentVoltage"]?.ToString() ?? "N/A",
+                                    currentclockspeed = obj["CurrentClockSpeed"]?.ToString() ?? "N/A",
 
-                            // Serialize the process object into a JSON string and add it to the list
+                                    // Use fallback if there are any issues retrieving process information
+                                    processes = GetSafeProcessCount(),
+                                    threads = GetSafeThreadCount(),
+                                    handles = GetSafeHandleCount(),
 
-                            cpu_information_json = JsonSerializer.Serialize(cpuInfo, new JsonSerializerOptions { WriteIndented = true });
-                            Logging.Device_Information("Device_Information.Hardware.CPU_Information", "cpu_information_json", cpu_information_json);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                                    maxclockspeed = obj["MaxClockSpeed"]?.ToString() ?? "N/A",
+                                    sockets = numberOfSockets.ToString(),
+                                    cores = obj["NumberOfCores"]?.ToString() ?? "N/A",
+                                    logical_processors = obj["NumberOfLogicalProcessors"]?.ToString() ?? "N/A",
+                                    virtualization = obj["VirtualizationFirmwareEnabled"]?.ToString() ?? "N/A",
+                                    //l1_cache = SafeCacheSize(obj["L1CacheSize"]),
+                                    l1_cache = "N/A",
+                                    l2_cache = SafeCacheSize(obj["L2CacheSize"]),
+                                    l3_cache = SafeCacheSize(obj["L3CacheSize"])
+                                };
+
+                                // Serialize the process object into a JSON string and add it to the list
+
+                                cpu_information_json = JsonSerializer.Serialize(cpuInfo, new JsonSerializerOptions { WriteIndented = true });
+                                Logging.Device_Information("Device_Information.Hardware.CPU_Information", "cpu_information_json", cpu_information_json);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                            }
                         }
                     }
                 }
-
-                return cpu_information_json;
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    return "{}";
+                }
             }
-            catch (Exception ex)
+            else if (OperatingSystem.IsLinux())
             {
-                Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while querying for WMI data: " + ex.ToString());
-                return "{}";
+                try
+                {
+                    string cpu_name = string.Empty;
+                    string cpu_cores = string.Empty;
+                    string cpu_threads = string.Empty;
+                    string cpu_usage = string.Empty;
+                    string cpu_speed = string.Empty;
+                    string cpu_cache = string.Empty;
+                    // Read the CPU information from the /proc/cpuinfo file
+                    string cpuInfoFile = "/proc/cpuinfo";
+                    if (File.Exists(cpuInfoFile))
+                    {
+                        // Read the file contents
+                        string[] cpuInfoLines = File.ReadAllLines(cpuInfoFile);
+                        // Search for the "model name" line
+                        foreach (string line in cpuInfoLines)
+                        {
+                            if (line.StartsWith("model name"))
+                            {
+                                // Extract the CPU name
+                                cpu_name = line.Split(':')[1].Trim();
+                            }
+                            else if (line.StartsWith("cpu cores"))
+                            {
+                                // Extract the CPU cores
+                                cpu_cores = line.Split(':')[1].Trim();
+                            }
+                            else if (line.StartsWith("siblings"))
+                            {
+                                // Extract the CPU threads
+                                cpu_threads = line.Split(':')[1].Trim();
+                            }
+                            else if (line.StartsWith("cpu MHz"))
+                            {
+                                // Extract the CPU speed
+                                cpu_speed = line.Split(':')[1].Trim();
+
+                                // Wandle den extrahierten Wert in eine Gleitkommazahl um
+                                if (double.TryParse(cpu_speed, out double cpuSpeed))
+                                {
+                                    double roundedCpuSpeed = Math.Round(cpuSpeed);
+
+                                    cpu_speed = roundedCpuSpeed.ToString();
+                                }
+                            }
+                            else if (line.StartsWith("cache size"))
+                            {
+                                // Extract the CPU cache size
+                                cpu_cache = line.Split(':')[1].Trim();
+                            }
+                        }
+                    }
+                    // Get CPU usage
+                    cpu_usage = CPU_Usage();
+                    // Create JSON
+                    CPU_Information cpuInfo = new CPU_Information
+                    {
+                        name = cpu_name,
+                        socket_designation = "N/A",
+                        processor_id = "N/A",
+                        revision = "N/A",
+                        usage = cpu_usage,
+                        voltage = "N/A",
+                        currentclockspeed = cpu_speed,
+                        processes = GetSafeProcessCount(),
+                        threads = GetSafeThreadCount(),
+                        handles = GetSafeHandleCount(),
+                        maxclockspeed = "N/A",
+                        sockets = "N/A",
+                        cores = cpu_cores,
+                        logical_processors = cpu_threads,
+                        virtualization = "N/A",
+                        l1_cache = "N/A",
+                        l2_cache = "N/A",
+                        l3_cache = cpu_cache
+                    };
+
+                    cpu_information_json = JsonSerializer.Serialize(cpuInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                    // Create and log JSON array
+                    Logging.Device_Information("Device_Information.Hardware.CPU_Information", "cpu_information_json", cpu_information_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while reading /proc/cpuinfo: " + ex.ToString());
+                    return "{}";
+                }
             }
+                
+            return cpu_information_json;
         }
 
         // Helper function to safely convert cache size
@@ -248,116 +343,245 @@ namespace Global.Device_Information
         {
             string ram_information_json = string.Empty;
 
-            try
+            if (OperatingSystem.IsWindows())
             {
-                string name = string.Empty;
-                string available = string.Empty;
-                string assured = $"{((double)Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024 * 1024)):N1} / {((double)new PerformanceCounter("Memory", "Available MBytes").NextValue() / 1024):N1}"; //data is not correct. Either my knowledge is wrong here, or the calculations. Doesnt represent the numbers in task manager
-                string cache = string.Empty;
-                string outsourced_pool = string.Empty;
-                string not_outsourced_pool = string.Empty;
-                string speed = string.Empty;
-                string slots = new ManagementObjectSearcher("SELECT MemoryDevices FROM Win32_PhysicalMemoryArray").Get().Cast<ManagementBaseObject>().Select(obj => obj["MemoryDevices"].ToString()).FirstOrDefault();
-                int slots_used = 0;
-                string form_factor = string.Empty;
-                string hardware_reserved = string.Empty;
-
                 try
                 {
-                    // Query for memory performance data
-                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PerfRawData_PerfOS_Memory"))
+                    string name = string.Empty;
+                    string available = string.Empty;
+                    string assured = $"{((double)Process.GetCurrentProcess().WorkingSet64 / (1024 * 1024 * 1024)):N1} / {((double)new PerformanceCounter("Memory", "Available MBytes").NextValue() / 1024):N1}"; //data is not correct. Either my knowledge is wrong here, or the calculations. Doesnt represent the numbers in task manager
+                    string cache = string.Empty;
+                    string outsourced_pool = string.Empty;
+                    string not_outsourced_pool = string.Empty;
+                    string speed = string.Empty;
+                    string slots = new ManagementObjectSearcher("SELECT MemoryDevices FROM Win32_PhysicalMemoryArray").Get().Cast<ManagementBaseObject>().Select(obj => obj["MemoryDevices"].ToString()).FirstOrDefault();
+                    int slots_used = 0;
+                    string form_factor = string.Empty;
+                    string hardware_reserved = string.Empty;
+
+                    try
                     {
-                        foreach (ManagementObject obj in searcher.Get())
+                        // Query for memory performance data
+                        using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PerfRawData_PerfOS_Memory"))
                         {
-                            if (obj != null)
+                            foreach (ManagementObject obj in searcher.Get())
                             {
-                                cache = Math.Floor(Convert.ToDouble(obj["AvailableBytes"] ?? 0) / (1024 * 1024)).ToString(); // Placeholder for cache size
-                                outsourced_pool = Math.Floor(Convert.ToDouble(obj["PoolPagedBytes"] ?? 0) / (1024 * 1024)).ToString();
-                                not_outsourced_pool = Math.Floor(Convert.ToDouble(obj["PoolNonpagedBytes"] ?? 0) / (1024 * 1024)).ToString();
+                                if (obj != null)
+                                {
+                                    cache = Math.Floor(Convert.ToDouble(obj["AvailableBytes"] ?? 0) / (1024 * 1024)).ToString(); // Placeholder for cache size
+                                    outsourced_pool = Math.Floor(Convert.ToDouble(obj["PoolPagedBytes"] ?? 0) / (1024 * 1024)).ToString();
+                                    not_outsourced_pool = Math.Floor(Convert.ToDouble(obj["PoolNonpagedBytes"] ?? 0) / (1024 * 1024)).ToString();
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    }
+
+                    try
+                    {
+                        // Query for OS memory info
+                        using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT TotalVisibleMemorySize, FreePhysicalMemory FROM Win32_OperatingSystem"))
+                        {
+                            foreach (ManagementObject obj in searcher.Get())
+                            {
+                                if (obj != null)
+                                {
+                                    ulong totalMemory = Convert.ToUInt64(obj["TotalVisibleMemorySize"] ?? 0); // Total memory in KB
+                                    ulong freeMemory = Convert.ToUInt64(obj["FreePhysicalMemory"] ?? 0); // Free memory in KB
+                                    ulong hardwareReservedMemory = totalMemory - freeMemory; // Reserved memory
+
+                                    hardware_reserved = (hardwareReservedMemory / 1024d).ToString(); // Convert to MB
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    }
+
+                    try
+                    {
+                        // Query for physical memory info
+                        using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PhysicalMemory"))
+                        {
+                            foreach (ManagementObject obj in searcher.Get())
+                            {
+                                if (obj != null)
+                                {
+                                    slots_used++;
+
+                                    name = obj["Name"]?.ToString() ?? "Unknown"; // Check if Name exists
+                                    available = (Convert.ToDouble(obj["Capacity"] ?? 0) / (1024 * 1024)).ToString(); // Convert Capacity to MB
+                                    speed = obj["Speed"]?.ToString() ?? "Unknown"; // Check if Speed exists
+                                    form_factor = obj["DeviceLocator"]?.ToString() ?? "Unknown"; // Check if DeviceLocator exists
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    }
+
+                    // Create JSON
+                    RAM_Information ramInfo = new RAM_Information
+                    {
+                        name = name,
+                        available = available,
+                        assured = assured,
+                        cache = cache,
+                        outsourced_pool = outsourced_pool,
+                        not_outsourced_pool = not_outsourced_pool,
+                        speed = speed,
+                        slots = slots,
+                        slots_used = slots_used.ToString(),
+                        form_factor = form_factor,
+                        hardware_reserved = hardware_reserved,
+                    };
+
+                    ram_information_json = JsonSerializer.Serialize(ramInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                    // Create and log JSON array
+                    Logging.Device_Information("Device_Information.Hardware.RAM_Information", "Collected the following process information.", ram_information_json);
+
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    return "{}";
                 }
-
+            }
+            else if (OperatingSystem.IsLinux())
+            {
                 try
                 {
-                    // Query for OS memory info
-                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT TotalVisibleMemorySize, FreePhysicalMemory FROM Win32_OperatingSystem"))
-                    {
-                        foreach (ManagementObject obj in searcher.Get())
-                        {
-                            if (obj != null)
-                            {
-                                ulong totalMemory = Convert.ToUInt64(obj["TotalVisibleMemorySize"] ?? 0); // Total memory in KB
-                                ulong freeMemory = Convert.ToUInt64(obj["FreePhysicalMemory"] ?? 0); // Free memory in KB
-                                ulong hardwareReservedMemory = totalMemory - freeMemory; // Reserved memory
+                    string name = "N/A";
+                    string available = "N/A";
+                    string assured = "N/A";
+                    string cache = "N/A";
+                    string outsourced_pool = "N/A";
+                    string not_outsourced_pool = "N/A";
+                    string speed = "N/A";
+                    string slots = "N/A";
+                    int slots_used = 0;
+                    string form_factor = "N/A";
+                    string hardware_reserved = "N/A";
 
-                                hardware_reserved = (hardwareReservedMemory / 1024d).ToString(); // Convert to MB
-                            }
-                        }
+                    // Retrieving RAM information via /proc/meminfo
+                    string[] memInfo = File.ReadAllLines("/proc/meminfo");
+                    var memInfoDict = memInfo.ToDictionary(
+                        line => line.Split(':')[0].Trim(),
+                        line => line.Split(':')[1].Trim()
+                    );
+
+                    // Calculate the total and free memory
+                    if (memInfoDict.ContainsKey("MemTotal") && memInfoDict.ContainsKey("MemFree"))
+                    {
+                        ulong totalMemory = Convert.ToUInt64(memInfoDict["MemTotal"].Split(' ')[0]); // in kB
+                        ulong freeMemory = Convert.ToUInt64(memInfoDict["MemFree"].Split(' ')[0]); // in kB
+                        ulong hardwareReservedMemory = totalMemory - freeMemory; // Reserved memory
+
+                        hardware_reserved = (hardwareReservedMemory / 1024d).ToString(); // in MB
+
+                        // round hardware_reserved
+                        hardware_reserved = Math.Round(Convert.ToDouble(hardware_reserved)).ToString();
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
-                }
 
-                try
-                {
-                    // Query for physical memory info
-                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "SELECT * FROM Win32_PhysicalMemory"))
+                    // Calculate 'Cache' based on 'Cached' and 'Buffers'
+                    if (memInfoDict.ContainsKey("Cached") && memInfoDict.ContainsKey("Buffers"))
                     {
-                        foreach (ManagementObject obj in searcher.Get())
+                        ulong cached = Convert.ToUInt64(memInfoDict["Cached"].Split(' ')[0]); // in kB
+                        ulong buffers = Convert.ToUInt64(memInfoDict["Buffers"].Split(' ')[0]); // in kB
+                        cache = ((cached + buffers) / 1024d).ToString(); // in MB
+
+                        // round cache
+                        cache = Math.Round(Convert.ToDouble(cache)).ToString();
+                    }
+
+                    // Calculation of the 'outsourced_pool' (swap)
+                    if (memInfoDict.ContainsKey("SwapTotal") && memInfoDict.ContainsKey("SwapFree"))
+                    {
+                        string swapTotal = memInfoDict["SwapTotal"];
+                        string swapFree = memInfoDict["SwapFree"];
+                        string swapUsed = (Convert.ToUInt64(swapTotal.Split(' ')[0]) - Convert.ToUInt64(swapFree.Split(' ')[0])).ToString();
+                        outsourced_pool = swapUsed; // als Beispiel
+                    }
+
+                    // Berechne 'available' und 'assured' aus MemAvailable
+                    if (memInfoDict.ContainsKey("MemAvailable"))
+                    {
+                        available = (Convert.ToUInt64(memInfoDict["MemAvailable"].Split(' ')[0]) / 1024d).ToString(); // in MB
+
+                        // round available
+                        available = Math.Round(Convert.ToDouble(available)).ToString();
+                    }
+
+                    // 'assured' could be interpreted here as the difference between MemTotal and MemFree
+                    assured = ((Convert.ToUInt64(memInfoDict["MemTotal"].Split(' ')[0]) - Convert.ToUInt64(memInfoDict["MemFree"].Split(' ')[0])) / 1024d).ToString("F2"); // in MB, Format mit 2 Dezimalstellen
+
+                    // Calculation of 'not_outsourced_pool' (storage without swap)
+                    if (memInfoDict.ContainsKey("MemFree") && memInfoDict.ContainsKey("Cached"))
+                    {
+                        ulong freeWithoutSwap = Convert.ToUInt64(memInfoDict["MemFree"].Split(' ')[0]) + Convert.ToUInt64(memInfoDict["Cached"].Split(' ')[0]);
+                        not_outsourced_pool = (freeWithoutSwap / 1024d).ToString(); // in MB
+
+                        // round not_outsourced_pool
+                        not_outsourced_pool = Math.Round(Convert.ToDouble(not_outsourced_pool)).ToString();
+                    }
+
+                    // If there is information on RAM slots, use this
+                    try
+                    {
+                        string[] dmidecodeOutput = File.ReadAllLines("/sys/devices/system/-memory/block0/dimm0");
+
+                        foreach (var line in dmidecodeOutput)
                         {
-                            if (obj != null)
+                            if (line.Contains("Size"))
                             {
                                 slots_used++;
-
-                                name = obj["Name"]?.ToString() ?? "Unknown"; // Check if Name exists
-                                available = (Convert.ToDouble(obj["Capacity"] ?? 0) / (1024 * 1024)).ToString(); // Convert Capacity to MB
-                                speed = obj["Speed"]?.ToString() ?? "Unknown"; // Check if Speed exists
-                                form_factor = obj["DeviceLocator"]?.ToString() ?? "Unknown"; // Check if DeviceLocator exists
+                                name = "DIMM Slot"; // This could be replaced by more accurate information
+                                available = line.Split(':')[1].Trim();
+                                form_factor = "DIMM"; // Example value, could be replaced by an exact query
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Information", "Linux RAM dmidecode", "Error reading dmidecode: " + ex.ToString());
+                    }
+
+                    // Create the JSON object with the collected data
+                    RAM_Information ramInfo = new RAM_Information
+                    {
+                        name = name,
+                        available = available,
+                        assured = assured,
+                        cache = cache,
+                        outsourced_pool = outsourced_pool,
+                        not_outsourced_pool = not_outsourced_pool,
+                        speed = speed,
+                        slots = slots,
+                        slots_used = slots_used.ToString(),
+                        form_factor = form_factor,
+                        hardware_reserved = hardware_reserved,
+                    };
+
+                    ram_information_json = JsonSerializer.Serialize(ramInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                    Logging.Device_Information("Device_Information.Hardware.RAM_Information", "Collected the following RAM information.", ram_information_json);
                 }
                 catch (Exception ex)
                 {
-                    Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
+                    Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while gathering Linux memory data: " + ex.ToString());
+                    return "{}";
                 }
-
-                // Create JSON
-                RAM_Information ramInfo = new RAM_Information
-                {
-                    name = name,
-                    available = available,
-                    assured = assured,
-                    cache = cache,
-                    outsourced_pool = outsourced_pool,
-                    not_outsourced_pool = not_outsourced_pool,
-                    speed = speed,
-                    slots = slots,
-                    slots_used = slots_used.ToString(),
-                    form_factor = form_factor,
-                    hardware_reserved = hardware_reserved,
-                };
-
-                ram_information_json = JsonSerializer.Serialize(ramInfo, new JsonSerializerOptions { WriteIndented = true });
-
-                // Create and log JSON array
-                Logging.Device_Information("Device_Information.Hardware.RAM_Information", "Collected the following process information.", ram_information_json);
-
-                return ram_information_json;
             }
-            catch (Exception ex)
-            {
-                Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "An error occurred while querying for WMI data: " + ex.ToString());
-                return "{}";
-            }
+
+            return ram_information_json;
         }
 
         public static string RAM_Usage()
@@ -406,6 +630,8 @@ namespace Global.Device_Information
 
         public static string Disks()
         {
+            string disks_json = String.Empty;
+
             if (OperatingSystem.IsWindows())
             {
                 try
@@ -532,21 +758,100 @@ namespace Global.Device_Information
                         }
 
                         // Create and log JSON array
-                        string disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
+                        disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
                         Logging.Device_Information("Device_Information.Hardware.Disks", "Collected the following disk information.", disks_json);
-                        return disks_json;
                     }
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.Disks", "General error in Disks method.", ex.ToString());
-                    return "[]";
+                    disks_json = "[]";
+                }
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    // Create a list of JSON strings for each hard drive
+                    List<string> disksJsonList = new List<string>();
+                    List<string> collectedLettersList = new List<string>();
+
+                    // Retrieve all hard drives
+                    string lsblkOutput = Linux.Helper.Bash.Execute_Command("lsblk -J -o NAME,SIZE,TYPE,MODEL,SERIAL,TRAN,ROTA,FSTYPE,UUID,STATE");
+
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "lsblk-Output", lsblkOutput);
+
+                    // Deserialising the lsblk output
+                    var lsblkJson = JsonSerializer.Deserialize<JsonDocument>(lsblkOutput);
+                    var blockdevices = lsblkJson.RootElement.GetProperty("blockdevices").EnumerateArray();
+
+                    foreach (var device in blockdevices)
+                    {
+                        try
+                        {
+                            string name = device.GetProperty("name").GetString() ?? "N/A";
+                            string size = device.GetProperty("size").GetString() ?? "N/A";
+                            string type = device.GetProperty("type").GetString() ?? "N/A";
+                            string model = device.GetProperty("model").GetString() ?? "N/A";
+                            string serial = device.GetProperty("serial").GetString() ?? "N/A";
+                            string fstype = device.GetProperty("fstype").GetString() ?? "N/A";
+                            string uuid = device.GetProperty("uuid").GetString() ?? "N/A";
+                            string state = device.GetProperty("state").GetString() ?? "N/A";
+
+                            // Calculate the capacity in GB (if available)
+                            double sizeInGB = Linux.Helper.Linux.Disks_Convert_Size_To_GB(size);
+
+                            // Use the df command to determine the current usage of the file system
+                            string dfOutput = Linux.Helper.Bash.Execute_Command($"df -h /dev/{name} | tail -n 1");
+                            string[] dfParts = dfOutput.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            string usagePercent = dfParts.Length > 4 ? dfParts[4] : "N/A"; // Percent usage
+
+                            // Remove the percentage sign from the usage
+                            usagePercent = usagePercent.Replace("%", "");
+
+                            // Die Information für jedes Laufwerk
+                            Disks diskInfo = new Disks
+                            {
+                                letter = name,  // In Linux there are no drive letters as in Windows, so we use the name.
+                                label = model,
+                                model = model,
+                                firmware_revision = "N/A",  // Linux does not provide a firmware version via lsblk
+                                serial_number = serial,
+                                interface_type = "N/A",  // Cannot be retrieved in lsblk
+                                drive_type = type,
+                                drive_format = fstype,
+                                drive_ready = state == "running" ? "True" : "False",
+                                capacity = sizeInGB.ToString(),
+                                usage = usagePercent,
+                                status = state,
+                            };
+
+                            // Serialize the disk object into a JSON string and add it to the list
+                            string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
+                            disksJsonList.Add(disksJson);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information from lsblk output.", ex.ToString());
+                        }
+                    }
+
+                    // Create and log JSON array
+                    disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "Collected the following disk information.", disks_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.Disks", "General error in Disks method.", ex.ToString());
+                    disks_json = "[]";
                 }
             }
             else
             {
                 return "[]";
             }
+
+            return disks_json;
         }
 
         public static int CPU_Utilization()
@@ -732,22 +1037,28 @@ namespace Global.Device_Information
             {
                 try
                 {
-                    if (File.Exists("/sys/class/dmi/id/board_name"))
+                    // Check paths to the mainboard information
+                    string[] boardNamePaths = { "/sys/class/dmi/id/board_name", "/sys/devices/virtual/dmi/id/board_name" };
+                    string[] boardVendorPaths = { "/sys/class/dmi/id/board_vendor", "/sys/devices/virtual/dmi/id/board_vendor" };
+
+                    // Extract board name
+                    foreach (var path in boardNamePaths)
                     {
-                        _mainboard = Linux.Helper.Bash.Execute_Command("cat /sys/class/dmi/id/board_name");
-                    }
-                    else if (File.Exists("/sys/devices/virtual/dmi/id/board_name"))
-                    {
-                        _mainboard = Linux.Helper.Bash.Execute_Command("cat /sys/devices/virtual/dmi/id/board_name");
+                        if (File.Exists(path))
+                        {
+                            _mainboard = Linux.Helper.Bash.Execute_Command($"cat {path}").Trim();
+                            break;
+                        }
                     }
 
-                    if (File.Exists("/sys/class/dmi/id/board_vendor"))
+                    // Extract manufacturer
+                    foreach (var path in boardVendorPaths)
                     {
-                        mainboard_manufacturer = Linux.Helper.Bash.Execute_Command("cat /sys/class/dmi/id/board_vendor");
-                    }
-                    else if (File.Exists("/sys/devices/virtual/dmi/id/board_vendor"))
-                    {
-                        mainboard_manufacturer = Linux.Helper.Bash.Execute_Command("cat /sys/devices/virtual/dmi/id/board_vendor");
+                        if (File.Exists(path))
+                        {
+                            mainboard_manufacturer = Linux.Helper.Bash.Execute_Command($"cat {path}").Trim();
+                            break;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -772,22 +1083,29 @@ namespace Global.Device_Information
             else if (OperatingSystem.IsLinux())
             {
                 // Get GPU
-                try
+                gpu = Linux.Helper.Bash.Execute_Command("lshw -C display");
+
+                var match_product = Regex.Match(gpu, $@"product:\s*(.+)");
+                var match_vendor = Regex.Match(gpu, $@"vendor:\s*(.+)");
+
+                if (!string.IsNullOrWhiteSpace(gpu))
                 {
-                    // Read the GPU information from the /proc/ directory
-                    string[] gpuInfoLines = File.ReadAllLines("/proc/driver/nvidia/gpus/0/information");
-                    foreach (string line in gpuInfoLines)
+                    // GPU-Informationen aus der Ausgabe extrahieren
+                    string product = match_product.Success ? match_product.Groups[1].Value : string.Empty;
+                    string vendor = match_vendor.Success ? match_vendor.Groups[1].Value : string.Empty;
+
+                    if (!string.IsNullOrWhiteSpace(product) && !string.IsNullOrWhiteSpace(vendor))
                     {
-                        if (line.StartsWith("Model:"))
-                        {
-                            gpu = line.Split(':')[1].Trim();
-                            break;
-                        }
+                        gpu = $"{vendor.Trim()} {product.Trim()}";
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Error("Device_Information.Hardware.GPU_Name", "General error.", ex.ToString());
+                    else if (!string.IsNullOrWhiteSpace(product))
+                    {
+                        gpu = product.Trim();
+                    }
+                    else if (!string.IsNullOrWhiteSpace(vendor))
+                    {
+                        gpu = vendor.Trim();
+                    }
                 }
 
                 Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);

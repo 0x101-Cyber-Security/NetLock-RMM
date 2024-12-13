@@ -19,7 +19,6 @@ using System.Management;
 using NetLock_RMM_Agent_Comm;
 using System.Reflection.PortableExecutable;
 using System.Data.SQLite;
-using NetLock_RMM_Agent_Comm.Linux.Helper;
 using System.Data.Entity.Core.Mapping;
 
 namespace Global.Online_Mode
@@ -230,6 +229,16 @@ namespace Global.Online_Mode
             public string nissignatureversion { get; set; }
             public bool onaccessprotectionenabled { get; set; }
             public bool realtimetprotectionenabled { get; set; }
+        }
+
+        public class Cronjobs
+        {
+            public string next { get; set; }
+            public string left { get; set; }
+            public string last { get; set; }
+            public string passed { get; set; }
+            public string unit { get; set; }
+            public string activates { get; set; }
         }
 
         public static async Task<string> Authenticate()
@@ -447,8 +456,8 @@ namespace Global.Online_Mode
                                 Device_Worker.authorized = true;
                             }
 
-                            Windows_Worker.sync_timer.Interval = 600000; // change to 10 minutes
-                            Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Windows_Worker.sync_timer.Interval.ToString());
+                            Device_Worker.sync_timer.Interval = 600000; // change to 10 minutes
+                            Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
                         else if (result == "unauthorized")
                         {
@@ -479,8 +488,8 @@ namespace Global.Online_Mode
                                 Device_Worker.authorized = false;
                             }
 
-                            Windows_Worker.sync_timer.Interval = 30000; // change to 30 seconds
-                            Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Windows_Worker.sync_timer.Interval.ToString());
+                            Device_Worker.sync_timer.Interval = 30000; // change to 30 seconds
+                            Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
 
                         return result;
@@ -557,6 +566,8 @@ namespace Global.Online_Mode
 
                 string antivirus_information_json = Windows.Helper.Windows.Antivirus_Information();
 
+                string cronjobs_json = Device_Information.Software.Cronjobs(); // disabled till a better solution is found
+
                 // Erstelle das JSON-Objekt
                 var jsonObject = new
                 {
@@ -573,6 +584,7 @@ namespace Global.Online_Mode
                     applications_drivers = applications_drivers_json,
                     antivirus_products = antivirus_products_json,
                     antivirus_information = antivirus_information_json,
+                    cronjobs = cronjobs_json,
                 };
 
                 // Konvertiere das Objekt in ein JSON-String

@@ -35,22 +35,9 @@ namespace NetLock_RMM_Server.Agent.Windows
             //public string? environment_variables { get; set; }
         }
 
-        public class Content_Entity
-        {
-            public string? network_adapters { get; set; }
-            public string? disks { get; set; }
-            public string? applications_installed { get; set; }
-            public string? applications_logon { get; set; }
-            public string? applications_scheduled_tasks { get; set; }
-            public string? applications_drivers { get; set; }
-            public string? applications_services { get; set; }
-            public string? antivirus_information { get; set; }
-        }
-
         public class Root_Entity
         {
             public Device_Identity_Entity? device_identity { get; set; }
-            public Content_Entity? content { get; set; }
         }
 
 
@@ -80,6 +67,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 string processes_json_string = String.Empty;
                 string antivirus_products_json_string = String.Empty;
                 string antivirus_information_json_string = String.Empty;
+                string cronjobs_json_string = String.Empty;
 
                 // Deserialisierung des gesamten JSON-Strings
                 using (JsonDocument document = JsonDocument.Parse(json))
@@ -130,6 +118,9 @@ namespace NetLock_RMM_Server.Agent.Windows
                     JsonElement antivirus_information_element = document.RootElement.GetProperty("antivirus_information");
                     antivirus_information_json_string = antivirus_information_element.ToString();
 
+                    JsonElement cronjobs_element = document.RootElement.GetProperty("cronjobs");
+                    cronjobs_json_string = cronjobs_element.ToString();
+
                     // Ausgabe des extrahierten JSON-Strings
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "ram_information_json_string", ram_information_json_string);
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "cpu_information_json_string", cpu_information_json_string);
@@ -145,6 +136,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "ram_json_string", ram_json_string);
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "antivirus_products_json_string", antivirus_products_json_string);
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "antivirus_information_json_string", antivirus_information_json_string);
+                    Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "cronjobs_json_string", cronjobs_json_string);
                 }
 
                 // Get the tenant id & location id with tenant_guid & location_guid
@@ -165,7 +157,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                        "`applications_services` = @applications_services, " +
                        "`processes` = @processes, " +
                        "`antivirus_products` = @antivirus_products, " +
-                       "`antivirus_information` = @antivirus_information " +
+                       "`antivirus_information` = @antivirus_information, " +
+                       "`cronjobs` = @cronjobs " +
                        "WHERE device_name = @device_name AND location_id = @location_id AND tenant_id = @tenant_id";
 
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
@@ -185,6 +178,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 cmd.Parameters.AddWithValue("@processes", processes_json_string);
                 cmd.Parameters.AddWithValue("@antivirus_products", antivirus_products_json_string);
                 cmd.Parameters.AddWithValue("@antivirus_information", antivirus_information_json_string);
+                cmd.Parameters.AddWithValue("@cronjobs", cronjobs_json_string);
                 cmd.ExecuteNonQuery();
 
                 // Get device id with device name, tenant id & location id
@@ -199,6 +193,17 @@ namespace NetLock_RMM_Server.Agent.Windows
                 applications_installed_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 applications_installed_history_cmd.Parameters.AddWithValue("@json", applications_installed_json_string);
                 applications_installed_history_cmd.ExecuteNonQuery();
+
+                // Insert cronjobs_history
+                string cronjobs_history_execute_query = "INSERT INTO `device_information_cronjobs_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+
+                MySqlCommand cronjobs_history_cmd = new MySqlCommand(cronjobs_history_execute_query, conn);
+
+                cronjobs_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                cronjobs_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cronjobs_history_cmd.Parameters.AddWithValue("@json", cronjobs_json_string);
+                cronjobs_history_cmd.ExecuteNonQuery();
+
 
                 //Insert applications_logon_history
                 string applications_logon_history_execute_query = "INSERT INTO `applications_logon_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
@@ -346,8 +351,6 @@ namespace NetLock_RMM_Server.Agent.Windows
                 device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@json", antivirus_products_json_string);
                 device_information_antivirus_products_history_cmd.ExecuteNonQuery();
-
-
 
                 await conn.CloseAsync();
 

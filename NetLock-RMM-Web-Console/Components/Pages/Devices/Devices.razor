@@ -1787,12 +1787,6 @@
                                                             </span>
                                                         </MudTd>
 
-                                                        <MudTd DataLabel="Name" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@software_installed_row.name
-                                                            </span>
-                                                        </MudTd>
-
                                                         <MudTd DataLabel="Version" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
                                                             <span style="display: flex; align-items: center;">
                                                                 &nbsp;@software_installed_row.version
@@ -1912,6 +1906,167 @@
                                             </MudExpansionPanel>                            
 
                                         </MudTabPanel>
+
+                                            <MudTabPanel Text="@Localizer["Cronjobs"]">
+
+                                                <MudPaper>
+
+                                                    <MudTooltip Text="@Localizer["export_data"]">
+                                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_Table_Dialog"></MudIconButton>
+                                                    </MudTooltip>
+
+                                                    <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@cronjobs_mysql_data" Filter="new Func<Cronjobs_Entity, bool>(Cronjobs_Table_Filter_Func)">
+                                                        <ToolBarContent>
+                                                            <MudTextField @bind-Value="cronjobs_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                                        </ToolBarContent>
+                                                        <HeaderContent>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.name)">Name</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.version)">Version</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_date)">@Localizer["installation_date"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.installation_path)">@Localizer["installation_path"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.vendor)">@Localizer["manufacturer"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Cronjobs_Entity, object>(x => x.uninstallation_string)">@Localizer["uninstallation_command"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                        </HeaderContent>
+                                                        <RowTemplate Context="cronjobs_row">
+
+                                                            <MudTd DataLabel="Name" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.name
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="Version" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.version
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.installation_date
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.installation_path
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.vendor
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_RowClickHandler(cronjobs_row)" class="@Cronjobs_GetRowClass(cronjobs_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@cronjobs_row.uninstallation_string
+                                                                </span>
+                                                            </MudTd>
+
+                                                        </RowTemplate>
+                                                        <PagerContent>
+                                                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                        </PagerContent>
+                                                    </MudTable>
+
+                                                </MudPaper>
+
+                                                <MudExpansionPanel Class="mt-5 custom-expansion-panel" @bind-Expanded="cronjobs_history_expanded" @bind-Expanded:after="async () => { await Cronjobs_History_Table_Submit_Picker(); }">
+                                                    <TitleContent>
+                                                        <div class="d-flex">
+                                                            <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                                                            <MudText>@Localizer["history"]</MudText>
+                                                        </div>
+                                                    </TitleContent>
+
+                                                    <ChildContent>
+
+                                                        <div style="display: flex; align-items: center;">
+                                                            <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="cronjobs_history_table_picker" @bind-DateRange="cronjobs_history_table_dateRange">
+                                                                <PickerActions Context="pickerActionsContext">
+                                                                    <MudButton Class="mr-auto align-self-start" OnClick="@(() => cronjobs_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                                    <MudButton OnClick="@(() => cronjobs_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                                    <MudButton Color="Color.Primary" @onclick="async () => { await Cronjobs_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                                </PickerActions>
+                                                            </MudDateRangePicker>
+
+                                                            <MudTooltip Text="@Localizer["export_data"]">
+                                                                <MudIconButton Class="ml-2 mt-S" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Cronjobs_History_Table_Dialog"></MudIconButton>
+                                                            </MudTooltip>
+                                                        </div>
+
+                                                        <MudTable Class="mt-2" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@cronjobs_history_mysql_data" GroupBy="@cronjobs_groupDefinition" Filter="new Func<Cronjobs_History_Entity, bool>(Cronjobs_History_Table_Filter_Func)">
+                                                            <ToolBarContent>
+                                                                <MudTextField Class="mt-0" @bind-Value="cronjobs_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                                            </ToolBarContent>
+                                                            <HeaderContent>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_date))" style="white-space: nowrap;">@Localizer["installation_date"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.installation_path))" style="white-space: nowrap;">@Localizer["installation_path"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.vendor))" style="white-space: nowrap;">@Localizer["manufacturer"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => cronjobs_history_table_sorted_column = (nameof(Cronjobs_History_Entity.uninstallation_string))" style="white-space: nowrap;">@Localizer["uninstallation_command"]</MudTh>
+                                                            </HeaderContent>
+                                                            <GroupHeaderTemplate Context="groupContext">
+                                                                <MudTh Class="mud-table-cell-custom-group" colspan="6">@($"{groupContext.GroupName}: {groupContext.Key}") </MudTh>
+                                                            </GroupHeaderTemplate>
+                                                            <RowTemplate Context="cronjobs_history_row">
+
+                                                                <MudTd DataLabel="Name" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.name
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="Version" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.version
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.installation_date
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.installation_path
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.vendor
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Cronjobs_History_RowClickHandler(cronjobs_history_row)" class="@Cronjobs_History_GetRowClass(cronjobs_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@cronjobs_history_row.uninstallation_string
+                                                                    </span>
+                                                                </MudTd>
+
+                                                            </RowTemplate>
+                                                            <PagerContent>
+                                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                            </PagerContent>
+                                                        </MudTable>
+                                                    </ChildContent>
+                                                </MudExpansionPanel>
+
+                                            </MudTabPanel>
+
                                         <MudTabPanel Text="Logon">
                                             <MudPaper>
                                                 <MudTooltip Text="@Localizer["export_data"]">
@@ -3469,6 +3624,7 @@
     public string disks = String.Empty;
     public string disks_display_string = String.Empty;
     public string applications_installed = String.Empty;
+    public string cronjobs = String.Empty;
     public string applications_logon = String.Empty;
     public string applications_scheduled_tasks = String.Empty;
     public string applications_services = String.Empty;
@@ -4206,21 +4362,21 @@
             {
                 Device_Information_Network_Entity networkInfo = new Device_Information_Network_Entity();
 
-                networkInfo.name = adapter["name"].ToString();
-                networkInfo.description = adapter["description"].ToString();
-                networkInfo.type = adapter["type"].ToString();
-                networkInfo.link_speed = adapter["link_speed"].ToString();
-                networkInfo.service_name = adapter["service_name"].ToString();
-                networkInfo.dns_domain = adapter["dns_domain"].ToString();
-                networkInfo.dns_hostname = adapter["dns_hostname"].ToString();
-                networkInfo.dhcp_enabled = adapter["dhcp_enabled"].ToString();
-                networkInfo.dhcp_server = adapter["dhcp_server"].ToString();
-                networkInfo.ipv4_address = adapter["ipv4_address"].ToString();
-                networkInfo.ipv6_address = adapter["ipv6_address"].ToString();
-                networkInfo.subnet_mask = adapter["subnet_mask"].ToString();
-                networkInfo.mac_address = adapter["mac_address"].ToString();
-                networkInfo.sending = adapter["sending"].ToString();
-                networkInfo.receive = adapter["receive"].ToString();
+                networkInfo.name = adapter["name"]?.ToString() ?? "N/A";
+                networkInfo.description = adapter["description"]?.ToString() ?? "N/A";
+                networkInfo.type = adapter["type"]?.ToString() ?? "N/A";
+                networkInfo.link_speed = adapter["link_speed"]?.ToString() ?? "N/A";
+                networkInfo.service_name = adapter["service_name"]?.ToString() ?? "N/A";
+                networkInfo.dns_domain = adapter["dns_domain"]?.ToString() ?? "N/A";
+                networkInfo.dns_hostname = adapter["dns_hostname"]?.ToString() ?? "N/A";
+                networkInfo.dhcp_enabled = adapter["dhcp_enabled"]?.ToString() ?? "N/A";
+                networkInfo.dhcp_server = adapter["dhcp_server"]?.ToString() ?? "N/A";
+                networkInfo.ipv4_address = adapter["ipv4_address"]?.ToString() ?? "N/A";
+                networkInfo.ipv6_address = adapter["ipv6_address"]?.ToString() ?? "N/A";
+                networkInfo.subnet_mask = adapter["subnet_mask"]?.ToString() ?? "N/A";
+                networkInfo.mac_address = adapter["mac_address"]?.ToString() ?? "N/A";
+                networkInfo.sending = adapter["sending"]?.ToString() ?? "N/A";
+                networkInfo.receive = adapter["receive"]?.ToString() ?? "N/A";
 
                 // Füge networkInfo zur Liste hinzu
                 device_information_network_information_mysql_data.Add(networkInfo);
@@ -5522,6 +5678,224 @@
 
     #endregion
 
+    #region Cronjobs Installed Table
+
+    public List<Cronjobs_Entity> cronjobs_mysql_data;
+
+    public class Cronjobs_Entity
+    {
+        public string name { get; set; } = String.Empty;
+        public string version { get; set; } = String.Empty;
+        public string installation_date { get; set; } = String.Empty;
+        public string installation_path { get; set; } = String.Empty;
+        public string vendor { get; set; } = String.Empty;
+        public string uninstallation_string { get; set; } = String.Empty;
+    }
+
+    private string cronjobs_table_view_port = "70vh";
+    private string cronjobs_table_sorted_column;
+    private string cronjobs_table_search_string = "";
+
+    private bool Cronjobs_Table_Filter_Func(Cronjobs_Entity row)
+    {
+        if (string.IsNullOrEmpty(cronjobs_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.name.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.version.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.installation_date.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.installation_path.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.vendor.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.uninstallation_string.Contains(cronjobs_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string cronjobs_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void Cronjobs_RowClickHandler(Cronjobs_Entity row)
+    {
+        cronjobs_selectedRowContent = row.name;
+    }
+
+    private string Cronjobs_GetRowClass(Cronjobs_Entity row)
+    {
+        return row.name == cronjobs_selectedRowContent ? "selected-row" : "";
+    }
+
+    private async Task Cronjobs_Load()
+    {
+        try
+        {
+            JsonArray cronjobs_array = JsonNode.Parse(cronjobs).AsArray();
+
+            cronjobs_mysql_data = new List<Cronjobs_Entity>();
+
+            foreach (var software in cronjobs_array)
+            {
+                Cronjobs_Entity softwareEntity = new Cronjobs_Entity
+                    {
+                        name = software["name"].ToString(),
+                        version = software["version"].ToString(),
+                        installation_date = software["installed_date"].ToString(),
+                        installation_path = software["installation_path"].ToString(),
+                        vendor = software["vendor"].ToString(),
+                        uninstallation_string = software["uninstallation_string"].ToString()
+                    };
+
+                cronjobs_mysql_data.Add(softwareEntity);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/devices -> Cronjobs_Load", "Result", ex.Message);
+        }
+    }
+
+    #endregion
+
+    #region Cronjobs Installed Table History
+
+    private bool cronjobs_history_expanded = false;
+
+    private List<Cronjobs_History_Entity> cronjobs_history_mysql_data;
+
+    public class Cronjobs_History_Entity
+    {
+        public string date { get; set; } = String.Empty;
+        public string name { get; set; } = String.Empty;
+        public string version { get; set; } = String.Empty;
+        public string installation_date { get; set; } = String.Empty;
+        public string installation_path { get; set; } = String.Empty;
+        public string vendor { get; set; } = String.Empty;
+        public string uninstallation_string { get; set; } = String.Empty;
+    }
+
+    private TableGroupDefinition<Cronjobs_History_Entity> cronjobs_groupDefinition = new TableGroupDefinition<Cronjobs_History_Entity>
+        {
+            GroupName = date,
+            Indentation = false,
+            Expandable = true,
+            IsInitiallyExpanded = false,
+            Selector = (e) => e.date// Hier sollte die Eigenschaft sein, nach der gruppiert werden soll
+        };
+
+    private string cronjobs_history_table_view_port = "70vh";
+    private string cronjobs_history_table_sorted_column;
+    private string cronjobs_history_table_search_string = "";
+    private MudDateRangePicker cronjobs_history_table_picker;
+    private DateRange cronjobs_history_table_dateRange = new DateRange(DateTime.Now.Date.AddDays(-7), DateTime.Now.Date.AddDays(1));
+
+    private async Task Cronjobs_History_Table_Submit_Picker()
+    {
+        cronjobs_history_table_picker.CloseAsync();
+
+        cronjobs_history_mysql_data = await Cronjobs_History_Load(notes_tenant_name, notes_location_name, notes_device_name);
+    }
+
+    private bool Cronjobs_History_Table_Filter_Func(Cronjobs_History_Entity row)
+    {
+        if (string.IsNullOrEmpty(cronjobs_history_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.date.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.name.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.version.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.installation_date.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.installation_path.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.vendor.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.uninstallation_string.Contains(cronjobs_history_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string cronjobs_history_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void Cronjobs_History_RowClickHandler(Cronjobs_History_Entity row)
+    {
+        cronjobs_history_selectedRowContent = row.name;
+    }
+
+    private string Cronjobs_History_GetRowClass(Cronjobs_History_Entity row)
+    {
+        return row.name == cronjobs_history_selectedRowContent ? "selected-row" : "";
+    }
+
+    private async Task<List<Cronjobs_History_Entity>> Cronjobs_History_Load(string tenant_name, string location_name, string device_name)
+    {
+        loading_overlay = true;
+
+        string query = "SELECT * FROM cronjobs_history WHERE device_id = @device_id AND date >= @start_date AND date <= @end_date ORDER BY date DESC;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            List<Cronjobs_History_Entity> result = new List<Cronjobs_History_Entity>();
+
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@device_id", notes_device_id);
+            command.Parameters.AddWithValue("@start_date", cronjobs_history_table_dateRange.Start.Value);
+            command.Parameters.AddWithValue("@end_date", cronjobs_history_table_dateRange.End.Value);
+
+            Logging.Handler.Debug("/devices -> Cronjobs_History_Load", "MySQL_Query", query);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Logging.Handler.Debug("/devices -> Cronjobs_History_Load", "MySQL_Result", reader["json"].ToString());
+
+                        JsonArray cronjobs_history_array = JsonNode.Parse(reader["json"].ToString()).AsArray();
+
+                        foreach (var software in cronjobs_history_array)
+                        {
+                            try
+                            {
+                                Cronjobs_History_Entity softwareEntity = new Cronjobs_History_Entity
+                                    {
+                                        name = software["name"].ToString(),
+                                        date = reader["date"].ToString(),
+                                        version = software["version"].ToString(),
+                                        installation_date = software["installed_date"].ToString(),
+                                        installation_path = software["installation_path"].ToString(),
+                                        vendor = software["vendor"].ToString(),
+                                        uninstallation_string = software["uninstallation_string"].ToString(),
+                                    };
+
+                                result.Add(softwareEntity);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Handler.Error("/devices -> Cronjobs_History_Load", "MySQL_Query (corrupt json entry)", ex.Message);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/devices -> Cronjobs_History_Load", "MySQL_Query", ex.Message);
+            return new List<Cronjobs_History_Entity>(); // Return an empty list or handle the exception as needed
+        }
+        finally
+        {
+            conn.Close();
+            StateHasChanged();
+            loading_overlay = false;
+        }
+    }
+
+    #endregion
+
     #region Antivirus Products
 
     private string antivirus_products_string = String.Empty;
@@ -6057,6 +6431,7 @@
                         cpu_information_string = reader["cpu_information"].ToString() ?? String.Empty;
                         ram_information_string = reader["ram_information"].ToString() ?? String.Empty;
                         applications_installed = reader["applications_installed"].ToString() ?? String.Empty;
+                        cronjobs = reader["cronjobs"].ToString() ?? String.Empty;
                         applications_logon = reader["applications_logon"].ToString() ?? String.Empty;
                         applications_scheduled_tasks = reader["applications_scheduled_tasks"].ToString() ?? String.Empty;
                         applications_services = reader["applications_services"].ToString() ?? String.Empty;
@@ -6588,30 +6963,32 @@
     {
         try
         {
+            Console.WriteLine(task_manager_string);
+
             JsonArray task_manager_array = JsonNode.Parse(task_manager_string).AsArray();
 
             task_manager_mysql_data = new List<Task_Manager_Entity>();
 
-            foreach (var software in task_manager_array)
+            foreach (var process in task_manager_array)
             {
                 Task_Manager_Entity softwareEntity = new Task_Manager_Entity
                     {
-                        name = software["name"].ToString(),
-                        pid = software["pid"].ToString(),
-                        parent_name = software["parent_name"].ToString(),
-                        parent_pid = software["parent_pid"].ToString(),
-                        cpu = software["cpu"].ToString(),
-                        ram = software["ram"].ToString(),
-                        user = software["user"].ToString(),
-                        created = software["created"].ToString(),
-                        path = software["path"].ToString(),
-                        cmd = software["cmd"].ToString(),
-                        handles = software["handles"].ToString(),
-                        threads = software["threads"].ToString(),
-                        read_operations = software["read_operations"].ToString(),
-                        read_transfer = software["read_transfer"].ToString(),
-                        write_operations = software["write_operations"].ToString(),
-                        write_transfer = software["write_transfer"].ToString(),
+                        name = process["name"]?.ToString() ?? "N/A", 
+                        pid = process["pid"]?.ToString() ?? "N/A",
+                        parent_name = process["parent_name"]?.ToString() ?? "N/A",
+                        parent_pid = process["parent_pid"]?.ToString() ?? "N/A",
+                        cpu = process["cpu"]?.ToString() ?? "N/A",
+                        ram = process["ram"]?.ToString() ?? "N/A",
+                        user = process["user"]?.ToString() ?? "N/A",
+                        created = process["created"]?.ToString() ?? "N/A",
+                        path = process["path"]?.ToString() ?? "N/A",
+                        cmd = process["cmd"]?.ToString() ?? "N/A",
+                        handles = process["handles"]?.ToString() ?? "N/A",
+                        threads = process["threads"]?.ToString() ?? "N/A",
+                        read_operations = process["read_operations"]?.ToString() ?? "N/A",
+                        read_transfer = process["read_transfer"]?.ToString() ?? "N/A",
+                        write_operations = process["write_operations"]?.ToString() ?? "N/A",
+                        write_transfer = process["write_transfer"]?.ToString() ?? "N/A",
                     };
 
                 task_manager_mysql_data.Add(softwareEntity);
@@ -8142,6 +8519,16 @@
     private async Task Trigger_Export_Installed_Application_Table_Dialog()
     {
         await Show_Export_Table_Dialog("applications_installed");
+    }
+
+    private async Task Trigger_Export_Cronjobs_Table_Dialog()
+    {
+        await Show_Export_Table_Dialog("cronjobs");
+    }
+
+    private async Task Trigger_Export_Cronjobs_History_Table_Dialog()
+    {
+        await Show_Export_Table_Dialog("cronjobs_history");
     }
 
     private async Task Trigger_Export_Application_Logon_Table_Dialog()
