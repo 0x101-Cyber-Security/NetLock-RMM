@@ -116,7 +116,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                             authentification_result = "unauthorized";
                             deauthorize = true;
                         }
-                        else if (device_identity.access_key == reader["access_key"].ToString() && device_identity.hwid != reader["hwid"].ToString()) //access key is correct, but hwid is not. Deauthorize the device, set new access key & set not synced
+                        else if (device_identity.access_key == reader["access_key"].ToString() && device_identity.hwid != reader["hwid"].ToString()) //access key is correct, but hwid is not. Deauthorize the device, set new hwid & set not synced
                         {
                             Logging.Handler.Debug("Modules.Authentification.Verify_Device", "Device unauthorized", "Device is unauthorized. //access key is correct, but hwid is not. Deauthorize the device, set new access key & set not synced. Access key: " + device_identity.access_key + " DB access_key: " + reader["access_key"].ToString() + " Device hwid: " + device_identity.hwid + " DB hwid: " + reader["hwid"].ToString());
                             authentification_result = "unauthorized";
