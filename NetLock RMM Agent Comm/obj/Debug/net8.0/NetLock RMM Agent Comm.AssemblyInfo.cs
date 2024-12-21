@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NetLock RMM Agent Comm")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+00c370f4840409ce685027ae933478d230f1501e")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+064c834f71c5b59e9d07c957cd96295596ac52e3")]
 [assembly: System.Reflection.AssemblyProductAttribute("NetLock RMM Agent Comm")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NetLock RMM Agent Comm")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

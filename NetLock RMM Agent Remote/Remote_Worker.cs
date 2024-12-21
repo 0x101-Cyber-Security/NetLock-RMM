@@ -6,6 +6,7 @@ using System.Text;
 using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net;
+using System.Security.AccessControl;
 
 namespace NetLock_RMM_Agent_Remote
 {
@@ -329,7 +330,7 @@ namespace NetLock_RMM_Agent_Remote
                     try
                     {
                         // if linux or macos convert the path to linux/macos path
-                        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                        if (!String.IsNullOrEmpty(command_object.file_browser_path) && OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                             command_object.file_browser_path = command_object.file_browser_path.Replace("\\", "/");
 
                         if (command_object.type == 0) // Remote Shell
@@ -391,8 +392,6 @@ namespace NetLock_RMM_Agent_Remote
                             }
                             else if (command_object.file_browser_command == 10) // download file from file server
                             {
-                                Console.WriteLine(command_object.file_browser_path);
-
                                 // download url with tenant guid, location guid & device name
                                 string download_url = file_server_url + "/admin/files/download/device" + "?guid=" + command_object.file_browser_file_guid + "&tenant_guid=" + device_identity_object.tenant_guid + "&location_guid=" + device_identity_object.location_guid + "&device_name=" + device_identity_object.device_name + "&access_key=" + device_identity_object.access_key + "&hwid=" + device_identity_object.hwid;
 
@@ -510,7 +509,7 @@ namespace NetLock_RMM_Agent_Remote
 
                 remote_server_client_setup = true;
 
-                Console.WriteLine("Service.Setup_SignalR", "Connected to the remote server.", "");
+                Console.WriteLine("Connected to the remote server.");
                 Logging.Debug("Service.Setup_SignalR", "Connected to the remote server.", "");
             }
             catch (Exception ex)

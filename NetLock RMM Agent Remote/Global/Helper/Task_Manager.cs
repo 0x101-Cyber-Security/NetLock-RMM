@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using System.Management;
+using System.Runtime.InteropServices;
 
 namespace Global.Helper
 {
@@ -18,7 +19,7 @@ namespace Global.Helper
                 Process parentProcess = Process.GetProcessById(pid);
 
                 // Recursively terminate all child processes
-                TerminateChildProcesses(pid);
+                Terminate_Child_Processes(pid);
 
                 // Terminate the parent process
                 parentProcess.Kill();
@@ -31,27 +32,78 @@ namespace Global.Helper
             }
         }
 
-        private static void TerminateChildProcesses(int parentId)
+        private static void Terminate_Child_Processes(int parentId)
         {
-            // Query all child processes based on parent process ID
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                Terminate_Child_Processes_Windows(parentId);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                Terminate_Child_Processes_Unix(parentId);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("This method only supports Windows, Linux, and macOS.");
+            }
+        }
 
-            foreach (ManagementObject obj in searcher.Get())
+        private static void Terminate_Child_Processes_Windows(int parentId)
+        {
+            var searcher = new System.Management.ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
+            foreach (var obj in searcher.Get())
             {
                 int childProcessId = Convert.ToInt32(obj["ProcessId"]);
                 try
                 {
-                    // Recursively terminate child processes
-                    TerminateChildProcesses(childProcessId);
-
-                    // Kill the child process
+                    Terminate_Child_Processes_Windows(childProcessId);
                     Process childProcess = Process.GetProcessById(childProcessId);
                     childProcess.Kill();
                 }
                 catch (Exception)
                 {
-                    // Ignore any exceptions for already terminated processes
+                    // Ignore exceptions for already terminated processes
                 }
+            }
+        }
+
+        private static void Terminate_Child_Processes_Unix(int parentId)
+        {
+            try
+            {
+                var processStartInfo = new ProcessStartInfo
+                {
+                    FileName = "pgrep",
+                    Arguments = $"-P {parentId}",
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+
+                using var process = Process.Start(processStartInfo);
+                if (process == null) return;
+
+                using var reader = process.StandardOutput;
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (int.TryParse(line, out int childProcessId))
+                    {
+                        Terminate_Child_Processes_Unix(childProcessId);
+                        try
+                        {
+                            Process childProcess = Process.GetProcessById(childProcessId);
+                            childProcess.Kill();
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore exceptions for already terminated processes
+                        }
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                // Handle errors gracefully for unsupported systems
             }
         }
     }

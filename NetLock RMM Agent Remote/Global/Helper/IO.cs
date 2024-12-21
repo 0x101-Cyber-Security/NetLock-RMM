@@ -347,9 +347,7 @@ namespace Global.Helper
             {
                 // Check if the file exists
                 if (!File.Exists(path))
-                {
                     File.WriteAllText(path, await Base64.Decode(content));
-                }
 
                 return path;
             }
