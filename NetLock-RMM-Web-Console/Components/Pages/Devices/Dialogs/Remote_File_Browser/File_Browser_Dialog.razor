@@ -1083,10 +1083,6 @@
         {
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory", "Path", _remote_file_browser_path);
 
-            // if linux or macos convert the path to linux/macos path
-            if (platform == "Linux" || platform == "MacOS")
-                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
-
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
@@ -1167,7 +1163,7 @@
             if (platform == "Linux" || platform == "MacOS")
                 _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
 
-            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory", "Path", _remote_file_browser_path);
+            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_File", "Path", _remote_file_browser_path);
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
@@ -1208,7 +1204,7 @@
 
             if (remote_server_client_setup)
             {
-                Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory", "Message", json);
+                Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_File", "Message", json);
 
                 try
                 {
@@ -1219,12 +1215,12 @@
                 }
                 catch (Exception ex)
                 {
-                    Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_Directory", "General error", ex.Message);
+                    Logging.Handler.Error("/dashboard -> Remote_File_Browser_Create_File", "General error", ex.Message);
                 }
             }
             else
             {
-                Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_Directory", "Remote server not setup.", "");
+                Logging.Handler.Error("/dashboard -> Remote_File_Browser_Create_File", "Remote server not setup.", "");
                 await Remote_Authentificate_Dialog();
             }
 
@@ -1232,7 +1228,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_Directory", "General error", ex.ToString());
+            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Create_File", "General error", ex.ToString());
         }
     }
 
@@ -1733,16 +1729,27 @@
     private async Task Remote_File_Browser_Rename_Directory_Dialog(string _remote_file_path)
     {
         // Use regex to get the file name from the remote file path
-        string pattern = @"\\([^\\]+)$";
+        string pattern = @"[\\/][^\\/]+$";
         Match match = Regex.Match(_remote_file_path, pattern);
 
-        // Assign the match to a string
-        string remote_file_name = match.Groups[1].Value;
+        string remote_file_name = String.Empty;
+
+        if (match.Success)
+        {
+            // Remove the leading slash or backslash to extract just the file name
+            remote_file_name = match.Value.TrimStart('\\', '/');
+            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory_Dialog", "File name", remote_file_name);
+        }
+        else
+        {
+            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_Directory_Dialog", "Error", "No match found");
+        }
 
         var options = new DialogOptions
             {
-
-                MaxWidth = MaxWidth.Small,
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
                 BackgroundClass = "dialog-blurring",
             };
 
@@ -1763,15 +1770,13 @@
         // Use the result to replace the old file name with the new one in the remote file path
         string _remote_file_path_new = _remote_file_path.Replace(remote_file_name, result.Data.ToString());
 
-        _remote_file_path = Path.Combine(_remote_file_path, result.Data.ToString());
-
         // if linux or macos convert the path to linux/macos path
         if (platform == "Linux" || platform == "MacOS")
         {
             _remote_file_path = _remote_file_path.Replace("\\", "/");
             _remote_file_path_new = _remote_file_path_new.Replace("\\", "/");
         }
-            
+
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory_Dialog", "Result, new file path", _remote_file_path_new);
 
         await Remote_File_Browser_Rename_Directory(_remote_file_path, _remote_file_path_new);
@@ -1855,16 +1860,27 @@
             return;
 
         // Use regex to get the file name from the remote file path
-        string pattern = @"\\([^\\]+)$";
+        string pattern = @"[\\/][^\\/]+$";
         Match match = Regex.Match(_remote_file_path, pattern);
 
-        // Assign the match to a string
-        string remote_file_name = match.Groups[1].Value;
+        string remote_file_name = String.Empty;
+
+        if (match.Success)
+        {
+            // Remove the leading slash or backslash to extract just the file name
+            remote_file_name = match.Value.TrimStart('\\', '/');
+            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_File_Dialog", "File name", remote_file_name);
+        }
+        else
+        {
+            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_File_Dialog", "Error", "No match found");
+        }
 
         var options = new DialogOptions
             {
-
-                MaxWidth = MaxWidth.Small,
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
                 BackgroundClass = "dialog-blurring",
             };
 
@@ -1885,6 +1901,13 @@
         // Use the result to replace the old file name with the new one in the remote file path
         string _remote_file_path_new = _remote_file_path.Replace(remote_file_name, result.Data.ToString());
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_File_Dialog", "Result, new file path", _remote_file_path_new);
+
+        // if linux or macos convert the path to linux/macos path
+        if (platform == "Linux" || platform == "MacOS")
+        {
+            _remote_file_path = _remote_file_path.Replace("\\", "/");
+            _remote_file_path_new = _remote_file_path_new.Replace("\\", "/");
+        }
 
         await Remote_File_Browser_Rename_File(_remote_file_path, _remote_file_path_new);
     }
