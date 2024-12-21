@@ -7,14 +7,14 @@ using System.Diagnostics;
 using System.IO;
 using NetLock_RMM_Agent_Remote;
 using Global.Initialization;
+using Global.Helper;
 
-namespace Global.Helper
+namespace Windows.Helper
 {
     internal class PowerShell
     {
         public static string Execute_Command(string type, string command, int timeout) // -1 = no timeout
         {
-
             try
             {
                 Logging.PowerShell("Helper.Powershell.Execute_Command", "Trying to execute command", "type: " + type + " timeout: " + timeout + " command:" + Environment.NewLine + command);

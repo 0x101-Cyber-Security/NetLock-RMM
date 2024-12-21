@@ -6,6 +6,7 @@ using System;
 using System.Collections.Concurrent;
 using NetLock_RMM_Server.SignalR;
 using Microsoft.Extensions.Primitives;
+using Org.BouncyCastle.Asn1.Icao;
 
 namespace NetLock_RMM_Server.Agent.Windows
 {
@@ -252,7 +253,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Update device data if authorized, not synced or synced, and device exists, and update is true
-                if (authentification_result == "authorized" || authentification_result == "synced" || authentification_result == "not_synced" && device_exists && update)
+                if ((authentification_result == "authorized" || authentification_result == "synced" || authentification_result == "not_synced") && device_exists && update)
                 {
                     string synced = "0";
 

@@ -255,14 +255,14 @@ namespace Global.Helper
 
             try
             {
-                // Überprüfen, ob das Quellverzeichnis existiert
+                // Check whether the source directory exists
                 if (Directory.Exists(source_path))
                 {
-                    // Überprüfen, ob das Zielverzeichnis existiert, und ggf. erstellen
+                    // Check whether the target directory exists and create if necessary
                     if (!Directory.Exists(destination_path))
                         Directory.CreateDirectory(destination_path);
 
-                    // Alle Dateien aus dem Quellverzeichnis in das Zielverzeichnis verschieben
+                    // Move all files from the source directory to the target directory
                     var files = Directory.GetFiles(source_path);
                     foreach (var file in files)
                     {
@@ -277,7 +277,7 @@ namespace Global.Helper
                         movedItems.Add(destFile);
                     }
 
-                    // Alle Unterverzeichnisse aus dem Quellverzeichnis in das Zielverzeichnis verschieben
+                    // Move all subdirectories from the source directory to the target directory
                     var directories = Directory.GetDirectories(source_path);
                     foreach (var directory in directories)
                     {
@@ -292,7 +292,7 @@ namespace Global.Helper
                         movedItems.Add(destDir);
                     }
 
-                    // Am Ende das Quellverzeichnis selbst nicht verschieben, da alle Inhalte bereits verschoben wurden
+                    // At the end, do not move the source directory itself, as all contents have already been moved
                 }
                 else
                 {

@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Win32;
 using System.IO;
+using Global.Helper;
 
-namespace Global.Helper
+namespace Windows.Helper
 {
     internal class Registry
     {

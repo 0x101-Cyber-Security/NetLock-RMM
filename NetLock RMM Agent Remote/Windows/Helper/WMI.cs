@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Global.Helper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Global.Helper
+namespace Windows.Helper
 {
     internal class WMI
     {

@@ -172,6 +172,7 @@
     [Parameter] public string device_name { get; set; }
     [Parameter] public string tenant_guid { get; set; }
     [Parameter] public string location_guid { get; set; }
+    [Parameter] public string platform { get; set; }
 
     private bool loading_overlay = false;
     private bool error_occurred = false;
@@ -304,7 +305,7 @@
                     remote_file_browser_drives_list = command.Split(',').ToList();
                     remote_file_browser_drive_string = remote_file_browser_drives_list[0];
 
-                    // Load the first drive
+                    // Load the first drive // its not async for a reason, we need to wait for the drives to be loaded
                     Remote_File_Browser_Get_Index(remote_file_browser_drive_string, false);
 
                     StateHasChanged();
@@ -828,6 +829,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_Directory", "Path", _remote_file_browser_path);
 
             // Create the object
@@ -905,6 +910,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Delete_Directory", "Path", _remote_file_browser_path);
 
             bool? result = await DialogService.ShowMessageBox(Localizer["warning"], Localizer["Are you sure you want to delete the directory?"] + " " + _remote_file_browser_path, yesText: "" + Localizer["confirm"] + "", cancelText: "" + Localizer["cancel"] + "");
@@ -990,7 +999,11 @@
     {
         try
         {
-            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_Directory", "Path", _remote_file_browser_path);
+            Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Move_Directory", "Path", _remote_file_browser_path);
+
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
@@ -1060,7 +1073,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Create_Directory", "General error", ex.ToString());
+            Logging.Handler.Error("/dashboard -> Remote_File_Browser_Move_Directory", "General error", ex.ToString());
         }
     }
 
@@ -1069,6 +1082,10 @@
         try
         {
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory", "Path", _remote_file_browser_path);
+
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
@@ -1146,6 +1163,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory", "Path", _remote_file_browser_path);
 
             // Create the object
@@ -1219,6 +1240,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Delete_File", "Path", _remote_file_browser_path);
 
             bool? result = await DialogService.ShowMessageBox(Localizer["warning"], Localizer["Are you sure you want to delete the file?"] + " " + _remote_file_browser_path, yesText: "" + Localizer["confirm"] + "", cancelText: "" + Localizer["cancel"] + "");
@@ -1299,6 +1324,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Move_File", "Path", _remote_file_browser_path);
 
             // Create the object
@@ -1371,6 +1400,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_File", "Path", _remote_file_browser_path);
 
             // Create the object
@@ -1443,6 +1476,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Upload_File_To_Device", "register_guid", register_guid);
 
             // Create the object
@@ -1514,6 +1551,10 @@
     {
         try
         {
+            // if linux or macos convert the path to linux/macos path
+            if (platform == "Linux" || platform == "MacOS")
+                _remote_file_browser_path = _remote_file_browser_path.Replace("\\", "/");
+
             Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Downlaod_File_From_Device", "_remote_file_browser_path", _remote_file_browser_path);
 
             uploading_indeterminate = true;
@@ -1637,7 +1678,13 @@
 
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_Directory_Dialog", "Result", result.Data.ToString());
 
-        await Remote_File_Browser_Create_Directory(_remote_file_path + "\\" + result.Data.ToString());
+        _remote_file_path = Path.Combine(_remote_file_path, result.Data.ToString());
+
+        // if linux or macos convert the path to linux/macos path
+        if (platform == "Linux" || platform == "MacOS")
+            _remote_file_path = _remote_file_path.Replace("\\", "/");
+
+        await Remote_File_Browser_Create_Directory(_remote_file_path);
     }
 
     private bool remote_file_browser_move_directory_dialog_open = false;
@@ -1655,21 +1702,30 @@
                 BackgroundClass = "dialog-blurring",
             };
 
-        remote_file_browser_move_directory_dialog_open = false;
+        remote_file_browser_move_directory_dialog_open = true;
 
         DialogParameters parameters = new DialogParameters();
         parameters.Add("_remote_file_path", _remote_file_path);
 
-        remote_file_browser_move_directory_dialog_open = true;
+        remote_file_browser_move_directory_dialog_open = false;
 
         var result = await this.DialogService.Show<Pages.Devices.Dialogs.Remote_File_Browser.Move_Directory_Dialog>(string.Empty, parameters, options).Result;
 
         if (result.Canceled)
             return;
 
-        Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_Directory_Dialog", "Result", result.Data.ToString());
+        Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Move_Directory_Dialog", "Result", result.Data.ToString());
+        
+        string _remote_file_path_new = result.Data.ToString();
 
-        await Remote_File_Browser_Move_Directory(_remote_file_path, result.Data.ToString());
+        // if linux or macos convert the path to linux/macos path
+        if (platform == "Linux" || platform == "MacOS")
+        {
+            _remote_file_path = _remote_file_path.Replace("\\", "/");
+            _remote_file_path_new = _remote_file_path_new.Replace("\\", "/");
+        }
+            
+        await Remote_File_Browser_Move_Directory(_remote_file_path, _remote_file_path_new);
     }
 
     private bool remote_file_browser_rename_directory_dialog_open = false;
@@ -1706,6 +1762,16 @@
 
         // Use the result to replace the old file name with the new one in the remote file path
         string _remote_file_path_new = _remote_file_path.Replace(remote_file_name, result.Data.ToString());
+
+        _remote_file_path = Path.Combine(_remote_file_path, result.Data.ToString());
+
+        // if linux or macos convert the path to linux/macos path
+        if (platform == "Linux" || platform == "MacOS")
+        {
+            _remote_file_path = _remote_file_path.Replace("\\", "/");
+            _remote_file_path_new = _remote_file_path_new.Replace("\\", "/");
+        }
+            
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Rename_Directory_Dialog", "Result, new file path", _remote_file_path_new);
 
         await Remote_File_Browser_Rename_Directory(_remote_file_path, _remote_file_path_new);
@@ -1744,6 +1810,7 @@
         string[] result_array = result.Data.ToString().Split("\u001F");
         string file_name = result_array[0];
         string file_content = result_array[1];
+
 
         await Remote_File_Browser_Create_File(_remote_file_path + "\\" + file_name, file_content);
     }

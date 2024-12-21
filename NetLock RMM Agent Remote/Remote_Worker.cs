@@ -42,7 +42,6 @@ namespace NetLock_RMM_Agent_Remote
 
         public class Device_Identity
         {
-            public bool ssl { get; set; }
             public string agent_version { get; set; }
             public string package_guid { get; set; }
             public string device_name { get; set; }
@@ -329,10 +328,14 @@ namespace NetLock_RMM_Agent_Remote
 
                     try
                     {
+                        // if linux or macos convert the path to linux/macos path
+                        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                            command_object.file_browser_path = command_object.file_browser_path.Replace("\\", "/");
+
                         if (command_object.type == 0) // Remote Shell
                         {
                             if (OperatingSystem.IsWindows())
-                                result = PowerShell.Execute_Script(command_object.type.ToString(), command_object.powershell_code);
+                                result = Windows.Helper.PowerShell.Execute_Script(command_object.type.ToString(), command_object.powershell_code);
                             else if (OperatingSystem.IsLinux())
                                 result = Linux.Helper.Bash.Execute_Command(Base64.Decode_Syncron(command_object.powershell_code));
 
@@ -386,12 +389,15 @@ namespace NetLock_RMM_Agent_Remote
                             {
                                 result = IO.Rename_File(command_object.file_browser_path, command_object.file_browser_path_move);
                             }
-                            else if (command_object.file_browser_command == 10) // download file
+                            else if (command_object.file_browser_command == 10) // download file from file server
                             {
+                                Console.WriteLine(command_object.file_browser_path);
+
                                 // download url with tenant guid, location guid & device name
                                 string download_url = file_server_url + "/admin/files/download/device" + "?guid=" + command_object.file_browser_file_guid + "&tenant_guid=" + device_identity_object.tenant_guid + "&location_guid=" + device_identity_object.location_guid + "&device_name=" + device_identity_object.device_name + "&access_key=" + device_identity_object.access_key + "&hwid=" + device_identity_object.hwid;
 
                                 Logging.Debug("Service.Setup_SignalR", "Download URL", download_url);
+
                                 result = await Http.DownloadFileAsync(ssl, download_url, command_object.file_browser_path, device_identity_object.package_guid);
 
                                 Logging.Debug("Service.Setup_SignalR", "File downloaded", result);
@@ -504,6 +510,7 @@ namespace NetLock_RMM_Agent_Remote
 
                 remote_server_client_setup = true;
 
+                Console.WriteLine("Service.Setup_SignalR", "Connected to the remote server.", "");
                 Logging.Debug("Service.Setup_SignalR", "Connected to the remote server.", "");
             }
             catch (Exception ex)
@@ -527,6 +534,7 @@ namespace NetLock_RMM_Agent_Remote
 
                 // Connect to the remote server
                 await remote_server_client.StartAsync();
+                Console.WriteLine("Service.Remote_Connect", "Connected to the server.", "");
                 Logging.Debug("Service.Remote_Connect", "Connected to the server.", "");
             }
             catch (Exception ex)
