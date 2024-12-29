@@ -189,7 +189,6 @@ namespace NetLock_RMM_Server.Agent.Windows
                 string sensors_json = string.Empty;
                 string jobs_json = string.Empty;
 
-
                 // Log the communicated agent information
                 Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "device_identity.device_name", device_name);
                 Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "location_name", location_name);

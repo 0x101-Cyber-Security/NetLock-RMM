@@ -106,8 +106,7 @@
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAAAQwBwAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T23:51:58.508Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T23:51:58.508Z"
             },
             {
               "$type": "Document",
@@ -129,10 +128,9 @@
               "RelativeDocumentMoniker": "Global\\Helper\\Task_Manager.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Global\\Helper\\Task_Manager.cs",
               "RelativeToolTip": "Global\\Helper\\Task_Manager.cs",
-              "ViewState": "AgIAABAAAAAAAAAAAAAgwDoAAABGAAAAAAAAAA==",
+              "ViewState": "AgIAABAAAAAAAAAAAAAgwCgAAAByAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:26:06.262Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:26:06.262Z"
             },
             {
               "$type": "Document",
@@ -168,8 +166,7 @@
               "RelativeToolTip": "Global\\Helper\\IO.cs",
               "ViewState": "AgIAADkBAAAAAAAAAAAwwGIBAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:38.989Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:25:38.989Z"
             },
             {
               "$type": "Document",
@@ -229,8 +226,7 @@
               "RelativeToolTip": "Remote_Worker.cs",
               "ViewState": "AgIAAMMBAAAAAAAAAAAYwP8BAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:15:07.381Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:15:07.381Z"
             },
             {
               "$type": "Document",
@@ -302,8 +298,7 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:15:04.581Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:15:04.581Z"
             }
           ]
         }

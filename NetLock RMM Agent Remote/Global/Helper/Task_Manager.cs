@@ -50,7 +50,7 @@ namespace Global.Helper
 
         private static void Terminate_Child_Processes_Windows(int parentId)
         {
-            var searcher = new System.Management.ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
+            var searcher = new ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
             foreach (var obj in searcher.Get())
             {
                 int childProcessId = Convert.ToInt32(obj["ProcessId"]);

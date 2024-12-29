@@ -49,22 +49,6 @@ namespace NetLock_RMM_Agent_Installer_Windows
         {
             try
             {
-                string os_version = Environment.OSVersion.Version.ToString();
-                char os_version_char = os_version[0];
-
-                if (os_version_char.ToString() == "6")
-                {
-                    Logging.Handler.Debug("Main", "OS_Version", "OS (" + os_version_char + ") is old. Switch to compatibility mode.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> OS (" + os_version_char + ") is old. Switch to compatibility mode.");
-                    ServicePointManager.Expect100Continue = true;
-                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                }
-                else
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> OS (" + os_version_char + ") is new.");
-                    Logging.Handler.Debug("Main", "OS_Version", "OS (" + os_version_char + ") is new.");
-                }
-
                 Console.Title = "NetLock RMM Agent Installer Windows";
                 Console.ForegroundColor = ConsoleColor.Red;
                 string title = @"//

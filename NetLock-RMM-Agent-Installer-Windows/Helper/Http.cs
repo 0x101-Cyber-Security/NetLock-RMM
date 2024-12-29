@@ -16,14 +16,21 @@ namespace NetLock_RMM_Agent_Installer_Windows.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM Agent"); // Sending 
                     client.DefaultRequestHeaders.Add("Package_Guid", guid);
 
                     HttpResponseMessage response = null;
 
                     if (ssl)
+                    {
+                        Console.WriteLine("Downloading file from: https://" + url);
                         response = await client.GetAsync("https://" + url);
+                    }
                     else
+                    {
+                        Console.WriteLine("Downloading file from: http://" + url);
                         response = await client.GetAsync("http://" + url);
+                    }
 
                     response.EnsureSuccessStatusCode();
 
@@ -50,6 +57,7 @@ namespace NetLock_RMM_Agent_Installer_Windows.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
+                    client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM Agent"); // Sending 
                     client.DefaultRequestHeaders.Add("Package_Guid", guid);
 
                     HttpResponseMessage response = null;
