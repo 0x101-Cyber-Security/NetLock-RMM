@@ -133,10 +133,12 @@
 
                 <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
                     <MudSelectItem Value="@("Windows")" />
+                    <MudSelectItem Value="@("Linux")" />
+                    <MudSelectItem Value="@("MacOS")" />
                     <MudSelectItem Value="@("System")" />
                 </MudSelect>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="type_display" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+            <MudSelect Class="mt-3" T="string" @bind-Value="type_display" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
                     @if (platform == "Windows")
                     {
                         type_display = "PowerShell";
@@ -147,19 +149,26 @@
                         type_display = "MySQL";
                         <MudSelectItem Value="@("MySQL")" />
                     }
+                    else if (platform == "Linux")
+                    {
+                        type_display = "Bash";
+                        <MudSelectItem Value="@("Bash")" />
+                    }
+                    else if (platform == "MacOS")
+                    {
+                        type_display = "Bash";
+                        <MudSelectItem Value="@("Bash")" />
+                    }
                 </MudSelect>
 
-                if (type_display == "PowerShell" || type_display == "MySQL")
-                {
-                    <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
-                        @{
-                            foreach (var script in scripts_list)
-                            {
-                                <MudSelectItem Value="@(script.name)" />
-                            }
+                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    @{
+                        foreach (var script in scripts_list)
+                        {
+                            <MudSelectItem Value="@(script.name)" />
                         }
-                    </MudSelect>
-                }
+                    }
+                </MudSelect>
             }
 
         </DialogContent>
@@ -179,7 +188,6 @@
     }
 
     public List<Script> scripts_list;
-
 
     private string job_name = String.Empty;
     private string description = String.Empty;
@@ -304,7 +312,6 @@
     {
         scripts_list = new List<Script>();
         scripts_list.Clear();
-        string query = "SELECT * FROM scripts WHERE platform = @platform;";
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -312,8 +319,10 @@
         {
             await conn.OpenAsync();
 
+            string query = "SELECT * FROM scripts WHERE platform = @platform AND shell = @shell;";
             MySqlCommand command = new MySqlCommand(query, conn);
             command.Parameters.AddWithValue("@platform", platform);
+            command.Parameters.AddWithValue("@shell", type_display);
 
             Logging.Handler.Debug("/manage_jobs Add_Job_Dialog) -> Get_Scripts", "MySQL_Prepared_Query", query); //Output prepared query
 

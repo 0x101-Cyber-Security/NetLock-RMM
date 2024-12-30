@@ -33,6 +33,8 @@
 
         <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after=@StateHasChanged Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter">
             <MudSelectItem Value="@("Windows")" />
+            <MudSelectItem Value="@("Linux")" />
+            <MudSelectItem Value="@("MacOS")" />
             <MudSelectItem Value="@("System")" />
         </MudSelect>
 
@@ -47,6 +49,16 @@
                 shell = "MySQL";
                 <MudSelectItem Value="@("MySQL")" />
             }
+            else if (platform == "Linux")
+            {
+                shell = "Bash";
+                <MudSelectItem Value="@("Bash")" />
+            }
+            else if (platform == "MacOS")
+            {
+                shell = "Bash";
+                <MudSelectItem Value="@("Bash")" />
+            }
         </MudSelect>
 
         @{
@@ -54,6 +66,13 @@
             {
                 if (shell == "PowerShell")
                 {
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
                     <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
@@ -61,6 +80,27 @@
             {
                 if (shell == "MySQL")
                 {
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "Linux" || platform == "MacOS")
+            {
+                if (shell == "Bash")
+                {
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
                     <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
@@ -77,11 +117,26 @@
 @code {
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
-    [Parameter] public string id { get; set; }
     [Parameter] public string json { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        await Get_Scripts(true);
+        await Extract_Script();
+        await Get_Scripts(false);
         await Extract_Script();
 
         StateHasChanged();
@@ -145,6 +200,7 @@
             platform = _object.platform;
             shell = _object.shell;
             script = _object.script;
+
             await script_editor.SetValue(script);
         }
         catch (Exception ex)
@@ -153,21 +209,131 @@
         }
     }
 
-    private async Task Update_Jobs_Script()
+    private List<string> scripts = new List<string>();
+
+    private string collection_script_name = String.Empty;
+    private string collection_script = String.Empty;
+
+    private async Task Get_Scripts(bool first)
     {
-        string script_encoded = await Base64.Handler.Encode(script);
-        Logging.Handler.Debug("/manage_scripts Edit_Script_Dialog) -> Update_Jobs_Script", "MySQL_Result (script_encoded)", script_encoded);
+        script = String.Empty;
+        scripts.Clear();
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
-            string query = "SELECT * FROM jobs WHERE script_id = @script_id;";
-
             await conn.OpenAsync();
 
+            string query = "SELECT * FROM scripts WHERE platform = @platform AND shell = @shell;"; ;
+
+            if (first)
+                query = "SELECT * FROM scripts;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
+            
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    scripts.Add(reader["name"].ToString() ?? String.Empty);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> Get_Scripts", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task Get_Script(string name, string platform, string shell)
+    {
+        Console.WriteLine("Get_Script: " + name + " " + platform + " " + shell);
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM scripts WHERE platform = @platform AND shell = @shell AND name = @name;";
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    await script_editor.SetValue(reader["script"].ToString() ?? String.Empty);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> Get_Script", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task Update_Jobs_Script()
+    {
+        string script_encoded = await Base64.Handler.Encode(script);
+        Logging.Handler.Debug("/manage_scripts Edit_Script_Dialog) -> Update_Sensors_Script", "MySQL_Result (script_encoded)", script_encoded);
+
+        int script_id = 0;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM scripts WHERE name = @name;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", old_script_name);
+
+            Logging.Handler.Debug("/manage_scripts Edit_Script_Dialog) -> Update_Sensors_Script", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        script_id = Convert.ToInt32(reader["id"].ToString());
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts Edit_Script_Dialog) -> Update_Jobs_Script", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            conn.Close();
+        }
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM jobs WHERE script_id = @script_id;";
+
             MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@script_id", id);
+            command.Parameters.AddWithValue("@script_id", script_id);
 
             Logging.Handler.Debug("/manage_scripts Edit_Script_Dialog) -> Update_Jobs_Script", "MySQL_Prepared_Query", query); //Output prepared query
 
@@ -197,7 +363,7 @@
                         }
 
                         // Customize the "script"
-                        updatedJsonObj["script_id"] = id;
+                        updatedJsonObj["script_id"] = script_id;
                         updatedJsonObj["script"] = script_encoded;
 
                         // Serialize back to JSON
@@ -219,7 +385,7 @@
                             using (var updateCommand2 = new MySqlCommand("UPDATE jobs SET script_id = @script_id WHERE id = @id;", updateConn))
                             {
                                 updateCommand2.Parameters.AddWithValue("@id", reader["id"].ToString());
-                                updateCommand2.Parameters.AddWithValue("@script_id", id);
+                                updateCommand2.Parameters.AddWithValue("@script_id", script_id);
                                 await updateCommand2.ExecuteNonQueryAsync();
                             }
                         }
@@ -554,7 +720,7 @@
 
         if (success)
         {
-            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty); // Reset the device sync. Doing this will not require to generate a new id for jobs & sensors
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else

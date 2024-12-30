@@ -19,41 +19,41 @@
 
 <style>
     .selected-row-light {
-        background-color: lightgray;
+    background-color: lightgray;
     }
 
     .selected-row-dark {
-        background-color: #141414;
+    background-color: #141414;
     }
 
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 </style>
 
 <AuthorizeView>
 
     <Authorized>
-        
+
         @if(permissions_collections_enabled && permissions_collections_scripts_enabled)
         {
             <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
@@ -140,7 +140,7 @@
         }
 
     </Authorized>
- </AuthorizeView>
+</AuthorizeView>
 
 @code {
 
@@ -359,8 +359,6 @@
         StateHasChanged();
     }
 
-    private string scripts_json = String.Empty;
-
     private async Task Scripts_Load()
     {
         scripts_mysql_data = new List<Scripts_Entity>();
@@ -405,6 +403,7 @@
         finally
         {
             conn.Close();
+            StateHasChanged();
         }
     }
 
@@ -500,8 +499,6 @@
 
         if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
         {
-            scripts_json = result.Data.ToString();
-
             await Scripts_Load();
         }
     }
@@ -538,8 +535,6 @@
 
         if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
         {
-            scripts_json = result.Data.ToString();
-
             scripts_selectedRowContent_id = String.Empty;
             scripts_selectedRowContent_json = String.Empty;
 
@@ -578,8 +573,6 @@
 
         if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
         {
-            scripts_json = result.Data.ToString();
-
             scripts_selectedRowContent_id = String.Empty;
             scripts_selectedRowContent_json = String.Empty;
 

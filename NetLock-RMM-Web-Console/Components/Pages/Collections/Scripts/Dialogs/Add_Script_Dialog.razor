@@ -33,6 +33,8 @@
 
         <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after=@StateHasChanged Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter">
             <MudSelectItem Value="@("Windows")" />
+            <MudSelectItem Value="@("Linux")" />
+            <MudSelectItem Value="@("MacOS")" />
             <MudSelectItem Value="@("System")" />
         </MudSelect>
 
@@ -46,6 +48,16 @@
             {
                 shell = "MySQL";
                 <MudSelectItem Value="@("MySQL")" />
+            }
+            else if (platform == "Linux")
+            {
+                shell = "Bash";
+                <MudSelectItem Value="@("Bash")" />
+            }
+            else if (platform == "MacOS")
+            {
+                shell = "Bash";
+                <MudSelectItem Value="@("Bash")" />
             }
         </MudSelect>
 
@@ -61,14 +73,35 @@
                         }
                     </MudSelect>
 
-                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
             else if (platform == "System")
             {
                 if (shell == "MySQL")
                 {
-                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="MySQL_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "Linux" || platform == "MacOS") 
+            {
+                if (shell == "Bash")
+                {
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
         }
@@ -88,7 +121,22 @@
 
     protected override async Task OnInitializedAsync()
     {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
         await Get_Scripts();
+
+        StateHasChanged();
     }
 
     private string updatedJson = String.Empty;
@@ -120,13 +168,35 @@
 
     private StandaloneCodeEditor script_editor = null!;
 
-    private StandaloneEditorConstructionOptions Editor_Construction_Options(StandaloneCodeEditor editor)
+    private StandaloneEditorConstructionOptions PowerShell_Editor_Construction_Options(StandaloneCodeEditor editor)
     {
         return new StandaloneEditorConstructionOptions
 	    {
 		    AutomaticLayout = true,
             Theme = "vs-dark",
 		    Language = "powershell",
+		    //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+	    };
+    }
+    
+    private StandaloneEditorConstructionOptions MySQL_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "mysql",
+                //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            };
+    }
+
+    private StandaloneEditorConstructionOptions Shell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+	    {
+		    AutomaticLayout = true,
+            Theme = "vs-dark",
+		    Language = "shell",
 		    //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
 	    };
     }
@@ -149,8 +219,10 @@
         {
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM scripts;";
+            string query = "SELECT * FROM scripts WHERE platform = @platform AND shell = @shell;";
             MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
 
             using (DbDataReader reader = await cmd.ExecuteReaderAsync())
             {

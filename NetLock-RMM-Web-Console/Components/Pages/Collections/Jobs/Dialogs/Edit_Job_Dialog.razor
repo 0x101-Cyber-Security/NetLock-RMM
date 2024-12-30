@@ -131,12 +131,14 @@
                 <MudCheckBox T="bool" @bind-Value="time_scheduler_sunday" Label="@Localizer["sunday"].ToString()" Color="Color.Primary" />
             }
 
-            <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+            <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(false); }" Label="@Localizer["platform"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
                 <MudSelectItem Value="@("Windows")" />
+                <MudSelectItem Value="@("Linux")" />
+                <MudSelectItem Value="@("MacOS")" />
                 <MudSelectItem Value="@("System")" />
             </MudSelect>
 
-            <MudSelect Class="mt-3" T="string" @bind-Value="type_display" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+            <MudSelect Class="mt-3" T="string" @bind-Value="type_display" @bind-Value:after="async () => { await Get_Scripts(false); }" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
                 @if (platform == "Windows")
                 {
                     type_display = "PowerShell";
@@ -147,19 +149,26 @@
                     type_display = "MySQL";
                     <MudSelectItem Value="@("MySQL")" />
                 }
+                else if (platform == "Linux")
+                {
+                    type_display = "Bash";
+                    <MudSelectItem Value="@("Bash")" />
+                }
+                else if (platform == "MacOS")
+                {
+                    type_display = "Bash";
+                    <MudSelectItem Value="@("Bash")" />
+                }
             </MudSelect>
 
-            if (type_display == "PowerShell" || type_display == "MySQL")
-            {
-                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
-                    @{
-                        foreach (var script in scripts_list)
-                        {
-                            <MudSelectItem Value="@(script.name)" />
-                        }
+            <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                @{
+                    foreach (var script in scripts_list)
+                    {
+                        <MudSelectItem Value="@(script.name)" />
                     }
-                </MudSelect>
-            }
+                }
+            </MudSelect>
         }
 
     </DialogContent>
@@ -179,12 +188,14 @@
     protected override async Task OnInitializedAsync()
     {
         time_scheduler_type_display = Localizer["schedule_system_boot"];
-                
-        await Get_Scripts();
+
+        await Get_Scripts(true);
         await Extract_Job();
+        await Get_Scripts(false);
+        script = script_temp;
     }
 
-    public List<Script> scripts_list;
+    public List<Script> scripts_list = new List<Script>();
 
     private string updatedJson = String.Empty;
 
@@ -197,6 +208,7 @@
     private string type_display = String.Empty;
     private int script_id = 0;
     private string script = String.Empty;
+    private string script_temp = String.Empty;
 
     private int time_scheduler_type = 0;
     private string time_scheduler_type_display = String.Empty;
@@ -320,7 +332,8 @@
             type_display = _object.type;
             script_id = _object.script_id;
             script = await Get_Script_Name(_object.script_id);
-            
+            script_temp = script;
+
             //time schedule
             time_scheduler_type = _object.time_scheduler_type;
             time_scheduler_seconds = _object.time_scheduler_seconds;
@@ -376,13 +389,10 @@
         }
     }
 
-    private async Task Get_Scripts()
+    private async Task Get_Scripts(bool first)
     {
-        scripts_list = new List<Script>();
-
         script = String.Empty;
         scripts_list.Clear();
-        string query = "SELECT * FROM scripts WHERE platform = @platform;";
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -390,8 +400,14 @@
         {
             await conn.OpenAsync();
 
+            string query =  "SELECT * FROM scripts WHERE platform = @platform AND shell = @shell;";;
+
+            if (first)
+                query = "SELECT * FROM scripts;";
+
             MySqlCommand command = new MySqlCommand(query, conn);
             command.Parameters.AddWithValue("@platform", platform);
+            command.Parameters.AddWithValue("@shell", type_display);
 
             Logging.Handler.Debug("/manage_jobs Edit_Job_Dialog) -> Get_Scripts", "MySQL_Prepared_Query", query); //Output prepared query
 
@@ -582,7 +598,7 @@
 
         if (success)
         {
-            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty); // Reset the device sync to force reload of the jobs
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else
