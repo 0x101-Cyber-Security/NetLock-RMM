@@ -133,7 +133,7 @@
     <value>Datum</value>
   </data>
   <data name="delete" xml:space="preserve">
-    <value>Löschen</value>
+    <value>Delete</value>
   </data>
   <data name="description" xml:space="preserve">
     <value>Beschreibung</value>

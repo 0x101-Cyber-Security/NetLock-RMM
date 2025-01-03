@@ -20,6 +20,12 @@
 
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@sensor_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
+        
+        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
+            <MudSelectItem T="string" Value="@Localizer["Windows"]" />
+            <MudSelectItem T="string" Value="@Localizer["Linux"]" />
+            <MudSelectItem T="string" Value="@Localizer["MacOS"]" />
+        </MudSelect>
 
         <MudSelect Class="mt-3" T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter">
             <MudSelectItem T="string" Value="@Localizer["critical"]" />
@@ -141,8 +147,13 @@
 
         <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter">
             <MudSelectItem T="string" Value="@Localizer["utilization"]" />
-            <MudSelectItem T="string" Value="@("Windows Eventlog")" />
-            <MudSelectItem T="string" Value="@("PowerShell")" />
+
+            @if (platform == "Windows")
+            {
+                <MudSelectItem T="string" Value="@("Windows Eventlog")" />
+                <MudSelectItem T="string" Value="@("PowerShell")" />
+            }
+
             <MudSelectItem T="string" Value="@Localizer["service"]" />
             <MudSelectItem T="string" Value="@("Ping")" />
         </MudSelect>
@@ -439,7 +450,7 @@
                     }
                 }
             }
-            else if (category == "PowerShell")
+            else if (category == "PowerShell" && platform == "Windows")
             {
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["rule"]</MudText>
 
@@ -487,7 +498,7 @@
                     </MudTooltip>
                 </div>
             }
-            else if (category == "Windows Eventlog")
+            else if (category == "Windows Eventlog" && platform == "Windows")
             {
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["rule"]</MudText>
 
@@ -702,6 +713,7 @@
 
         await Get_Scripts();
         await Extract_Sensor();
+        await Get_Scripts();
     }
 
     public List<Script> scripts_list;
@@ -711,6 +723,7 @@
     private string old_sensor_name = String.Empty;
     private string sensor_name = String.Empty;
     private string description = String.Empty;
+    private string platform = "Windows";
     private string severity = "Moderat";
     private string category = "Auslastung";
     private string sub_category = String.Empty;
@@ -783,6 +796,7 @@
         public string last_run { get; set; }
         public string author { get; set; }
         public string description { get; set; }
+        public string platform { get; set; }
         public int severity { get; set; }
         public int category { get; set; }
         public int sub_category { get; set; }
@@ -923,7 +937,7 @@
             await conn.OpenAsync();
 
             MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@platform", "Windows");
+            command.Parameters.AddWithValue("@platform", platform);
 
             Logging.Handler.Debug("/manage_jobs Add_Sensor_Dialog) -> Get_Scripts", "MySQL_Prepared_Query", query); //Output prepared query
 
@@ -1022,6 +1036,7 @@
             sensor_name = _object.name;
             old_sensor_name = _object.name;
             description = _object.description;
+            platform = _object.platform ?? "Windows";
             severity = _object.severity.ToString();
             category = _object.category.ToString();
             sub_category = _object.sub_category.ToString();
@@ -1305,6 +1320,7 @@
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
                     author = author.Value,
                     description = description,
+                    platform = platform,
                     severity = severity_converted,
                     category = category_converted,
                     sub_category = sub_category_converted,
@@ -1383,7 +1399,7 @@
                 }
             }
 
-            string execute_query = "UPDATE `sensors` SET name = @name, description = @description, severity = @severity, category = @category, sub_category = @sub_category, script_id = @script_id, script_action_id = @script_action_id, json = @json WHERE name = @old_name;";
+            string execute_query = "UPDATE `sensors` SET name = @name, description = @description, severity = @severity, category = @category, sub_category = @sub_category, script_id = @script_id, script_action_id = @script_action_id, json = @json, platform = @platform WHERE name = @old_name;";
 
             MySqlCommand cmd = new MySqlCommand(execute_query, conn);
 
@@ -1398,6 +1414,7 @@
             cmd.Parameters.AddWithValue("@script_id", script_id);
             cmd.Parameters.AddWithValue("@script_action_id", script_action_id);
             cmd.Parameters.AddWithValue("@json", sensors_json_string);
+            cmd.Parameters.AddWithValue("@platform", platform);
 
             cmd.ExecuteNonQuery();
 
@@ -1405,7 +1422,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/manage_sensors (Edit_Sensor_Dialog) -> OK", "Result", ex.Message);
+            Logging.Handler.Error("/manage_sensors (Edit_Sensor_Dialog) -> OK", "Result", ex.ToString());
         }
         finally
         {

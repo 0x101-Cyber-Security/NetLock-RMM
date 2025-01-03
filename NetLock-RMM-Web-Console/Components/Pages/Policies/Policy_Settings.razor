@@ -69,431 +69,440 @@
             }
             
             <MudTabs Class="mt-5" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default">
-                <MudTabPanel Text="Antivirus">
-
-                    <MudTabs Class="mt-0" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default">
-                        <MudTabPanel Text="@Localizer["configuration"]">
-
-                            <MudPaper>
-                                <MudSwitch Class="ml-2" T="bool" @bind-Value="@antivirus_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
-
-                                <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["general_settings"]</MudText>
-                                <MudText Class="ml-3" Typo="Typo.body1">@Localizer["user_interaction"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_security_center" Label="@Localizer["antivirus_security_center"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_security_center_tray" Label="@Localizer["antivirus_security_center_tray"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <MudText Class="ml-3 mt-3" Typo="Typo.body1">Updates</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_check_hourly_signatures" Label="@Localizer["antivirus_check_hourly_signatures"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_allow_metered_updates" Label="@Localizer["antivirus_allow_metered_updates"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["other"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_delete_quarantine_six_months" Label="@Localizer["antivirus_delete_quarantine_six_months"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                            </MudPaper>
-
-                            <MudPaper Class="mt-5">
-
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["scanner_settings"]</MudText>
-                                <MudSelect Class="ml-2 mr-2" T="string" @bind-Value="antivirus_scan_direction_display" Label="@Localizer["direction"]" AnchorOrigin="Origin.BottomCenter" style="max-width: 350px;" Disabled="@(!antivirus_enabled)">
-                                    <MudSelectItem T="string" Value="@Localizer["inbound_outbound"]" />
-                                    <MudSelectItem T="string" Value="@Localizer["inbound"]" />
-                                    <MudSelectItem T="string" Value="@Localizer["outbound"]" />
-                                </MudSelect>
-
-                                <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["file_system"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_file_hash_computing" Label="@Localizer["antivirus_file_hash_computing"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_block_at_first_seen" Label="@Localizer["antivirus_block_at_first_seen"]" Color="Color.Primary" Disabled="true" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_scan_archives" Label="@Localizer["antivirus_scan_archives"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_scan_mails" Label="@Localizer["antivirus_scan_mails"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["network"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_scan_network_files" Label="@Localizer["antivirus_net_scan_network_files"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_filter_incoming_connections" Label="@Localizer["antivirus_net_filter_incoming_connections"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_datagram_processing" Label="@Localizer["antivirus_net_datagram_processing"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <MudText Class="ml-3 mt-3" Typo="Typo.body1">Parser</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_tls" Label="TLS" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_rdp" Label="RDP" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_ssh" Label="SSH" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_http" Label="HTTP" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_dns" Label="DNS" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_dnsovertcp" Label="@Localizer["antivirus_parser_dnsovertcp"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                            </MudPaper>
-
-                            <MudPaper Class="mt-5">
-
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["exclusions"]</MudText>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Exclusion_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Exclusion_Edit_Exclusion_Dialog(antivirus_exclusions_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_exclusions_selectedRowContent))">@Localizer["edit"]</MudButton>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Exclusion_Delete_Dialog(antivirus_exclusions_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_exclusions_selectedRowContent))">@Localizer["delete"]</MudButton>
-
-                                <MudTooltip Text="@Localizer["export_data"]">
-                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Exclusions_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
-                                </MudTooltip>
-
-                                <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_exclusions_mysql_data" Filter="new Func<Antivirus_Exclusions_Entity, bool>(Antivirus_Exclusions_Table_Filter_Func)">
-                                    <ToolBarContent>
-                                        <MudTextField @bind-Value="antivirus_exclusions_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                    </ToolBarContent>
-                                    <HeaderContent>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.exclusion)">@Localizer["exclusion"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.date)">@Localizer["date"]</MudTableSortLabel></MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate Context="antivirus_exclusions_row">
-
-                                        <MudTd DataLabel="ID" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)"  class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="display: none;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_exclusions_row.id
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["exclusion"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_exclusions_row.exclusion
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["type"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_exclusions_row.type
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_exclusions_row.description
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_exclusions_row.date
-                                            </span>
-                                        </MudTd>
-
-                                    </RowTemplate>
-                                    <PagerContent>
-                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                    </PagerContent>
-                                </MudTable>
-
-                            </MudPaper>
-
-                            <MudPaper Class="mt-5">
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["scan_jobs"]</MudText>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Scan_Job_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
-
-                                <MudButton Class="ml-2 mt-2"Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Scan_Job_Edit_Dialog(antivirus_scan_jobs_selectedRowContent))" Disabled="@(!antivirus_enabled)">@Localizer["edit"]</MudButton>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Scan_Job_Delete_Dialog(antivirus_scan_jobs_selectedRowContent))" Disabled="@(!antivirus_enabled)">@Localizer["delete"]</MudButton>
-
-                                <MudTooltip Text="@Localizer["export_data"]">
-                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Scan_Jobs_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
-                                </MudTooltip>
-
-                                <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_scan_jobs_mysql_data" Filter="new Func<Antivirus_Scan_Jobs_Entity, bool>(Antivirus_Scan_Jobs_Table_Filter_Func)">
-                                    <ToolBarContent>
-                                        <MudTextField @bind-Value="antivirus_scan_jobs_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                    </ToolBarContent>
-                                    <HeaderContent>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.enabled)" style="white-space: nowrap;">Status</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["date"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_type)" style="white-space: nowrap;">@Localizer["time_scheduler"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_time)" style="white-space: nowrap;">@Localizer["time"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_monday)" style="white-space: nowrap;">@Localizer["monday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_tuesday)" style="white-space: nowrap;">@Localizer["tuesday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_wednesday)" style="white-space: nowrap;">@Localizer["wednesday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_thursday)" style="white-space: nowrap;">@Localizer["thursday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_friday)" style="white-space: nowrap;">@Localizer["friday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_saturday)" style="white-space: nowrap;">@Localizer["saturday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_sunday)" style="white-space: nowrap;">@Localizer["sunday"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_type)" style="white-space: nowrap;">@Localizer["scan_mode"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_cpu_usage)" style="white-space: nowrap;">@Localizer["scan_settings_cpu_usage"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_scan_on_battery)" style="white-space: nowrap;">@Localizer["scan_settings_scan_on_battery"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_network_drives)" style="white-space: nowrap;">@Localizer["scan_settings_network_drives"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_removable_disks)" style="white-space: nowrap;">@Localizer["scan_settings_removable_disks"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_update_signatures)" style="white-space: nowrap;">@Localizer["scan_settings_update_signatures"]</MudTableSortLabel></MudTh>
-                                        </HeaderContent>
-                                    <RowTemplate Context="antivirus_scan_jobs_row">
-
-                                        <MudTd DataLabel="Status" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.enabled
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="Name" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.name
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.date
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.description
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["time_scheduler"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_type
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["time"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_time Uhr
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["monday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_monday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["tuesday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_tuesday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["wednesday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_wednesday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["thursday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_thursday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["friday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_friday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["saturday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_saturday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["sunday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.time_scheduler_sunday
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_mode"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_type
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_settings_cpu_usage"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_settings_cpu_usage (%)
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_settings_scan_on_battery"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_settings_scan_on_battery
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_settings_network_drives"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_settings_network_drives
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_settings_removable_disks"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_settings_removable_disks
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["scan_settings_update_signatures"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_settings_update_signatures
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="display: none;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_scan_jobs_row.scan_directories_json
-                                            </span>
-                                        </MudTd>
-
-                                    </RowTemplate>
-                                    <PagerContent>
-                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                    </PagerContent>
-                                </MudTable>
-
-                            </MudPaper>
-
-                            @*@<MudPaper Class="mt-5">
-
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["controlled_folder_access"]</MudText>
-
-                                <MudSwitch Class="ml-2" T="bool" @bind-Value="@antivirus_controlled_folder_access_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <MudSelect Class="ml-2" T="string" @bind-Value="antivirus_controlled_folder_access_ruleset" Label="@Localizer["ruleset"]" AnchorOrigin="Origin.BottomCenter" Style="max-width: 300px;" Disabled="@(!antivirus_enabled)">
-                                    <MudSelectItem Value="@("-")" />
-                                    @{
-                                        foreach (string ruleset in antivirus_controlled_folder_access_rulesets)
-                                        {
-                                            <MudSelectItem Value="@ruleset" />
-                                        }
-                                    }
-                                </MudSelect>
-
-                                <MudDatePicker Class="ml-2" PickerVariant="PickerVariant.Dialog" Label="Automatisches Whitelisting bis zum" @ref="antivirus_controlled_folder_access_folders_date_picker" @bind-Date="antivirus_controlled_folder_access_folders_whitelist_until_date" Required="true" Disabled="@(!antivirus_enabled)">
-                                    <PickerActions Context="pickerActionsContext">
-                                        <MudButton Class="mr-auto align-self-start" OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                        <MudButton OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                        <MudButton OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.CloseAsync(true))" Color="Color.Primary">@Localizer["edit"]</MudButton>
-                                    </PickerActions>
-                                </MudDatePicker>
-
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Controlled_Folder_Access_Folders_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Controlled_Folder_Access_Folders_Edit_Dialog(antivirus_controlled_folder_access_folders_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_controlled_folder_access_folders_selectedRowContent))">@Localizer["edit"]</MudButton>
-                                <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Controlled_Folder_Access_Folders_Delete_Dialog(antivirus_controlled_folder_access_folders_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_controlled_folder_access_folders_selectedRowContent))">@Localizer["delete"]</MudButton>
-                                 
-                                <MudTooltip Text="@Localizer["export_data"]">
-                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Controlled_Folder_Access_Folders_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
-                                </MudTooltip>
-
-                                <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_controlled_folder_access_folders_mysql_data" Filter="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, bool>(Antivirus_Controlled_Folder_Access_Folders_Table_Filter_Func)">
-                                    <ToolBarContent>
-                                        <MudTextField @bind-Value="antivirus_controlled_folder_access_folders_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                    </ToolBarContent>
-                                    <HeaderContent>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.folder)" style="white-space: nowrap;">@Localizer["directory"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
-                                        <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["date"]</MudTableSortLabel></MudTh>
-                                        <MudTh></MudTh>
-                                    </HeaderContent>
-                                    <RowTemplate Context="antivirus_controlled_folder_access_folders_row">
-
-                                        <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class="@Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_controlled_folder_access_folders_row.folder
-                                            </span>
-                                        </MudTd>
-
-                                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class="@Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_controlled_folder_access_folders_row.description
-                                            </span>
-                                        </MudTd>
-
-                                    <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class=" @Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
-                                            <span style="display: flex; align-items: center;">
-                                                &nbsp;@antivirus_controlled_folder_access_folders_row.date
-                                            </span>
-                                        </MudTd>
-
-                                    </RowTemplate>
-                                    <PagerContent>
-                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                    </PagerContent>
-                                </MudTable>
-
-                        </MudPaper>*@
+
+                <MudTabPanel Text="Windows">
+
+                    <MudTabs>
+
+                        <MudTabPanel Text="Antivirus">
+                            <MudTabs Class="mt-0" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default">
+                                <MudTabPanel Text="@Localizer["configuration"]">
+
+                                    <MudPaper>
+                                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@antivirus_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+
+                                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["general_settings"]</MudText>
+                                        <MudText Class="ml-3" Typo="Typo.body1">@Localizer["user_interaction"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_security_center" Label="@Localizer["antivirus_security_center"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_security_center_tray" Label="@Localizer["antivirus_security_center_tray"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">Updates</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_check_hourly_signatures" Label="@Localizer["antivirus_check_hourly_signatures"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_allow_metered_updates" Label="@Localizer["antivirus_allow_metered_updates"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["other"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_delete_quarantine_six_months" Label="@Localizer["antivirus_delete_quarantine_six_months"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                    </MudPaper>
+
+                                    <MudPaper Class="mt-5">
+
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["scanner_settings"]</MudText>
+                                        <MudSelect Class="ml-2 mr-2" T="string" @bind-Value="antivirus_scan_direction_display" Label="@Localizer["direction"]" AnchorOrigin="Origin.BottomCenter" style="max-width: 350px;" Disabled="@(!antivirus_enabled)">
+                                            <MudSelectItem T="string" Value="@Localizer["inbound_outbound"]" />
+                                            <MudSelectItem T="string" Value="@Localizer["inbound"]" />
+                                            <MudSelectItem T="string" Value="@Localizer["outbound"]" />
+                                        </MudSelect>
+
+                                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["file_system"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_file_hash_computing" Label="@Localizer["antivirus_file_hash_computing"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_block_at_first_seen" Label="@Localizer["antivirus_block_at_first_seen"]" Color="Color.Primary" Disabled="true" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_scan_archives" Label="@Localizer["antivirus_scan_archives"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_scan_mails" Label="@Localizer["antivirus_scan_mails"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">@Localizer["network"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_scan_network_files" Label="@Localizer["antivirus_net_scan_network_files"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_filter_incoming_connections" Label="@Localizer["antivirus_net_filter_incoming_connections"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_net_datagram_processing" Label="@Localizer["antivirus_net_datagram_processing"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <MudText Class="ml-3 mt-3" Typo="Typo.body1">Parser</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_tls" Label="TLS" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_rdp" Label="RDP" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_ssh" Label="SSH" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_http" Label="HTTP" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_dns" Label="DNS" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_parser_dnsovertcp" Label="@Localizer["antivirus_parser_dnsovertcp"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                    </MudPaper>
+
+                                    <MudPaper Class="mt-5">
+
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["exclusions"]</MudText>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Exclusion_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Exclusion_Edit_Exclusion_Dialog(antivirus_exclusions_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_exclusions_selectedRowContent))">@Localizer["edit"]</MudButton>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Exclusion_Delete_Dialog(antivirus_exclusions_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_exclusions_selectedRowContent))">@Localizer["delete"]</MudButton>
+
+                                        <MudTooltip Text="@Localizer["export_data"]">
+                                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Exclusions_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
+                                        </MudTooltip>
+
+                                        <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_exclusions_mysql_data" Filter="new Func<Antivirus_Exclusions_Entity, bool>(Antivirus_Exclusions_Table_Filter_Func)">
+                                            <ToolBarContent>
+                                                <MudTextField @bind-Value="antivirus_exclusions_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                            </ToolBarContent>
+                                            <HeaderContent>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.exclusion)">@Localizer["exclusion"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Exclusions_Entity, object>(x => x.date)">@Localizer["date"]</MudTableSortLabel></MudTh>
+                                            </HeaderContent>
+                                            <RowTemplate Context="antivirus_exclusions_row">
+
+                                                <MudTd DataLabel="ID" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="display: none;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_exclusions_row.id
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["exclusion"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_exclusions_row.exclusion
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["type"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_exclusions_row.type
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_exclusions_row.description
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Exclusions_RowClickHandler(antivirus_exclusions_row)" @ondblclick="() => Antivirus_Exclusions_RowDblClickHandler(antivirus_exclusions_row)" class="@Antivirus_Exclusions_GetRowClass(antivirus_exclusions_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_exclusions_row.date
+                                                    </span>
+                                                </MudTd>
+
+                                            </RowTemplate>
+                                            <PagerContent>
+                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                            </PagerContent>
+                                        </MudTable>
+
+                                    </MudPaper>
+
+                                    <MudPaper Class="mt-5">
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["scan_jobs"]</MudText>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Scan_Job_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Scan_Job_Edit_Dialog(antivirus_scan_jobs_selectedRowContent))" Disabled="@(!antivirus_enabled)">@Localizer["edit"]</MudButton>
+
+                                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Scan_Job_Delete_Dialog(antivirus_scan_jobs_selectedRowContent))" Disabled="@(!antivirus_enabled)">@Localizer["delete"]</MudButton>
+
+                                        <MudTooltip Text="@Localizer["export_data"]">
+                                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Scan_Jobs_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
+                                        </MudTooltip>
+
+                                        <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_scan_jobs_mysql_data" Filter="new Func<Antivirus_Scan_Jobs_Entity, bool>(Antivirus_Scan_Jobs_Table_Filter_Func)">
+                                            <ToolBarContent>
+                                                <MudTextField @bind-Value="antivirus_scan_jobs_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                            </ToolBarContent>
+                                            <HeaderContent>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.enabled)" style="white-space: nowrap;">Status</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["date"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_type)" style="white-space: nowrap;">@Localizer["time_scheduler"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_time)" style="white-space: nowrap;">@Localizer["time"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_monday)" style="white-space: nowrap;">@Localizer["monday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_tuesday)" style="white-space: nowrap;">@Localizer["tuesday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_wednesday)" style="white-space: nowrap;">@Localizer["wednesday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_thursday)" style="white-space: nowrap;">@Localizer["thursday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_friday)" style="white-space: nowrap;">@Localizer["friday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_saturday)" style="white-space: nowrap;">@Localizer["saturday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.time_scheduler_sunday)" style="white-space: nowrap;">@Localizer["sunday"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_type)" style="white-space: nowrap;">@Localizer["scan_mode"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_cpu_usage)" style="white-space: nowrap;">@Localizer["scan_settings_cpu_usage"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_scan_on_battery)" style="white-space: nowrap;">@Localizer["scan_settings_scan_on_battery"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_network_drives)" style="white-space: nowrap;">@Localizer["scan_settings_network_drives"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_removable_disks)" style="white-space: nowrap;">@Localizer["scan_settings_removable_disks"]</MudTableSortLabel></MudTh>
+                                                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Scan_Jobs_Entity, object>(x => x.scan_settings_update_signatures)" style="white-space: nowrap;">@Localizer["scan_settings_update_signatures"]</MudTableSortLabel></MudTh>
+                                            </HeaderContent>
+                                            <RowTemplate Context="antivirus_scan_jobs_row">
+
+                                                <MudTd DataLabel="Status" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.enabled
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="Name" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.name
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.date
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.description
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["time_scheduler"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_type
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["time"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_time Uhr
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["monday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_monday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["tuesday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_tuesday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["wednesday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_wednesday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["thursday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_thursday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["friday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_friday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["saturday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_saturday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["sunday"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.time_scheduler_sunday
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_mode"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_type
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_settings_cpu_usage"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_settings_cpu_usage (%)
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_settings_scan_on_battery"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_settings_scan_on_battery
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_settings_network_drives"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_settings_network_drives
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_settings_removable_disks"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_settings_removable_disks
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["scan_settings_update_signatures"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="white-space: nowrap;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_settings_update_signatures
+                                                    </span>
+                                                </MudTd>
+
+                                                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Scan_Jobs_RowClickHandler(antivirus_scan_jobs_row)" @ondblclick="() => Antivirus_Scan_Jobs_RowDblClickHandler(antivirus_scan_jobs_row)" class="@Antivirus_Scan_Jobs_GetRowClass(antivirus_scan_jobs_row)" style="display: none;">
+                                                    <span style="display: flex; align-items: center;">
+                                                        &nbsp;@antivirus_scan_jobs_row.scan_directories_json
+                                                    </span>
+                                                </MudTd>
+
+                                            </RowTemplate>
+                                            <PagerContent>
+                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                            </PagerContent>
+                                        </MudTable>
+
+                                    </MudPaper>
+
+                                    @*@<MudPaper Class="mt-5">
+
+        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["controlled_folder_access"]</MudText>
+
+        <MudSwitch Class="ml-2" T="bool" @bind-Value="@antivirus_controlled_folder_access_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+        <MudSelect Class="ml-2" T="string" @bind-Value="antivirus_controlled_folder_access_ruleset" Label="@Localizer["ruleset"]" AnchorOrigin="Origin.BottomCenter" Style="max-width: 300px;" Disabled="@(!antivirus_enabled)">
+            <MudSelectItem Value="@("-")" />
+            @{
+                foreach (string ruleset in antivirus_controlled_folder_access_rulesets)
+                {
+                    <MudSelectItem Value="@ruleset" />
+                }
+            }
+        </MudSelect>
+
+        <MudDatePicker Class="ml-2" PickerVariant="PickerVariant.Dialog" Label="Automatisches Whitelisting bis zum" @ref="antivirus_controlled_folder_access_folders_date_picker" @bind-Date="antivirus_controlled_folder_access_folders_whitelist_until_date" Required="true" Disabled="@(!antivirus_enabled)">
+            <PickerActions Context="pickerActionsContext">
+                <MudButton Class="mr-auto align-self-start" OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                <MudButton OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                <MudButton OnClick="@(() => antivirus_controlled_folder_access_folders_date_picker.CloseAsync(true))" Color="Color.Primary">@Localizer["edit"]</MudButton>
+            </PickerActions>
+        </MudDatePicker>
+
+        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Antivirus_Controlled_Folder_Access_Folders_Add_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!antivirus_enabled)">@Localizer["add"]</MudButton>
+        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Antivirus_Controlled_Folder_Access_Folders_Edit_Dialog(antivirus_controlled_folder_access_folders_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_controlled_folder_access_folders_selectedRowContent))">@Localizer["edit"]</MudButton>
+        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Antivirus_Controlled_Folder_Access_Folders_Delete_Dialog(antivirus_controlled_folder_access_folders_selectedRowContent))" Disabled="@(!antivirus_enabled || String.IsNullOrEmpty(antivirus_controlled_folder_access_folders_selectedRowContent))">@Localizer["delete"]</MudButton>
+
+        <MudTooltip Text="@Localizer["export_data"]">
+            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Antivirus_Controlled_Folder_Access_Folders_Export_Table_Dialog" Disabled="@(!antivirus_enabled)"></MudIconButton>
+        </MudTooltip>
+
+        <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@antivirus_controlled_folder_access_folders_mysql_data" Filter="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, bool>(Antivirus_Controlled_Folder_Access_Folders_Table_Filter_Func)">
+            <ToolBarContent>
+                <MudTextField @bind-Value="antivirus_controlled_folder_access_folders_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.folder)" style="white-space: nowrap;">@Localizer["directory"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Antivirus_Controlled_Folder_Access_Folders_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["date"]</MudTableSortLabel></MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate Context="antivirus_controlled_folder_access_folders_row">
+
+                <MudTd DataLabel="@Localizer["directory"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class="@Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
+                    <span style="display: flex; align-items: center;">
+                        &nbsp;@antivirus_controlled_folder_access_folders_row.folder
+                    </span>
+                </MudTd>
+
+                <MudTd DataLabel="@Localizer["description"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class="@Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
+                    <span style="display: flex; align-items: center;">
+                        &nbsp;@antivirus_controlled_folder_access_folders_row.description
+                    </span>
+                </MudTd>
+
+            <MudTd DataLabel="@Localizer["date"]" @onclick="() => Antivirus_Controlled_Folder_Access_Folders_RowClickHandler(antivirus_controlled_folder_access_folders_row)" @ondblclick="() => Antivirus_Controlled_Folder_Access_Folders_RowDblClickHandler(antivirus_controlled_folder_access_folders_row)" class=" @Antivirus_Controlled_Folder_Access_Folders_GetRowClass(antivirus_controlled_folder_access_folders_row)" style="white-space: nowrap;">
+                    <span style="display: flex; align-items: center;">
+                        &nbsp;@antivirus_controlled_folder_access_folders_row.date
+                    </span>
+                </MudTd>
+
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+            </PagerContent>
+        </MudTable>
+
+</MudPaper>*@
+
+                                </MudTabPanel>
+
+                                <MudTabPanel Text="@Localizer["notifications"]">
+
+                                    <MudPaper Class="mt-0">
+                                        <!-- Antivirus @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-0" Typo="Typo.h6">Antivirus</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antivirus_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_antivirus_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antivirus_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_antivirus_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- Antispyware @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">Antispyware</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antispyware_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_antispyware_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antispyware_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_antispyware_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["behaviour"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["behaviour"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_behavior_detected" Label="@Localizer["antivirus_notifications_malwareprotection_behavior_detected"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["configuration"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["configuration"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_config_changed" Label="@Localizer["antivirus_notifications_malwareprotection_config_changed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["platform"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["platform"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_disabled_expired_state" Label="@Localizer["antivirus_notifications_malwareprotection_disabled_expired_state"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_engine_failure" Label="@Localizer["antivirus_notifications_malwareprotection_engine_failure"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_engine_update_platformoutofdate" Label="@Localizer["antivirus_notifications_malwareprotection_engine_update_platformoutofdate"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_expiration_warning_state" Label="@Localizer["antivirus_notifications_malwareprotection_expiration_warning_state"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_platform_almostoutofdate" Label="@Localizer["antivirus_notifications_malwareprotection_platform_almostoutofdate"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_platform_update_failed" Label="@Localizer["antivirus_notifications_malwareprotection_platform_update_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_protection_eol" Label="@Localizer["antivirus_notifications_malwareprotection_protection_eol"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["quarantine"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["quarantine"]</MudText>
+                                        <MudCheckBox Class="ml-2 " T="bool" @bind-Value="@antivirus_notifications_malwareprotection_quarantine_delete" Label="@Localizer["antivirus_notifications_malwareprotection_quarantine_delete"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_quarantine_restore" Label="@Localizer["antivirus_notifications_malwareprotection_quarantine_restore"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["real_time_protection"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["real_time_protection"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_configured" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_configured"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_failure" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_failure"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_recovered" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_recovered"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- Scan @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">Scan</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_cancelled" Label="@Localizer["antivirus_notifications_malwareprotection_scan_cancelled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_completed" Label="@Localizer["antivirus_notifications_malwareprotection_scan_completed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_failed" Label="@Localizer["antivirus_notifications_malwareprotection_scan_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_paused" Label="@Localizer["antivirus_notifications_malwareprotection_scan_paused"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- @Localizer["signatures"] @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["signatures"]</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_reversion" Label="@Localizer["antivirus_notifications_malwareprotection_signature_reversion"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_update_failed" Label="@Localizer["antivirus_notifications_malwareprotection_signature_update_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_updated" Label="@Localizer["antivirus_notifications_malwareprotection_signature_updated"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+
+                                        <!-- NetLock @Localizer["category"] -->
+                                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">NetLock</MudText>
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_mail" Label="@Localizer["e_mail"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_microsoft_teams" Label="Microsoft Teams" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_telegram" Label="Telegram" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_ntfy_sh" Label="NTFY.SH" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
+                                    </MudPaper>
+
+                                </MudTabPanel>
+                            </MudTabs>
 
                         </MudTabPanel>
 
-                        <MudTabPanel Text="@Localizer["notifications"]">
-
-                            <MudPaper Class="mt-0">
-                                <!-- Antivirus @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-0" Typo="Typo.h6">Antivirus</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antivirus_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_antivirus_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antivirus_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_antivirus_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- Antispyware @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">Antispyware</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antispyware_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_antispyware_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_antispyware_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_antispyware_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["behaviour"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["behaviour"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_behavior_detected" Label="@Localizer["antivirus_notifications_malwareprotection_behavior_detected"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["configuration"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["configuration"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_config_changed" Label="@Localizer["antivirus_notifications_malwareprotection_config_changed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["platform"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["platform"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_disabled_expired_state" Label="@Localizer["antivirus_notifications_malwareprotection_disabled_expired_state"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_engine_failure" Label="@Localizer["antivirus_notifications_malwareprotection_engine_failure"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_engine_update_platformoutofdate" Label="@Localizer["antivirus_notifications_malwareprotection_engine_update_platformoutofdate"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_expiration_warning_state" Label="@Localizer["antivirus_notifications_malwareprotection_expiration_warning_state"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_platform_almostoutofdate" Label="@Localizer["antivirus_notifications_malwareprotection_platform_almostoutofdate"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_platform_update_failed" Label="@Localizer["antivirus_notifications_malwareprotection_platform_update_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_protection_eol" Label="@Localizer["antivirus_notifications_malwareprotection_protection_eol"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["quarantine"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["quarantine"]</MudText>
-                                <MudCheckBox Class="ml-2 " T="bool" @bind-Value="@antivirus_notifications_malwareprotection_quarantine_delete" Label="@Localizer["antivirus_notifications_malwareprotection_quarantine_delete"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_quarantine_restore" Label="@Localizer["antivirus_notifications_malwareprotection_quarantine_restore"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["real_time_protection"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["real_time_protection"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_disabled" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_disabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_enabled" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_enabled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_configured" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_configured"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_failure" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_failure"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_rtp_feature_recovered" Label="@Localizer["antivirus_notifications_malwareprotection_rtp_feature_recovered"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- Scan @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">Scan</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_cancelled" Label="@Localizer["antivirus_notifications_malwareprotection_scan_cancelled"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_completed" Label="@Localizer["antivirus_notifications_malwareprotection_scan_completed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_failed" Label="@Localizer["antivirus_notifications_malwareprotection_scan_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_scan_paused" Label="@Localizer["antivirus_notifications_malwareprotection_scan_paused"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                <!-- @Localizer["signatures"] @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">@Localizer["signatures"]</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_reversion" Label="@Localizer["antivirus_notifications_malwareprotection_signature_reversion"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_update_failed" Label="@Localizer["antivirus_notifications_malwareprotection_signature_update_failed"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_malwareprotection_signature_updated" Label="@Localizer["antivirus_notifications_malwareprotection_signature_updated"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-
-                                 <!-- NetLock @Localizer["category"] -->
-                                <MudText Class="ml-2 mt-3" Typo="Typo.h6">NetLock</MudText>
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_mail" Label="@Localizer["e_mail"]" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_microsoft_teams" Label="Microsoft Teams" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_telegram" Label="Telegram" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@antivirus_notifications_netlock_ntfy_sh" Label="NTFY.SH" Color="Color.Primary" Disabled="@(!antivirus_enabled)" />
-                            </MudPaper>
-
-                        </MudTabPanel>
                     </MudTabs>
 
                 </MudTabPanel>
+
 
                 <MudTabPanel Text="@Localizer["sensors"]">
                     <MudPaper>
@@ -509,6 +518,7 @@
                             <HeaderContent>
                                 <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.enabled)" style="white-space: nowrap;">@Localizer["enabled"]</MudTableSortLabel></MudTh>
                                 <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.platform)" style="white-space: nowrap;">@Localizer["platform"]</MudTableSortLabel></MudTh>
                                 <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.category)" style="white-space: nowrap;">@Localizer["category"]</MudTableSortLabel></MudTh>
                                 <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.sub_category)" style="white-space: nowrap;">@Localizer["sub_category"]</MudTableSortLabel></MudTh>
                                 <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.severity)" style="white-space: nowrap;">@Localizer["severity"]</MudTableSortLabel></MudTh>
@@ -527,6 +537,12 @@
                                 <MudTd DataLabel="Name" @onclick="() => Sensors_RowClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
                                     <span style="display: flex; align-items: center;">
                                         &nbsp;@sensors_row.name
+                                    </span>
+                                </MudTd>
+
+                                <MudTd DataLabel="@Localizer["platform"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@sensors_row.platform
                                     </span>
                                 </MudTd>
 
@@ -1067,13 +1083,13 @@
 
     private async Task Load_Policy(string id)
     {
-        string query = "SELECT * FROM policies WHERE id = @id;";
-
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
             await conn.OpenAsync();
+
+            string query = "SELECT * FROM policies WHERE id = @id;";
 
             MySqlCommand command = new MySqlCommand(query, conn);
             command = new MySqlCommand(query, conn);
@@ -1111,6 +1127,7 @@
         Logging.Handler.Debug("/Policy_Settings -> Load_Policy", "JSON (antivirus_exclusions_json)", antivirus_exclusions_json);
         Logging.Handler.Debug("/Policy_Settings -> Load_Policy", "JSON (antivirus_scan_jobs_json)", antivirus_scan_jobs_json);
         Logging.Handler.Debug("/Policy_Settings -> Load_Policy", "JSON (sensors)", sensors_json);
+        Logging.Handler.Debug("/Policy_Settings -> Load_Policy", "JSON (jobs)", jobs_json);
     }
 
     private async Task Save_Policy()
@@ -2186,6 +2203,7 @@
         public string id { get; set; } = String.Empty;
         public bool enabled { get; set; } = false;
         public string name { get; set; } = String.Empty;
+        public string platform { get; set; } = String.Empty;
         public string description { get; set; } = String.Empty;
         public string author { get; set; } = String.Empty;
         public string date { get; set; } = String.Empty;
@@ -2246,6 +2264,7 @@
             await conn.OpenAsync();
 
             MySqlCommand command = new MySqlCommand("SELECT * FROM sensors;", conn);
+
             using (DbDataReader reader = await command.ExecuteReaderAsync())
             {
                 if (reader.HasRows)
@@ -2291,6 +2310,7 @@
                         {
                             id = reader["id"].ToString() ?? String.Empty,
                             name = reader["name"].ToString() ?? String.Empty,
+                            platform = reader["platform"].ToString() ?? String.Empty,
                             description = reader["description"].ToString() ?? String.Empty,
                             author = reader["author"].ToString() ?? String.Empty,
                             date = reader["date"].ToString() ?? String.Empty,
@@ -2408,7 +2428,8 @@
         {
             await conn.OpenAsync();
 
-            MySqlCommand command = new MySqlCommand("SELECT * FROM jobs WHERE platform = 'Windows';", conn);
+            MySqlCommand command = new MySqlCommand("SELECT * FROM jobs;", conn);
+
             using (DbDataReader reader = await command.ExecuteReaderAsync())
             {
                 if (reader.HasRows)
@@ -2469,16 +2490,28 @@
     #endregion
 
 
+    private bool show_delete_policy_dialog_open = false;
+
     private async Task Show_Delete_Policy_Dialog()
     {
-        var options = new DialogOptions
-            {
+        if (show_delete_policy_dialog_open)
+            return;
                 
-                MaxWidth = MaxWidth.Small,
-                BackgroundClass = "dialog-blurring",
-            };
+         var options = new DialogOptions
+         {
+             CloseButton = true,
+             FullWidth = true,
+             MaxWidth = MaxWidth.Medium,
+             BackgroundClass = "dialog-blurring",
+         };
 
-        await this.DialogService.Show<Dialogs.Delete_Policy_Dialog>(string.Empty, new DialogParameters(), options).Result;
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("name", policy_name);
+
+         show_delete_policy_dialog_open = true;
+
+        await this.DialogService.Show<Dialogs.Delete_Policy_Dialog>(string.Empty, parameters, options).Result;
+
+        show_delete_policy_dialog_open = false;
     }
-
 }

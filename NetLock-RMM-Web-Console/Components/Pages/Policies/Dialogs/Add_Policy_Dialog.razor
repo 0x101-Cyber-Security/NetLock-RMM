@@ -18,11 +18,6 @@
     <DialogContent>
         <MudTextField Label="Name" T="string" @bind-Value="@policy_name" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
-        <MudSelect T="string" @bind-Value="operating_system" Label="@Localizer["os"]" AnchorOrigin="Origin.BottomCenter">
-            <MudSelectItem Value="@("Windows")" />
-            <!--<MudSelectItem Value="@("Linux")" />-->
-            <!--<MudSelectItem Value="@("macOS")" />-->
-        </MudSelect>
     </DialogContent>
 
     <DialogActions>
@@ -35,14 +30,13 @@
 @code {
     private string policy_name = string.Empty;
     private string description = string.Empty;
-    private string operating_system = string.Empty;
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
     private bool Form_Valid()
     {
-        if (String.IsNullOrEmpty(policy_name) || String.IsNullOrEmpty(operating_system))
+        if (String.IsNullOrEmpty(policy_name))
             return true;
         else
             return false;
@@ -91,7 +85,7 @@
                     var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
                     var author = await sessionStorage.GetAsync<string>("username");
 
-                    string execute_query = "INSERT INTO `policies` (`name`, `date`, `author`, `description`, `operating_system`) VALUES (@name, @date, @author, @description, @operating_system);";
+                    string execute_query = "INSERT INTO `policies` (`name`, `date`, `author`, `description`) VALUES (@name, @date, @author, @description);";
 
                     MySqlCommand cmd = new MySqlCommand(execute_query, conn);
 
@@ -100,7 +94,6 @@
                     cmd.Parameters.AddWithValue("@author", author.Value);
                     cmd.Parameters.AddWithValue("@description", await Base64.Handler.Encode(description));
                     cmd.Parameters.AddWithValue("@content", null);
-                    cmd.Parameters.AddWithValue("@operating_system", operating_system);
 
                     cmd.ExecuteNonQuery();
 
@@ -108,7 +101,7 @@
                 }
                 catch (Exception ex)
                 {
-                    Logging.Handler.Error("Policy_Management.Add_Policy_Dialog", "Result", ex.Message);
+                    Logging.Handler.Error("Policy_Management.Add_Policy_Dialog", "Result", ex.ToString());
                     success = false;
                 }
                 finally

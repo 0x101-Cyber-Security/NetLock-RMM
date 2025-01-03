@@ -20,6 +20,7 @@ using System.Net.NetworkInformation;
 using static Global.Sensors.Time_Scheduler;
 using Global.Helper;
 using NetLock_RMM_Agent_Comm;
+using static Global.Jobs.Time_Scheduler;
 
 namespace Global.Sensors
 {
@@ -33,6 +34,7 @@ namespace Global.Sensors
             public string last_run { get; set; }
             public string author { get; set; }
             public string description { get; set; }
+            public string platform { get; set; }
             public int severity { get; set; }
             public int category { get; set; }
             public int sub_category { get; set; }
@@ -122,13 +124,21 @@ namespace Global.Sensors
 
             try
             {
-                DateTime os_up_time = ManagementDateTimeConverter.ToDateTime(Windows.Helper.WMI.Search("root\\cimv2", "SELECT LastBootUpTime FROM Win32_OperatingSystem", "LastBootUpTime")); // Environment.TickCount is not reliable, use WMI instead
+                DateTime os_up_time = Global.Helper.Globalization.GetLastBootUpTime(); // Environment.TickCount is not reliable, use WMI instead
 
-                List<Sensor> scan_sensorItems = JsonSerializer.Deserialize<List<Sensor>>(Device_Worker.policy_sensors_json);
+                List<Sensor> sensor_items = JsonSerializer.Deserialize<List<Sensor>>(Device_Worker.policy_sensors_json);
 
                 // Write each sensor to disk if not already exists
-                foreach (var sensor in scan_sensorItems)
+                foreach (var sensor in sensor_items)
                 {
+                    // Check if job is for the current platform
+                    if (OperatingSystem.IsWindows() && sensor.platform != "Windows")
+                        continue;
+                    else if (OperatingSystem.IsLinux() && sensor.platform != "Linux")
+                        continue;
+                    else if (OperatingSystem.IsMacOS() && sensor.platform != "MacOS")
+                        continue;
+
                     Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Check if sensor exists on disk", "Sensor: " + sensor.name + " Sensor id: " + sensor.id);
 
                     string sensor_json = JsonSerializer.Serialize(sensor);
@@ -151,7 +161,7 @@ namespace Global.Sensors
 
                     bool found = false;
 
-                    foreach (var sensor in scan_sensorItems)
+                    foreach (var sensor in sensor_items)
                     {
                         if (sensor.id == file_id)
                         {

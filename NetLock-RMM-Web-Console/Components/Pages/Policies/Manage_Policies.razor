@@ -18,34 +18,34 @@
 
 <style>
     .selected-row-light {
-        background-color: lightgray;
+    background-color: lightgray;
     }
 
     .selected-row-dark {
-        background-color: #141414;
+    background-color: #141414;
     }
 
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 </style>
 
@@ -80,7 +80,6 @@
                     <MudTh><MudTableSortLabel SortBy="new Func<Policies_Entity, object>(x => x.date)">@Localizer["created"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Policies_Entity, object>(x => x.author)">@Localizer["author"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Policies_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Policies_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
                 </HeaderContent>
                 <RowTemplate Context="policies_row">
 
@@ -105,12 +104,6 @@
                     <MudTd DataLabel="@Localizer["description"]" @onclick="() => Policies_RowClickHandler(policies_row)" @ondblclick="() => Policies_RowDblClickHandler(policies_row)" class="@Policies_GetRowClass(policies_row)" style="white-space: nowrap;">
                         <span style="display: flex; align-items: center;">
                             <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />&nbsp;@policies_row.description
-                        </span>
-                    </MudTd>
-
-                    <MudTd DataLabel="@Localizer["os"]" @onclick="() => Policies_RowClickHandler(policies_row)" @ondblclick="() => Policies_RowDblClickHandler(policies_row)" class="@Policies_GetRowClass(policies_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            <MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Size="Size.Small" />&nbsp;@policies_row.operating_system
                         </span>
                     </MudTd>
 
@@ -327,7 +320,6 @@
         public string date { get; set; } = String.Empty;
         public string author { get; set; } = String.Empty;
         public string description { get; set; } = String.Empty;
-        public string operating_system { get; set; } = String.Empty;
     }
 
     private string policies_table_view_port = "70vh";
@@ -343,8 +335,7 @@
         return row.policy_name.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                row.date.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                row.author.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase) ||
-               row.description.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase) ||
-               row.operating_system.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase);
+               row.description.Contains(policies_table_search_string, StringComparison.OrdinalIgnoreCase);
     }
 
     private string policies_selectedRowContent = String.Empty;
@@ -377,6 +368,7 @@
             await conn.OpenAsync();
 
             MySqlCommand command = new MySqlCommand("SELECT * FROM policies;", conn);
+
             using (DbDataReader reader = await command.ExecuteReaderAsync())
             {
                 if (reader.HasRows)
@@ -390,7 +382,6 @@
                             date = reader["date"].ToString() ?? "",
                             author = reader["author"].ToString() ?? "",
                             description = await Base64.Handler.Decode(reader["description"].ToString() ?? ""),
-                            operating_system = reader["operating_system"].ToString() ?? "",
                         };
 
                         result.Add(entity);
@@ -547,7 +538,6 @@
             htmlBuilder.Append("<th>Erstellt</th>");
             htmlBuilder.Append("<th>Author</th>");
             htmlBuilder.Append("<th>Beschreibung</th>");
-            htmlBuilder.Append("<th>Betriebssystem</th>");
             htmlBuilder.Append("</tr>");
 
             foreach (var entry in policies_mysql_data)
@@ -557,7 +547,6 @@
                 htmlBuilder.Append($"<td>{entry.date}</td>");
                 htmlBuilder.Append($"<td>{entry.author}</td>");
                 htmlBuilder.Append($"<td>{entry.description}</td>");
-                htmlBuilder.Append($"<td>{entry.operating_system}</td>");
                 htmlBuilder.Append("</tr>");
             }
 
@@ -596,7 +585,6 @@
                     worksheet.Cells[dataRow, 2].Value = entry.date;
                     worksheet.Cells[dataRow, 3].Value = entry.author;
                     worksheet.Cells[dataRow, 4].Value = entry.description;
-                    worksheet.Cells[dataRow, 5].Value = entry.operating_system;
 
                     dataRow++;
                 }

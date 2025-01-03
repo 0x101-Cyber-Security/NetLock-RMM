@@ -65,6 +65,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string last_run { get; set; }
             public string author { get; set; }
             public string description { get; set; }
+            public string platform { get; set; }
             public int severity { get; set; }
             public int category { get; set; }
             public int sub_category { get; set; }
@@ -344,7 +345,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Get policy from database
                 try
                 {
-                    string query = "SELECT * FROM policies WHERE name = @policy_name AND operating_system = 'Windows';";
+                    string query = "SELECT * FROM policies WHERE name = @policy_name;";
 
                     MySqlCommand command = new MySqlCommand(query, conn);
                     command.Parameters.AddWithValue("@policy_name", policy_name);

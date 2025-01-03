@@ -49,13 +49,21 @@ namespace Global.Jobs
 
             try
             {
-                DateTime os_up_time = ManagementDateTimeConverter.ToDateTime(Windows.Helper.WMI.Search("root\\cimv2", "SELECT LastBootUpTime FROM Win32_OperatingSystem", "LastBootUpTime")); // Environment.TickCount is not reliable, use WMI instead
+                DateTime os_up_time = Global.Helper.Globalization.GetLastBootUpTime(); // Environment.TickCount is not reliable, use WMI instead
 
-                List<Job> scan_jobItems = JsonSerializer.Deserialize<List<Job>>(Device_Worker.policy_jobs_json);
+                List<Job> job_items = JsonSerializer.Deserialize<List<Job>>(Device_Worker.policy_jobs_json);
 
                 // Write each job to disk if not already exists
-                foreach (var job in scan_jobItems)
+                foreach (var job in job_items)
                 {
+                    // Check if job is for the current platform
+                    if (OperatingSystem.IsWindows() && job.platform != "Windows")
+                        continue;
+                    else if (OperatingSystem.IsLinux() && job.platform != "Linux")
+                        continue;
+                    else if (OperatingSystem.IsMacOS() && job.platform != "MacOS")
+                        continue;
+                    
                     Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Check if job exists on disk", "Job: " + job.name + " Job id: " + job.id);
 
                     string job_json = JsonSerializer.Serialize(job);
@@ -78,7 +86,7 @@ namespace Global.Jobs
 
                     bool found = false;
 
-                    foreach (var job in scan_jobItems)
+                    foreach (var job in job_items)
                     {
                         if (job.id == file_id)
                         {
@@ -399,8 +407,18 @@ namespace Global.Jobs
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Execute job", "name: " + job_item.name + " id: " + job_item.id);
 
                         //Execute job
-                        result = Windows.Helper.PowerShell.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, job_item.script);
-                       
+                        // Windows
+                        if (OperatingSystem.IsWindows())
+                            result = Windows.Helper.PowerShell.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, job_item.script);
+                        else if (OperatingSystem.IsLinux())
+                        {
+                            result = Linux.Helper.Bash.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, job_item.script);
+                        }
+                        else if (OperatingSystem.IsMacOS())
+                        {
+                            // placeholder
+                        }
+
                         // Insert event
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Job executed", "name: " + job_item.name + " id: " + job_item.id + " result: " + result);
 

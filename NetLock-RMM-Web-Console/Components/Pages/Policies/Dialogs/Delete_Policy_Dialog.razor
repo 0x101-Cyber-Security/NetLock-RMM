@@ -35,8 +35,8 @@
 
 @code {
 
-    [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [Parameter] public string name { get; set; }
 
     private async Task Delete()
     {
@@ -51,11 +51,11 @@
         {
             await conn.OpenAsync();
 
-            string execute_query = "DELETE FROM `policies` WHERE policy_name = @policy_name; UPDATE devices SET policy_name = '-' WHERE policy_name = @policy_name;";
-
+            string execute_query = "DELETE FROM `policies` WHERE name = @policy_name;";
+            
             MySqlCommand cmd = new MySqlCommand(execute_query, conn);
 
-            cmd.Parameters.AddWithValue("@policy_name", await localStorage.GetItemAsync<string>("policy_name"));
+            cmd.Parameters.AddWithValue("@policy_name", name);
 
             cmd.ExecuteNonQuery();
 
@@ -63,7 +63,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("Policy_Management.Delete_Policy_Dialog", "Result", ex.Message);
+            Logging.Handler.Error("Policy_Management.Delete_Policy_Dialog", "Result", ex.ToString());
         }
         finally
         {
@@ -73,9 +73,9 @@
         if (success)
         {
             await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
-            //this.Snackbar.Add("Gelöscht.", Severity.Success);
+            this.Snackbar.Add("Gelöscht.", Severity.Success);
 
-            NavigationManager.Refresh();
+            NavigationManager.NavigateTo("/policies");
         }
         else
             this.Snackbar.Add("error_occurred", Severity.Error);

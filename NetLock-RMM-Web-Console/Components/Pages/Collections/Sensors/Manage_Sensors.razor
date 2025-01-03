@@ -85,6 +85,7 @@
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.name)">@Localizer["name"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.platform)">@Localizer["platform"]</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.category)">@Localizer["category"]</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.sub_category)">@Localizer["sub_category"]</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.severity)">@Localizer["severity"]</MudTableSortLabel></MudTh>
@@ -97,6 +98,12 @@
                         <MudTd DataLabel="@Localizer["name"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center;">
                                 &nbsp;@sensors_row.name
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["platform"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.platform
                             </span>
                         </MudTd>
 
@@ -442,6 +449,7 @@
                                 sub_category = sub_category_converted,
                                 severity = severity_converted,
                                 json = reader["json"].ToString(),
+                                platform = reader["platform"].ToString()
                             };
 
                         sensors_mysql_data.Add(entity);
@@ -474,6 +482,7 @@
         public string disk_category { get; set; } = String.Empty;
         public string severity { get; set; } = String.Empty;
         public string json { get; set; } = String.Empty;
+        public string platform{ get; set; } = String.Empty;
     }
 
     private string sensors_table_view_port = "70vh";
