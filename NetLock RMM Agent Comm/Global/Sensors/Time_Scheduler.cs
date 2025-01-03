@@ -142,12 +142,25 @@ namespace Global.Sensors
                     Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Check if sensor exists on disk", "Sensor: " + sensor.name + " Sensor id: " + sensor.id);
 
                     string sensor_json = JsonSerializer.Serialize(sensor);
-                    string sensor_path = Application_Paths.program_data_sensors + "\\" + sensor.id + ".json";
+                    string sensor_path = Path.Combine(Application_Paths.program_data_sensors, sensor.id + ".json");
 
                     if (!File.Exists(sensor_path))
                     {
                         Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Check if sensor exists on disk", "false");
                         File.WriteAllText(sensor_path, sensor_json);
+                    }
+
+                    // Check if script has changed
+                    if (File.Exists(sensor_path))
+                    {
+                        string existing_sensor_json = File.ReadAllText(sensor_path);
+                        Sensor existing_sensor = JsonSerializer.Deserialize<Sensor>(existing_sensor_json);
+                        
+                        if (existing_sensor.script != sensor.script)
+                        {
+                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Sensor script has changed. Updating it.", "Sensor: " + sensor.name + " Sensor id: " + sensor.id);
+                            File.WriteAllText(sensor_path, sensor_json);
+                        }
                     }
                 }
 
@@ -1962,7 +1975,13 @@ namespace Global.Sensors
                         if (triggered)
                         {
                             Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Triggered (id)", triggered.ToString() + " (" + sensor_item.id + ")");
-                            
+
+                            // Check if job description is empty
+                            if (String.IsNullOrEmpty(sensor_item.description) && Configuration.Agent.language == "en-US")
+                                sensor_item.description = "No description";
+                            else if (String.IsNullOrEmpty(sensor_item.description) && Configuration.Agent.language == "de-DE")
+                                sensor_item.description = "Keine Beschreibung";
+
                             // if notification treshold is reached, insert event and reset the counter
                             if (sensor_item.notification_treshold_count >= sensor_item.notification_treshold_max)
                             {

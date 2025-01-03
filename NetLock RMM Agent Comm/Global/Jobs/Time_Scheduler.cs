@@ -53,7 +53,7 @@ namespace Global.Jobs
 
                 List<Job> job_items = JsonSerializer.Deserialize<List<Job>>(Device_Worker.policy_jobs_json);
 
-                // Write each job to disk if not already exists
+                // Write each job to disk if not already exists, check if script has changed
                 foreach (var job in job_items)
                 {
                     // Check if job is for the current platform
@@ -67,12 +67,24 @@ namespace Global.Jobs
                     Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Check if job exists on disk", "Job: " + job.name + " Job id: " + job.id);
 
                     string job_json = JsonSerializer.Serialize(job);
-                    string job_path = Application_Paths.program_data_jobs + "\\" + job.id + ".json";
+                    string job_path = Path.Combine(Application_Paths.program_data_jobs, job.id + ".json");
 
                     if (!File.Exists(job_path))
                     {
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Check if job exists on disk", "false");
                         File.WriteAllText(job_path, job_json);
+                    }
+
+                    // Check if script has changed
+                    if (File.Exists(job_path))
+                    {
+                        string existing_job_json = File.ReadAllText(job_path);
+                        Job existing_job = JsonSerializer.Deserialize<Job>(existing_job_json);
+                        if (existing_job.script != job.script)
+                        {
+                            Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Job script has changed. Updating it.", "Job: " + job.name + " Job id: " + job.id);
+                            File.WriteAllText(job_path, job_json);
+                        }
                     }
                 }
 
@@ -422,10 +434,16 @@ namespace Global.Jobs
                         // Insert event
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Job executed", "name: " + job_item.name + " id: " + job_item.id + " result: " + result);
 
+                        // Check if job description is empty
+                        if (String.IsNullOrEmpty(job_item.description) && Configuration.Agent.language == "en-US")
+                            job_item.description = "No description";
+                        else if (String.IsNullOrEmpty(job_item.description) && Configuration.Agent.language == "de-DE")
+                            job_item.description = "Keine Beschreibung";
+
                         if (Configuration.Agent.language == "en-US")
-                            Events.Logger.Insert_Event("0", "Job", job_item.name + " completed", "Job: " + job_item.name + " (" + job_item.description + ") " + Environment.NewLine + Environment.NewLine + "Result: " + result, String.Empty, 1, 0);
+                            Events.Logger.Insert_Event("0", "Job", job_item.name + " completed", "Job: " + job_item.name + " (" + job_item.description + ") " + Environment.NewLine + Environment.NewLine + "Result: " + Environment.NewLine + result, String.Empty, 1, 0);
                         else if (Configuration.Agent.language == "de-DE")
-                            Events.Logger.Insert_Event("0", "Job", job_item.name + " fertiggestellt.", "Job: " + job_item.name + " (" + job_item.description + ") " + Environment.NewLine + Environment.NewLine + "Ergebnis: " + result, String.Empty, 1, 1);
+                            Events.Logger.Insert_Event("0", "Job", job_item.name + " fertiggestellt.", "Job: " + job_item.name + " (" + job_item.description + ") " + Environment.NewLine + Environment.NewLine + "Ergebnis: " + Environment.NewLine + result, String.Empty, 1, 1);
 
                         // Update last run
                         job_item.last_run = DateTime.Now.ToString();

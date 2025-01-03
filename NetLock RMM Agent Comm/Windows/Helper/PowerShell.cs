@@ -44,6 +44,8 @@ namespace Windows.Helper
 
         public static string Execute_Script(string type, string script)
         {
+            string path = String.Empty;
+
             try
             {
                 Global.Initialization.Health.Check_Directories();
@@ -53,7 +55,7 @@ namespace Windows.Helper
                 Random random = new Random();
                 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
                 string random_id = new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());
-                string path = Application_Paths.program_data_scripts + @"\" + Randomizer.Standard(12) + ".ps1";
+                path = Application_Paths.program_data_scripts + @"\" + Randomizer.Standard(12) + ".ps1";
 
                 //Decode script
                 byte[] script_data = Convert.FromBase64String(script);
@@ -71,9 +73,6 @@ namespace Windows.Helper
                 string result = cmd_process.StandardOutput.ReadToEnd();
                 cmd_process.WaitForExit(120000);
 
-                //Delete the script after execution
-                File.Delete(path);
-
                 Logging.PowerShell("Helper.Powershell.Execute_Script", "Command execution successfully", Environment.NewLine + " Result:" + result);
                 return result;
             }
@@ -81,6 +80,11 @@ namespace Windows.Helper
             {
                 Logging.Error("Helper.Powershell.Execute_Script", "Failed executing script. Type: " + type + " Script: " + script, ex.ToString());
                 return "Error: " + ex.ToString();
+            }
+            finally
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
             }
         }
     }

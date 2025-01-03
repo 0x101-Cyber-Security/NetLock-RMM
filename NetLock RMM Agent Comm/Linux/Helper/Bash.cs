@@ -55,41 +55,61 @@ namespace Linux.Helper
         {
             try
             {
-                Logging.Debug("Linux.Helper.Bash.Execute_Script", "Executing script", "type: " + type + " script: " + script);
+                Global.Initialization.Health.Check_Directories();
+
+                Logging.Debug("Linux.Helper.Bash.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
+
+                // Decode the script from Base64
+                byte[] script_data = Convert.FromBase64String(script);
+                string decoded_script = Encoding.UTF8.GetString(script_data);
+
+                // Convert Windows line endings (\r\n) to Unix line endings (\n)
+                decoded_script = decoded_script.Replace("\r\n", "\n");
 
                 // Create a new process
-                Process process = new Process();
-                // Set the process start information
-                process.StartInfo.FileName = "/bin/bash";
-                process.StartInfo.Arguments = $"-c \"{Application_Paths.program_data_scripts}/{script}\"";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.CreateNoWindow = true;
-                // Start the process
-                process.Start();
-                // Read the output and error
-                string output = process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
-                // Wait for the process to exit
-                process.WaitForExit();
-                // Log and return the output
-                if (!string.IsNullOrEmpty(error))
+                using (Process process = new Process())
                 {
-                    //Console.Error.WriteLine($"Error exec  uting command: {error}");
-                    Logging.Error("Linux.Helper.Bash.Execute_Script", "Error executing script", error);
-                    return "-";
-                }
-                else
-                {
-                    return output;
+                    process.StartInfo.FileName = "/bin/bash";
+                    process.StartInfo.Arguments = "-s"; // Read script from standard input
+                    process.StartInfo.UseShellExecute = false;
+                    process.StartInfo.RedirectStandardInput = true;
+                    process.StartInfo.RedirectStandardOutput = true;
+                    process.StartInfo.RedirectStandardError = true;
+                    process.StartInfo.CreateNoWindow = true;
+
+                    // Start the process
+                    process.Start();
+
+                    // Write the cleaned script to the process's standard input
+                    using (StreamWriter writer = process.StandardInput)
+                    {
+                        writer.Write(decoded_script);
+                    }
+
+                    // Read the output and error
+                    string output = process.StandardOutput.ReadToEnd();
+                    string error = process.StandardError.ReadToEnd();
+
+                    // Wait for the process to exit, with a timeout of 2 minutes
+                    process.WaitForExit(120000);
+
+                    // Check for errors
+                    if (!string.IsNullOrEmpty(error))
+                    {
+                        Logging.Error("Linux.Helper.Bash.Execute_Script", "Error executing script", error);
+                        return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
+                    }
+                    else
+                    {
+                        return output;
+                    }
                 }
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 Logging.Error("Linux.Helper.Bash.Execute_Script", "Error executing script", ex.ToString());
-                //Console.Error.WriteLine($"Error executing command: {ex.ToString()}");
-                return "-";
+                return ex.Message;
             }
         }
     }
