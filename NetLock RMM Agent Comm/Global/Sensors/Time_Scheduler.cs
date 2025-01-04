@@ -1137,7 +1137,8 @@ namespace Global.Sensors
                                         continue;
 
                                     resource_usage = Device_Information.Processes.Get_CPU_Usage_By_ID(process.Id);
-                                    //Logging.Handler.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
+
+                                    //Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
 
                                     if (resource_usage > sensor_item.cpu_usage)
                                     {
@@ -1395,7 +1396,7 @@ namespace Global.Sensors
 
                                         //Logging.Handler.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization sensor triggered", "name: " + sensor_item.name + " id: " + sensor_item.id);
 
-                                        int ram = Device_Information.Processes.Get_RAM_Usage_By_ID(process.Id, false);
+                                        int ram = resource_usage;
                                         string user = Device_Information.Processes.Process_Owner(process);
                                         string created = process.StartTime.ToString();
                                         string path = process.MainModule.FileName;
@@ -1683,10 +1684,14 @@ namespace Global.Sensors
                                 Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Check event log existence (" + sensor_item.eventlog + ")", event_log_existing.ToString() + " error: " + ex.ToString());
                             }
                         }
-                        else if (sensor_item.category == 2) // PowerShell
+                        else if (sensor_item.category == 2 || sensor_item.category == 5) // PowerShell or Linux Bash
                         {
-                            string result = Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
-
+                            string result = "-";
+                            if (sensor_item.category == 2)
+                                result = Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
+                            else if (sensor_item.category == 5)
+                                result = Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
+                            
                             if (Regex.IsMatch(result, sensor_item.expected_result))
                             {
                                 triggered = true;
@@ -1728,13 +1733,20 @@ namespace Global.Sensors
                                     File.WriteAllText(sensor, action_treshold_updated_sensor_json);
                                 }
 
+                                string details_type_specification = String.Empty;
+
+                                if (sensor_item.category == 2)
+                                    details_type_specification = "PowerShell";
+                                else if (sensor_item.category == 5)
+                                    details_type_specification = "Bash";
+
                                 // Create event
                                 if (Configuration.Agent.language == "en-US")
                                 {
                                     details =
                                         "Name: " + sensor_item.name + Environment.NewLine +
                                         "Description: " + sensor_item.description + Environment.NewLine +
-                                        "Type: PowerShell" + Environment.NewLine +
+                                        $"Type: {details_type_specification}" + Environment.NewLine +
                                         "Script: " + sensor_item.script + Environment.NewLine +
                                         "Pattern: " + sensor_item.expected_result + Environment.NewLine +
                                         "Result: " + result + Environment.NewLine +
@@ -1745,7 +1757,7 @@ namespace Global.Sensors
                                     details =
                                         "Name: " + sensor_item.name + Environment.NewLine +
                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
-                                        "Typ: PowerShell" + Environment.NewLine +
+                                        $"Typ: {details_type_specification}" + Environment.NewLine +
                                         "Skript: " + sensor_item.script + Environment.NewLine +
                                         "Pattern: " + sensor_item.expected_result + Environment.NewLine +
                                         "Ergebnis: " + result + Environment.NewLine +

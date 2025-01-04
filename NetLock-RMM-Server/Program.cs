@@ -180,7 +180,6 @@ builder.Services.Configure<FormOptions>(x =>
     x.MultipartBodyLengthLimit = 10L * 1024 * 1024 * 1024; // 10 GB // In case of multipart
 });
 
-
 // Check mysql connection
 if (!await NetLock_RMM_Server.MySQL.Handler.Check_Connection())
 {

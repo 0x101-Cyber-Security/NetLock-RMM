@@ -153,6 +153,10 @@
                 <MudSelectItem T="string" Value="@("Windows Eventlog")" />
                 <MudSelectItem T="string" Value="@("PowerShell")" />
             }
+            else if (platform == "Linux")
+            {
+                <MudSelectItem T="string" Value="@("Bash")" />          
+            }
    
             <MudSelectItem T="string" Value="@Localizer["service"]" />
             <MudSelectItem T="string" Value="@("Ping")" />
@@ -498,6 +502,54 @@
                     </MudTooltip>
                 </div>
             }
+            else if (category == "Bash" && platform != "Windows")
+            {
+                <MudText Class="mt-5" Typo="Typo.h6">@Localizer["rule"]</MudText>
+
+                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    @{
+                        foreach (var script in scripts_list)
+                        {
+                            <MudSelectItem Value="@(script.name)" />
+                        }
+                    }
+                </MudSelect>
+
+                <div style="display: flex; align-items: center;">
+                    <MudTextField Label="@Localizer["expected_result"]" T="string" @bind-Value="@expected_result" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+
+                    <MudTooltip Text="@Localizer["regex_supported_tooltip"]">
+                        <MudIconButton Class="ml-2 mt-3" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                </div>
+
+                <div style="display: flex; align-items: center;">
+                    <MudNumericField Class="mt-3" @bind-Value="notification_treshold_max" Label="@Localizer["notification_treshold_hits_max"]" Variant="Variant.Text" Min="0" Max="9999" />
+
+                    <MudTooltip Text="@Localizer["notification_treshold_hits_max_tooltip"]">
+                        <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                </div>
+
+                <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
+
+                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    @{
+                        foreach (var script in scripts_list)
+                        {
+                            <MudSelectItem Value="@(script.name)" />
+                        }
+                    }
+                </MudSelect>
+
+                <div style="display: flex; align-items: center;">
+                    <MudNumericField Class="mt-3" @bind-Value="action_treshold_max" Label="@Localizer["action_treshold_hits_max"]" Variant="Variant.Text" Min="0" Max="9999" />
+
+                    <MudTooltip Text="@Localizer["action_treshold_hits_max_tooltip"]">
+                        <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                </div>
+            }
             else if (category == "Windows Eventlog" && platform == "Windows")
             {
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["rule"]</MudText>
@@ -709,7 +761,7 @@
         await Get_Scripts();
     }
 
-    public List<Script> scripts_list;
+    public List<Script> scripts_list = new List<Script>();
 
     private string updatedJson = String.Empty;
 
@@ -919,7 +971,6 @@
 
     private async Task Get_Scripts()
     {
-        scripts_list = new List<Script>();
         scripts_list.Clear();
 
         // Add empty script
@@ -1055,6 +1106,8 @@
                 category_converted = 3;
             else if (category == "Ping")
                 category_converted = 4;
+            else if (category == "Bash")
+                category_converted = 5;
 
             //sub_category
             if (sub_category == Localizer["processor"])

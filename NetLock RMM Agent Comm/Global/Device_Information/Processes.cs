@@ -286,35 +286,101 @@ namespace Global.Device_Information
             }
         }
 
+        // Import sysconf for system information under linux. Related to determining the CPU usage of a process.
+        [DllImport("libc")]
+        private static extern long Sysconf(int name);
+
+        private const int _SC_CLK_TCK = 2; // sysconf-Konstante für Ticks pro Sekunde
+
         public static int Get_CPU_Usage_By_ID(int process_id)
         {
             try
             {
                 Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "process_id", process_id.ToString());
 
-                // Get process by id
-                Process process = Process.GetProcessById(process_id);
+                int cpuUsageNormalizedRounded = 0;
 
-                string instanceName = Get_Process_Instance_Name(process);
-                if (String.IsNullOrEmpty(instanceName))
-                    return 0;
+                if (OperatingSystem.IsWindows())
+                {
+                    // Get process by id
+                    Process process = Process.GetProcessById(process_id);
 
-                PerformanceCounter cpuCounter = new PerformanceCounter("Process", "% Processor Time", instanceName, true);
+                    string instanceName = Get_Process_Instance_Name(process);
+                    if (String.IsNullOrEmpty(instanceName))
+                        return 0;
 
-                // Da der erste Aufruf oft ungenaue Daten liefert, warten wir kurz und rufen den Wert erneut ab
-                cpuCounter.NextValue();
-                Thread.Sleep(1000);
+                    PerformanceCounter cpuCounter = new PerformanceCounter("Process", "% Processor Time", instanceName, true);
 
-                // CPU-Auslastung ermitteln
-                float cpuUsage = cpuCounter.NextValue();
-                int processorCount = Environment.ProcessorCount;
-                float cpuUsageNormalized = cpuUsage / processorCount;
+                    // Da der erste Aufruf oft ungenaue Daten liefert, warten wir kurz und rufen den Wert erneut ab
+                    cpuCounter.NextValue();
+                    Thread.Sleep(1000);
 
-                // Rundung und Umwandlung in int
-                int cpuUsageNormalizedRounded = (int)Math.Round(cpuUsageNormalized);
+                    // CPU-Auslastung ermitteln
+                    float cpuUsage = cpuCounter.NextValue();
+                    int processorCount = Environment.ProcessorCount;
+                    float cpuUsageNormalized = cpuUsage / processorCount;
 
-                Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "cpu process usage (id): " + process.Id, cpuUsage + "(%)");
-                Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "cpu process usage normalized (id): " + process.Id, cpuUsageNormalizedRounded + "(%)");
+                    // Rundung und Umwandlung in int
+                    cpuUsageNormalizedRounded = (int)Math.Round(cpuUsageNormalized);
+
+                    Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "cpu process usage (id): " + process.Id, cpuUsage + "(%)");
+                    Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "cpu process usage normalized (id): " + process.Id, cpuUsageNormalizedRounded + "(%)");
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    // Pfad zur Prozessstatistikdatei
+                    string statPath = $"/proc/{process_id}/stat";
+
+                    if (!File.Exists(statPath))
+                    {
+                        throw new Exception($"Process with ID {process_id} does not exist or access is denied.");
+                    }
+
+                    // Leseinhalt der Datei
+                    string statContent = File.ReadAllText(statPath);
+                    string[] statFields = statContent.Split(' ');
+
+                    // Überprüfen, ob genug Felder vorhanden sind
+                    if (statFields.Length < 17)
+                    {
+                        throw new Exception($"Unexpected format in /proc/{process_id}/stat.");
+                    }
+
+                    // Werte aus der Datei extrahieren
+                    long utime = long.Parse(statFields[13]); // Nutzerzeit in "Ticks"
+                    long stime = long.Parse(statFields[14]); // Systemzeit in "Ticks"
+                    long starttime = long.Parse(statFields[21]); // Startzeit in "Ticks"
+
+                    // Gesamte Prozess-CPU-Zeit in Ticks
+                    long totalTime = utime + stime;
+
+                    // Aktuelle Systemuptime abrufen
+                    string uptimeContent = File.ReadAllText("/proc/uptime");
+                    double systemUptime = double.Parse(uptimeContent.Split(' ')[0], System.Globalization.CultureInfo.InvariantCulture);
+
+                    // System-Ticks pro Sekunde (Hertz/Jiffies)
+                    const long hertz = 100; // Standardwert für Linux-Systeme
+
+                    // Anzahl der CPU-Kerne abrufen
+                    int numCores = Environment.ProcessorCount;
+
+                    // Berechnung der CPU-Auslastung
+                    double elapsedTimeInSeconds = systemUptime - (starttime / (double)hertz);
+                    if (elapsedTimeInSeconds <= 0)
+                    {
+                        return 0; // Verhindere Division durch 0 oder negative Zeit
+                    }
+
+                    double cpuUsage = (totalTime / (double)hertz) / elapsedTimeInSeconds * 100;
+
+                    // CPU-Auslastung pro Kern berücksichtigen
+                    double cpuUsagePerCore = cpuUsage / numCores;
+
+                    // Runden und Rückgabe
+                    cpuUsageNormalizedRounded = (int)Math.Round(cpuUsagePerCore);
+
+                    Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "CPU-Prozessnutzung (ID): " + process_id, cpuUsageNormalizedRounded + "(%)");
+                }
 
                 return cpuUsageNormalizedRounded;
             }
@@ -332,35 +398,120 @@ namespace Global.Device_Information
             {
                 Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process_id", process_id.ToString());
 
-                Process process = Process.GetProcessById(process_id);
-
-                // Determine RAM utilisation in bytes
-                long memoryUsageInBytes = process.WorkingSet64;
-
-                // Convert RAM usage to megabytes
-                double memoryUsageInMB = memoryUsageInBytes / (1024.0 * 1024.0);
-
-                if (!percentage) // MB
+                if (OperatingSystem.IsWindows())
                 {
-                    Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in MB (id): " + process.Id, memoryUsageInMB + "(MB)");
+                    Process process = Process.GetProcessById(process_id);
 
-                    return Convert.ToInt32(Math.Round(memoryUsageInMB));
+                    // Determine RAM utilisation in bytes
+                    long memoryUsageInBytes = process.WorkingSet64;
+
+                    // Convert RAM usage to megabytes
+                    double memoryUsageInMB = memoryUsageInBytes / (1024.0 * 1024.0);
+
+                    if (!percentage) // MB
+                    {
+                        Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in MB (id): " + process.Id, memoryUsageInMB + "(MB)");
+
+                        return Convert.ToInt32(Math.Round(memoryUsageInMB));
+                    }
+                    else // percentage
+                    {
+                        int totalMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
+                        int availableMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
+
+                        // Umrechnung in MB
+                        double totalMemoryInMB = totalMemory / 1024.0;
+                        double availableMemoryInMB = availableMemory / 1024.0;
+
+                        int ramUsagePercentage = Convert.ToInt32((memoryUsageInMB / totalMemoryInMB) * 100);
+
+                        Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in % (id): " + process.Id, ramUsagePercentage + "(%)");
+
+                        return ramUsagePercentage;
+                    }
                 }
-                else // percentage
+                else if (OperatingSystem.IsLinux())
                 {
-                    int totalMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
-                    int availableMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
+                    // Path to the process's status file
+                    string procStatusPath = $"/proc/{process_id}/status";
 
-                    // Umrechnung in MB
-                    double totalMemoryInMB = totalMemory / 1024.0;
-                    double availableMemoryInMB = availableMemory / 1024.0;
+                    if (!File.Exists(procStatusPath))
+                    {
+                        throw new Exception($"Process with ID {process_id} does not exist or access is denied.");
+                    }
 
-                    int ramUsagePercentage = Convert.ToInt32((memoryUsageInMB / totalMemoryInMB) * 100);
+                    // Read the status file
+                    string[] lines = File.ReadAllLines(procStatusPath);
 
-                    Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in % (id): " + process.Id, ramUsagePercentage + "(%)");
+                    // Extract memory usage information
+                    long memoryUsageInKB = 0;
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("VmRSS:", StringComparison.Ordinal))
+                        {
+                            // Parse the line: e.g., "VmRSS:    123456 kB"
+                            string[] parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            if (parts.Length >= 2 && long.TryParse(parts[1], out long value))
+                            {
+                                memoryUsageInKB = value; // Value is in kB
+                                break;
+                            }
+                        }
+                    }
 
-                    return ramUsagePercentage;
+                    if (memoryUsageInKB == 0)
+                    {
+                        throw new Exception($"Unable to determine memory usage for process ID {process_id}.");
+                    }
+
+                    // Convert RAM usage to megabytes
+                    double memoryUsageInMB = memoryUsageInKB / 1024.0;
+
+                    if (!percentage) // MB
+                    {
+                        Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in MB (id): " + process_id, memoryUsageInMB + " (MB)");
+                        return Convert.ToInt32(Math.Round(memoryUsageInMB));
+                    }
+                    else // percentage
+                    {
+                        // Get total memory from /proc/meminfo
+                        string memInfoPath = "/proc/meminfo";
+                        if (!File.Exists(memInfoPath))
+                        {
+                            throw new Exception("Unable to read /proc/meminfo to determine total memory.");
+                        }
+
+                        long totalMemoryInKB = 0;
+                        foreach (string line in File.ReadLines(memInfoPath))
+                        {
+                            if (line.StartsWith("MemTotal:", StringComparison.Ordinal))
+                            {
+                                string[] parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                                if (parts.Length >= 2 && long.TryParse(parts[1], out long value))
+                                {
+                                    totalMemoryInKB = value; // Value is in kB
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (totalMemoryInKB == 0)
+                        {
+                            throw new Exception("Unable to determine total memory from /proc/meminfo.");
+                        }
+
+                        double totalMemoryInMB = totalMemoryInKB / 1024.0;
+
+                        // Calculate RAM usage as a percentage
+                        int ramUsagePercentage = Convert.ToInt32((memoryUsageInMB / totalMemoryInMB) * 100);
+
+                        Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", "process ram usage in % (id): " + process_id, ramUsagePercentage + " (%)");
+
+                        return ramUsagePercentage;
+                    }
                 }
+
+                return 0;
             }
             catch (Exception ex)
             {
@@ -395,24 +546,68 @@ namespace Global.Device_Information
             }
         }
 
+        // Code for getting the owner of a process on Windows and Linux
+        /// <summary>
+        /// Opens the access token associated with a process.
+        /// </summary>
+        /// <param name="ProcessHandle">A handle to the process whose access token is opened.</param>
+        /// <param name="DesiredAccess">Specifies an access mask that specifies the requested types of access to the access token.</param>
+        /// <param name="TokenHandle">A pointer to a handle that identifies the newly opened access token when the function returns.</param>
+        /// <returns>True if the function succeeds; otherwise, false.</returns>
         [DllImport("advapi32.dll", SetLastError = true)]
         private static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+
+        /// <summary>
+        /// Closes an open object handle.
+        /// </summary>
+        /// <param name="hObject">A valid handle to an open object.</param>
+        /// <returns>True if the function succeeds; otherwise, false.</returns>
         [DllImport("kernel32.dll", SetLastError = true)]
         [return: MarshalAs(UnmanagedType.Bool)]
         private static extern bool CloseHandle(IntPtr hObject);
+
+        /// <summary>
+        /// Gets the owner of the specified process.
+        /// </summary>
+        /// <param name="process">The process whose owner is to be determined.</param>
+        /// <returns>The owner of the process.</returns>
+        /// <exception cref="PlatformNotSupportedException">Thrown when the operating system is not supported.</exception>
         public static string Process_Owner(Process process)
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                return GetWindowsProcessOwner(process);
+            }
+            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            {
+                return GetLinuxProcessOwner(process);
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Unsupported operating system.");
+            }
+        }
+
+        /// <summary>
+        /// Gets the owner of the specified process on Windows.
+        /// </summary>
+        /// <param name="process">The process whose owner is to be determined.</param>
+        /// <returns>The owner of the process.</returns>
+        private static string GetWindowsProcessOwner(Process process)
         {
             IntPtr processHandle = IntPtr.Zero;
             try
             {
-                OpenProcessToken(process.Handle, 8, out processHandle);
-                WindowsIdentity wi = new WindowsIdentity(processHandle);
-                string user = wi.Name;
-                return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
+                if (OpenProcessToken(process.Handle, 8, out processHandle))
+                {
+                    WindowsIdentity wi = new WindowsIdentity(processHandle);
+                    string user = wi.Name;
+                    return user.Contains(@"\") ? user.Substring(user.IndexOf(@"\") + 1) : user;
+                }
             }
             catch
             {
-                return null;
+                // Log or handle exception as needed
             }
             finally
             {
@@ -421,6 +616,73 @@ namespace Global.Device_Information
                     CloseHandle(processHandle);
                 }
             }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Gets the owner of the specified process on Linux.
+        /// </summary>
+        /// <param name="process">The process whose owner is to be determined.</param>
+        /// <returns>The owner of the process.</returns>
+        private static string GetLinuxProcessOwner(Process process)
+        {
+            try
+            {
+                // Path to the process status file in /proc
+                string statusPath = $"/proc/{process.Id}/status";
+
+                // Read the file and search for the "Uid" line
+                foreach (var line in File.ReadLines(statusPath))
+                {
+                    if (line.StartsWith("Uid:"))
+                    {
+                        string[] parts = line.Split('\t', StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length > 1)
+                        {
+                            string uid = parts[1];
+
+                            // Convert UID to username using getpwuid
+                            string username = GetUsernameFromUid(uid);
+                            return username;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Log or handle exception as needed
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Converts a UID to a username on Linux.
+        /// </summary>
+        /// <param name="uid">The UID to be converted.</param>
+        /// <returns>The username corresponding to the UID.</returns>
+        private static string GetUsernameFromUid(string uid)
+        {
+            try
+            {
+                // Use "getent passwd" to fetch username from UID
+                string result = Linux.Helper.Bash.Execute_Command($"getent passwd {uid}");
+                if (!string.IsNullOrEmpty(result))
+                {
+                    string[] parts = result.Split(':');
+                    if (parts.Length > 0)
+                    {
+                        return parts[0]; // Username is the first field
+                    }
+                }
+            }
+            catch
+            {
+                // Log or handle exception as needed
+            }
+
+            return null;
         }
     }
 }
