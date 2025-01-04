@@ -11,16 +11,16 @@
       "RelativeMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|solutionrelative:global\\device_information\\hardware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent comm\\global\\online_mode\\handler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|solutionrelative:global\\online_mode\\handler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent comm\\windows\\helper\\powershell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|solutionrelative:windows\\helper\\powershell.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent comm\\linux\\helper\\linux.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|solutionrelative:linux\\helper\\linux.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent comm\\global\\online_mode\\handler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|solutionrelative:global\\online_mode\\handler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{74DA604D-11A8-4A67-B1B3-735AE8704648}|NetLock RMM Agent Comm.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent comm\\global\\sensors\\handler.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -266,13 +266,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 2,
               "Title": "Handler.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Global\\Online_Mode\\Handler.cs",
               "RelativeDocumentMoniker": "Global\\Online_Mode\\Handler.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Global\\Online_Mode\\Handler.cs",
               "RelativeToolTip": "Global\\Online_Mode\\Handler.cs",
-              "ViewState": "AgIAAAACAAAAAAAAAAAtwCsCAABBAAAAAAAAAA==",
+              "ViewState": "AgIAAAACAAAAAAAAAAAtwCsCAABCAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-25T00:52:53.568Z",
               "EditorCaption": ""
@@ -323,8 +323,7 @@
               "RelativeToolTip": "Global\\Sensors\\Handler.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T20:31:18.134Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T20:31:18.134Z"
             },
             {
               "$type": "Document",
@@ -334,7 +333,7 @@
               "RelativeDocumentMoniker": "Global\\Sensors\\Time_Scheduler.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Global\\Sensors\\Time_Scheduler.cs*",
               "RelativeToolTip": "Global\\Sensors\\Time_Scheduler.cs*",
-              "ViewState": "AgIAAM8CAAAAAAAAAAAtwO0CAAAvAAAAAAAAAA==",
+              "ViewState": "AgIAABcDAAAAAAAAAAAIwD0DAACFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-25T20:38:11.306Z",
               "EditorCaption": ""
@@ -361,12 +360,11 @@
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
               "ViewState": "AgIAAEcAAAAAAAAAAAAtwGsAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-11T23:45:16.09Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-11T23:45:16.09Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "PowerShell.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Windows\\Helper\\PowerShell.cs",
               "RelativeDocumentMoniker": "Windows\\Helper\\PowerShell.cs",
@@ -374,8 +372,7 @@
               "RelativeToolTip": "Windows\\Helper\\PowerShell.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAD4vzYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T20:35:05.699Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T20:35:05.699Z"
             },
             {
               "$type": "Document",
@@ -391,7 +388,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Linux.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Linux\\Helper\\Linux.cs",
               "RelativeDocumentMoniker": "Linux\\Helper\\Linux.cs",
@@ -399,8 +396,7 @@
               "RelativeToolTip": "Linux\\Helper\\Linux.cs",
               "ViewState": "AgIAADEAAAAAAAAAAAAlwFIAAABRAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-11T22:17:19.399Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-11T22:17:19.399Z"
             },
             {
               "$type": "Document",
@@ -424,8 +420,7 @@
               "RelativeToolTip": "Linux\\Linux_Worker.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAgwEwAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-09T20:45:38.416Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-09T20:45:38.416Z"
             },
             {
               "$type": "Document",
@@ -833,11 +828,11 @@
       "FloatingWindowState": {
         "Id": "6342a1b1-6d3f-4513-82e7-3ac806e52b4f",
         "Display": 1,
-        "X": 193,
-        "Y": 205,
+        "X": 7,
+        "Y": 7,
         "Width": 1918,
         "Height": 1030,
-        "WindowState": 0
+        "WindowState": 2
       },
       "DocumentGroups": [
         {
@@ -852,7 +847,7 @@
               "RelativeDocumentMoniker": "Global\\Device_Information\\Hardware.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\Global\\Device_Information\\Hardware.cs",
               "RelativeToolTip": "Global\\Device_Information\\Hardware.cs",
-              "ViewState": "AgIAAJIDAAAAAAAAAAAAAKMDAAANAAAAAAAAAA==",
+              "ViewState": "AgIAAL0EAAAAAAAAAAAEwNcEAABfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-25T01:12:41.445Z",
               "EditorCaption": ""

@@ -747,7 +747,7 @@ namespace Global.Sensors
                                         // Check disk usage
                                         int drive_total_space_gb = Device_Information.Hardware.Drive_Size_GB(drive_name);
                                         int drive_free_space_gb = Device_Information.Hardware.Drive_Free_Space_GB(drive_name);
-                                        int drive_usage = 0;
+                                        int drive_usage = 0; // If disk_category is 0 or 1, just calculate the usage in GB. If not, calculate the usage in percentage and respect that drive usage should not be seen as drive usage but as drive free space instead. This can cause confusion if not known
 
                                         // If disk_category is 0 or 1, just calculate the usage in GB
                                         if (sensor_item.disk_category == 0 || sensor_item.disk_category == 1)
@@ -755,7 +755,7 @@ namespace Global.Sensors
                                         else
                                             drive_usage = Device_Information.Hardware.Drive_Usage(sensor_item.disk_category, drive_name);
 
-                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "disk_specification", $"Drive: {drive_name}, Total: {drive_total_space_gb}GB, Free: {drive_free_space_gb}GB {specification}");
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "disk_specification", $"Drive: {drive_name}, Total: {drive_total_space_gb} GB, Free: {drive_free_space_gb} GB, Usage: {drive_usage} {specification}");
 
                                         // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
                                         if (sensor_item.disk_category == 0) // 0 = More than X GB occupied
@@ -904,7 +904,7 @@ namespace Global.Sensors
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
-                                                        "In usage: " + drive_usage + $" {specification}" + Environment.NewLine +
+                                                        "Free: " + drive_usage + $" {specification}" + Environment.NewLine +
                                                         "Action result: " + Environment.NewLine + action_result;
                                                 }
                                                 else if (Configuration.Agent.language == "de-DE")
@@ -918,7 +918,7 @@ namespace Global.Sensors
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
-                                                        "In Verwendung: " + drive_usage + $" {specification}" + Environment.NewLine +
+                                                        "Frei: " + drive_usage + $" {specification}" + Environment.NewLine +
                                                         "Ergebnis der Aktion: " + Environment.NewLine + action_result;
                                                 }
 
@@ -945,6 +945,8 @@ namespace Global.Sensors
                                             if (drive_usage > sensor_item.disk_usage && drive_total_space_gb > sensor_item.disk_minimum_capacity)
                                             {
                                                 triggered = true;
+
+                                                Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "disk_category_2", "name: " + drive_name + " triggered: " + true.ToString());
 
                                                 // if action treshold is reached, execute the action and reset the counter
                                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
@@ -1087,7 +1089,7 @@ namespace Global.Sensors
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
-                                                        "In usage: " + drive_usage + $" {specification}" + Environment.NewLine +
+                                                        "Free: " + drive_usage + $" {specification}" + Environment.NewLine +
                                                         "Action result: " + Environment.NewLine + action_result;
                                                 }
                                                 else if (Configuration.Agent.language == "de-DE")
@@ -1101,7 +1103,7 @@ namespace Global.Sensors
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
-                                                        "In Verwendung: " + drive_usage + $" {specification}" + Environment.NewLine +
+                                                        "Frei: " + drive_usage + $" {specification}" + Environment.NewLine +
                                                         "Ergebnis der Aktion: " + Environment.NewLine + action_result;
                                                 }
 
