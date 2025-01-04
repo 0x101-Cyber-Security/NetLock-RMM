@@ -178,7 +178,8 @@ builder.WebHost.UseKestrel(k =>
         });
     }
 
-    k.Listen(IPAddress.Any, builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port"));
+    if (builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Http:Enabled"))
+        k.Listen(IPAddress.Any, builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port"));
 });
 
 builder.Services.Configure<FormOptions>(x =>

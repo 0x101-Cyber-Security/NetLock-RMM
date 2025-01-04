@@ -921,6 +921,10 @@
     {
         scripts_list = new List<Script>();
         scripts_list.Clear();
+
+        // Add empty script
+        scripts_list.Add(new Script { id = 0, name = "-", date = String.Empty, author = String.Empty, description = String.Empty, platform = String.Empty, shell = String.Empty, script = String.Empty });
+
         string query = "SELECT * FROM scripts WHERE platform = @platform;";
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);

@@ -21,7 +21,7 @@
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@sensor_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
         
-        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
+        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(false); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
             <MudSelectItem T="string" Value="@Localizer["Windows"]" />
             <MudSelectItem T="string" Value="@Localizer["Linux"]" />
             <MudSelectItem T="string" Value="@Localizer["MacOS"]" />
@@ -711,12 +711,13 @@
         service_action = Localizer["service_action_start"];
         time_scheduler_type_display = Localizer["schedule_system_boot"];
 
-        await Get_Scripts();
+        await Get_Scripts(true);
         await Extract_Sensor();
-        await Get_Scripts();
+        await Get_Scripts(false);
+        script = script_temp;
     }
 
-    public List<Script> scripts_list;
+    public List<Script> scripts_list = new List<Script>();
 
     private string updatedJson = String.Empty;
 
@@ -731,6 +732,7 @@
 
     private int script_id = 0;
     private string script = String.Empty;
+    private string script_temp = String.Empty;
     private int script_action_id = 0;
     private string script_action = String.Empty;
     private int notification_treshold_max = 0;
@@ -924,17 +926,24 @@
             return false;
     }
 
-    private async Task Get_Scripts()
+    private async Task Get_Scripts(bool first)
     {
-        scripts_list = new List<Script>();
+        script = String.Empty;
         scripts_list.Clear();
-        string query = "SELECT * FROM scripts WHERE platform = @platform;";
+
+        // Add empty script
+        scripts_list.Add(new Script { id = 0, name = "-", date = String.Empty, author = String.Empty, description = String.Empty, platform = String.Empty, shell = String.Empty, script = String.Empty });
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
             await conn.OpenAsync();
+
+            string query = "SELECT * FROM scripts WHERE platform = @platform;"; ;
+
+            if (first)
+                query = "SELECT * FROM scripts;";
 
             MySqlCommand command = new MySqlCommand(query, conn);
             command.Parameters.AddWithValue("@platform", platform);
@@ -1046,6 +1055,8 @@
             auto_reset = _object.auto_reset;
             script_id = _object.script_id;
             script = await Get_Script_Name(_object.script_id);
+            script_temp = script;
+            Console.WriteLine("Script: " + script);
             script_action_id = _object.script_action_id;
             script_action = await Get_Script_Name(_object.script_action_id);
             cpu_usage = _object.cpu_usage;

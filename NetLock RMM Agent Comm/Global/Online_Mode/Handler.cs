@@ -285,7 +285,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu", Device_Worker.cpu);
 
                     // Get CPU usage
-                    Device_Worker.cpu_usage = Device_Information.Hardware.CPU_Usage();
+                    Device_Worker.cpu_usage = Device_Information.Hardware.CPU_Usage().ToString();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu_usage", Device_Worker.cpu_usage);
 
                     // Get Mainboard
@@ -301,7 +301,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram", Device_Worker.ram);
 
                     // Get RAM usage
-                    Device_Worker.ram_usage = Device_Information.Hardware.RAM_Usage();
+                    Device_Worker.ram_usage = Device_Information.Hardware.RAM_Usage().ToString();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram_usage", Device_Worker.ram_usage);
 
                     // Get TPM
@@ -347,7 +347,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu", Device_Worker.cpu);
 
                     // Get CPU usage
-                    Device_Worker.cpu_usage = Device_Information.Hardware.CPU_Usage();
+                    Device_Worker.cpu_usage = Device_Information.Hardware.CPU_Usage().ToString();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "cpu_usage", Device_Worker.cpu_usage);
 
                     // Get Mainboard
@@ -363,7 +363,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram", Device_Worker.ram);
 
                     // Get RAM usage
-                    Device_Worker.ram_usage = Device_Information.Hardware.RAM_Usage();
+                    Device_Worker.ram_usage = Device_Information.Hardware.RAM_Usage().ToString();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "ram_usage", Device_Worker.ram_usage);
 
                     // Get TPM

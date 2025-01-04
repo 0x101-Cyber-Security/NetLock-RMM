@@ -19,6 +19,8 @@ using System.Runtime.Versioning;
 using System.Text.RegularExpressions;
 using System.Configuration.Internal;
 using System.Globalization;
+using System.ComponentModel;
+using System.Runtime.InteropServices;
 
 namespace Global.Device_Information
 {
@@ -201,7 +203,7 @@ namespace Global.Device_Information
                         }
                     }
                     // Get CPU usage
-                    cpu_usage = CPU_Usage();
+                    cpu_usage = CPU_Usage().ToString();
                     // Create JSON
                     CPU_Information cpuInfo = new CPU_Information
                     {
@@ -297,44 +299,87 @@ namespace Global.Device_Information
             return "0"; // Fallback
         }
 
-        public static string CPU_Usage()
+        public static int CPU_Usage()
         {
             if (OperatingSystem.IsWindows())
             {
                 try
                 {
-                    // CPU utilisation under Windows
-                    PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-                    cpuCounter.NextValue(); // Ignore first measurement
-                    Thread.Sleep(1000); // Wait 1 second
+                    // Create a new PerformanceCounter instance
+                    using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
+                    {
+                        // Initialize and discard the first measurement
+                        cpuCounter.NextValue();
+                        Thread.Sleep(1000);
 
-                    int cpuUsage = Convert.ToInt32(Math.Round(cpuCounter.NextValue()));
+                        // Get the actual CPU usage
+                        float cpuUsage = cpuCounter.NextValue();
 
-                    return cpuUsage.ToString();
+                        Logging.Device_Information("Device_Information.Hardware.CPU_Utilization", "Current CPU Usage (%)", cpuUsage.ToString("F2"));
+
+                        return Convert.ToInt32(Math.Round(cpuUsage));
+                    }
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
-                    return "0";
+                    return 0;
                 }
             }
             else if (OperatingSystem.IsLinux())
             {
                 try
                 {
-                    // CPU utilisation under Linux
-                    string cpuUsage = File.ReadAllText("/proc/loadavg").Split(' ')[0];
-                    return cpuUsage;
+                    // Function to read CPU stats from /proc/stat
+                    static (long idle, long total) ReadCpuStats()
+                    {
+                        string[] cpuStats = File.ReadLines("/proc/stat")
+                                                .First(line => line.StartsWith("cpu "))
+                                                .Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                        long user = long.Parse(cpuStats[1]);
+                        long nice = long.Parse(cpuStats[2]);
+                        long system = long.Parse(cpuStats[3]);
+                        long idle = long.Parse(cpuStats[4]);
+                        long iowait = long.Parse(cpuStats[5]);
+                        long irq = long.Parse(cpuStats[6]);
+                        long softirq = long.Parse(cpuStats[7]);
+                        long steal = cpuStats.Length > 8 ? long.Parse(cpuStats[8]) : 0;
+
+                        long total = user + nice + system + idle + iowait + irq + softirq + steal;
+
+                        return (idle, total);
+                    }
+
+                    // Read initial CPU stats
+                    var (idle1, total1) = ReadCpuStats();
+
+                    // Wait for a short interval
+                    Thread.Sleep(1000);
+
+                    // Read CPU stats again
+                    var (idle2, total2) = ReadCpuStats();
+
+                    // Calculate CPU usage percentage
+                    long idleDiff = idle2 - idle1;
+                    long totalDiff = total2 - total1;
+                    float cpuUsage = 100f * (1 - (float)idleDiff / totalDiff);
+
+                    // Log and return the CPU usage
+                    Logging.Device_Information("Device_Information.Hardware.CPU_Utilization", "Current CPU Usage (%)", cpuUsage.ToString("F2"));
+
+                    return Convert.ToInt32(Math.Round(cpuUsage));
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
-                    return "0";
+                    return 0;
                 }
+
             }
             else
             {
-                return "0";
+                return 0;
             }
         }
 
@@ -584,7 +629,7 @@ namespace Global.Device_Information
             return ram_information_json;
         }
 
-        public static string RAM_Usage()
+        public static int RAM_Usage()
         {
             if (OperatingSystem.IsWindows())
             {
@@ -600,12 +645,12 @@ namespace Global.Device_Information
 
                     Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());
 
-                    return usedMemoryPercentageInt.ToString();
+                    return usedMemoryPercentageInt;
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
-                    return "0";
+                    return 0;
                 }
             }
             else if (OperatingSystem.IsLinux())    
@@ -614,17 +659,17 @@ namespace Global.Device_Information
                 {
                     // RAM utilisation under Linux
                     string ramUsage = Linux.Helper.Bash.Execute_Command("free | grep Mem | awk '{print $3/$2 * 100}'");
-                    return ramUsage;
+                    return Convert.ToInt32(ramUsage);
                 }
                 catch (Exception ex)
                 {
                     Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
-                    return "0";
+                    return 0;
                 }
             }
             else
             {
-                return "0";
+                return 0;
             }
         }
 
@@ -854,38 +899,6 @@ namespace Global.Device_Information
             return disks_json;
         }
 
-        public static int CPU_Utilization()
-        {
-            try
-            {
-                // Create a new PerformanceCounter instance
-                using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
-                {
-                    // Give the counter some time to initialize
-                    Thread.Sleep(1000);
-
-                    // Get the current value of the CPU usage
-                    float cpuUsage = cpuCounter.NextValue();
-
-                    // Print the CPU usage to the console
-                    //Logging.Handler.Device_Information("Device_Information.Hardware.CPU_Utilization", "Current CPU Usage (%)", cpuUsage.ToString());
-
-                    // To get more accurate results, wait for a short period and take another reading
-                    Thread.Sleep(1000);
-                    cpuUsage = cpuCounter.NextValue();
-
-                    Logging.Device_Information("Device_Information.Hardware.CPU_Utilization", "Current CPU Usage (%)", cpuUsage.ToString());
-
-                    return Convert.ToInt32(Math.Round(cpuUsage));
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
-                return 0;
-            }
-        }
-
         public static string RAM_Total()
         {
             // Get RAM
@@ -913,77 +926,57 @@ namespace Global.Device_Information
             }
         }
 
-        public static int RAM_Utilization()
+        public static int Drive_Usage(int type, string drivePath) // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
         {
             try
             {
-                ulong totalVisibleMemorySize = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
-                ulong freePhysicalMemory = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
-
-                float usedMemory = totalVisibleMemorySize - freePhysicalMemory;
-                float usedMemoryPercentage = ((float)usedMemory / totalVisibleMemorySize) * 100;
-
-                int usedMemoryPercentageInt = Convert.ToInt32(Math.Round(usedMemoryPercentage));
-
-                Logging.Device_Information("Device_Information.Hardware.RAM_Utilization", "Current RAM Usage (%)", usedMemoryPercentageInt.ToString());
-
-                return usedMemoryPercentageInt;
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
-                return 0;
-            }
-        }
-
-
-
-        public static int Drive_Usage(int type, char drive_letter) // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
-        {
-            try
-            {
-                DriveInfo drive_info = new DriveInfo(drive_letter.ToString());
-
-                if (drive_info.IsReady)
+                if (OperatingSystem.IsWindows())
                 {
-                    // Available and total memory sizes in bytes
-                    long availableFreeSpaceBytes = drive_info.AvailableFreeSpace;
-                    long totalFreeSpaceBytes = drive_info.TotalFreeSpace;
-                    long totalSizeBytes = drive_info.TotalSize;
+                    DriveInfo driveInfo = new DriveInfo(drivePath);
 
-                    // Conversion from bytes to gigabytes
-                    double availableFreeSpaceGB = availableFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
-                    double totalFreeSpaceGB = totalFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
-                    double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
-
-                    // Conversion from bytes to gigabytes
-                    double usedSpaceGB = totalSizeGB - availableFreeSpaceGB;
-
-                    // Calculation of the memory space used as a percentage
-                    double usedSpacePercentage = 100 * (usedSpaceGB / totalSizeGB);
-                    usedSpacePercentage = Math.Round(usedSpacePercentage, 2);
-
-                    // Ausgabe der Ergebnisse
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Total memory GB", totalSizeGB.ToString());
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Free memory GB", availableFreeSpaceGB.ToString());
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used GB", usedSpaceGB.ToString());
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used %", usedSpacePercentage.ToString());
-
-                    if (type == 0) // More than X GB occupied
-                        return Convert.ToInt32(Math.Round(usedSpaceGB));
-                    else if (type == 1) // Less than X GB free
-                        return Convert.ToInt32(Math.Round(availableFreeSpaceGB));
-                    else if (type == 2) // More than X percent occupied
-                        return Convert.ToInt32(Math.Round(usedSpacePercentage));
-                    else if (type == 3) // Less than X percent free
-                        return Convert.ToInt32(Math.Round(100 - usedSpacePercentage));
+                    if (driveInfo.IsReady)
+                    {
+                        return Calculate_Drive_Usage(type, driveInfo.AvailableFreeSpace, driveInfo.TotalSize);
+                    }
                     else
+                    {
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "The drive is not ready", drivePath);
                         return 0;
+                    }
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    // Change the command to get both the used memory and the free memory
+                    string output = Linux.Helper.Bash.Execute_Command($"df -h {drivePath} --output=source,used,avail,pcent");
+
+                    // Split the output to obtain the required values
+                    var lines = output.Split('\n');
+                    if (lines.Length > 1)
+                    {
+                        var data = lines[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        // Extract values from the output
+                        var usedSpace = data[1]; // Used memory
+                        var availableSpace = data[2]; // Freier Speicher
+                        var usagePercentage = data[3].TrimEnd('%'); // Percentage of hard disc used
+
+                        // Conversion of free and used memory values in GB
+                        double usedSpaceGB = ConvertToGB(usedSpace);
+                        double availableFreeSpaceGB = ConvertToGB(availableSpace);
+
+                        return Calculate_Drive_Usage(type, availableFreeSpaceGB, usedSpaceGB);
+                    }
+                    else
+                    {
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Failed to retrieve drive information.", drivePath);
+                        throw new InvalidOperationException("Failed to retrieve drive information.");
+                    }
                 }
                 else
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "The drive is not ready", drive_letter.ToString());
-
-                return 0;
+                {
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "This method supports only Windows and Linux.", drivePath);
+                    throw new PlatformNotSupportedException("This method supports only Windows and Linux.");
+                }
             }
             catch (Exception ex)
             {
@@ -992,33 +985,116 @@ namespace Global.Device_Information
             }
         }
 
-        public static int Drive_Size(char drive_letter) // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
+        private static double ConvertToGB(string space)
         {
             try
             {
-                DriveInfo drive_info = new DriveInfo(drive_letter.ToString());
-
-                if (drive_info.IsReady)
+                if (space.EndsWith("G"))
                 {
-                    // Available and total memory sizes in bytes
-                    long totalSizeBytes = drive_info.TotalSize;
+                    return double.Parse(space.TrimEnd('G'));
+                }
+                else if (space.EndsWith("M"))
+                {
+                    return double.Parse(space.TrimEnd('M')) / 1024.0;
+                }
+                else if (space.EndsWith("K"))
+                {
+                    return double.Parse(space.TrimEnd('K')) / (1024.0 * 1024.0);
+                }
+                else
+                {
+                    Logging.Error("Device_Information.Hardware.ConvertToGB", "Unknown space unit.", space);
+                    throw new InvalidOperationException("Unknown space unit.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.Hardware.ConvertToGB", "General error.", ex.ToString());
+                return 0;
+            }
+        }
+
+        private static int Calculate_Drive_Usage(int type, double availableFreeSpaceGB, double usedSpaceGB)
+        {
+            try
+            {
+                double totalSizeGB = availableFreeSpaceGB + usedSpaceGB;
+                double usedSpacePercentage = 100 * (usedSpaceGB / totalSizeGB);
+
+                if (type == 0) // More than X GB occupied
+                    return Convert.ToInt32(Math.Round(usedSpaceGB));
+                else if (type == 1) // Less than X GB free
+                    return Convert.ToInt32(Math.Round(availableFreeSpaceGB));
+                else if (type == 2) // More than X percent occupied
+                    return Convert.ToInt32(Math.Round(usedSpacePercentage));
+                else if (type == 3) // Less than X percent free
+                    return Convert.ToInt32(Math.Round(100 - usedSpacePercentage));
+                else
+                    return 0;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.Hardware.Calculate_Drive_Usage", "General error.", ex.ToString());
+                return 0;
+            }
+        }
+
+        public static int Drive_Size_GB(string drivePath) // drivePath: "C:" für Windows, "/" für Linux | // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
+        {
+            try
+            {
+                DriveInfo driveInfo = new DriveInfo(drivePath);
+
+                if (driveInfo.IsReady)
+                {
+                    // Total memory size in bytes
+                    long totalSizeBytes = driveInfo.TotalSize;
 
                     // Conversion from bytes to gigabytes
                     double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
 
-                    // Ausgabe der Ergebnisse
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Total memory GB", totalSizeGB.ToString());
+                    // Logging the results
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Size", "Total memory GB", totalSizeGB.ToString());
 
                     return Convert.ToInt32(Math.Round(totalSizeGB));
                 }
                 else
-                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "The drive is not ready", drive_letter.ToString());
-
-                return 0;
+                {
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Size", "The drive is not ready", drivePath);
+                    return 0;
+                }
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Hardware.Drive_Usage", "General error.", ex.ToString());
+                Logging.Error("Device_Information.Hardware.Drive_Size", "General error.", ex.ToString());
+                return 0;
+            }
+        }
+
+        public static int Drive_Free_Space_GB(string drivePath)
+        {
+            try
+            {
+                DriveInfo driveInfo = new DriveInfo(drivePath);
+                if (driveInfo.IsReady)
+                {
+                    // Free memory space in bytes
+                    long freeSpaceBytes = driveInfo.AvailableFreeSpace;
+                    // Conversion from bytes to gigabytes
+                    double freeSpaceGB = freeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
+                    // Logging the results
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Free space GB", freeSpaceGB.ToString());
+                    return Convert.ToInt32(Math.Round(freeSpaceGB));
+                }
+                else
+                {
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "The drive is not ready", drivePath);
+                    return 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.Hardware.Drive_Free_Space", "General error.", ex.ToString());
                 return 0;
             }
         }

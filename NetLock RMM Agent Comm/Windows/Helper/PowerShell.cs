@@ -52,6 +52,12 @@ namespace Windows.Helper
 
                 Logging.PowerShell("Helper.Powershell.Execute_Script", "Trying to execute command", type + "script:" + Environment.NewLine + script);
 
+                if (String.IsNullOrEmpty(script))
+                {
+                    Logging.Error("Helper.Powershell.Execute_Script", "Script is empty", "");
+                    return "-";
+                }
+
                 Random random = new Random();
                 const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
                 string random_id = new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());

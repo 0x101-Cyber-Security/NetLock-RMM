@@ -150,7 +150,7 @@ namespace Global.Sensors
                         File.WriteAllText(sensor_path, sensor_json);
                     }
 
-                    // Check if script has changed
+                    // Check if script has changed, if so update it
                     if (File.Exists(sensor_path))
                     {
                         string existing_sensor_json = File.ReadAllText(sensor_path);
@@ -531,7 +531,7 @@ namespace Global.Sensors
                         {
                             if (sensor_item.sub_category == 0) // cpu
                             {
-                                resource_usage = Device_Information.Hardware.CPU_Utilization();
+                                resource_usage = Device_Information.Hardware.CPU_Usage();
 
                                 if (sensor_item.cpu_usage < resource_usage) // Check if CPU utilization is higher than the treshold
                                 {
@@ -540,7 +540,10 @@ namespace Global.Sensors
                                     // if action treshold is reached, execute the action and reset the counter
                                     if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                     {
-                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        if (OperatingSystem.IsWindows())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        else if (OperatingSystem.IsLinux())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                         // Create action history if not exists
                                         if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -615,7 +618,7 @@ namespace Global.Sensors
                             }
                             else if (sensor_item.sub_category == 1) // RAM
                             {
-                                int ram_usage = Device_Information.Hardware.RAM_Utilization();
+                                int ram_usage = Device_Information.Hardware.RAM_Usage();
 
                                 if (sensor_item.ram_usage < ram_usage)
                                 {
@@ -624,7 +627,10 @@ namespace Global.Sensors
                                     // if action treshold is reached, execute the action and reset the counter
                                     if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                     {
-                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        if (OperatingSystem.IsWindows())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        else if (OperatingSystem.IsLinux())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                         // Create action history if not exists
                                         if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -697,16 +703,24 @@ namespace Global.Sensors
                                 else
                                     continue;
                             }
-                            else if (sensor_item.sub_category == 2) // Disks
+                            else if (sensor_item.sub_category == 2) // Drives
                             {
-                                // Get all disks
+                                // Get all drives
                                 List<DriveInfo> drives = DriveInfo.GetDrives().ToList();
 
-                                List<string> drive_letters = sensor_item.disk_letters.Split(',').Select(letter => letter.Trim()).ToList();
+                                List<string> drive_letters = sensor_item.disk_letters.Split(',')
+                                    .Select(letter => letter.Trim())
+                                    .Where(letter => !string.IsNullOrEmpty(letter)) // Removes empty entries
+                                    .ToList();
 
                                 foreach (var drive in drives)
                                 {
-                                    string drive_name = drive.Name.Replace(":\\", "");
+                                    // Extract the drive letter on Windows; use the full name on Linux
+                                    string drive_name = OperatingSystem.IsWindows()
+                                        ? drive.Name.Replace(":\\", "") // Windows: "C:\\" => "C"
+                                        : (drive.Name.EndsWith("/") && drive.Name.Count(c => c == '/') > 1
+                                            ? drive.Name.TrimEnd('/') // Only trim if there is more than one slash
+                                            : drive.Name);             // Otherwise leave the path unchanged
 
                                     Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "foreach drive", "name: " + drive_name + " " + true.ToString());
 
@@ -731,10 +745,18 @@ namespace Global.Sensors
                                             specification = "(%)";
 
                                         // Check disk usage
-                                        int drive_total_space_gb = Device_Information.Hardware.Drive_Size(Convert.ToChar(drive_name));
-                                        int drive_free_space_gb = Device_Information.Hardware.Drive_Size(Convert.ToChar(drive_name));
-                                        int drive_usage = Device_Information.Hardware.Drive_Usage(sensor_item.disk_category, Convert.ToChar(drive_name));
-                                        
+                                        int drive_total_space_gb = Device_Information.Hardware.Drive_Size_GB(drive_name);
+                                        int drive_free_space_gb = Device_Information.Hardware.Drive_Free_Space_GB(drive_name);
+                                        int drive_usage = 0;
+
+                                        // If disk_category is 0 or 1, just calculate the usage in GB
+                                        if (sensor_item.disk_category == 0 || sensor_item.disk_category == 1)
+                                            drive_usage = drive_total_space_gb - drive_free_space_gb;
+                                        else
+                                            drive_usage = Device_Information.Hardware.Drive_Usage(sensor_item.disk_category, drive_name);
+
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "disk_specification", $"Drive: {drive_name}, Total: {drive_total_space_gb}GB, Free: {drive_free_space_gb}GB {specification}");
+
                                         // 0 = More than X GB occupied, 1 = Less than X GB free, 2 = More than X percent occupied, 3 = Less than X percent free
                                         if (sensor_item.disk_category == 0) // 0 = More than X GB occupied
                                         {
@@ -745,7 +767,10 @@ namespace Global.Sensors
                                                 // if action treshold is reached, execute the action and reset the counter
                                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                                 {
-                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    if (OperatingSystem.IsWindows())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsLinux())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -780,9 +805,11 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        "Time: " + sensor_item.name + Environment.NewLine +
+                                                        "Time: " + DateTime.Now + Environment.NewLine +
+                                                        "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (more than X GB occupied)" + Environment.NewLine +
+                                                        "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -796,6 +823,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (mehr als X GB belegt)" + Environment.NewLine +
+                                                        "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Laufwerksspeicher: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -830,7 +858,10 @@ namespace Global.Sensors
                                                 // if action treshold is reached, execute the action and reset the counter
                                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                                 {
-                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    if (OperatingSystem.IsWindows())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsLinux())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -869,6 +900,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (less than X GB free)" + Environment.NewLine +
+                                                        "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -882,6 +914,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (weniger als X GB frei)" + Environment.NewLine +
+                                                        "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -916,7 +949,10 @@ namespace Global.Sensors
                                                 // if action treshold is reached, execute the action and reset the counter
                                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                                 {
-                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    if (OperatingSystem.IsWindows())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsLinux())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -955,6 +991,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (more than X percent occupied)" + Environment.NewLine +
+                                                        "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -968,6 +1005,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (mehr als X Prozent belegt)" + Environment.NewLine +
+                                                        "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -1002,7 +1040,10 @@ namespace Global.Sensors
                                                 // if action treshold is reached, execute the action and reset the counter
                                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                                 {
-                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    if (OperatingSystem.IsWindows())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsLinux())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1042,6 +1083,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (less than X percent free)" + Environment.NewLine +
+                                                        "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Selected limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -1055,6 +1097,7 @@ namespace Global.Sensors
                                                         "Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (weniger als X Prozent frei)" + Environment.NewLine +
+                                                        "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
                                                         "Festgelegtes Limit: " + sensor_item.disk_usage + $" {specification}" + Environment.NewLine +
@@ -1123,7 +1166,10 @@ namespace Global.Sensors
                                         // if action treshold is reached, execute the action and reset the counter
                                         if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                         {
-                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            if (OperatingSystem.IsWindows())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsLinux())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1245,7 +1291,10 @@ namespace Global.Sensors
                                         // if action treshold is reached, execute the action and reset the counter
                                         if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                         {
-                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            if (OperatingSystem.IsWindows())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsLinux())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1367,7 +1416,10 @@ namespace Global.Sensors
                                         // if action treshold is reached, execute the action and reset the counter
                                         if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                         {
-                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            if (OperatingSystem.IsWindows())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsLinux())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1523,7 +1575,11 @@ namespace Global.Sensors
                                         {
                                             if (!action_already_executed)
                                             {
-                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                if (OperatingSystem.IsWindows())
+                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                else if (OperatingSystem.IsLinux())
+                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+
                                                 action_already_executed = true;
                                             }
 
@@ -1636,7 +1692,10 @@ namespace Global.Sensors
                                 // if action treshold is reached, execute the action and reset the counter
                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                 {
-                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    if (OperatingSystem.IsWindows())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    else if (OperatingSystem.IsLinux())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1758,7 +1817,10 @@ namespace Global.Sensors
                                 // if action treshold is reached, execute the action and reset the counter
                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                 {
-                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    if (OperatingSystem.IsWindows())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    else if (OperatingSystem.IsLinux())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1871,7 +1933,10 @@ namespace Global.Sensors
                                 // if action treshold is reached, execute the action and reset the counter
                                 if (sensor_item.action_treshold_count >= sensor_item.action_treshold_max)
                                 {
-                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    if (OperatingSystem.IsWindows())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    else if (OperatingSystem.IsLinux())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))

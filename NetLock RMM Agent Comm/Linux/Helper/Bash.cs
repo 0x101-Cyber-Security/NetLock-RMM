@@ -59,6 +59,12 @@ namespace Linux.Helper
 
                 Logging.Debug("Linux.Helper.Bash.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
 
+                if (String.IsNullOrEmpty(script))
+                {
+                    Logging.Error("Linux.Helper.Bash.Execute_Script", "Script is empty", "");
+                    return "-";
+                }
+
                 // Decode the script from Base64
                 byte[] script_data = Convert.FromBase64String(script);
                 string decoded_script = Encoding.UTF8.GetString(script_data);
