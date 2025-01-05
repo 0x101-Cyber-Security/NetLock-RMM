@@ -578,9 +578,11 @@ namespace Global.Sensors
                                     if (Configuration.Agent.language == "en-US")
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"The processor utilization exceeds the threshold value. The current utilization is {resource_usage}%. The defined limit is {sensor_item.cpu_usage}%." + Environment.NewLine + Environment.NewLine +
+                                            "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: Processor" + Environment.NewLine +
+                                            "Time: " + DateTime.Now + Environment.NewLine +
                                             "Selected limit: " + sensor_item.cpu_usage + " (%)" + Environment.NewLine +
                                             "In usage: " + resource_usage + " (%)" + Environment.NewLine +
                                             "Action result: " + Environment.NewLine + action_result;
@@ -588,9 +590,11 @@ namespace Global.Sensors
                                     else if (Configuration.Agent.language == "de-DE")
                                     {
                                         details =
-                                           "Name: " + sensor_item.name + Environment.NewLine +
+                                           $"Die Prozessor-Auslastung überschreitet den Schwellenwert. Aktuell beträgt die Auslastung {resource_usage}%. Das festgelegte Limit ist {sensor_item.cpu_usage}%." + Environment.NewLine + Environment.NewLine +
+                                           "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                            "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                            "Typ: Prozessor" + Environment.NewLine +
+                                           "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                            "Festgelegtes Limit: " + sensor_item.cpu_usage + " (%)" + Environment.NewLine +
                                            "In Verwendung: " + resource_usage + " (%)" + Environment.NewLine +
                                            "Ergebnis der Aktion: " + Environment.NewLine + action_result;
@@ -665,9 +669,11 @@ namespace Global.Sensors
                                     if (Configuration.Agent.language == "en-US")
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"Memory utilization exceeds the threshold. The current utilization is {ram_usage}%. The defined limit is {sensor_item.ram_usage}%." + Environment.NewLine + Environment.NewLine +
+                                            "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: RAM" + Environment.NewLine +
+                                            "Time: " + DateTime.Now + Environment.NewLine +
                                             "Selected limit: " + sensor_item.ram_usage + " (%)" + Environment.NewLine +
                                             "In usage: " + ram_usage + " (%)" + Environment.NewLine +
                                             "Action result: " + Environment.NewLine + action_result;
@@ -675,12 +681,14 @@ namespace Global.Sensors
                                     else if (Configuration.Agent.language == "de-DE")
                                     {
                                         details =
-                                           "Name: " + sensor_item.name + Environment.NewLine +
-                                           "Beschreibung: " + sensor_item.description + Environment.NewLine +
-                                           "Typ: Arbeitsspeicher" + Environment.NewLine +
-                                           "Festgelegtes Limit: " + sensor_item.ram_usage + " (%)" + Environment.NewLine +
-                                           "In Verwendung: " + ram_usage + " (%)" + Environment.NewLine +
-                                           "Ergebnis der Aktion: " + Environment.NewLine + action_result;
+                                            $"Die Arbeitsspeicherauslastung überschreitet den Schwellenwert. Aktuell beträgt die Auslastung {ram_usage}%. Das festgelegte Limit ist {sensor_item.ram_usage}%." + Environment.NewLine + Environment.NewLine +
+                                            "Sensor Name: " + sensor_item.name + Environment.NewLine +
+                                            "Beschreibung: " + sensor_item.description + Environment.NewLine +
+                                            "Typ: Arbeitsspeicher" + Environment.NewLine +
+                                            "Uhrzeit: " + DateTime.Now + Environment.NewLine +
+                                            "Festgelegtes Limit: " + sensor_item.ram_usage + " (%)" + Environment.NewLine +
+                                            "In Verwendung: " + ram_usage + " (%)" + Environment.NewLine +
+                                            "Ergebnis der Aktion: " + Environment.NewLine + action_result;
                                     }
 
                                     // Create notification history if not exists
@@ -805,10 +813,11 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        "Time: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"More than the limit of {sensor_item.disk_usage} GB of storage space is being used. Currently, {drive_usage} GB is occupied, leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (more than X GB occupied)" + Environment.NewLine +
+                                                        "Time: " + DateTime.Now + Environment.NewLine +
                                                         "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -819,10 +828,11 @@ namespace Global.Sensors
                                                 else if (Configuration.Agent.language == "de-DE")
                                                 {
                                                     details =
-                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Es wird mehr als das festgelegte Limit von {sensor_item.disk_usage} GB Speicherplatz genutzt. Aktuell sind {drive_usage} GB belegt, sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (mehr als X GB belegt)" + Environment.NewLine +
+                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                         "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Laufwerksspeicher: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -896,10 +906,11 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        "Time: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Less than the limit of {sensor_item.disk_usage} GB of storage space is available. Currently, {drive_usage} GB is occupied, leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (less than X GB free)" + Environment.NewLine +
+                                                        "Time: " + DateTime.Now + Environment.NewLine +
                                                         "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -910,10 +921,11 @@ namespace Global.Sensors
                                                 else if (Configuration.Agent.language == "de-DE")
                                                 {
                                                     details =
-                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Weniger als der Grenzwert von {sensor_item.disk_usage} GB an Speicherplatz ist verfügbar. Aktuell sind {drive_usage} GB belegt, sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (weniger als X GB frei)" + Environment.NewLine +
+                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                         "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -989,10 +1001,11 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        "Time: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"More than the limit of {sensor_item.disk_usage}% of storage space is being used. Currently, {drive_usage}% is occupied, leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (more than X percent occupied)" + Environment.NewLine +
+                                                        "Time: " + DateTime.Now + Environment.NewLine +
                                                         "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -1003,10 +1016,11 @@ namespace Global.Sensors
                                                 else if (Configuration.Agent.language == "de-DE")
                                                 {
                                                     details =
-                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Es wird mehr als das festgelegte Limit von {sensor_item.disk_usage}% Speicherplatz genutzt. Aktuell sind {drive_usage}% belegt, sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (mehr als X Prozent belegt)" + Environment.NewLine +
+                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                         "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -1081,10 +1095,11 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        "Time: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Less than the limit of {sensor_item.disk_usage}% of storage space is available. Currently, {drive_usage}% is occupied, leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (less than X percent free)" + Environment.NewLine +
+                                                        "Time: " + DateTime.Now + Environment.NewLine +
                                                         "Drive: " + drive.Name + Environment.NewLine +
                                                         "Drive size: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Drive free space: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -1095,10 +1110,11 @@ namespace Global.Sensors
                                                 else if (Configuration.Agent.language == "de-DE")
                                                 {
                                                     details =
-                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                                        $"Weniger als der Grenzwert von {sensor_item.disk_usage}% an Speicherplatz ist verfügbar. Aktuell sind {drive_usage}% belegt, sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
+                                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (weniger als X Prozent frei)" + Environment.NewLine +
+                                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                         "Laufwerk: " + drive.Name + Environment.NewLine +
                                                         "Laufwerksgröße: " + drive_total_space_gb + " (GB)" + Environment.NewLine +
                                                         "Freier Platz auf dem Laufwerk: " + drive_free_space_gb + " (GB)" + Environment.NewLine +
@@ -1207,10 +1223,11 @@ namespace Global.Sensors
                                         if (Configuration.Agent.language == "en-US")
                                         {
                                             details =
-                                                "Time: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"The process utilization of {sensor_item.process_name} exceeds the threshold value. The current utilization is {resource_usage}%. The defined limit is {sensor_item.cpu_usage}%. The ram usage is {ram} (MB) & the owner of the process is {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                 "Description: " + sensor_item.description + Environment.NewLine +
                                                 "Type: Process CPU usage (%)" + Environment.NewLine +
+                                                "Time: " + DateTime.Now + Environment.NewLine +
                                                 "Process name: " + sensor_item.process_name + " (" + process.Id + ")" + Environment.NewLine +
                                                 "Selected limit: " + sensor_item.cpu_usage + " (%)" + Environment.NewLine +
                                                 "In usage: " + resource_usage + " (%)" + Environment.NewLine +
@@ -1222,10 +1239,11 @@ namespace Global.Sensors
                                         else if (Configuration.Agent.language == "de-DE")
                                         {
                                             details =
-                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"Die Prozessauslastung von {sensor_item.process_name} überschreitet den Schwellenwert. Die aktuelle Auslastung beträgt {resource_usage}%. Der definierte Grenzwert ist {sensor_item.cpu_usage}%. Die Ram-Auslastung beträgt {ram} (MB) & der Besitzer des Prozesses ist {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                 "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                 "Typ: Prozess-CPU-Nutzung" + Environment.NewLine +
+                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                 "Prozess Name: " + sensor_item.process_name + " (%)" + Environment.NewLine +
                                                 "Festgelegtes Limit: " + sensor_item.cpu_usage + " (%)" + Environment.NewLine +
                                                 "In Verwendung: " + resource_usage + " (%)" + Environment.NewLine +
@@ -1332,10 +1350,11 @@ namespace Global.Sensors
                                         if (Configuration.Agent.language == "en-US")
                                         {
                                             details =
-                                                "Time: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"The memory utilization of {sensor_item.process_name} exceeds the threshold value. The current utilization is {resource_usage}%. The defined limit is {sensor_item.ram_usage}%. The ram usage is {ram} (MB) & the owner of the process is {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                 "Description: " + sensor_item.description + Environment.NewLine +
                                                 "Type: Process RAM usage (%)" + Environment.NewLine +
+                                                "Time: " + DateTime.Now + Environment.NewLine +
                                                 "Process name: " + sensor_item.process_name + " (" + process.Id + ")" + Environment.NewLine +
                                                 "Selected limit: " + sensor_item.ram_usage + " (%)" + Environment.NewLine +
                                                 "In usage: " + resource_usage + " (%)" + Environment.NewLine +
@@ -1347,10 +1366,11 @@ namespace Global.Sensors
                                         else if (Configuration.Agent.language == "de-DE")
                                         {
                                             details =
-                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"Die Speicherauslastung von {sensor_item.process_name} überschreitet den Schwellenwert. Die aktuelle Auslastung beträgt {resource_usage}%. Der definierte Grenzwert ist {sensor_item.ram_usage}%. Die Ram-Auslastung beträgt {ram} (MB) & der Besitzer des Prozesses ist {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                 "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                 "Typ: Prozess-RAM-Nutzung (%)" + Environment.NewLine +
+                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                 "Prozess Name: " + sensor_item.process_name + " (%)" + Environment.NewLine +
                                                 "Festgelegtes Limit: " + sensor_item.ram_usage + " (%)" + Environment.NewLine +
                                                 "In Verwendung: " + resource_usage + " (%)" + Environment.NewLine +
@@ -1457,10 +1477,11 @@ namespace Global.Sensors
                                         if (Configuration.Agent.language == "en-US")
                                         {
                                             details =
-                                                "Time: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"The memory utilization of {sensor_item.process_name} exceeds the threshold value. The current utilization is {resource_usage} (MB). The defined limit is {sensor_item.ram_usage} (MB). The owner of the process is {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                 "Description: " + sensor_item.description + Environment.NewLine +
                                                 "Type: Process RAM usage (MB)" + Environment.NewLine +
+                                                "Time: " + DateTime.Now + Environment.NewLine +
                                                 "Process name: " + sensor_item.process_name + " (" + process.Id + ")" + Environment.NewLine +
                                                 "Selected limit: " + sensor_item.ram_usage + " (MB)" + Environment.NewLine +
                                                 "In usage: " + resource_usage + " (MB)" + Environment.NewLine +
@@ -1471,10 +1492,11 @@ namespace Global.Sensors
                                         else if (Configuration.Agent.language == "de-DE")
                                         {
                                             details =
-                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"Die Speicherauslastung von {sensor_item.process_name} überschreitet den Schwellenwert. Die aktuelle Auslastung beträgt {resource_usage} (MB). Der definierte Grenzwert ist {sensor_item.ram_usage} (MB). Der Besitzer des Prozesses ist {user}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                 "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                 "Typ: Prozess-RAM-Nutzung (MB)" + Environment.NewLine +
+                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                 "Prozess Name: " + sensor_item.process_name + " (%)" + Environment.NewLine +
                                                 "Festgelegtes Limit: " + sensor_item.ram_usage + " (MB)" + Environment.NewLine +
                                                 "In Verwendung: " + resource_usage + " (MB)" + Environment.NewLine +
@@ -1619,10 +1641,11 @@ namespace Global.Sensors
                                         if (Configuration.Agent.language == "en-US")
                                         {
                                             details =
-                                                "Time: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"The check of event log {sensor_item.eventlog} by event ID {sensor_item.eventlog_event_id} resulted in a hit for the expected result {sensor_item.expected_result}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                 "Description: " + sensor_item.description + Environment.NewLine +
                                                 "Type: Windows Eventlog" + Environment.NewLine +
+                                                "Time: " + DateTime.Now + Environment.NewLine +
                                                 "Eventlog: " + sensor_item.eventlog + Environment.NewLine +
                                                 "Event id: " + sensor_item.eventlog_event_id + Environment.NewLine +
                                                 "Expected result: " + sensor_item.expected_result + Environment.NewLine +
@@ -1637,10 +1660,11 @@ namespace Global.Sensors
                                         else if (Configuration.Agent.language == "de-DE")
                                         {
                                             details =
-                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
-                                                "Name: " + sensor_item.name + Environment.NewLine +
+                                                $"Die Prüfung von Eventlog {sensor_item.eventlog} nach Event ID {sensor_item.eventlog_event_id} ergab einen Treffer für das erwartete Ergebnis {sensor_item.expected_result}." + Environment.NewLine + Environment.NewLine +
+                                                "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                 "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                 "Typ: Windows Eventlog" + Environment.NewLine +
+                                                "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                                 "Eventlog: " + sensor_item.eventlog + Environment.NewLine +
                                                 "Event ID: " + sensor_item.eventlog_event_id + Environment.NewLine +
                                                 "Erwartetes Ergebnis: " + sensor_item.expected_result + Environment.NewLine +
@@ -1744,9 +1768,11 @@ namespace Global.Sensors
                                 if (Configuration.Agent.language == "en-US")
                                 {
                                     details =
-                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                        $"The script execution of {sensor_item.name} resulted in a hit for the expected result {sensor_item.expected_result}." + Environment.NewLine + Environment.NewLine +
+                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                         "Description: " + sensor_item.description + Environment.NewLine +
                                         $"Type: {details_type_specification}" + Environment.NewLine +
+                                        "Time: " + DateTime.Now + Environment.NewLine +
                                         "Script: " + sensor_item.script + Environment.NewLine +
                                         "Pattern: " + sensor_item.expected_result + Environment.NewLine +
                                         "Result: " + result + Environment.NewLine +
@@ -1755,9 +1781,11 @@ namespace Global.Sensors
                                 else if (Configuration.Agent.language == "de-DE")
                                 {
                                     details =
-                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                        $"Die Skriptausführung von {sensor_item.name} ergab einen Treffer für das erwartete Ergebnis {sensor_item.expected_result}." + Environment.NewLine + Environment.NewLine +
+                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                         $"Typ: {details_type_specification}" + Environment.NewLine +
+                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                         "Skript: " + sensor_item.script + Environment.NewLine +
                                         "Pattern: " + sensor_item.expected_result + Environment.NewLine +
                                         "Ergebnis: " + result + Environment.NewLine +
@@ -1951,9 +1979,11 @@ namespace Global.Sensors
                                     if (service_start_failed)
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"The service {sensor_item.service_name} was {sensor_item.service_condition}. The service action of {sensor_item.service_name} could not be performed." + Environment.NewLine + Environment.NewLine +
+                                            "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: Service" + Environment.NewLine +
+                                            "Time: " + DateTime.Now + Environment.NewLine +
                                             "Service: " + sensor_item.service_name + Environment.NewLine +
                                             "Result: The requested service action could not be performed." + Environment.NewLine +
                                             "Error: " + service_error_message + Environment.NewLine +
@@ -1962,9 +1992,11 @@ namespace Global.Sensors
                                     else
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"The service {sensor_item.service_name} was {sensor_item.service_condition}. The service action of {sensor_item.service_name} was successfully executed." + Environment.NewLine + Environment.NewLine +
+                                            "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: Service" + Environment.NewLine +
+                                            "Time: " + DateTime.Now + Environment.NewLine +
                                             "Service: " + sensor_item.service_name + Environment.NewLine +
                                             "Result: The requested service action was successfully executed." + Environment.NewLine +
                                             "Action result: " + Environment.NewLine + action_result;
@@ -1975,9 +2007,11 @@ namespace Global.Sensors
                                     if (service_start_failed)
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"Der Dienst {sensor_item.service_name} war {sensor_item.service_condition}. Die Dienstaktion von " + sensor_item.service_name + " konnte nicht ausgeführt werden." + Environment.NewLine +
+                                            "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                             "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                             "Typ: Dienst" + Environment.NewLine +
+                                            "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                             "Dienst: " + sensor_item.service_name + Environment.NewLine +
                                             "Ergebnis: The requested service action could not be performed." + Environment.NewLine +
                                             "Fehler: " + service_error_message + Environment.NewLine +
@@ -1986,9 +2020,11 @@ namespace Global.Sensors
                                     else
                                     {
                                         details =
-                                            "Name: " + sensor_item.name + Environment.NewLine +
+                                            $"Der Dienst {sensor_item.service_name} war {sensor_item.service_condition}. Die Dienstaktion von " + sensor_item.service_name + " wurde erfolgreich ausgeführt." + Environment.NewLine +
+                                            "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                             "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                             "Typ: Dienst" + Environment.NewLine +
+                                            "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                             "Dienst: " + sensor_item.service_name + Environment.NewLine +
                                             "Ergebnis: Die gewünschte Dienst Aktion wurde erfolgreich ausgeführt." + Environment.NewLine +
                                             "Ergebnis der Aktion: " + Environment.NewLine + action_result;
@@ -2072,9 +2108,11 @@ namespace Global.Sensors
                                         ping_result = "Failed";
 
                                     details =
-                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                        $"The ping check of {sensor_item.ping_address} resulted in a hit for the expected result {ping_result}." + Environment.NewLine + Environment.NewLine +
+                                        "Sensor name: " + sensor_item.name + Environment.NewLine +
                                         "Description: " + sensor_item.description + Environment.NewLine +
                                         "Type: Ping" + Environment.NewLine +
+                                        "Time: " + DateTime.Now + Environment.NewLine +
                                         "Address: " + sensor_item.ping_address + Environment.NewLine +
                                         "Timeout: " + sensor_item.ping_timeout + Environment.NewLine +
                                         "Result: " + ping_result + Environment.NewLine +
@@ -2088,9 +2126,11 @@ namespace Global.Sensors
                                         ping_result = "Fehlgeschlagen";
 
                                     details =
-                                        "Name: " + sensor_item.name + Environment.NewLine +
+                                        $"Der Ping-Check von {sensor_item.ping_address} ergab einen Treffer für das erwartete Ergebnis {ping_result}." + Environment.NewLine + Environment.NewLine +
+                                        "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                         "Typ: Ping" + Environment.NewLine +
+                                        "Uhrzeit: " + DateTime.Now + Environment.NewLine +
                                         "Adresse: " + sensor_item.ping_address + Environment.NewLine +
                                         "Timeout: " + sensor_item.ping_timeout + Environment.NewLine +
                                         "Ergebnis: " + ping_result + Environment.NewLine +
@@ -2189,6 +2229,9 @@ namespace Global.Sensors
 
                                 // Serializing the extracted properties to JSON
                                 string notifications_json = JsonSerializer.Serialize(notifications, new JsonSerializerOptions { WriteIndented = true });
+
+                                // Remove all empty characters & lines until the first character
+                                notification_history = notification_history.TrimStart();
 
                                 // Create event based on category and sub category
                                 if (sensor_item.category == 0) //utilization

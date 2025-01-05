@@ -39,8 +39,6 @@ namespace _x101.HWID_System
                         byte[] hashBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(rawHwid));
                         HW_UID = BitConverter.ToString(hashBytes).Replace("-", "");
                     }
-
-                    Console.WriteLine(HW_UID);
                 }
                 catch (Exception ex)
                 {

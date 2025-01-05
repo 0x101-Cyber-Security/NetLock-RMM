@@ -34,20 +34,18 @@ namespace Linux.Helper
                 // Log and return the output
                 if (!string.IsNullOrEmpty(error))
                 {
-                    //Console.Error.WriteLine($"Error executing command: {error}");
                     Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", error);
                     return "-";
                 }
                 else
                 {
-                    Console.WriteLine(output);
+                    Logging.Debug("Linux.Helper.Bash.Execute_Command", "Command executed", output);
                     return output;
                 }
             }
             catch (Exception ex)
             {
                 Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", ex.ToString());
-                //Console.Error.WriteLine($"Error executing command: {ex.ToString()}");
                 return "-";
             }
         }
@@ -114,7 +112,6 @@ namespace Linux.Helper
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
                 Logging.Error("Linux.Helper.Bash.Execute_Script", "Error executing script", ex.ToString());
                 return ex.Message;
             }

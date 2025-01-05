@@ -203,6 +203,9 @@ namespace Global.Device_Information
 
         public static bool Ping(string address, int timeout)
         {
+            if (string.IsNullOrEmpty(address))
+                throw new ArgumentNullException(nameof(address));
+
             bool pingable = false;
             Ping pinger = null;
 
@@ -212,20 +215,20 @@ namespace Global.Device_Information
                 PingReply reply = pinger.Send(address, timeout);
                 pingable = reply.Status == IPStatus.Success;
             }
-            catch (PingException)
+            catch (PingException ex)
             {
-                // Fehler beim Senden der Ping-Anfrage
+                Logging.Error("Device_Information.Network.Ping", "Ping failed", ex.ToString());
+            }
+            catch (PlatformNotSupportedException ex)
+            {
+                Logging.Error("Device_Information.Network.Ping", "Platform not supported", ex.ToString());
             }
             finally
             {
-                if (pinger != null)
-                {
-                    pinger.Dispose();
-                }
+                pinger?.Dispose();
             }
 
-            Logging.Device_Information("Device_Information.Network.Ping", "address pingable", address + " (" + pingable.ToString() + ")");
-
+            Logging.Device_Information("Device_Information.Network.Ping", "Address pingable", $"{address} ({pingable})");
             return pingable;
         }
     }
