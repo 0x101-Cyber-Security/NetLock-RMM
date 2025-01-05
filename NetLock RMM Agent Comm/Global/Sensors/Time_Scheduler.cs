@@ -1790,33 +1790,113 @@ namespace Global.Sensors
 
                             try
                             {
-                                ServiceController sc = new ServiceController(sensor_item.service_name);
-                                service_status = sc.Status.Equals(ServiceControllerStatus.Paused).ToString();
-                                
-                                if (sensor_item.service_condition == 0 && sc.Status.Equals(ServiceControllerStatus.Running)) // if service is running and condition is 0 = running
+                                if (OperatingSystem.IsWindows())
                                 {
-                                    triggered = true;
+                                    ServiceController sc = new ServiceController(sensor_item.service_name);
+                                    service_status = sc.Status.Equals(ServiceControllerStatus.Paused).ToString();
 
-                                    if (sensor_item.service_action == 1) // stop the service if it's running and the action is 1 = stop
-                                        sc.Stop();
-                                }
-                                else if (sensor_item.service_condition == 1 && sc.Status.Equals(ServiceControllerStatus.Paused)) // if service is paused and condition is 1 = paused
-                                {
-                                    triggered = true;
-
-                                    if (sensor_item.service_action == 2) // restart the service if it's paused and the action is 2 = restart
+                                    if (sensor_item.service_condition == 0 && sc.Status.Equals(ServiceControllerStatus.Running)) // if service is running and condition is 0 = running
                                     {
-                                        sc.Stop();
-                                        sc.WaitForStatus(ServiceControllerStatus.Stopped);
-                                        sc.Start();
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running", sensor_item.service_name + " " + sc.Status.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 1) // stop the service if it's running and the action is 1 = stop
+                                            sc.Stop();
+                                    }
+                                    else if (sensor_item.service_condition == 1 && sc.Status.Equals(ServiceControllerStatus.Paused)) // if service is paused and condition is 1 = paused
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is paused", sensor_item.service_name + " " + sc.Status.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 2) // restart the service if it's paused and the action is 2 = restart
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is paused, restarting", sensor_item.service_name + " " + sc.Status.ToString());
+
+                                            sc.Stop();
+                                            sc.WaitForStatus(ServiceControllerStatus.Stopped);
+                                            sc.Start();
+                                        }
+                                    }
+                                    else if (sensor_item.service_condition == 2 && sc.Status.Equals(ServiceControllerStatus.Stopped)) // if service is stopped and condition is 2 = stopped
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped", sensor_item.service_name + " " + sc.Status.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 0) // start the service if it's stopped and the action is 0 = start
+                                            sc.Start();
                                     }
                                 }
-                                else if (sensor_item.service_condition == 2 && sc.Status.Equals(ServiceControllerStatus.Stopped)) // if service is stopped and condition is 2 = stopped
+                                else if (OperatingSystem.IsLinux())
                                 {
-                                    triggered = true;
+                                    string serviceCommand = $"systemctl is-active --quiet {sensor_item.service_name}";
+                                    string statusCommand = $"systemctl show -p ActiveState {sensor_item.service_name}";
 
-                                    if (sensor_item.service_action == 0) // start the service if it's stopped and the action is 0 = start
-                                        sc.Start();
+                                    // Überprüfen, ob der Dienst aktiv ist. We do not use helper class here, because we need to verify the exit codes
+                                    var serviceStatusProcess = new System.Diagnostics.Process
+                                    {
+                                        StartInfo = new System.Diagnostics.ProcessStartInfo
+                                        {
+                                            FileName = "/bin/bash",
+                                            Arguments = $"-c \"{serviceCommand}\"",
+                                            RedirectStandardOutput = true,
+                                            RedirectStandardError = true,
+                                            UseShellExecute = false,
+                                            CreateNoWindow = true
+                                        }
+                                    };
+
+                                    serviceStatusProcess.Start();
+                                    serviceStatusProcess.WaitForExit();
+
+                                    bool isServiceRunning = serviceStatusProcess.ExitCode == 0; // ExitCode 0 bedeutet, der Dienst läuft
+
+                                    Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service status", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                    if (sensor_item.service_condition == 0 && isServiceRunning) // if service is running and condition is 0 = running
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 1) // stop the service if it's running and the action is 1 = stop
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running, stopping", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Stoppe den Dienst
+                                            Linux.Helper.Bash.Execute_Command($"systemctl stop {sensor_item.service_name}");
+                                        }
+                                    }
+                                    else if (sensor_item.service_condition == 1 && !isServiceRunning) // if service is stopped and condition is 1 = paused (simuliert als gestoppt)
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 2) // restart the service if it's stopped and the action is 2 = restart
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, restarting", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Starte den Dienst
+                                            Linux.Helper.Bash.Execute_Command($"systemctl start {sensor_item.service_name}");
+                                        }
+                                    }
+                                    else if (sensor_item.service_condition == 2 && !isServiceRunning) // if service is stopped and condition is 2 = stopped
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 0) // start the service if it's stopped and the action is 0 = start
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, starting", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Starte den Dienst
+                                            Linux.Helper.Bash.Execute_Command($"systemctl start {sensor_item.service_name}");
+                                        }
+                                    }
                                 }
                             }
                             catch (Exception ex)

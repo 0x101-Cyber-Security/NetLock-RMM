@@ -1238,11 +1238,11 @@
 
             //service condition
             if (service_condition == "0")
-                service_condition = Localizer["running"];
+                service_condition = Localizer["service_status_running"];
             else if (service_condition == "1")
-                service_condition = Localizer["paused"];
+                service_condition = Localizer["service_status_paused"];
             else if (service_condition == "2")
-                service_condition = Localizer["stopped"];
+                service_condition = Localizer["service_status_stopped"];
 
             //service action
             if (service_action == "0")
@@ -1349,11 +1349,11 @@
                 disk_category_converted = 3;
 
             //service condition
-            if (service_condition == Localizer["running"])
+            if (service_condition == Localizer["service_status_running"])
                 service_condition_converted = 0;
-            else if (service_condition == Localizer["paused"])
+            else if (service_condition == Localizer["service_status_paused"])
                 service_condition_converted = 1;
-            else if (service_condition == Localizer["stopped"])
+            else if (service_condition == Localizer["service_status_stopped"])
                 service_condition_converted = 2;
 
             //service action

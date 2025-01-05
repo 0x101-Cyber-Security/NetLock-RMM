@@ -40,6 +40,7 @@ namespace Linux.Helper
                 }
                 else
                 {
+                    Console.WriteLine(output);
                     return output;
                 }
             }

@@ -414,6 +414,9 @@
   <data name="severity" xml:space="preserve">
     <value>Severity</value>
   </data>
+  <data name="stopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
   <data name="sub_category" xml:space="preserve">
     <value>Sub category</value>
   </data>
