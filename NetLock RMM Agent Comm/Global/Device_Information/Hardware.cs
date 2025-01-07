@@ -21,6 +21,7 @@ using System.Configuration.Internal;
 using System.Globalization;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using System.Diagnostics.Eventing.Reader;
 
 namespace Global.Device_Information
 {
@@ -47,6 +48,34 @@ namespace Global.Device_Information
                         foreach (string line in cpuInfoLines)
                         {
                             if (line.StartsWith("model name"))
+                            {
+                                // Extract the CPU name
+                                cpu_name = line.Split(':')[1].Trim();
+                                break;
+                            }
+                        }
+                    }
+                    return cpu_name;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Name", "General error.", ex.ToString());
+                    return "N/A";
+                }
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    string cpu_name = string.Empty;
+                    // Read the CPU information from the system_profiler command
+                    string systemProfilerOutput = MacOS.Helper.Zsh.Execute_Command("system_profiler SPHardwareDataType");
+                    if (!string.IsNullOrEmpty(systemProfilerOutput))
+                    {
+                        // Search for the "Processor Name" line
+                        foreach (string line in systemProfilerOutput.Split('\n'))
+                        {
+                            if (line.Contains("Processor Name"))
                             {
                                 // Extract the CPU name
                                 cpu_name = line.Split(':')[1].Trim();
@@ -238,7 +267,78 @@ namespace Global.Device_Information
                     return "{}";
                 }
             }
-                
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    string cpu_name = string.Empty;
+                    string cpu_cores = string.Empty;
+                    string cpu_threads = string.Empty;
+                    string cpu_usage = string.Empty;
+                    string cpu_speed = string.Empty;
+                    string cpu_cache = string.Empty;
+
+                    // CPU Name
+                    cpu_name = MacOS.Helper.Zsh.Execute_Command("sysctl -n machdep.cpu.brand_string").Trim();
+
+                    // CPU Cores and Threads
+                    cpu_cores = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.physicalcpu").Trim();
+                    cpu_threads = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.logicalcpu").Trim();
+
+                    // CPU Speed
+                    string cpu_speed_hz = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.cpufrequency").Trim();
+                    if (long.TryParse(cpu_speed_hz, out long cpuSpeedHz))
+                    {
+                        double cpuSpeedGHz = cpuSpeedHz / 1_000_000_000.0; // Convert to GHz
+                        cpu_speed = Math.Round(cpuSpeedGHz, 2).ToString() + " GHz";
+                    }
+
+                    // CPU Cache Size (L3)
+                    cpu_cache = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.l3cachesize").Trim();
+                    if (long.TryParse(cpu_cache, out long cacheBytes))
+                    {
+                        double cacheMB = cacheBytes / 1_048_576.0; // Convert to MB
+                        cpu_cache = Math.Round(cacheMB, 2).ToString() + " MB";
+                    }
+
+                    // Get CPU Usage
+                    cpu_usage = CPU_Usage().ToString();
+
+                    // Create JSON
+                    CPU_Information cpuInfo = new CPU_Information
+                    {
+                        name = cpu_name,
+                        socket_designation = "N/A",
+                        processor_id = "N/A",
+                        revision = "N/A",
+                        usage = cpu_usage,
+                        voltage = "N/A",
+                        currentclockspeed = cpu_speed,
+                        processes = GetSafeProcessCount(),
+                        threads = GetSafeThreadCount(),
+                        handles = GetSafeHandleCount(),
+                        maxclockspeed = "N/A",
+                        sockets = "N/A",
+                        cores = cpu_cores,
+                        logical_processors = cpu_threads,
+                        virtualization = "N/A",
+                        l1_cache = "N/A",
+                        l2_cache = "N/A",
+                        l3_cache = cpu_cache
+                    };
+
+                    cpu_information_json = JsonSerializer.Serialize(cpuInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                    // Create and log JSON array
+                    Logging.Device_Information("Device_Information.Hardware.CPU_Information", "cpu_information_json", cpu_information_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Information", "CPU_Information", "An error occurred while retrieving CPU information on macOS: " + ex.ToString());
+                    return "{}";
+                }
+            }
+
             return cpu_information_json;
         }
 
@@ -375,7 +475,33 @@ namespace Global.Device_Information
                     Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
                     return 0;
                 }
-
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // Read the CPU usage from the system_profiler command
+                    string systemProfilerOutput = MacOS.Helper.Zsh.Execute_Command("system_profiler SPHardwareDataType");
+                    if (!string.IsNullOrEmpty(systemProfilerOutput))
+                    {
+                        // Search for the "Processor Usage" line
+                        foreach (string line in systemProfilerOutput.Split('\n'))
+                        {
+                            if (line.Contains("Processor Usage"))
+                            {
+                                // Extract the CPU usage
+                                string cpuUsage = line.Split(':')[1].Trim();
+                                return Convert.ToInt32(cpuUsage.Replace("%", ""));
+                            }
+                        }
+                    }
+                    return 0;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.CPU_Utilization", "General error.", ex.ToString());
+                    return 0;
+                }
             }
             else
             {
@@ -625,15 +751,105 @@ namespace Global.Device_Information
                     return "{}";
                 }
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    string name = "N/A";
+                    string available = "N/A";
+                    string assured = "N/A";
+                    string cache = "N/A";
+                    string outsourced_pool = "N/A";
+                    string not_outsourced_pool = "N/A";
+                    string speed = "N/A";
+                    string slots = "N/A";
+                    int slots_used = 0;
+                    string form_factor = "N/A";
+                    string hardware_reserved = "N/A";
+
+                    // Abrufen von CPU-Informationen
+                    string cpuName = MacOS.Helper.Zsh.Execute_Command("sysctl -n machdep.cpu.brand_string");
+                    string cpuCores = MacOS.Helper.Zsh.Execute_Command("sysctl -n machdep.cpu.core_count");
+                    string cpuThreads = MacOS.Helper.Zsh.Execute_Command("sysctl -n machdep.cpu.thread_count");
+                    string cpuSpeed = MacOS.Helper.Zsh.Execute_Command("sysctl -n machdep.cpu.freq");
+
+                    // Abrufen von RAM-Informationen
+                    string totalRam = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.memsize");
+                    ulong totalMemory = Convert.ToUInt64(totalRam); // in Byte
+
+                    // Berechne den verfügbaren RAM und den reservierten RAM
+                    string availableRam = MacOS.Helper.Zsh.Execute_Command("sysctl -n vm.available_memory");
+                    ulong availableMemory = Convert.ToUInt64(availableRam); // in Byte
+                    hardware_reserved = ((totalMemory - availableMemory) / 1024d / 1024d).ToString("F2"); // MB
+
+                    // Berechne den Cache (hier als Beispiel, könnte je nach Bedarf angepasst werden)
+                    string cacheRam = MacOS.Helper.Zsh.Execute_Command("sysctl -n vm.page_cache");
+                    cache = (Convert.ToUInt64(cacheRam) / 1024d / 1024d).ToString("F2"); // MB
+
+                    // Berechne den "outsourced pool" (hier als Beispiel, Swap in macOS)
+                    string swapTotal = MacOS.Helper.Zsh.Execute_Command("sysctl -n vm.swapusage");
+                    string[] swapValues = swapTotal.Split(' ');
+                    string swapUsed = swapValues[2]; // Swap genutzt
+                    outsourced_pool = swapUsed;
+
+                    // Berechne 'available' und 'assured' aus den verfügbaren RAM-Werten
+                    assured = ((totalMemory - availableMemory) / 1024d / 1024d).ToString("F2"); // MB
+
+                    // Berechne 'not_outsourced_pool' (Speicher ohne Swap)
+                    not_outsourced_pool = ((totalMemory - Convert.ToUInt64(swapUsed)) / 1024d / 1024d).ToString("F2"); // MB
+
+                    // RAM-Slots abfragen, falls Informationen über DIMM verfügbar sind
+                    try
+                    {
+                        string slotsOutput = MacOS.Helper.Zsh.Execute_Command("system_profiler SPHardwareDataType");
+                        if (slotsOutput.Contains("DIMM"))
+                        {
+                            slots_used++;
+                            name = "DIMM Slot"; // Beispielwert, könnte durch genauere Abfrage ersetzt werden
+                            form_factor = "DIMM"; // Beispielwert, könnte durch genauere Abfrage ersetzt werden
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Information", "MacOS RAM slots", "Fehler beim Abrufen von RAM-Slots: " + ex.ToString());
+                    }
+
+                    // Erstellen des JSON-Objekts mit den gesammelten Daten
+                    RAM_Information ramInfo = new RAM_Information
+                    {
+                        name = name,
+                        available = available,
+                        assured = assured,
+                        cache = cache,
+                        outsourced_pool = outsourced_pool,
+                        not_outsourced_pool = not_outsourced_pool,
+                        speed = speed,
+                        slots = slots,
+                        slots_used = slots_used.ToString(),
+                        form_factor = form_factor,
+                        hardware_reserved = hardware_reserved,
+                    };
+
+                    ram_information_json = JsonSerializer.Serialize(ramInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                    Logging.Device_Information("Device_Information.Hardware.RAM_Information", "Gesammelte RAM-Informationen.", ram_information_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.RAM_Information", "RAM_Information", "Ein Fehler ist beim Abrufen der MacOS RAM-Daten aufgetreten: " + ex.ToString());
+                    return "{}";
+                }
+            }
+
 
             return ram_information_json;
         }
 
         public static int RAM_Usage()
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                try
+                if (OperatingSystem.IsWindows())
                 {
                     ulong totalVisibleMemorySize = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
                     ulong freePhysicalMemory = ulong.Parse(Windows.Helper.WMI.Search("root\\CIMV2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
@@ -647,28 +863,40 @@ namespace Global.Device_Information
 
                     return usedMemoryPercentageInt;
                 }
-                catch (Exception ex)
-                {
-                    Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
-                    return 0;
-                }
-            }
-            else if (OperatingSystem.IsLinux())    
-            {
-                try
+                else if (OperatingSystem.IsLinux())
                 {
                     // RAM utilisation under Linux
                     string ramUsage = Linux.Helper.Bash.Execute_Command("free | grep Mem | awk '{print $3/$2 * 100}'");
                     return Convert.ToInt32(ramUsage);
                 }
-                catch (Exception ex)
+                else if (OperatingSystem.IsMacOS())
                 {
-                    Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
+                    // Read the RAM usage from the system_profiler command
+                    string systemProfilerOutput = MacOS.Helper.Zsh.Execute_Command("system_profiler SPHardwareDataType");
+                    if (!string.IsNullOrEmpty(systemProfilerOutput))
+                    {
+                        // Search for the "Memory Usage" line
+                        foreach (string line in systemProfilerOutput.Split('\n'))
+                        {
+                            if (line.Contains("Memory Usage"))
+                            {
+                                // Extract the RAM usage
+                                string ramUsage = line.Split(':')[1].Trim();
+                                return Convert.ToInt32(ramUsage.Replace("%", ""));
+                            }
+                        }
+                    }
+
+                    return 0;
+                }
+                else
+                {
                     return 0;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
                 return 0;
             }
         }
@@ -891,6 +1119,83 @@ namespace Global.Device_Information
                     disks_json = "[]";
                 }
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // Liste für JSON-Strings der Festplatten
+                    List<string> disksJsonList = new List<string>();
+
+                    // Abrufen aller Festplatteninformationen mit diskutil
+                    string diskutilOutput = MacOS.Helper.Zsh.Execute_Command("diskutil list -json");
+
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-Output", diskutilOutput);
+
+                    // Deserialisierung der diskutil-Ausgabe
+                    var diskutilJson = JsonSerializer.Deserialize<JsonDocument>(diskutilOutput);
+                    var disks = diskutilJson.RootElement.GetProperty("devices").EnumerateArray();
+
+                    foreach (var device in disks)
+                    {
+                        try
+                        {
+                            string name = device.GetProperty("device_identifier").GetString() ?? "N/A";
+                            string size = device.GetProperty("size").GetString() ?? "N/A";
+                            string type = device.GetProperty("device_type").GetString() ?? "N/A";
+                            string model = device.GetProperty("model").GetString() ?? "N/A";
+                            string serial = device.GetProperty("serial_number").GetString() ?? "N/A";
+                            string fstype = device.GetProperty("file_system").GetString() ?? "N/A";
+                            string uuid = device.GetProperty("uuid").GetString() ?? "N/A";
+                            string state = device.GetProperty("state").GetString() ?? "N/A";
+
+                            // Berechne die Kapazität in GB (wenn verfügbar)
+                            double sizeInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB(size);
+
+                            // Verwende den Befehl df, um die aktuelle Nutzung des Dateisystems zu bestimmen
+                            string dfOutput = MacOS.Helper.Zsh.Execute_Command($"df -h /dev/{name} | tail -n 1");
+                            string[] dfParts = dfOutput.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                            string usagePercent = dfParts.Length > 4 ? dfParts[4] : "N/A"; // Prozentuale Nutzung
+
+                            // Entferne das Prozentzeichen von der Nutzung
+                            usagePercent = usagePercent.Replace("%", "");
+
+                            // Festplatteninformation erstellen
+                            Disks diskInfo = new Disks
+                            {
+                                letter = name,  // Auf macOS gibt es keine Laufwerksbuchstaben wie unter Windows, daher verwenden wir den Namen.
+                                label = model,
+                                model = model,
+                                firmware_revision = "N/A",  // macOS stellt keine Firmware-Version über diskutil bereit
+                                serial_number = serial,
+                                interface_type = "N/A",  // Kann mit diskutil nicht ermittelt werden
+                                drive_type = type,
+                                drive_format = fstype,
+                                drive_ready = state == "Online" ? "True" : "False", // Überprüfe den Zustand
+                                capacity = sizeInGB.ToString(),
+                                usage = usagePercent,
+                                status = state,
+                            };
+
+                            // Serialisiere das Festplattenobjekt in einen JSON-String und füge es der Liste hinzu
+                            string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
+                            disksJsonList.Add(disksJson);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Device_Information("Device_Information.Hardware.Disks", "Fehler beim Sammeln der Festplatteninformationen aus diskutil-Ausgabe.", ex.ToString());
+                        }
+                    }
+
+                    // Erstelle und logge das JSON-Array
+                    disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "Folgende Festplatteninformationen wurden gesammelt.", disks_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.Disks", "Allgemeiner Fehler in der Disks-Methode.", ex.ToString());
+                    disks_json = "[]";
+                }
+            }
             else
             {
                 return "[]";
@@ -915,6 +1220,21 @@ namespace Global.Device_Information
                 {
                     _ram = Linux.Helper.Bash.Execute_Command("grep MemTotal /proc/meminfo | awk '{print $2}'");
                     _ram = Math.Round(Convert.ToDouble(_ram) / 1024 / 1024).ToString();
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    string systemProfilerOutput = MacOS.Helper.Zsh.Execute_Command("system_profiler SPHardwareDataType");
+                    if (!string.IsNullOrEmpty(systemProfilerOutput))
+                    {
+                        foreach (string line in systemProfilerOutput.Split('\n'))
+                        {
+                            if (line.Contains("Memory:"))
+                            {
+                                _ram = line.Split(':')[1].Trim();
+                                break;
+                            }
+                        }
+                    }
                 }
 
                 return _ram;
@@ -1226,7 +1546,21 @@ namespace Global.Device_Information
                     Logging.Error("Device_Information.Hardware.Mainboard_Name", "General error.", ex.ToString());
                 }
             }
-           
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // Get the mainboard name
+                    _mainboard = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.model");
+                    // Get the mainboard manufacturer
+                    mainboard_manufacturer = MacOS.Helper.Zsh.Execute_Command("sysctl -n hw.vendor");
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Hardware.Mainboard_Name", "General error.", ex.ToString());
+                }
+            }
+
             return $"{mainboard_manufacturer} ({_mainboard})";
         }
 
@@ -1270,7 +1604,13 @@ namespace Global.Device_Information
 
                 Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
             }
-         
+            else if (OperatingSystem.IsMacOS())
+            {
+                // Get GPU
+                gpu = MacOS.Helper.Zsh.Execute_Command("system_profiler SPDisplaysDataType | grep Chipset");
+                Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
+            }
+
             return gpu;
         }
 
@@ -1281,10 +1621,6 @@ namespace Global.Device_Information
                 // Get TPM status
                 string tpm_status = Windows.Helper.WMI.Search("root\\cimv2\\Security\\MicrosoftTpm", "SELECT IsEnabled_InitialValue FROM Win32_Tpm", "IsEnabled_InitialValue");
                 return tpm_status;
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                return "N/A";
             }
             else
             {

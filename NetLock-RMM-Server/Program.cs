@@ -291,7 +291,7 @@ CommandHubSingleton.Instance.Initialize(hubContext);
 app.MapGet("/test", async context =>
 {
     context.Response.StatusCode = 200;
-    await context.Response.WriteAsync("Test successful.");
+    await context.Response.WriteAsync("ok");
 });
 
 //Check Version

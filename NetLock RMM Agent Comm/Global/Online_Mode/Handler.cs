@@ -308,7 +308,7 @@ namespace Global.Online_Mode
                     Device_Worker.tpm = Device_Information.Hardware.TPM_Status();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
                 }
-                else if (OperatingSystem.IsLinux())
+                else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
                     // Get ip_address_internal
                     Device_Worker.ip_address_internal = Network.Get_Local_IP_Address();

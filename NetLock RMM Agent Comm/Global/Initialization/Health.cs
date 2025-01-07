@@ -51,6 +51,7 @@ namespace Global.Initialization
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 Logging.Error("Global.Initialization.Health.Check_Directories", "", ex.ToString());
             }
         }

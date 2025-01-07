@@ -49,9 +49,8 @@ namespace Global.Device_Information
                     Logging.Error("NetLock_RMM_Comm_Agent_Windows.Helper.Windows.Windows_Version", "Collect windows product name & version", ex.ToString());
                     return "-";
                 }
-            }
-
-            if (OperatingSystem.IsLinux())
+            } 
+            else if (OperatingSystem.IsLinux())
             {
                 try
                 {
@@ -82,6 +81,42 @@ namespace Global.Device_Information
                 catch (Exception ex)
                 {
                     Logging.Error("LinuxHelper.UbuntuVersion", "Error retrieving Ubuntu version", ex.Message);
+                    return "-";
+                }
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // macOS Systeminformationen abrufen
+                    string systemInfo = MacOS.Helper.Zsh.Execute_Command("sw_vers");
+                    string productName = "-";
+                    string productVersion = "-";
+                    string buildVersion = "-";
+
+                    // Zeilen parsen
+                    string[] lines = systemInfo.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (string line in lines)
+                    {
+                        if (line.StartsWith("ProductName:"))
+                        {
+                            productName = line.Replace("ProductName:", "").Trim();
+                        }
+                        else if (line.StartsWith("ProductVersion:"))
+                        {
+                            productVersion = line.Replace("ProductVersion:", "").Trim();
+                        }
+                        else if (line.StartsWith("BuildVersion:"))
+                        {
+                            buildVersion = line.Replace("BuildVersion:", "").Trim();
+                        }
+                    }
+
+                    return $"{productName} {productVersion} (Build {buildVersion})";
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("MacOSHelper.VersionInfo", "Error retrieving macOS version", ex.Message);
                     return "-";
                 }
             }
@@ -183,23 +218,15 @@ namespace Global.Device_Information
 
         public static string Get_Last_Boot_Time()
         {
-            if (OperatingSystem.IsWindows())
+            try
             {
-                try
+                if (OperatingSystem.IsWindows())
                 {
                     string _last_boot = Windows.Helper.WMI.Search("root\\CIMV2", "SELECT LastBootUpTime FROM Win32_OperatingSystem", "LastBootUpTime");
                     DateTime last_boot_datetime = ManagementDateTimeConverter.ToDateTime(_last_boot);
                     return last_boot_datetime.ToString("dd.MM.yyyy HH:mm:ss");
                 }
-                catch (Exception ex)
-                {
-                    Logging.Error("Device_Information.Windows.Get_Last_Boot_Time", "Error retrieving last boot time", ex.Message);
-                    return null;
-                }
-            }
-            else if (OperatingSystem.IsLinux())
-            {
-                try
+                else if (OperatingSystem.IsLinux())
                 {
                     // Read uptime from /proc/uptime
                     string uptimeContent = File.ReadAllText("/proc/uptime");
@@ -215,14 +242,40 @@ namespace Global.Device_Information
                     // Log and return the result
                     return formattedBootTime;
                 }
-                catch (Exception ex)
+                else if (OperatingSystem.IsMacOS())
                 {
-                    Console.Error.WriteLine($"Error retrieving last boot time: {ex.ToString()}");
+                    // Get the last boot time from the system
+                    string rawBootTime = MacOS.Helper.Zsh.Execute_Command("sysctl kern.boottime");
+
+                    // Extract the seconds part using Regex
+                    var match = System.Text.RegularExpressions.Regex.Match(rawBootTime, @"sec\s*=\s*(\d+)");
+                    if (!match.Success)
+                    {
+                        throw new FormatException("Could not extract the boot time from the system output.");
+                    }
+
+                    string lastBootTime = match.Groups[1].Value;
+
+                    // Convert the last boot time to a DateTime object
+                    DateTime lastBootDateTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    lastBootDateTime = lastBootDateTime.AddSeconds(Convert.ToDouble(lastBootTime));
+
+                    // Format the last boot time
+                    string formattedBootTime = lastBootDateTime.ToString("dd.MM.yyyy HH:mm:ss");
+
+                    Logging.Error("Device_Information.MacOS.Get_Last_Boot_Time", "Last boot time", formattedBootTime);
+
+                    // Log and return the result
+                    return formattedBootTime;
+                }
+                else
+                {
                     return null;
                 }
             }
-            else
+            catch (Exception ex)
             {
+                Logging.Error("Device_Information.Windows.Get_Last_Boot_Time", "Error retrieving last boot time", ex.Message);
                 return null;
             }
         }

@@ -175,7 +175,7 @@ namespace NetLock_RMM_Agent_Comm
                 await Global.Initialization.Check_Connection.Check_Servers();
 
                 Logging.Debug("Device_Worker.Initialize", "", "COMM SERVER: " + Device_Worker.communication_server.ToString());
-                Logging.Debug("Device_Worker.Initialize", "", "Connection checked: " + communication_server_status.ToString());
+                Logging.Debug("Device_Worker.Initialize", "", "COMM server connection status: " + communication_server_status.ToString());
 
                 // Online mode
                 if (communication_server_status)

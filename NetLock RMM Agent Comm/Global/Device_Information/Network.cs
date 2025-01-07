@@ -193,6 +193,96 @@ namespace Global.Device_Information
                     return "[]";
                 }
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // Liste für JSON-Strings der Netzwerkadapter
+                    List<string> network_adapterJsonList = new List<string>();
+
+                    // Führe den Befehl 'ifconfig' aus, um die Liste der Netzwerkadapter zu erhalten
+                    string output = MacOS.Helper.Zsh.Execute_Command("ifconfig -l");
+
+                    // Splitte die Ausgabe in einzelne Netzwerkadapter
+                    var networkAdapters = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var adapter in networkAdapters)
+                    {
+                        string adapterName = adapter.Trim();
+
+                        // Führe den Befehl 'ifconfig <adapterName>' aus, um Details für jeden Adapter zu erhalten
+                        string output2 = MacOS.Helper.Zsh.Execute_Command($"ifconfig {adapterName}");
+
+                        // Variablen für die benötigten Informationen
+                        string ipv4Address = "N/A";
+                        string ipv6Address = "N/A";
+                        string macAddress = "N/A";
+                        string linkSpeed = "N/A"; // macOS hat keine direkte Möglichkeit, die Link-Geschwindigkeit zu ermitteln
+                        string subnetMask = "N/A";
+
+                        // IPv4-Adresse extrahieren
+                        var ipv4Match = Regex.Match(output2, @"inet\s+(\d+\.\d+\.\d+\.\d+)");
+                        if (ipv4Match.Success)
+                        {
+                            ipv4Address = ipv4Match.Groups[1].Value;
+                        }
+
+                        // IPv6-Adresse extrahieren
+                        var ipv6Match = Regex.Match(output2, @"inet6\s+([a-fA-F0-9:]+)");
+                        if (ipv6Match.Success)
+                        {
+                            ipv6Address = ipv6Match.Groups[1].Value;
+                        }
+
+                        // MAC-Adresse extrahieren
+                        var macMatch = Regex.Match(output2, @"ether\s+([a-fA-F0-9:]+)");
+                        if (macMatch.Success)
+                        {
+                            macAddress = macMatch.Groups[1].Value;
+                        }
+
+                        // Subnetzmaske extrahieren
+                        var subnetMaskMatch = Regex.Match(output2, @"netmask\s+([a-fA-F0-9]+)");
+                        if (subnetMaskMatch.Success)
+                        {
+                            subnetMask = subnetMaskMatch.Groups[1].Value;
+                        }
+
+                        // Erstelle ein Network_Adapters-Objekt
+                        Network_Adapters network_adapterInfo = new Network_Adapters
+                        {
+                            name = adapterName ?? "N/A",
+                            description = adapterName ?? "N/A", // Beschreibung kann weiter aus anderen Quellen abgerufen werden
+                            manufacturer = "N/A", // Weitere Tools erforderlich, um den Hersteller zu ermitteln
+                            type = "N/A", // Adaptertyp nicht direkt verfügbar
+                            link_speed = linkSpeed ?? "N/A", // Link-Geschwindigkeit (optional, benötigt spezielle Tools)
+                            service_name = "N/A", // macOS bietet dies in ähnlicher Weise nicht wie Windows
+                            dns_domain = "N/A", // DNS-Domain nicht direkt verfügbar
+                            dns_hostname = "N/A", // Hostname ist häufig separat
+                            dhcp_enabled = "N/A", // DHCP-Status kann über 'networksetup' überprüft werden
+                            ipv4_address = ipv4Address ?? "N/A",
+                            ipv6_address = ipv6Address ?? "N/A",
+                            subnet_mask = subnetMask ?? "N/A",
+                            mac_address = macAddress ?? "N/A",
+                            sending = "N/A", // Sendeinformationen sind hier nicht direkt verfügbar
+                            receive = "N/A", // Empfangen ebenfalls nicht ohne zusätzliche Tools
+                        };
+
+                        // Serialisiere das Network_Adapters-Objekt in einen JSON-String und füge es der Liste hinzu
+                        string network_adapterJson = JsonSerializer.Serialize(network_adapterInfo, new JsonSerializerOptions { WriteIndented = true });
+                        network_adapterJsonList.Add(network_adapterJson);
+                    }
+
+                    // Kombiniere alle JSON-Strings zu einem großen JSON-Array
+                    network_adapters_json = "[" + string.Join("," + Environment.NewLine, network_adapterJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Network.Network_Adapter_Information", "network_adapters_json", network_adapters_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Network.Network_Adapter_Information", "Error", ex.ToString());
+                    return "[]";
+                }
+            }
             else
             {
                 return "[]";

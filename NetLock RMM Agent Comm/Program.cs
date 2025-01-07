@@ -1,6 +1,9 @@
 using _x101.HWID_System;
 using Global.Helper;
 using NetLock_RMM_Agent_Comm;
+using System.Net;
+
+Console.WriteLine("Starting NetLock RMM Agent");
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -10,6 +13,8 @@ if (Logging.Check_Debug_Mode()) // debug_mode
     Console.WriteLine("Debug mode enabled");
     Global.Configuration.Agent.debug_mode = true;
 }
+else
+    Console.WriteLine("Debug mode disabled");
 
 Global.Configuration.Agent.debug_mode = true;
 
@@ -61,13 +66,21 @@ Global.Initialization.Health.Setup_Events_Virtual_Datatable();
 // Check if platform is Windows
 if (OperatingSystem.IsWindows())
 {
+    Console.WriteLine("Windows platform detected");
     Logging.Debug("Program.cs", "Startup", "Windows platform detected");
     builder.Services.AddHostedService<Windows_Worker>();
 }
 else if (OperatingSystem.IsLinux())
 {
+    Console.WriteLine("Linux platform detected");
     Logging.Debug("Program.cs", "Startup", "Linux platform detected");
     builder.Services.AddHostedService<Linux_Worker>();
+}
+else if (OperatingSystem.IsMacOS())
+{
+    Console.WriteLine("MacOS platform detected");
+    Logging.Debug("Program.cs", "Startup", "MacOS platform detected");
+    //builder.Services.AddHostedService<MacOS_Worker>();
 }
 
 var host = builder.Build();

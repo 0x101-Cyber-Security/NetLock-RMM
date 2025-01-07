@@ -267,7 +267,76 @@ namespace Global.Device_Information
                     Logging.Error("Device_Information.Process_List.Collect", "Failed.", ex.ToString());
                     return "[]";
                 }
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                // macOS process list
+                try
+                {
+                    int processorCount = Environment.ProcessorCount;
 
+                    // macOS-kompatibler ps-Befehl
+                    string processes_string = MacOS.Helper.Zsh.Execute_Command("ps -Ao pid,ppid,comm,user,%cpu,%mem,etime,command -r");
+
+                    Logging.Device_Information("Device_Information.Process_List.Collect", "ps output", processes_string);
+
+                    string[] processes = processes_string.Split('\n');
+
+                    // Die erste Zeile ignorieren (Header)
+                    for (int i = 1; i < processes.Length; i++)
+                    {
+                        string process = processes[i].Trim();
+                        if (string.IsNullOrWhiteSpace(process))
+                            continue;
+
+                        // Spalten korrekt extrahieren, cmd mit Regex
+                        string[] process_info = Regex.Split(process, @"\s+");
+                        if (process_info.Length < 8)
+                            continue;
+
+                        // Parse PID sicher
+                        if (!int.TryParse(process_info[0], out int pid))
+                        {
+                            Logging.Device_Information("Device_Information.Process_List.Collect", $"Skipping invalid PID: ", process_info[0]);
+                            continue;
+                        }
+
+                        string parent_pid = process_info[1];
+                        string name = process_info[2];
+                        string user = process_info[3];
+                        string cpu = process_info[4];
+
+                        double cpuUsage = double.Parse(cpu);
+                        double cpuUsagePerCore = cpuUsage / processorCount;
+                        cpu = Math.Round(cpuUsagePerCore).ToString();
+
+                        string ram = process_info[5];
+                        string created = process_info[6];
+
+                        // Der restliche Teil der cmd-Zeile wird hier zusammengefügt
+                        string commandline = string.Join(" ", process_info.Skip(7));
+
+                        Process_Data processInfo = new Process_Data
+                        {
+                            name = name,
+                            pid = pid.ToString(),
+                            parent_pid = parent_pid,
+                            cpu = cpu,
+                            ram = ram,
+                            user = user,
+                            created = created,
+                            cmd = commandline
+                        };
+
+                        string processJson = JsonSerializer.Serialize(processInfo, new JsonSerializerOptions { WriteIndented = true });
+                        processJsonList.Add(processJson);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Process_List.Collect", "Failed.", ex.ToString());
+                    return "[]";
+                }
             }
 
             // Currently not using parallel execution because of possible performance issues caused by the wmi process
