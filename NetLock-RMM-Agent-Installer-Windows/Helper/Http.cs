@@ -18,6 +18,7 @@ namespace NetLock_RMM_Agent_Installer_Windows.Helper
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM User Agent");
                     client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.Timeout = TimeSpan.FromMinutes(60);
 
                     HttpResponseMessage response = null;
 
@@ -59,6 +60,7 @@ namespace NetLock_RMM_Agent_Installer_Windows.Helper
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM User Agent");
                     client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.Timeout = TimeSpan.FromMinutes(1);
 
                     HttpResponseMessage response = null;
 
