@@ -10,7 +10,7 @@ namespace MacOS.Helper
 {
     internal class Zsh
     {
-        public static string Execute_Command(string command)
+        /*public static string Execute_Command(string command)
         {
             try
             {
@@ -47,9 +47,9 @@ namespace MacOS.Helper
                 Logging.Error("MacOS.Helper.Zsh.Execute_Command", "Error executing command", ex.ToString());
                 return "-";
             }
-        }
+        }*/
 
-        public static string Execute_Script(string type, string script)
+        public static string Execute_Script(string type, bool decode, string script)
         {
             try
             {
@@ -64,11 +64,14 @@ namespace MacOS.Helper
                 }
 
                 // Decode the script from Base64
-                byte[] script_data = Convert.FromBase64String(script);
-                string decoded_script = Encoding.UTF8.GetString(script_data);
-
-                // Convert Windows line endings (\r\n) to Unix line endings (\n)
-                decoded_script = decoded_script.Replace("\r\n", "\n");
+                if (decode)
+                {
+                    byte[] script_data = Convert.FromBase64String(script);
+                    string decoded_script = Encoding.UTF8.GetString(script_data);
+                    
+                    // Convert Windows line endings (\r\n) to Unix line endings (\n)
+                    script = decoded_script.Replace("\r\n", "\n");
+                }
 
                 // Create a new process
                 using (Process process = new Process())
@@ -87,7 +90,7 @@ namespace MacOS.Helper
                     // Write the cleaned script to the process's standard input
                     using (StreamWriter writer = process.StandardInput)
                     {
-                        writer.Write(decoded_script);
+                        writer.Write(script);
                     }
 
                     // Read the output and error

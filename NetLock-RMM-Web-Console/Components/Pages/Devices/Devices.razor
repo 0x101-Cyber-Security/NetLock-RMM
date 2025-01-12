@@ -649,7 +649,7 @@
                                                         <HeaderContent>
                                                             <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.date))" style="white-space: nowrap;">@Localizer["date"]</MudTh>
                                                             <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.processes))" style="white-space: nowrap;">@Localizer["processes"]</MudTh>
+                                                            <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.usage))" style="white-space: nowrap;">@Localizer["cpu usage"]</MudTh>
                                                             <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.threads))" style="white-space: nowrap;">Threads</MudTh>
                                                             <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.handles))" style="white-space: nowrap;">Handles</MudTh>
                                                             <MudTh Sortable="true" @onclick="() => device_information_cpu_history_table_sorted_column = (nameof(Device_Information_CPU_History_Entity.currentclockspeed))" style="white-space: nowrap;">@Localizer["speed_mhz"]</MudTh>
@@ -676,6 +676,12 @@
                                                             <MudTd DataLabel="Name" @onclick="() => Device_Information_CPU_History_RowClickHandler(device_information_cpu_history_row)" class="@Device_Information_CPU_History_GetRowClass(device_information_cpu_history_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
                                                                     &nbsp;@device_information_cpu_history_row.name
+                                                                </span>
+                                                            </MudTd>
+
+                                                            <MudTd DataLabel="@Localizer["cpu usage"]" @onclick="() => Device_Information_CPU_History_RowClickHandler(device_information_cpu_history_row)" class="@Device_Information_CPU_History_GetRowClass(device_information_cpu_history_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@device_information_cpu_history_row.usage
                                                                 </span>
                                                             </MudTd>
 

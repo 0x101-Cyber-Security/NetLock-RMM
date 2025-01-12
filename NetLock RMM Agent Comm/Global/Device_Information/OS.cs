@@ -89,7 +89,7 @@ namespace Global.Device_Information
                 try
                 {
                     // macOS Systeminformationen abrufen
-                    string systemInfo = MacOS.Helper.Zsh.Execute_Command("sw_vers");
+                    string systemInfo = MacOS.Helper.Zsh.Execute_Script("Version", false, "sw_vers");
                     string productName = "-";
                     string productVersion = "-";
                     string buildVersion = "-";
@@ -245,7 +245,7 @@ namespace Global.Device_Information
                 else if (OperatingSystem.IsMacOS())
                 {
                     // Get the last boot time from the system
-                    string rawBootTime = MacOS.Helper.Zsh.Execute_Command("sysctl kern.boottime");
+                    string rawBootTime = MacOS.Helper.Zsh.Execute_Script("Get_Last_Boot_Time", false, "sysctl kern.boottime");
 
                     // Extract the seconds part using Regex
                     var match = System.Text.RegularExpressions.Regex.Match(rawBootTime, @"sec\s*=\s*(\d+)");

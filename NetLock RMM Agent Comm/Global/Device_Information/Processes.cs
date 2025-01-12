@@ -276,7 +276,7 @@ namespace Global.Device_Information
                     int processorCount = Environment.ProcessorCount;
 
                     // macOS-kompatibler ps-Befehl
-                    string processes_string = MacOS.Helper.Zsh.Execute_Command("ps -Ao pid,ppid,comm,user,%cpu,%mem,etime,command -r");
+                    string processes_string = MacOS.Helper.Zsh.Execute_Script("Collect", false, "ps -Ao pid,ppid,comm,user,%cpu,%mem,etime,command -r");
 
                     Logging.Device_Information("Device_Information.Process_List.Collect", "ps output", processes_string);
 

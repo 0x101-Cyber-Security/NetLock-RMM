@@ -323,7 +323,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "domain", Device_Worker.domain);
 
                     // Get Antivirus solution
-                    Device_Worker.antivirus_solution = "-";
+                    Device_Worker.antivirus_solution = "N/A";
                     Logging.Debug("Online_Mode.Handler.Authenticate", "antivirus_solution", Device_Worker.antivirus_solution);
 
                     // Get Firewall status

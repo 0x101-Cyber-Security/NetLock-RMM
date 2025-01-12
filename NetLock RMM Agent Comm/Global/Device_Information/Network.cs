@@ -13,6 +13,7 @@ using static Global.Online_Mode.Handler;
 using Global.Helper;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Net;
 
 namespace Global.Device_Information
 {
@@ -197,83 +198,121 @@ namespace Global.Device_Information
             {
                 try
                 {
-                    // Liste für JSON-Strings der Netzwerkadapter
+                    // List for saving the JSON data for each network adapter
                     List<string> network_adapterJsonList = new List<string>();
 
-                    // Führe den Befehl 'ifconfig' aus, um die Liste der Netzwerkadapter zu erhalten
-                    string output = MacOS.Helper.Zsh.Execute_Command("ifconfig -l");
+                    // Execute the 'ifconfig' command to get the network adapter information
+                    string output = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, "ifconfig -a");
 
-                    // Splitte die Ausgabe in einzelne Netzwerkadapter
-                    var networkAdapters = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    // Divide the output into individual adapter sections
+                    var networkAdapters = output.Split(new[] { "\n\n" }, StringSplitOptions.RemoveEmptyEntries);
 
                     foreach (var adapter in networkAdapters)
                     {
-                        string adapterName = adapter.Trim();
+                        // Extract the name of the network adapter
+                        string[] lines = adapter.Split('\n');
+                        string adapterName = lines[0].Split(':')[0].Trim();
 
-                        // Führe den Befehl 'ifconfig <adapterName>' aus, um Details für jeden Adapter zu erhalten
-                        string output2 = MacOS.Helper.Zsh.Execute_Command($"ifconfig {adapterName}");
+                        // Adapter type
+                        string adapterType = "N/A";
 
-                        // Variablen für die benötigten Informationen
+                        try
+                        {
+                            string networksetupOutput = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, "networksetup -listallhardwareports");
+                            var match = Regex.Match(networksetupOutput, $"Hardware Port: (.+?)\\s+Device: {adapterName}");
+                            if (match.Success)
+                            {
+                                adapterType = match.Groups[1].Value;
+                            }
+                        }
+                        catch
+                        {
+                            adapterType = "Unknown"; // Fallback for errors
+                        }
+
+                        // Initialise variables
                         string ipv4Address = "N/A";
                         string ipv6Address = "N/A";
                         string macAddress = "N/A";
-                        string linkSpeed = "N/A"; // macOS hat keine direkte Möglichkeit, die Link-Geschwindigkeit zu ermitteln
-                        string subnetMask = "N/A";
 
-                        // IPv4-Adresse extrahieren
-                        var ipv4Match = Regex.Match(output2, @"inet\s+(\d+\.\d+\.\d+\.\d+)");
+                        // Extract IPv4 address
+                        var ipv4Match = Regex.Match(adapter, @"inet\s+(\d+\.\d+\.\d+\.\d+)");
                         if (ipv4Match.Success)
                         {
                             ipv4Address = ipv4Match.Groups[1].Value;
                         }
 
-                        // IPv6-Adresse extrahieren
-                        var ipv6Match = Regex.Match(output2, @"inet6\s+([a-fA-F0-9:]+)");
+                        // Extract IPv6 address
+                        var ipv6Match = Regex.Match(adapter, @"inet6\s+([a-fA-F0-9:]+)");
                         if (ipv6Match.Success)
                         {
                             ipv6Address = ipv6Match.Groups[1].Value;
                         }
 
-                        // MAC-Adresse extrahieren
-                        var macMatch = Regex.Match(output2, @"ether\s+([a-fA-F0-9:]+)");
+                        // Extract MAC address
+                        var macMatch = Regex.Match(adapter, @"ether\s+([a-fA-F0-9:]+)");
                         if (macMatch.Success)
                         {
                             macAddress = macMatch.Groups[1].Value;
                         }
 
-                        // Subnetzmaske extrahieren
-                        var subnetMaskMatch = Regex.Match(output2, @"netmask\s+([a-fA-F0-9]+)");
-                        if (subnetMaskMatch.Success)
-                        {
-                            subnetMask = subnetMaskMatch.Groups[1].Value;
-                        }
+                        // Extract link speed (using networksetup or system_profiler)
+                        string link_speed = "N/A";
+                        //var linkSpeedMatch = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, $"networksetup -getmedia {adapterName}");
+                        //link_speed = linkSpeedMatch.Trim();
 
-                        // Erstelle ein Network_Adapters-Objekt
+                        // DHCP status can be checked using ipconfig (if available)
+                        string dhcp_enabled = "N/A";
+
+                        var dhcpMatch = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, $"ipconfig getpacket {adapterName}");
+                        if (!string.IsNullOrEmpty(dhcpMatch) && dhcpMatch.Contains("dhcp"))
+                            dhcp_enabled = "true";
+                        else
+                            dhcp_enabled = "false";
+
+                        // Subnet mask extraction (ifconfig example)
+                        string subnet_mask = "N/A";
+                        var subnetMatch = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, $"ifconfig {adapterName}");
+                        var subnetMaskMatch = Regex.Match(subnetMatch, @"netmask\s+([a-fA-F0-9:]+)");
+
+                        if (subnetMaskMatch.Success)
+                            subnet_mask = subnetMaskMatch.Groups[1].Value;
+
+                        // Send and receive stats can be gathered from netstat or other tools
+                        string sending = "N/A";
+                        string receive = "N/A";
+
+                        //var netstatOutput = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, "netstat -i");
+
+                        sending = "N/A"; // Requires statistics tools such as 'netstat'
+                        receive = "N/A"; // Requires statistics tools such as 'netstat'
+
+                        // Create network adapter object
                         Network_Adapters network_adapterInfo = new Network_Adapters
                         {
                             name = adapterName ?? "N/A",
-                            description = adapterName ?? "N/A", // Beschreibung kann weiter aus anderen Quellen abgerufen werden
-                            manufacturer = "N/A", // Weitere Tools erforderlich, um den Hersteller zu ermitteln
-                            type = "N/A", // Adaptertyp nicht direkt verfügbar
-                            link_speed = linkSpeed ?? "N/A", // Link-Geschwindigkeit (optional, benötigt spezielle Tools)
-                            service_name = "N/A", // macOS bietet dies in ähnlicher Weise nicht wie Windows
-                            dns_domain = "N/A", // DNS-Domain nicht direkt verfügbar
-                            dns_hostname = "N/A", // Hostname ist häufig separat
-                            dhcp_enabled = "N/A", // DHCP-Status kann über 'networksetup' überprüft werden
+                            description = adapterName ?? "N/A",
+                            manufacturer = "N/A", // not available on MacOS
+                            type = adapterType, // Can be further specified if required
+                            link_speed = link_speed, // Link Speed requires advanced tools such as 'networksetup'
+                            service_name = adapterName ?? "N/A",
+                            dns_domain = "N/A", // Can be supplemented by further commands such as `scutil --dns`.
+                            dns_hostname = Dns.GetHostName(),
+                            dhcp_enabled = dhcp_enabled, // Requires advanced parsing or tools
                             ipv4_address = ipv4Address ?? "N/A",
                             ipv6_address = ipv6Address ?? "N/A",
-                            subnet_mask = subnetMask ?? "N/A",
+                            subnet_mask = subnet_mask, // Can be supplemented by further commands such as `ifconfig`.
                             mac_address = macAddress ?? "N/A",
-                            sending = "N/A", // Sendeinformationen sind hier nicht direkt verfügbar
-                            receive = "N/A", // Empfangen ebenfalls nicht ohne zusätzliche Tools
+                            sending = "N/A", // Requires statistics tools such as 'netstat'
+                            receive = "N/A" // Requires statistics tools such as 'netstat'
                         };
 
-                        // Serialisiere das Network_Adapters-Objekt in einen JSON-String und füge es der Liste hinzu
+                        // Create JSON of the network adapter and add to the list
                         string network_adapterJson = JsonSerializer.Serialize(network_adapterInfo, new JsonSerializerOptions { WriteIndented = true });
                         network_adapterJsonList.Add(network_adapterJson);
                     }
 
-                    // Kombiniere alle JSON-Strings zu einem großen JSON-Array
+                    // Complete output of the network adapter information
                     network_adapters_json = "[" + string.Join("," + Environment.NewLine, network_adapterJsonList) + "]";
                     Logging.Device_Information("Device_Information.Network.Network_Adapter_Information", "network_adapters_json", network_adapters_json);
                 }
@@ -282,7 +321,7 @@ namespace Global.Device_Information
                     Logging.Error("Device_Information.Network.Network_Adapter_Information", "Error", ex.ToString());
                     return "[]";
                 }
-            }
+            }       
             else
             {
                 return "[]";
