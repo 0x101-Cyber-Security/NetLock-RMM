@@ -12,38 +12,48 @@ namespace MacOS.Helper
         {
             double sizeInGB = 0;
 
-            // Überprüfen auf Größenangaben in GB
+            // Check for size specifications in GB
             if (size.EndsWith("G", StringComparison.OrdinalIgnoreCase))
             {
                 sizeInGB = double.Parse(size.Replace("G", "").Trim());
             }
-            // Überprüfen auf Größenangaben in MB (Umwandlung in GB)
+            // Check for size specifications in MB (conversion to GB)
             else if (size.EndsWith("M", StringComparison.OrdinalIgnoreCase))
             {
                 sizeInGB = double.Parse(size.Replace("M", "").Trim()) / 1024; // Umrechnung von MB in GB
             }
-            // Überprüfen auf Größenangaben in TB (Umwandlung in GB)
+            // Check for size specifications in TB (conversion to GB)
             else if (size.EndsWith("T", StringComparison.OrdinalIgnoreCase))
             {
                 sizeInGB = double.Parse(size.Replace("T", "").Trim()) * 1024; // Umrechnung von TB in GB
             }
-            // Überprüfen auf Größenangaben in Bytes (Umwandlung in GB)
+            // Check for size specifications in bytes (conversion to GB)
             else if (size.EndsWith("B", StringComparison.OrdinalIgnoreCase))
             {
                 sizeInGB = double.Parse(size.Replace("B", "").Trim()) / (1024 * 1024 * 1024); // Umrechnung von Bytes in GB
             }
-            // Fall ohne Einheit, Standardannahme: Größe in GB
+            // Case without unit, default assumption: size in GB
             else if (double.TryParse(size, out double sizeValue))
             {
                 sizeInGB = sizeValue;
             }
             else
             {
-                throw new ArgumentException("Ungültiges Größenformat.");
+                throw new ArgumentException("Invalid size format.");
             }
 
-            // Rundung auf 2 Dezimalstellen für eine bessere Anzeige
+            // Rounding to 2 decimal places for a better display
             return Math.Round(sizeInGB, 2);
         }
+
+        public static double Disks_Convert_Size_To_GB_Two(long sizeInBytes)
+        {
+            // Conversion from bytes to GB
+            double sizeInGB = (double)sizeInBytes / (1024 * 1024 * 1024);
+
+            // Rounding to 2 decimal places for a better display
+            return Math.Round(sizeInGB, 2);
+        }
+
     }
 }

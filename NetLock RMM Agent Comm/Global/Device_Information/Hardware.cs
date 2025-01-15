@@ -807,6 +807,7 @@ namespace Global.Device_Information
 
                             // Available memory = free + inactive + speculative
                             available = ((freeMemory + inactiveMemory + speculativeMemory) / (1024d * 1024d)).ToString("F2") + " MB";
+                            available = available.Replace(".", ",");
                             assured = (activeMemory / (1024d * 1024d)).ToString("F2");
                         }
                     }
@@ -821,6 +822,7 @@ namespace Global.Device_Information
                         {
                             ulong totalMemory = ulong.Parse(match.Groups[1].Value);
                             hardware_reserved = (totalMemory / (1024d * 1024d * 1024d)).ToString("F2") + " GB";
+                            hardware_reserved = hardware_reserved.Replace(".", ",");
                         }
                     }
 
@@ -882,23 +884,75 @@ namespace Global.Device_Information
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
-                    // Read the RAM usage from the system_profiler command
-                    string systemProfilerOutput = MacOS.Helper.Zsh.Execute_Script("RAM_Usage", false, "system_profiler SPHardwareDataType");
-                    if (!string.IsNullOrEmpty(systemProfilerOutput))
+                    try
                     {
-                        // Search for the "Memory Usage" line
-                        foreach (string line in systemProfilerOutput.Split('\n'))
+                        // Executes the vm_stat command and analyses the output
+                        string vmStatOutput = MacOS.Helper.Zsh.Execute_Script(
+                            "RAM_Usage",
+                            false,
+                            "vm_stat | perl -ne '/page size of (\\d+)/ and $size=$1; /Pages\\s+([^:]+)[^\\d]+(\\d+)/ and printf(\"%-16s %16.2f Mi\\n\", \"$1:\", $2 * $size / 1048576);'"
+                        );
+
+                        if (string.IsNullOrEmpty(vmStatOutput))
                         {
-                            if (line.Contains("Memory Usage"))
+                            throw new InvalidOperationException("No output from vm_stat command.");
+                        }
+
+                        // Initialisation of variables for calculation
+                        double freeMemory = 0;
+                        double activeMemory = 0;
+                        double inactiveMemory = 0;
+                        double speculativeMemory = 0;
+                        double wiredMemory = 0;
+                        double cachedMemory = 0; // Corresponds to macOS Cached Files
+                        double totalMemory = 0;
+
+                        // Parse die Ausgabe
+                        foreach (var line in vmStatOutput.Split('\n'))
+                        {
+                            if (line.StartsWith("free:"))
                             {
-                                // Extract the RAM usage
-                                string ramUsage = line.Split(':')[1].Trim();
-                                return Convert.ToInt32(ramUsage.Replace("%", ""));
+                                freeMemory = ExtractMemoryValue(line);
+                            }
+                            else if (line.StartsWith("active:"))
+                            {
+                                activeMemory = ExtractMemoryValue(line);
+                            }
+                            else if (line.StartsWith("inactive:"))
+                            {
+                                inactiveMemory = ExtractMemoryValue(line);
+                            }
+                            else if (line.StartsWith("speculative:"))
+                            {
+                                speculativeMemory = ExtractMemoryValue(line);
+                            }
+                            else if (line.StartsWith("wired down:"))
+                            {
+                                wiredMemory = ExtractMemoryValue(line);
+                            }
+                            else if (line.StartsWith("cached:"))
+                            {
+                                cachedMemory = ExtractMemoryValue(line); // Can be mapped on the basis of inactive/speculative
                             }
                         }
-                    }
 
-                    return 0;
+                        // Calculate total memory (in MiB)
+                        totalMemory = freeMemory + activeMemory + inactiveMemory + speculativeMemory + wiredMemory;
+
+                        // Memory used (only active + wired + optional speculative)
+                        double usedMemory = activeMemory + wiredMemory;
+
+                        // Calculate RAM utilisation in percent
+                        double memoryUsagePercentage = (usedMemory / totalMemory) * 100;
+
+                        // Output of the RAM utilisation in percent
+                        return Convert.ToInt32(Math.Round(memoryUsagePercentage));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Hardware.RAM_Usage", "Error calculating RAM usage.", ex.ToString());
+                        return 0;
+                    }
                 }
                 else
                 {
@@ -910,6 +964,13 @@ namespace Global.Device_Information
                 Logging.Error("Device_Information.Hardware.RAM_Utilization", "General error.", ex.ToString());
                 return 0;
             }
+        }
+
+        // Auxiliary method for extracting memory values (in MiB) for macOS
+        private static double ExtractMemoryValue(string line)
+        {
+            var match = Regex.Match(line, @"([\d\.]+)\s+Mi");
+            return match.Success ? double.Parse(match.Groups[1].Value) : 0;
         }
 
         public static string Disks()
@@ -1134,76 +1195,82 @@ namespace Global.Device_Information
             {
                 try
                 {
-                    // Liste für JSON-Strings der Festplatten
+                    // List of JSON data for each hard drive
                     List<string> disksJsonList = new List<string>();
 
-                    // Abrufen aller Festplatteninformationen mit diskutil
-                    string diskutilOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, "diskutil list -json");
+                    // Retrieve all hard disc information with diskutil in plist format
+                    string diskutilListOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, "diskutil list -plist");
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-list-Output", diskutilListOutput);
 
-                    Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-Output", diskutilOutput);
+                    // Parsing the plist output
+                    var plist = MacOS.Helper.Plist.Parse(diskutilListOutput);
+                    var allDisks = plist["AllDisksAndPartitions"] as IEnumerable<object>;
 
-                    // Deserialisierung der diskutil-Ausgabe
-                    var diskutilJson = JsonSerializer.Deserialize<JsonDocument>(diskutilOutput);
-                    var disks = diskutilJson.RootElement.GetProperty("devices").EnumerateArray();
-
-                    foreach (var device in disks)
+                    foreach (var diskObj in allDisks)
                     {
                         try
                         {
-                            string name = device.GetProperty("device_identifier").GetString() ?? "N/A";
-                            string size = device.GetProperty("size").GetString() ?? "N/A";
-                            string type = device.GetProperty("device_type").GetString() ?? "N/A";
-                            string model = device.GetProperty("model").GetString() ?? "N/A";
-                            string serial = device.GetProperty("serial_number").GetString() ?? "N/A";
-                            string fstype = device.GetProperty("file_system").GetString() ?? "N/A";
-                            string uuid = device.GetProperty("uuid").GetString() ?? "N/A";
-                            string state = device.GetProperty("state").GetString() ?? "N/A";
+                            var disk = diskObj as Dictionary<string, object>;
 
-                            // Berechne die Kapazität in GB (wenn verfügbar)
-                            double sizeInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB(size);
+                            string name = disk.GetValueOrDefault("DeviceIdentifier", "N/A").ToString();
+                            
+                            string size = (disk.GetValueOrDefault("Size", 0L) is long sizeBytes) ? sizeBytes.ToString() : "N/A";
+                            Console.WriteLine("size: " + size);
+                            string volumeName = disk.GetValueOrDefault("VolumeName", "N/A").ToString();
+                            string fileSystem = disk.GetValueOrDefault("FilesystemName", "N/A").ToString();
+                            bool isInternal = disk.GetValueOrDefault("Internal", false) is bool internalFlag && internalFlag;
 
-                            // Verwende den Befehl df, um die aktuelle Nutzung des Dateisystems zu bestimmen
-                            string dfOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, $"df -h /dev/{name} | tail -n 1");
-                            string[] dfParts = dfOutput.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            string usagePercent = dfParts.Length > 4 ? dfParts[4] : "N/A"; // Prozentuale Nutzung
+                            // Convert size to GB
+                            // Check that the size is not "N/A" and convert the value as long
+                            double sizeInGB = (size == "N/A" || !long.TryParse(size, out long sizeInBytes))
+                                                ? 0
+                                                : MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(sizeInBytes);
 
-                            // Entferne das Prozentzeichen von der Nutzung
-                            usagePercent = usagePercent.Replace("%", "");
+                            
 
-                            // Festplatteninformation erstellen
+                            Console.WriteLine("sizeInGB: " + sizeInGB);
+
+                            // Retrieve the status of the hard drive (optionally "diskutil info" can be used)
+                            string diskutilInfoOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, $"diskutil info -plist {name}");
+                            var infoPlist = MacOS.Helper.Plist.Parse(diskutilInfoOutput);
+                            string mediaName = infoPlist.GetValueOrDefault("MediaName", "N/A").ToString();
+                            string writable = infoPlist.GetValueOrDefault("Writable", false).ToString();
+                            string solidState = infoPlist.GetValueOrDefault("SolidState", false).ToString();
+
+                            // Compile disc information
                             Disks diskInfo = new Disks
                             {
-                                letter = name,  // Auf macOS gibt es keine Laufwerksbuchstaben wie unter Windows, daher verwenden wir den Namen.
-                                label = model,
-                                model = model,
-                                firmware_revision = "N/A",  // macOS stellt keine Firmware-Version über diskutil bereit
-                                serial_number = serial,
-                                interface_type = "N/A",  // Kann mit diskutil nicht ermittelt werden
-                                drive_type = type,
-                                drive_format = fstype,
-                                drive_ready = state == "Online" ? "True" : "False", // Überprüfe den Zustand
+                                letter = name,  // There are no drive letters in macOS, so we use the device identifier
+                                label = volumeName,
+                                model = mediaName,
+                                firmware_revision = "N/A",  // Firmware is not available via diskutil
+                                serial_number = "N/A",  // Serial is not available via diskutil
+                                interface_type = isInternal ? "Internal" : "External",
+                                drive_type = solidState == "True" ? "SSD" : "HDD",
+                                drive_format = fileSystem,
+                                drive_ready = writable == "True" ? "True" : "False",
                                 capacity = sizeInGB.ToString(),
-                                usage = usagePercent,
-                                status = state,
+                                usage = "N/A",  // macOS does not provide a direct usage percentage, needs to be calculated
+                                status = writable == "True" ? "Online" : "Offline",
                             };
 
-                            // Serialisiere das Festplattenobjekt in einen JSON-String und füge es der Liste hinzu
+                            // Serialise disc object and add to list
                             string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                             disksJsonList.Add(disksJson);
                         }
                         catch (Exception ex)
                         {
-                            Logging.Device_Information("Device_Information.Hardware.Disks", "Fehler beim Sammeln der Festplatteninformationen aus diskutil-Ausgabe.", ex.ToString());
+                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information from diskutil output.", ex.ToString());
                         }
                     }
 
-                    // Erstelle und logge das JSON-Array
+                    // JSON-Array erstellen und loggen
                     disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
-                    Logging.Device_Information("Device_Information.Hardware.Disks", "Folgende Festplatteninformationen wurden gesammelt.", disks_json);
+                    Logging.Device_Information("Device_Information.Hardware.Disks", "Collected the following disk information.", disks_json);
                 }
                 catch (Exception ex)
                 {
-                    Logging.Error("Device_Information.Hardware.Disks", "Allgemeiner Fehler in der Disks-Methode.", ex.ToString());
+                    Logging.Error("Device_Information.Hardware.Disks", "General error in Disks method.", ex.ToString());
                     disks_json = "[]";
                 }
             }
