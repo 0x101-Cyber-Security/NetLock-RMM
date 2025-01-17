@@ -288,6 +288,70 @@ namespace Global.Device_Information
                     applications_installed_json = "[]";
                 }
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                List<string> applications_installedJsonList = new List<string>();
+
+                try
+                {
+                    // Execute the command to get the list of installed applications
+                    var installedApplications = MacOS.Helper.Zsh.Execute_Script("Applications", false, "system_profiler SPApplicationsDataType -json");
+
+                    // Parse the JSON output from system_profiler
+                    var jsonOutput = JsonDocument.Parse(installedApplications);
+                    if (jsonOutput.RootElement.TryGetProperty("SPApplicationsDataType", out var applications))
+                    {
+                        // Iterate over each application
+                        foreach (var app in applications.EnumerateArray())
+                        {
+                            try
+                            {
+                                string name = app.TryGetProperty("_name", out var nameProperty) ? nameProperty.GetString() ?? "N/A" : "N/A";
+                                string version = app.TryGetProperty("version", out var versionProperty) ? versionProperty.GetString() ?? "N/A" : "N/A";
+                                string path = app.TryGetProperty("path", out var pathProperty) ? pathProperty.GetString() ?? "N/A" : "N/A";
+                                string vendor = app.TryGetProperty("obtained_from", out var vendorProperty) ? vendorProperty.GetString() ?? "N/A" : "N/A"; // Indicates App Store or direct
+                                string installDate = "N/A"; // macOS doesn't provide install date in SPApplicationsDataType
+
+                                // Compile application info into JSON format
+                                var applicationInfo = new Applications_Installed
+                                {
+                                    name = name,
+                                    version = version,
+                                    installed_date = installDate,
+                                    installation_path = path,
+                                    vendor = vendor,
+                                    uninstallation_string = $"sudo rm -rf \"{path}\"" // Approximation for uninstallation
+                                };
+
+                                string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
+
+                                lock (applications_installedJsonList)
+                                {
+                                    applications_installedJsonList.Add(applications_installedJson);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Error("Device_Information.Software.Applications_Installed", "Failed to process application info", ex.Message);
+                            }
+                        }
+
+                        // Create and log JSON array
+                        applications_installed_json = "[" + string.Join("," + Environment.NewLine, applications_installedJsonList) + "]";
+                        Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_installed_json", applications_installed_json);
+                    }
+                    else
+                    {
+                        Logging.Error("Device_Information.Software.Applications_Installed", "SPApplicationsDataType not found in JSON output", "");
+                        applications_installed_json = "[]";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (general error)", ex.ToString());
+                    applications_installed_json = "[]";
+                }
+            }
             else
             {
                 applications_installed_json = "[]";
@@ -298,96 +362,113 @@ namespace Global.Device_Information
 
         public static string Applications_Logon()
         {
-            try
+            if (OperatingSystem.IsWindows())
             {
-                // Create a list of JSON strings for each installed software
-                List<string> applications_logonJsonList = new List<string>();
-
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_StartupCommand"))
+                try
                 {
-                    foreach (ManagementObject reader in searcher.Get())
-                    {
-                        try
-                        {
-                            // Create logon object
-                            Applications_Logon logonInfo = new Applications_Logon
-                            {
-                                name = string.IsNullOrEmpty(reader["Name"].ToString()) ? "N/A" : reader["Name"].ToString(),
-                                path = string.IsNullOrEmpty(reader["Location"].ToString()) ? "N/A" : reader["Location"].ToString(),
-                                command = string.IsNullOrEmpty(reader["Command"].ToString()) ? "N/A" : reader["Command"].ToString(),
-                                user = string.IsNullOrEmpty(reader["User"].ToString()) ? "N/A" : reader["User"].ToString(),
-                                user_sid = string.IsNullOrEmpty(reader["UserSID"].ToString()) ? "N/A" : reader["UserSID"].ToString(),
-                            };
+                    // Create a list of JSON strings for each installed software
+                    List<string> applications_logonJsonList = new List<string>();
 
-                            // Serialize the logon object into a JSON string and add it to the list
-                            string logonJson = JsonSerializer.Serialize(logonInfo, new JsonSerializerOptions { WriteIndented = true });
-                            Logging.Device_Information("Device_Information.Software.Applications_Logon", "logonJson", logonJson);
-                            applications_logonJsonList.Add(logonJson);
-                        }
-                        catch (Exception ex)
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\CIMV2", "select * from Win32_StartupCommand"))
+                    {
+                        foreach (ManagementObject reader in searcher.Get())
                         {
-                            Logging.Device_Information("Device_Information.Software.Applications_Logon", "Failed.", ex.Message);
+                            try
+                            {
+                                // Create logon object
+                                Applications_Logon logonInfo = new Applications_Logon
+                                {
+                                    name = string.IsNullOrEmpty(reader["Name"].ToString()) ? "N/A" : reader["Name"].ToString(),
+                                    path = string.IsNullOrEmpty(reader["Location"].ToString()) ? "N/A" : reader["Location"].ToString(),
+                                    command = string.IsNullOrEmpty(reader["Command"].ToString()) ? "N/A" : reader["Command"].ToString(),
+                                    user = string.IsNullOrEmpty(reader["User"].ToString()) ? "N/A" : reader["User"].ToString(),
+                                    user_sid = string.IsNullOrEmpty(reader["UserSID"].ToString()) ? "N/A" : reader["UserSID"].ToString(),
+                                };
+
+                                // Serialize the logon object into a JSON string and add it to the list
+                                string logonJson = JsonSerializer.Serialize(logonInfo, new JsonSerializerOptions { WriteIndented = true });
+                                Logging.Device_Information("Device_Information.Software.Applications_Logon", "logonJson", logonJson);
+                                applications_logonJsonList.Add(logonJson);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Device_Information("Device_Information.Software.Applications_Logon", "Failed.", ex.Message);
+                            }
                         }
                     }
-                }
 
-                // Create and log JSON array
-                string applications_logon_json = "[" + string.Join("," + Environment.NewLine, applications_logonJsonList) + "]";
-                Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_logon_json", applications_logon_json);
-                return applications_logon_json;
+                    // Create and log JSON array
+                    string applications_logon_json = "[" + string.Join("," + Environment.NewLine, applications_logonJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_logon_json", applications_logon_json);
+                    return applications_logon_json;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Logon", "Collecting failed (general error)", ex.ToString());
+                    return "[]";
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logging.Error("Device_Information.Software.Applications_Logon", "Collecting failed (general error)", ex.ToString());
+                Logging.Debug("Device_Information.Software.Applications_Logon", "Operating system is not Windows", "");
                 return "[]";
             }
+
         }
 
         public static string Applications_Scheduled_Tasks()
         {
-            // Create a list of JSON strings for each installed software
-            List<string> applications_scheduled_tasksJsonList = new List<string>();
-
-            try
+            if (OperatingSystem.IsWindows())
             {
-                Microsoft.Win32.TaskScheduler.Task[] allTasks = TaskService.Instance.FindAllTasks(new Regex(".*")); // this will list ALL tasks for ALL users
+                // Create a list of JSON strings for each installed software
+                List<string> applications_scheduled_tasksJsonList = new List<string>();
 
-                foreach (Microsoft.Win32.TaskScheduler.Task tsk in allTasks)
+                try
                 {
-                    try
+                    Microsoft.Win32.TaskScheduler.Task[] allTasks = TaskService.Instance.FindAllTasks(new Regex(".*")); // this will list ALL tasks for ALL users
+
+                    foreach (Microsoft.Win32.TaskScheduler.Task tsk in allTasks)
                     {
-                        // Create scheduled task object
-                        Applications_Scheduled_Tasks scheduledTaskInfo = new Applications_Scheduled_Tasks
+                        try
                         {
-                            name = string.IsNullOrEmpty(tsk.Name) ? "N/A" : tsk.Name,
-                            status = string.IsNullOrEmpty(tsk.State.ToString()) ? "N/A" : tsk.State.ToString(),
-                            author = string.IsNullOrEmpty(tsk.Definition.Principal.Account) ? "N/A" : tsk.Definition.Principal.Account,
-                            path = string.IsNullOrEmpty(tsk.Path) ? "N/A" : tsk.Path,
-                            folder = string.IsNullOrEmpty(tsk.Folder.ToString()) ? "N/A" : tsk.Folder.ToString(),
-                            user_sid = string.IsNullOrEmpty(tsk.Definition.Principal.UserId) ? "N/A" : tsk.Definition.Principal.UserId,
-                            next_execution = string.IsNullOrEmpty(tsk.NextRunTime.ToString()) ? "N/A" : tsk.NextRunTime.ToString(),
-                            last_execution = string.IsNullOrEmpty(tsk.LastRunTime.ToString()) ? "N/A" : tsk.LastRunTime.ToString(),
-                        };
+                            // Create scheduled task object
+                            Applications_Scheduled_Tasks scheduledTaskInfo = new Applications_Scheduled_Tasks
+                            {
+                                name = string.IsNullOrEmpty(tsk.Name) ? "N/A" : tsk.Name,
+                                status = string.IsNullOrEmpty(tsk.State.ToString()) ? "N/A" : tsk.State.ToString(),
+                                author = string.IsNullOrEmpty(tsk.Definition.Principal.Account) ? "N/A" : tsk.Definition.Principal.Account,
+                                path = string.IsNullOrEmpty(tsk.Path) ? "N/A" : tsk.Path,
+                                folder = string.IsNullOrEmpty(tsk.Folder.ToString()) ? "N/A" : tsk.Folder.ToString(),
+                                user_sid = string.IsNullOrEmpty(tsk.Definition.Principal.UserId) ? "N/A" : tsk.Definition.Principal.UserId,
+                                next_execution = string.IsNullOrEmpty(tsk.NextRunTime.ToString()) ? "N/A" : tsk.NextRunTime.ToString(),
+                                last_execution = string.IsNullOrEmpty(tsk.LastRunTime.ToString()) ? "N/A" : tsk.LastRunTime.ToString(),
+                            };
 
-                        // Serialize the scheduled task object into a JSON string and add it to the list
-                        string scheduledTaskJson = JsonSerializer.Serialize(scheduledTaskInfo, new JsonSerializerOptions { WriteIndented = true });
-                        Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "scheduledTaskJson", scheduledTaskJson);
-                        applications_scheduled_tasksJsonList.Add(scheduledTaskJson);
+                            // Serialize the scheduled task object into a JSON string and add it to the list
+                            string scheduledTaskJson = JsonSerializer.Serialize(scheduledTaskInfo, new JsonSerializerOptions { WriteIndented = true });
+                            Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "scheduledTaskJson", scheduledTaskJson);
+                            applications_scheduled_tasksJsonList.Add(scheduledTaskJson);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "Failed.", ex.Message);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "Failed.", ex.Message);
-                    }
+
+                    // Create and log JSON array
+                    string applications_scheduled_tasks_json = "[" + string.Join("," + Environment.NewLine, applications_scheduled_tasksJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "applications_scheduled_tasks_json", applications_scheduled_tasks_json);
+                    return applications_scheduled_tasks_json;
                 }
-
-                // Create and log JSON array
-                string applications_scheduled_tasks_json = "[" + string.Join("," + Environment.NewLine, applications_scheduled_tasksJsonList) + "]";
-                Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "applications_scheduled_tasks_json", applications_scheduled_tasks_json);
-                return applications_scheduled_tasks_json;
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Scheduled_Tasks", "Collecting failed (general error)", ex.ToString());
+                    return "[]";
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logging.Error("Device_Information.Software.Applications_Scheduled_Tasks", "Collecting failed (general error)", ex.ToString());
+                Logging.Debug("Device_Information.Software.Applications_Scheduled_Tasks", "Operating system is not Windows", "");
                 return "[]";
             }
         }
@@ -503,8 +584,78 @@ namespace Global.Device_Information
                     applications_services_json = "[]";
                 }
             }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    // Create a list of JSON strings for each service
+                    List<string> applications_servicesJsonList = new List<string>();
+
+                    // Execute the launchctl command to list services
+                    string output = MacOS.Helper.Zsh.Execute_Script("Services", false, "launchctl list");
+
+                    // Split the output into lines (each line corresponds to a service)
+                    var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    foreach (var line in lines.Skip(1)) // Skip the header line
+                    {
+                        try
+                        {
+                            // Split the line by tabs or spaces to get individual fields (columns)
+                            var details = line.Split(new[] { '\t', ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                            if (details.Length >= 3)
+                            {
+                                string label = details[2].Trim();
+                                string status = details[1].Trim() == "0" ? "Running" : "Stopped";
+
+                                // Extract more details from the plist file
+                                string plistPath = $"/Library/LaunchDaemons/{label}.plist";
+                                string plistContent = MacOS.Helper.Zsh.Execute_Script("Plist", false, $"plutil -p \"{plistPath}\"");
+
+                                string startType = plistContent.Contains("KeepAlive") ? "Automatic" : "Manual";
+                                string loginAs = plistContent.Contains("UserName") ? "User Defined" : "root";
+
+                                string programPath = plistContent.Contains("Program") ? ExtractValueFromPlist(plistContent, "Program") : "N/A";
+
+                                Applications_Services serviceInfo = new Applications_Services
+                                {
+                                    name = label,
+                                    status = status,
+                                    description = "N/A",
+                                    display_name = label,
+                                    start_type = startType,
+                                    login_as = loginAs,
+                                    path = programPath
+                                };
+                                // Serialize the service object into a JSON string and add it to the list
+                                string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
+                                applications_servicesJsonList.Add(serviceJson);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Device_Information("Device_Information.Software.Applications_Services", "Failed to process line.", ex.Message);
+                        }
+                    }
+
+                    // Create and log the JSON array
+                    applications_services_json = "[" + string.Join("," + Environment.NewLine, applications_servicesJsonList) + "]";
+                    Logging.Device_Information("Device_Information.Software.Applications_Services", "applications_services_json", applications_services_json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Software.Applications_Services", "Collecting failed (general error)", ex.ToString());
+                    applications_services_json = "[]";
+                }
+            }
 
             return applications_services_json;
+        }
+        private static string ExtractValueFromPlist(string plistContent, string key)
+        {
+            var match = Regex.Match(plistContent, $"\"{key}\" => \"([^\"]+)\"");
+            return match.Success ? match.Groups[1].Value : "N/A";
         }
 
         public static string Applications_Drivers()
@@ -564,9 +715,10 @@ namespace Global.Device_Information
                     applications_drivers_json = "[]";
                 }
             }
-            else if (OperatingSystem.IsLinux())
+            else
             {
-                
+                Logging.Debug("Device_Information.Software.Applications_Drivers", "Operating system is not Windows", "");
+                applications_drivers_json = "[]";
             }
 
             return applications_drivers_json;

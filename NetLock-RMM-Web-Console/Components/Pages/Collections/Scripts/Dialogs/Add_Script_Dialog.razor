@@ -56,8 +56,8 @@
             }
             else if (platform == "MacOS")
             {
-                shell = "Bash";
-                <MudSelectItem Value="@("Bash")" />
+                shell = "Zsh";
+                <MudSelectItem Value="@("Zsh")" />
             }
         </MudSelect>
 
@@ -90,7 +90,7 @@
                     <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="MySQL_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
-            else if (platform == "Linux" || platform == "MacOS") 
+            else if (platform == "Linux") 
             {
                 if (shell == "Bash")
                 {
@@ -104,6 +104,21 @@
                     <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
+            else if (platform == "MacOS") 
+            {
+                if (shell == "Zsh")
+                {
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                        @foreach (var s in scripts)
+                        {
+                            <MudSelectItem Value="@s" />
+                        }
+                    </MudSelect>
+
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            
         }
 
     </DialogContent>

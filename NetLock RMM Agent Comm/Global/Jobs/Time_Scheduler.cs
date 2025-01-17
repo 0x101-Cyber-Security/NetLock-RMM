@@ -419,17 +419,12 @@ namespace Global.Jobs
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Execute job", "name: " + job_item.name + " id: " + job_item.id);
 
                         //Execute job
-                        // Windows
                         if (OperatingSystem.IsWindows())
                             result = Windows.Helper.PowerShell.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, job_item.script);
                         else if (OperatingSystem.IsLinux())
-                        {
                             result = Linux.Helper.Bash.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, job_item.script);
-                        }
                         else if (OperatingSystem.IsMacOS())
-                        {
-                            // placeholder
-                        }
+                            result = MacOS.Helper.Zsh.Execute_Script("Jobs.Time_Scheduler.Check_Execution (execute job) " + job_item.name, true, job_item.script);
 
                         // Insert event
                         Logging.Jobs("Jobs.Time_Scheduler.Check_Execution", "Job executed", "name: " + job_item.name + " id: " + job_item.id + " result: " + result);

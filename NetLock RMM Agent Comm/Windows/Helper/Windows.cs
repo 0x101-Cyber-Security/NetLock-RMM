@@ -50,29 +50,40 @@ namespace Windows.Helper
         public static string Antivirus_Products()
         {
             try
-            {   // Create a list of JSON strings for each antivirus product
+            {
+                // Create a list of JSON strings for each antivirus product
                 List<string> antivirus_productsJsonList = new List<string>();
 
-                // Get the antivirus products from the AntiVirusProduct class in the SecurityCenter2 namespace (Windows Security Center), which is available since Windows 10 version 1703 (Creators Update) and Windows Server 2016 (Windows 10 version 1607)
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT * FROM AntiVirusProduct"))
+                if (OperatingSystem.IsWindows())
                 {
-                    foreach (ManagementObject obj in searcher.Get())
+                    // Get the antivirus products from the AntiVirusProduct class in the SecurityCenter2 namespace (Windows Security Center), which is available since Windows 10 version 1703 (Creators Update) and Windows Server 2016 (Windows 10 version 1607)
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT * FROM AntiVirusProduct"))
                     {
-                        // Create antivirus product JSON object
-                        Antivirus_Products antivirus_productsInfo = new Antivirus_Products
+                        foreach (ManagementObject obj in searcher.Get())
                         {
-                            display_name = obj["displayName"]?.ToString() ?? "N/A",
-                            instance_guid = obj["instanceGuid"]?.ToString() ?? "N/A",
-                            path_to_signed_product_exe = obj["pathToSignedProductExe"]?.ToString() ?? "N/A",
-                            path_to_signed_reporting_exe = obj["pathToSignedReportingExe"]?.ToString() ?? "N/A",
-                            product_state = obj["productState"]?.ToString() ?? "N/A",
-                            timestamp = obj["timestamp"]?.ToString() ?? "N/A",
-                        };
+                            // Create antivirus product JSON object
+                            Antivirus_Products antivirus_productsInfo = new Antivirus_Products
+                            {
+                                display_name = obj["displayName"]?.ToString() ?? "N/A",
+                                instance_guid = obj["instanceGuid"]?.ToString() ?? "N/A",
+                                path_to_signed_product_exe = obj["pathToSignedProductExe"]?.ToString() ?? "N/A",
+                                path_to_signed_reporting_exe = obj["pathToSignedReportingExe"]?.ToString() ?? "N/A",
+                                product_state = obj["productState"]?.ToString() ?? "N/A",
+                                timestamp = obj["timestamp"]?.ToString() ?? "N/A",
+                            };
 
-                        // Serialize the antivirus product object into a JSON string and add it to the list
-                        string network_adapterJson = JsonSerializer.Serialize(antivirus_productsInfo, new JsonSerializerOptions { WriteIndented = true });
-                        antivirus_productsJsonList.Add(network_adapterJson);
+                            // Serialize the antivirus product object into a JSON string and add it to the list
+                            string network_adapterJson = JsonSerializer.Serialize(antivirus_productsInfo, new JsonSerializerOptions { WriteIndented = true });
+                            antivirus_productsJsonList.Add(network_adapterJson);
+                        }
                     }
+                }
+                else
+                {
+                    Logging.Debug("Device_Information.Windows.Antivirus_Products", "Operating system is not Windows", "");
+
+                    // If the operating system is not Windows, return an empty list
+                    return "[]";
                 }
 
                 // Return the list of antivirus products as a JSON array
@@ -89,51 +100,59 @@ namespace Windows.Helper
 
         public static string Antivirus_Information()
         {
-            try
+            if (OperatingSystem.IsWindows())
             {
-                string antivirus_information_json = "{}";
-
-                // Get the antivirus information from the AntiVirusProduct class in the SecurityCenter2 namespace (Windows Security Center), which is available since Windows 10 version 1703 (Creators Update) and Windows Server 2016 (Windows 10 version 1607)
-                using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("Root\\Microsoft\\Windows\\Defender", "SELECT * FROM MSFT_MpComputerStatus"))
+                try
                 {
-                    foreach (ManagementObject obj in searcher.Get())
-                    {
-                        // Create antivirus information object
-                        Antivirus_Information antivirus_information = new Antivirus_Information
-                        {
-                            amengineversion = obj["AMEngineVersion"]?.ToString() ?? "N/A",
-                            amproductversion = obj["AMProductVersion"]?.ToString() ?? "N/A",
-                            amserviceenabled = Convert.ToBoolean(obj["AMServiceEnabled"]),
-                            amserviceversion = obj["AMServiceVersion"]?.ToString() ?? "N/A",
-                            antispywareenabled = Convert.ToBoolean(obj["AntispywareEnabled"]),
-                            antispywaresignaturelastupdated = obj["AntispywareSignatureLastUpdated"]?.ToString() ?? "N/A",
-                            antispywaresignatureversion = obj["AntispywareSignatureVersion"]?.ToString() ?? "N/A",
-                            antivirusenabled = Convert.ToBoolean(obj["AntivirusEnabled"]),
-                            antivirussignaturelastupdated = obj["AntivirusSignatureLastUpdated"]?.ToString() ?? "N/A",
-                            antivirussignatureversion = obj["AntivirusSignatureVersion"]?.ToString() ?? "N/A",
-                            behaviormonitorenabled = Convert.ToBoolean(obj["BehaviorMonitorEnabled"]),
-                            ioavprotectionenabled = Convert.ToBoolean(obj["IoavProtectionEnabled"]),
-                            istamperprotected = Convert.ToBoolean(obj["IsTamperProtected"]),
-                            nisenabled = Convert.ToBoolean(obj["NISEnabled"]),
-                            nisengineversion = obj["NISEngineVersion"]?.ToString() ?? "N/A",
-                            nissignaturelastupdated = obj["NISSignatureLastUpdated"]?.ToString() ?? "N/A",
-                            nissignatureversion = obj["NISSignatureVersion"]?.ToString() ?? "N/A",
-                            onaccessprotectionenabled = Convert.ToBoolean(obj["OnAccessProtectionEnabled"]),
-                            realtimetprotectionenabled = Convert.ToBoolean(obj["RealTimeProtectionEnabled"]),
-                        };
-    
-                        // Serialize the antivirus information object into a JSON string
-                        antivirus_information_json = JsonSerializer.Serialize(antivirus_information, new JsonSerializerOptions { WriteIndented = true });
-                        Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "antivirus_information_json", antivirus_information_json);
-                    }
-                }
+                    string antivirus_information_json = "{}";
 
-                // Return the antivirus information as a JSON object
-                return antivirus_information_json;
+                    // Get the antivirus information from the AntiVirusProduct class in the SecurityCenter2 namespace (Windows Security Center), which is available since Windows 10 version 1703 (Creators Update) and Windows Server 2016 (Windows 10 version 1607)
+                    using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("Root\\Microsoft\\Windows\\Defender", "SELECT * FROM MSFT_MpComputerStatus"))
+                    {
+                        foreach (ManagementObject obj in searcher.Get())
+                        {
+                            // Create antivirus information object
+                            Antivirus_Information antivirus_information = new Antivirus_Information
+                            {
+                                amengineversion = obj["AMEngineVersion"]?.ToString() ?? "N/A",
+                                amproductversion = obj["AMProductVersion"]?.ToString() ?? "N/A",
+                                amserviceenabled = Convert.ToBoolean(obj["AMServiceEnabled"]),
+                                amserviceversion = obj["AMServiceVersion"]?.ToString() ?? "N/A",
+                                antispywareenabled = Convert.ToBoolean(obj["AntispywareEnabled"]),
+                                antispywaresignaturelastupdated = obj["AntispywareSignatureLastUpdated"]?.ToString() ?? "N/A",
+                                antispywaresignatureversion = obj["AntispywareSignatureVersion"]?.ToString() ?? "N/A",
+                                antivirusenabled = Convert.ToBoolean(obj["AntivirusEnabled"]),
+                                antivirussignaturelastupdated = obj["AntivirusSignatureLastUpdated"]?.ToString() ?? "N/A",
+                                antivirussignatureversion = obj["AntivirusSignatureVersion"]?.ToString() ?? "N/A",
+                                behaviormonitorenabled = Convert.ToBoolean(obj["BehaviorMonitorEnabled"]),
+                                ioavprotectionenabled = Convert.ToBoolean(obj["IoavProtectionEnabled"]),
+                                istamperprotected = Convert.ToBoolean(obj["IsTamperProtected"]),
+                                nisenabled = Convert.ToBoolean(obj["NISEnabled"]),
+                                nisengineversion = obj["NISEngineVersion"]?.ToString() ?? "N/A",
+                                nissignaturelastupdated = obj["NISSignatureLastUpdated"]?.ToString() ?? "N/A",
+                                nissignatureversion = obj["NISSignatureVersion"]?.ToString() ?? "N/A",
+                                onaccessprotectionenabled = Convert.ToBoolean(obj["OnAccessProtectionEnabled"]),
+                                realtimetprotectionenabled = Convert.ToBoolean(obj["RealTimeProtectionEnabled"]),
+                            };
+
+                            // Serialize the antivirus information object into a JSON string
+                            antivirus_information_json = JsonSerializer.Serialize(antivirus_information, new JsonSerializerOptions { WriteIndented = true });
+                            Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "antivirus_information_json", antivirus_information_json);
+                        }
+                    }
+
+                    // Return the antivirus information as a JSON object
+                    return antivirus_information_json;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.Windows.Antivirus_Information", "Collect antivirus information", ex.Message);
+                    return "{}";
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Logging.Error("Device_Information.Windows.Antivirus_Information", "Collect antivirus information", ex.Message);
+                Logging.Debug("Device_Information.Windows.Antivirus_Information", "Operating system is not Windows", "");
                 return "{}";
             }
         }

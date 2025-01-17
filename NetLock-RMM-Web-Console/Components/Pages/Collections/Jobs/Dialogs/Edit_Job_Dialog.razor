@@ -156,8 +156,8 @@
                 }
                 else if (platform == "MacOS")
                 {
-                    type_display = "Bash";
-                    <MudSelectItem Value="@("Bash")" />
+                    type_display = "Zsh";
+                    <MudSelectItem Value="@("Zsh")" />
                 }
             </MudSelect>
 
@@ -438,7 +438,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/manage_jobs Edit_Job_Dialog) -> Get_Scripts", "MySQL_Query", ex.Message);
+            Logging.Handler.Error("/manage_jobs Edit_Job_Dialog) -> Get_Scripts", "MySQL_Query", ex.ToString());
         }
         finally
         {

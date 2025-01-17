@@ -246,6 +246,9 @@ namespace Global.Device_Information
                         // Der restliche Teil der cmd-Zeile wird hier zusammengefügt
                         string commandline = string.Join(" ", process_info.Skip(7));
 
+                        // Get process path
+                        string processPath = Linux.Helper.Bash.Execute_Command($"readlink -f /proc/{pid}/exe");
+
                         Process_Data processInfo = new Process_Data
                         {
                             name = name,
@@ -255,6 +258,7 @@ namespace Global.Device_Information
                             ram = ram,
                             user = user,
                             created = created,
+                            path = processPath,
                             cmd = commandline
                         };
 
