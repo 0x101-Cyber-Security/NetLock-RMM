@@ -177,7 +177,7 @@
                         <MudTd DataLabel="@Localizer["firewall"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center;">
                                 
-                            @if (row.platform == "Windows")
+                            @if (row.platform == "Windows" || row.platform == "MacOS")
                             {
                                 @if (row.firewall_status == "True")
                                 {
@@ -266,7 +266,7 @@
 
                                             <MudText Class="mt-5 ml-2" Typo="Typo.h6">@Localizer["security"]</MudText>                  
                                             
-                                            @if (platform == "Windows")
+                                            @if (platform == "Windows" || platform == "MacOS")
                                             {
                                                 @if (firewall_status == "True")
                                                 {
@@ -1362,22 +1362,45 @@
                                                                 string[] driveLabels = { Localizer["free"] + $": {freeSpaceGB} (GB)", Localizer["occupied"] + $": {usedSpaceGB} (GB)" };
 
                                                                 <div class="ml-2">
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["model"]: @model</MudText>
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["firmware_revision"]: @firmware_revision</MudText>
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["serial_number"]: @serial_number</MudText>
-                                                                    <MudText Typo="Typo.body1">&nbsp;Interface: @interface_type</MudText>
+
+                                                                    @if (platform == "MacOS")
+                                                                    {
+                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["Name"]: @letter</MudText>
+                                                                    }
+
+                                                                    @if (platform != "MacOS")
+                                                                    {
+                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["model"]: @model</MudText>
+                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["firmware_revision"]: @firmware_revision</MudText>
+                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["serial_number"]: @serial_number</MudText>
+                                                                        <MudText Typo="Typo.body1">&nbsp;Interface: @interface_type</MudText>
+                                                                    }
+
                                                                     <MudText Typo="Typo.body1">&nbsp;@Localizer["type"]: @drive_type</MudText>
                                                                     <MudText Typo="Typo.body1">&nbsp;@Localizer["file_system"]: @drive_format</MudText>
                                                                     <MudText Typo="Typo.body1">&nbsp;@Localizer["ready"]: @drive_ready</MudText>
 
-                                                                    <MudChart ChartType="MudBlazor.ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@driveLabels" ChartOptions="drive_chart_options">
-                                                                        <CustomGraphics>
-                                                                            <text class="donut-inner-text" x="50%" y="30%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">@letter</text>
-                                                                            <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">(@label)</text>
-                                                                            <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="3">@capacityGB.ToString() (GB)</text>
-                                                                            <text class="donut-inner-text" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">@Localizer["occupied"]: @usage (%)</text>
-                                                                        </CustomGraphics>
-                                                                    </MudChart>
+                                                                    @if (platform == "MacOS")
+                                                                    {
+                                                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@driveLabels" ChartOptions="drive_chart_options">
+                                                                            <CustomGraphics>
+                                                                                <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="3">@capacityGB.ToString() (GB)</text>
+                                                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">@Localizer["occupied"]: @usage (%)</text>
+                                                                            </CustomGraphics>
+                                                                        </MudChart>
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="300px" Height="300px" InputData="@data" InputLabels="@driveLabels" ChartOptions="drive_chart_options">
+                                                                            <CustomGraphics>
+                                                                                <text class="donut-inner-text" x="50%" y="30%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">@letter</text>
+                                                                                <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">(@label)</text>
+                                                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="3">@capacityGB.ToString() (GB)</text>
+                                                                                <text class="donut-inner-text" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="2">@Localizer["occupied"]: @usage (%)</text>
+                                                                            </CustomGraphics>
+                                                                        </MudChart>
+                                                                    }
+                                                      
                                                                 </div>
                                                             }
                                                             catch (Exception ex)

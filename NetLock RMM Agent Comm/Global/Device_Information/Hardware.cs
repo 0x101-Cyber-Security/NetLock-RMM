@@ -22,6 +22,8 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Diagnostics.Eventing.Reader;
+using System.Diagnostics.Metrics;
+using System.Data.Entity.Infrastructure;
 
 namespace Global.Device_Information
 {
@@ -1158,7 +1160,7 @@ namespace Global.Device_Information
                             Disks diskInfo = new Disks
                             {
                                 letter = name,  // In Linux there are no drive letters as in Windows, so we use the name.
-                                label = model,
+                                label = "N/A",
                                 model = model,
                                 firmware_revision = "N/A",  // Linux does not provide a firmware version via lsblk
                                 serial_number = serial,
@@ -1195,74 +1197,122 @@ namespace Global.Device_Information
             {
                 try
                 {
-                    // List of JSON data for each hard drive
                     List<string> disksJsonList = new List<string>();
 
-                    // Retrieve all hard disc information with diskutil in plist format
-                    string diskutilListOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, "diskutil list -plist");
-                    Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-list-Output", diskutilListOutput);
+                    // List of JSON data for each hard drive
+                    DriveInfo[] allDrives = DriveInfo.GetDrives();
 
-                    // Parsing the plist output
-                    var plist = MacOS.Helper.Plist.Parse(diskutilListOutput);
-                    var allDisks = plist["AllDisksAndPartitions"] as IEnumerable<object>;
-
-                    foreach (var diskObj in allDisks)
+                    foreach (var drive in allDrives)
                     {
                         try
                         {
-                            var disk = diskObj as Dictionary<string, object>;
+                            // Read out total size in bytes
+                            long totalSizeInBytes = drive.TotalSize; // Assumption: TotalSize is a long
+                            long freeSpaceInBytes = drive.TotalFreeSpace; // Free memory space in bytes
 
-                            string name = disk.GetValueOrDefault("DeviceIdentifier", "N/A").ToString();
-                            
-                            string size = (disk.GetValueOrDefault("Size", 0L) is long sizeBytes) ? sizeBytes.ToString() : "N/A";
-                            Console.WriteLine("size: " + size);
-                            string volumeName = disk.GetValueOrDefault("VolumeName", "N/A").ToString();
-                            string fileSystem = disk.GetValueOrDefault("FilesystemName", "N/A").ToString();
-                            bool isInternal = disk.GetValueOrDefault("Internal", false) is bool internalFlag && internalFlag;
+                            // Convert sizes to GB
+                            double totalSizeInGB = totalSizeInBytes / (1024.0 * 1024.0 * 1024.0);
 
-                            // Convert size to GB
-                            // Check that the size is not "N/A" and convert the value as long
-                            double sizeInGB = (size == "N/A" || !long.TryParse(size, out long sizeInBytes))
-                                                ? 0
-                                                : MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(sizeInBytes);
+                            // Round the total size to two decimal places
+                            string sizeInGB = totalSizeInGB.ToString("F2");
 
-                            
+                            double freeSpaceInGB = freeSpaceInBytes / (1024.0 * 1024.0 * 1024.0);
 
-                            Console.WriteLine("sizeInGB: " + sizeInGB);
+                            // Calculation of utilisation in percent
+                            double usagePercentage = (totalSizeInBytes > 0)
+                                ? ((totalSizeInBytes - freeSpaceInBytes) / (double)totalSizeInBytes) * 100
+                                : 0;
 
-                            // Retrieve the status of the hard drive (optionally "diskutil info" can be used)
-                            string diskutilInfoOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, $"diskutil info -plist {name}");
-                            var infoPlist = MacOS.Helper.Plist.Parse(diskutilInfoOutput);
-                            string mediaName = infoPlist.GetValueOrDefault("MediaName", "N/A").ToString();
-                            string writable = infoPlist.GetValueOrDefault("Writable", false).ToString();
-                            string solidState = infoPlist.GetValueOrDefault("SolidState", false).ToString();
+                            // Round the utilisation percentage to two decimal places
+                            string usagePercent = usagePercentage.ToString("F2");
 
-                            // Compile disc information
+                            // Compile disk information
                             Disks diskInfo = new Disks
                             {
-                                letter = name,  // There are no drive letters in macOS, so we use the device identifier
-                                label = volumeName,
-                                model = mediaName,
-                                firmware_revision = "N/A",  // Firmware is not available via diskutil
-                                serial_number = "N/A",  // Serial is not available via diskutil
-                                interface_type = isInternal ? "Internal" : "External",
-                                drive_type = solidState == "True" ? "SSD" : "HDD",
-                                drive_format = fileSystem,
-                                drive_ready = writable == "True" ? "True" : "False",
-                                capacity = sizeInGB.ToString(),
-                                usage = "N/A",  // macOS does not provide a direct usage percentage, needs to be calculated
-                                status = writable == "True" ? "Online" : "Offline",
+                                letter = drive.Name,  // In Linux there are no drive letters as in Windows, so we use the name.
+                                label = "N/A", // drive.VolumeLabel is the same as drive.Name
+                                model = "N/A",
+                                firmware_revision = "N/A",  // Linux does not provide a firmware version via lsblk
+                                serial_number = "N/A",
+                                interface_type = "N/A",  // Cannot be retrieved in lsblk
+                                drive_type = drive.DriveType.ToString(),
+                                drive_format = drive.DriveFormat,
+                                drive_ready = drive.IsReady ? "True" : "False",
+                                capacity = sizeInGB,
+                                usage = usagePercent,
+                                status = "N/A",
                             };
 
-                            // Serialise disc object and add to list
+                            // Serialize disk object and add to list
                             string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                             disksJsonList.Add(disksJson);
                         }
                         catch (Exception ex)
                         {
-                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information from diskutil output.", ex.ToString());
+                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information.", ex.ToString());
                         }
                     }
+
+// List of JSON data for each hard drive
+/*List<string> disksJsonList = new List<string>();
+
+// Retrieve all hard disc information with diskutil in plist format
+string diskutilListOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, "diskutil list -plist");
+Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-list-Output", diskutilListOutput);
+
+// Parsing the plist output
+var plist = MacOS.Helper.Plist.Parse(diskutilListOutput);
+var allDisks = plist["AllDisksAndPartitions"] as IEnumerable<object>;
+
+foreach (var diskObj in allDisks)
+{
+    try
+    {
+        var disk = diskObj as Dictionary<string, object>;
+
+        string name = disk.GetValueOrDefault("DeviceIdentifier", "N/A").ToString();
+
+        // Retrieve diskutil info for this device
+        string diskutilInfoOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, $"diskutil info -plist {name}");
+        var infoPlist = MacOS.Helper.Plist.Parse(diskutilInfoOutput);
+
+        // Extract size details
+        long totalSizeInBytes = infoPlist.GetValueOrDefault("TotalSize", 0L) is long totalSize ? totalSize : 0;
+        long freeSpaceInBytes = infoPlist.GetValueOrDefault("FreeSpace", 0L) is long freeSpace ? freeSpace : 0;
+
+        // Calculate usage percentage
+        double usagePercentage = (totalSizeInBytes > 0)
+            ? ((totalSizeInBytes - freeSpaceInBytes) / (double)totalSizeInBytes) * 100
+            : 0;
+
+        // Convert sizes to GB
+        double totalSizeInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(totalSizeInBytes);
+        double freeSpaceInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(freeSpaceInBytes);
+
+        Console.WriteLine($"Total size: {totalSizeInGB} GB, Free space: {freeSpaceInGB} GB, Usage: {usagePercentage:F2}%");
+
+        // Compile disk information
+        Disks diskInfo = new Disks
+        {
+            letter = name,
+            label = disk.GetValueOrDefault("VolumeName", "N/A").ToString(),
+            model = infoPlist.GetValueOrDefault("MediaName", "N/A").ToString(),
+            drive_type = infoPlist.GetValueOrDefault("SolidState", false).ToString() == "True" ? "SSD" : "HDD",
+            drive_format = disk.GetValueOrDefault("FilesystemName", "N/A").ToString(),
+            capacity = totalSizeInGB.ToString("F2") + " GB",
+            usage = usagePercentage.ToString("F2") + " %", // Add usage in percentage
+            status = infoPlist.GetValueOrDefault("Writable", false).ToString() == "True" ? "Online" : "Offline",
+        };
+
+        // Serialize disk object and add to list
+        string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
+        disksJsonList.Add(disksJson);
+    }
+    catch (Exception ex)
+    {
+        Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information.", ex.ToString());
+    }
+}*/
 
                     // JSON-Array erstellen und loggen
                     disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
