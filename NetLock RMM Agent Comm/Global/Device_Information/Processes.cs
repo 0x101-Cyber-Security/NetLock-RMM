@@ -359,12 +359,6 @@ namespace Global.Device_Information
             }
         }
 
-        // Import sysconf for system information under linux. Related to determining the CPU usage of a process.
-        [DllImport("libc")]
-        private static extern long Sysconf(int name);
-
-        private const int _SC_CLK_TCK = 2; // sysconf-Konstante für Ticks pro Sekunde
-
         public static int Get_CPU_Usage_By_ID(int process_id)
         {
             try
@@ -454,6 +448,45 @@ namespace Global.Device_Information
 
                     Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "CPU-Prozessnutzung (ID): " + process_id, cpuUsageNormalizedRounded + "(%)");
                 }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    try
+                    {
+                        // Execute `ps` command to get process information
+                        string command = $"ps -p {process_id} -o %cpu";
+                        string output = MacOS.Helper.Zsh.Execute_Script("Get_CPU_Usage_By_ID", false, command);
+
+                        // Parse the output
+                        var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (lines.Length < 2)
+                        {
+                            throw new Exception($"Process with ID {process_id} does not exist or CPU usage information is not available.");
+                        }
+
+                        // The CPU usage is typically on the second line
+                        string cpuUsageString = lines[1].Trim();
+                        if (double.TryParse(cpuUsageString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double cpuUsage))
+                        {
+                            // Normalize CPU usage by number of cores
+                            int numCores = Environment.ProcessorCount;
+                            double cpuUsageNormalized = cpuUsage / numCores;
+
+                            // Round and return
+                            cpuUsageNormalizedRounded = (int)Math.Round(cpuUsageNormalized);
+                            Logging.Device_Information("Device_Information.Processes.Get_CPU_Usage_By_ID", "CPU process usage (id): " + process_id, cpuUsageNormalizedRounded + "(%)");
+                        }
+                        else
+                        {
+                            throw new Exception($"Unable to parse CPU usage for process ID {process_id}.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Processes.Get_CPU_Usage_By_ID", "Failed to get CPU usage.", ex.Message);
+                        cpuUsageNormalizedRounded = 0; // Default to 0 if an error occurs
+                    }
+                }
 
                 return cpuUsageNormalizedRounded;
             }
@@ -492,7 +525,7 @@ namespace Global.Device_Information
                         int totalMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "TotalVisibleMemorySize"));
                         int availableMemory = Convert.ToInt32(Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_OperatingSystem", "FreePhysicalMemory"));
 
-                        // Umrechnung in MB
+                        // Conversion to MB
                         double totalMemoryInMB = totalMemory / 1024.0;
                         double availableMemoryInMB = availableMemory / 1024.0;
 
@@ -583,6 +616,61 @@ namespace Global.Device_Information
                         return ramUsagePercentage;
                     }
                 }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    try
+                    {
+                        // Execute `ps` command to get memory usage percentage
+                        string output = MacOS.Helper.Zsh.Execute_Script("Get_RAM_Usage_By_ID", false, $"ps -p {process_id} -o %mem");
+
+                        // Parse the output
+                        var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (lines.Length < 2)
+                        {
+                            throw new Exception($"Process with ID {process_id} does not exist or memory usage information is not available.");
+                        }
+
+                        // The memory usage is typically on the second line
+                        string memoryUsageString = lines[1].Trim();
+
+                        if (!double.TryParse(memoryUsageString, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double memoryUsagePercentage))
+                        {
+                            throw new Exception($"Unable to parse memory usage percentage for process ID {process_id}.");
+                        }
+
+                        if (!percentage) // Return memory usage in MB
+                        {
+                            // Get total RAM in bytes
+                            string totalRamOutput = MacOS.Helper.Zsh.Execute_Script("Get_RAM_Usage_By_ID", false, "sysctl hw.memsize");
+
+                            // Parse total RAM size
+                            var totalRamParts = totalRamOutput.Split(':', StringSplitOptions.RemoveEmptyEntries);
+                            if (totalRamParts.Length < 2 || !long.TryParse(totalRamParts[1].Trim(), out long totalRamBytes))
+                            {
+                                throw new Exception("Failed to retrieve total RAM size.");
+                            }
+
+                            double totalRamMB = totalRamBytes / (1024.0 * 1024.0); // Convert bytes to MB
+
+                            // Calculate memory usage in MB
+                            double memoryUsageInMB = (memoryUsagePercentage / 100.0) * totalRamMB;
+
+                            Logging.Device_Information("Device_Information.Processes.Get_RAM_Usage_By_ID", $"Process RAM usage in MB (id: {process_id})", $"{Math.Round(memoryUsageInMB)} MB");
+
+                            return Convert.ToInt32(Math.Round(memoryUsageInMB));
+                        }
+                        else // Return memory usage as a percentage
+                        {
+                            Logging.Debug("Device_Information.Processes.Get_RAM_Usage_By_ID", "Memory usage percentage", memoryUsagePercentage.ToString());
+                            return Convert.ToInt32(memoryUsagePercentage);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Device_Information.Processes.Get_RAM_Usage_By_ID", "Failed to get RAM usage.", ex.ToString());
+                        return 0; // Return 0 on failure
+                    }
+                }
 
                 return 0;
             }
@@ -651,9 +739,13 @@ namespace Global.Device_Information
             {
                 return GetWindowsProcessOwner(process);
             }
-            else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+            else if (OperatingSystem.IsLinux())
             {
                 return GetLinuxProcessOwner(process);
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                return GetMacOSProcessOwner(process);
             }
             else
             {
@@ -728,6 +820,30 @@ namespace Global.Device_Information
             }
 
             return null;
+        }
+
+        private static string GetMacOSProcessOwner(Process process)
+        {
+            try
+            {
+                // Execute `ps` command to get process information
+                string command = $"ps -p {process.Id} -o user";
+                string output = MacOS.Helper.Zsh.Execute_Script("Get_Process_Owner", false, command);
+                // Parse the output
+                var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                if (lines.Length < 2)
+                {
+                    throw new Exception($"Process with ID {process.Id} does not exist or owner information is not available.");
+                }
+                // The owner is typically on the second line
+                string owner = lines[1].Trim();
+                return owner;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.Processes.Get_Process_Owner", "Failed to get process owner.", ex.Message);
+                return null;
+            }
         }
 
         /// <summary>

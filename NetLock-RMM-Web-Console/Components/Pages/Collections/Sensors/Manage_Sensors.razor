@@ -419,6 +419,10 @@
                             category_converted = Localizer["service"];
                         else if (reader["category"].ToString() == "4")
                             category_converted = "Ping";
+                        else if (reader["category"].ToString() == "5")
+                            category_converted = "Bash";
+                        else if (reader["category"].ToString() == "6")
+                            category_converted = "Zsh";
 
                         //sub_category
                         if (reader["sub_category"].ToString() == "0")
@@ -435,7 +439,7 @@
                             sub_category_converted = Localizer["process_ram_usage_mb"];
 
                         //clean categories for view
-                        if (category_converted == "Windows Eventlog" || category_converted == "PowerShell" || category_converted == Localizer["service"] || category_converted == "Ping")
+                        if (category_converted == "Windows Eventlog" || category_converted == "PowerShell" || category_converted == Localizer["service"] || category_converted == "Ping" || category_converted == "Bash" || category_converted == "Zsh")
                             sub_category_converted = "-";
 
                         Sensors_Entity entity = new Sensors_Entity //Create entity

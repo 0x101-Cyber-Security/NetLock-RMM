@@ -544,6 +544,8 @@ namespace Global.Sensors
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                         else if (OperatingSystem.IsLinux())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        else if (OperatingSystem.IsMacOS())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                         // Create action history if not exists
                                         if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -635,6 +637,8 @@ namespace Global.Sensors
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                         else if (OperatingSystem.IsLinux())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        else if (OperatingSystem.IsMacOS())
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                         // Create action history if not exists
                                         if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -779,6 +783,8 @@ namespace Global.Sensors
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsMacOS())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -872,6 +878,8 @@ namespace Global.Sensors
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsMacOS())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -967,6 +975,8 @@ namespace Global.Sensors
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsMacOS())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1060,6 +1070,8 @@ namespace Global.Sensors
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                    else if (OperatingSystem.IsMacOS())
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                                     // Create action history if not exists
                                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1154,7 +1166,7 @@ namespace Global.Sensors
 
                                     resource_usage = Device_Information.Processes.Get_CPU_Usage_By_ID(process.Id);
 
-                                    //Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
+                                    Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
 
                                     if (resource_usage > sensor_item.cpu_usage)
                                     {
@@ -1166,7 +1178,10 @@ namespace Global.Sensors
                                         string user = Device_Information.Processes.Process_Owner(process);
                                         string created = process.StartTime.ToString();
                                         string path = process.MainModule.FileName;
-                                        string cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
+                                        string cmd = "-";
+
+                                        if (OperatingSystem.IsWindows())
+                                            cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
 
                                         Process_Information proc_info = new Process_Information
                                         {
@@ -1189,6 +1204,8 @@ namespace Global.Sensors
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsMacOS())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1281,19 +1298,22 @@ namespace Global.Sensors
                                         continue;
 
                                     resource_usage = Device_Information.Processes.Get_RAM_Usage_By_ID(process.Id, true);
-                                    //Logging.Handler.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
+                                    Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization", "name: " + sensor_item.name + " id: " + sensor_item.id);
 
                                     if (resource_usage > sensor_item.ram_usage)
                                     {
                                         triggered = true;
 
-                                        //Logging.Handler.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization sensor triggered", "name: " + sensor_item.name + " id: " + sensor_item.id);
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "process cpu utilization sensor triggered", "name: " + sensor_item.name + " id: " + sensor_item.id);
 
                                         int ram = Device_Information.Processes.Get_RAM_Usage_By_ID(process.Id, false);
                                         string user = Device_Information.Processes.Process_Owner(process);
                                         string created = process.StartTime.ToString();
                                         string path = process.MainModule.FileName;
-                                        string cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
+                                        string cmd = "-";
+
+                                        if (OperatingSystem.IsWindows())
+                                            cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
 
                                         Process_Information proc_info = new Process_Information
                                         {
@@ -1316,6 +1336,8 @@ namespace Global.Sensors
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsMacOS())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1420,7 +1442,10 @@ namespace Global.Sensors
                                         string user = Device_Information.Processes.Process_Owner(process);
                                         string created = process.StartTime.ToString();
                                         string path = process.MainModule.FileName;
-                                        string cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
+                                        string cmd = "-";
+
+                                        if (OperatingSystem.IsWindows())
+                                            cmd = Windows.Helper.WMI.Search("root\\cimv2", "SELECT * FROM Win32_Process WHERE ProcessId = " + process.Id, "CommandLine");
 
                                         Process_Information proc_info = new Process_Information
                                         {
@@ -1443,6 +1468,8 @@ namespace Global.Sensors
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            else if (OperatingSystem.IsMacOS())
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                             // Create action history if not exists
                                             if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1708,14 +1735,17 @@ namespace Global.Sensors
                                 Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Check event log existence (" + sensor_item.eventlog + ")", event_log_existing.ToString() + " error: " + ex.ToString());
                             }
                         }
-                        else if (sensor_item.category == 2 || sensor_item.category == 5) // PowerShell or Linux Bash
+                        else if (sensor_item.category == 2 || sensor_item.category == 5 || sensor_item.category == 6) // PowerShell, Linux Bash or MacOS Zsh
                         {
                             string result = "-";
+
                             if (sensor_item.category == 2)
                                 result = Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
                             else if (sensor_item.category == 5)
                                 result = Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
-                            
+                            else if (sensor_item.category == 6)
+                                result = MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script);
+
                             if (Regex.IsMatch(result, sensor_item.expected_result))
                             {
                                 triggered = true;
@@ -1727,6 +1757,8 @@ namespace Global.Sensors
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                     else if (OperatingSystem.IsLinux())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    else if (OperatingSystem.IsMacOS())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -1763,6 +1795,8 @@ namespace Global.Sensors
                                     details_type_specification = "PowerShell";
                                 else if (sensor_item.category == 5)
                                     details_type_specification = "Bash";
+                                else if (sensor_item.category == 6)
+                                    details_type_specification = "Zsh";
 
                                 // Create event
                                 if (Configuration.Agent.language == "en-US")
@@ -1857,10 +1891,9 @@ namespace Global.Sensors
                                             sc.Start();
                                     }
                                 }
-                                else if (OperatingSystem.IsLinux())
+                                else if (OperatingSystem.IsLinux()) // marked for refactoring for cleaner code
                                 {
                                     string serviceCommand = $"systemctl is-active --quiet {sensor_item.service_name}";
-                                    string statusCommand = $"systemctl show -p ActiveState {sensor_item.service_name}";
 
                                     // Überprüfen, ob der Dienst aktiv ist. We do not use helper class here, because we need to verify the exit codes
                                     var serviceStatusProcess = new System.Diagnostics.Process
@@ -1926,6 +1959,69 @@ namespace Global.Sensors
                                         }
                                     }
                                 }
+                                else if (OperatingSystem.IsMacOS()) // Currently only supports system wide services
+                                {
+                                    string output = MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl list | grep {sensor_item.service_name}");
+
+                                    // Regex, um nur die Zeile für den spezifischen Dienst zu extrahieren
+                                    string pattern = $@"^\S+\s+\S+\s+{sensor_item.service_name}$";
+                                    var match = Regex.Match(output, pattern, RegexOptions.Multiline);
+
+                                    bool isServiceRunning = false;
+
+                                    if (match.Success)
+                                    {
+                                        // Extrahiere den PID-Wert oder das `-` am Anfang der Zeile
+                                        string[] parts = match.Value.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                        isServiceRunning = parts[0] != "-"; // "-" bedeutet, der Dienst läuft nicht
+                                    }
+
+                                    Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service status", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                    if (sensor_item.service_condition == 0 && isServiceRunning) // Wenn der Dienst läuft und die Bedingung 0 ist (sollte laufen)
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 1) // Stoppe den Dienst, wenn die Aktion 1 ist (soll gestoppt werden)
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running, stopping", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Stoppe den Dienst
+                                            MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl stop {sensor_item.service_name}.plist");
+                                        }
+                                    }
+                                    else if (sensor_item.service_condition == 1 && !isServiceRunning) // Wenn der Dienst gestoppt ist und die Bedingung 1 ist (simuliert als pausiert)
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 2) // Starte den Dienst neu, wenn die Aktion 2 ist
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, restarting", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Starte den Dienst neu
+                                            MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl stop {sensor_item.service_name}.plist");
+                                            MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl start {sensor_item.service_name}.plist");
+                                        }
+                                    }
+                                    else if (sensor_item.service_condition == 2 && !isServiceRunning) // Wenn der Dienst gestoppt ist und die Bedingung 2 ist (sollte gestoppt sein)
+                                    {
+                                        Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                        triggered = true;
+
+                                        if (sensor_item.service_action == 0) // Starte den Dienst, wenn die Aktion 0 ist (soll gestartet werden)
+                                        {
+                                            Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, starting", sensor_item.service_name + " " + isServiceRunning.ToString());
+
+                                            // Starte den Dienst
+                                            MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl start {sensor_item.service_name}.plist");
+                                        }
+                                    }
+                                }
                             }
                             catch (Exception ex)
                             {
@@ -1976,10 +2072,30 @@ namespace Global.Sensors
                                 // Create event
                                 if (Configuration.Agent.language == "en-US")
                                 {
+                                    // Convert the service condition to human readable text
+                                    string service_condition = String.Empty;
+
+                                    if (sensor_item.service_condition == 0)
+                                        service_condition = "running";
+                                    else if (sensor_item.service_condition == 1)
+                                        service_condition = "paused";
+                                    else if (sensor_item.service_condition == 2)
+                                        service_condition = "stopped";
+
+                                    // Convert the service action to human readable text
+                                    string service_action = String.Empty;
+
+                                    if (sensor_item.service_action == 0)
+                                        service_action = "start";
+                                    else if (sensor_item.service_action == 1)
+                                        service_action = "stop";
+                                    else if (sensor_item.service_action == 2)
+                                        service_action = "restart";
+
                                     if (service_start_failed)
                                     {
                                         details =
-                                            $"The service {sensor_item.service_name} was {sensor_item.service_condition}. The service action of {sensor_item.service_name} could not be performed." + Environment.NewLine + Environment.NewLine +
+                                            $"The service {sensor_item.service_name} was {service_condition}. The service action ({service_action}) could not be performed." + Environment.NewLine + Environment.NewLine +
                                             "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: Service" + Environment.NewLine +
@@ -1992,7 +2108,7 @@ namespace Global.Sensors
                                     else
                                     {
                                         details =
-                                            $"The service {sensor_item.service_name} was {sensor_item.service_condition}. The service action of {sensor_item.service_name} was successfully executed." + Environment.NewLine + Environment.NewLine +
+                                            $"The service {sensor_item.service_name} was {service_condition}. The service action ({service_action}) was successfully executed." + Environment.NewLine + Environment.NewLine +
                                             "Sensor name: " + sensor_item.name + Environment.NewLine +
                                             "Description: " + sensor_item.description + Environment.NewLine +
                                             "Type: Service" + Environment.NewLine +
@@ -2004,10 +2120,30 @@ namespace Global.Sensors
                                 }
                                 else if (Configuration.Agent.language == "de-DE")
                                 {
+                                    // Convert the service condition to human readable text
+                                    string service_condition = String.Empty;
+
+                                    if (sensor_item.service_condition == 0)
+                                        service_condition = "läuft";
+                                    else if (sensor_item.service_condition == 1)
+                                        service_condition = "pausiert";
+                                    else if (sensor_item.service_condition == 2)
+                                        service_condition = "gestoppt";
+
+                                    // Convert the service action to human readable text
+                                    string service_action = String.Empty;
+
+                                    if (sensor_item.service_action == 0)
+                                        service_action = "starten";
+                                    else if (sensor_item.service_action == 1)
+                                        service_action = "stoppen";
+                                    else if (sensor_item.service_action == 2)
+                                        service_action = "neu starten";
+
                                     if (service_start_failed)
                                     {
                                         details =
-                                            $"Der Dienst {sensor_item.service_name} war {sensor_item.service_condition}. Die Dienstaktion von " + sensor_item.service_name + " konnte nicht ausgeführt werden." + Environment.NewLine +
+                                            $"Der Dienst {sensor_item.service_name} war {service_condition}. Die Dienstaktion ({service_action}) konnte nicht ausgeführt werden." + Environment.NewLine +
                                             "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                             "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                             "Typ: Dienst" + Environment.NewLine +
@@ -2020,7 +2156,7 @@ namespace Global.Sensors
                                     else
                                     {
                                         details =
-                                            $"Der Dienst {sensor_item.service_name} war {sensor_item.service_condition}. Die Dienstaktion von " + sensor_item.service_name + " wurde erfolgreich ausgeführt." + Environment.NewLine +
+                                            $"Der Dienst {sensor_item.service_name} war {service_condition}. Die Dienstaktion ({service_action}) wurde erfolgreich ausgeführt." + Environment.NewLine +
                                             "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                             "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                             "Typ: Dienst" + Environment.NewLine +
@@ -2067,6 +2203,8 @@ namespace Global.Sensors
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                     else if (OperatingSystem.IsLinux())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                    else if (OperatingSystem.IsMacOS())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -2240,7 +2378,7 @@ namespace Global.Sensors
                                     {
                                         // CPU usage
                                         if (Configuration.Agent.language == "en-US")
-                                            Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Sensor CPU (" + sensor_item.name +  ")", notification_history + "History of actions" + Environment.NewLine + action_history, notifications_json, 2, 0);
+                                            Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Sensor CPU (" + sensor_item.name +  ")", notification_history + "History of actions" + Environment.NewLine + action_history, notifications_json, 2, 0); // type is 2 = sensor
                                         else if (Configuration.Agent.language == "de-DE")
                                             Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Sensor CPU (" + sensor_item.name + ")", notification_history + "Historie der Aktionen" + Environment.NewLine + action_history, notifications_json, 2, 1);
                                     }
@@ -2307,6 +2445,20 @@ namespace Global.Sensors
                                         Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Ping (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "History of actions" + Environment.NewLine + action_history, notifications_json, 2, 0);
                                     else if (Configuration.Agent.language == "de-DE")
                                         Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Ping (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "Historie der Aktionen" + Environment.NewLine + action_history, notifications_json, 2, 1);
+                                }
+                                else if (sensor_item.category == 5)
+                                {
+                                    if (Configuration.Agent.language == "en-US")
+                                        Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Bash (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "History of actions" + Environment.NewLine + action_history, notifications_json, 2, 0);
+                                    else if (Configuration.Agent.language == "de-DE")
+                                        Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Bash (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "Historie der Aktionen" + Environment.NewLine + action_history, notifications_json, 2, 1);
+                                }
+                                else if (sensor_item.category == 6)
+                                {
+                                    if (Configuration.Agent.language == "en-US")
+                                        Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Zsh (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "History of actions" + Environment.NewLine + action_history, notifications_json, 2, 0);
+                                    else if (Configuration.Agent.language == "de-DE")
+                                        Events.Logger.Insert_Event(sensor_item.severity.ToString(), "Sensor", "Zsh (" + sensor_item.name + ")", notification_history + Environment.NewLine + Environment.NewLine + "Historie der Aktionen" + Environment.NewLine + action_history, notifications_json, 2, 1);
                                 }
 
                                 sensor_item.notification_treshold_count = 0;

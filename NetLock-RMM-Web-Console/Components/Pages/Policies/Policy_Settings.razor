@@ -2290,9 +2290,17 @@
                         if (reader["category"].ToString() == "0")
                             category_converted = Localizer["utilization"];
                         else if (reader["category"].ToString() == "1")
-                            category_converted = "Windows Eventlog";
+                            category_converted = "Windows Eventlog";    
                         else if (reader["category"].ToString() == "2")
                             category_converted = "PowerShell";
+                        else if (reader["category"].ToString() == "3")
+                            category_converted = Localizer["service"];
+                        else if (reader["category"].ToString() == "4")
+                            category_converted = "Ping";
+                        else if (reader["category"].ToString() == "5")
+                            category_converted = "Bash";
+                        else if (reader["category"].ToString() == "6")
+                            category_converted = "Zsh";
 
                         //sub_category
                         if (reader["sub_category"].ToString() == "0")
@@ -2301,9 +2309,15 @@
                             sub_category_converted = Localizer["ram"];
                         else if (reader["sub_category"].ToString() == "2")
                             sub_category_converted = Localizer["drive"];
+                        else if (reader["sub_category"].ToString() == "3")
+                            sub_category_converted = Localizer["process_cpu_usage_%"];
+                        else if (reader["sub_category"].ToString() == "4")
+                            sub_category_converted = Localizer["process_ram_usage_%"];
+                        else if (reader["sub_category"].ToString() == "5")
+                            sub_category_converted = Localizer["process_ram_usage_mb"];
 
                         //clean categories for view
-                        if (category_converted == "Windows Eventlog" || category_converted == "PowerShell")
+                        if (category_converted == "Windows Eventlog" || category_converted == "PowerShell" || category_converted == Localizer["service"] || category_converted == "Ping" || category_converted == "Bash" || category_converted == "Zsh")
                             sub_category_converted = "-";
 
                         Sensors_Entity entity = new Sensors_Entity

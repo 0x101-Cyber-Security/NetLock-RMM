@@ -1380,101 +1380,49 @@ foreach (var diskObj in allDisks)
         {
             try
             {
-                if (OperatingSystem.IsWindows())
+                DriveInfo drive_info = new DriveInfo(drive_letter.ToString());
+
+                if (drive_info.IsReady)
                 {
-                    DriveInfo drive_info = new DriveInfo(drive_letter.ToString());
+                    // Available and total memory sizes in bytes
+                    long availableFreeSpaceBytes = drive_info.AvailableFreeSpace;
+                    long totalFreeSpaceBytes = drive_info.TotalFreeSpace;
+                    long totalSizeBytes = drive_info.TotalSize;
 
-                    if (drive_info.IsReady)
-                    {
-                        // Available and total memory sizes in bytes
-                        long availableFreeSpaceBytes = drive_info.AvailableFreeSpace;
-                        long totalFreeSpaceBytes = drive_info.TotalFreeSpace;
-                        long totalSizeBytes = drive_info.TotalSize;
+                    // Conversion from bytes to gigabytes
+                    double availableFreeSpaceGB = availableFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
+                    double totalFreeSpaceGB = totalFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
+                    double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
 
-                        // Conversion from bytes to gigabytes
-                        double availableFreeSpaceGB = availableFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
-                        double totalFreeSpaceGB = totalFreeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
-                        double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
+                    // Conversion from bytes to gigabytes
+                    double usedSpaceGB = totalSizeGB - availableFreeSpaceGB;
 
-                        // Conversion from bytes to gigabytes
-                        double usedSpaceGB = totalSizeGB - availableFreeSpaceGB;
+                    // Calculation of the memory space used as a percentage
+                    double usedSpacePercentage = 100 * (usedSpaceGB / totalSizeGB);
+                    usedSpacePercentage = Math.Round(usedSpacePercentage, 2);
 
-                        // Calculation of the memory space used as a percentage
-                        double usedSpacePercentage = 100 * (usedSpaceGB / totalSizeGB);
-                        usedSpacePercentage = Math.Round(usedSpacePercentage, 2);
+                    // Output of the results
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Total memory GB", totalSizeGB.ToString());
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Free memory GB", availableFreeSpaceGB.ToString());
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used GB", usedSpaceGB.ToString());
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used %", usedSpacePercentage.ToString());
 
-                        // Output of the results
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Total memory GB", totalSizeGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Free memory GB", availableFreeSpaceGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used GB", usedSpaceGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used %", usedSpacePercentage.ToString());
-
-                        if (type == 0) // More than X GB occupied
-                            return Convert.ToInt32(Math.Round(usedSpaceGB));
-                        else if (type == 1) // Less than X GB free
-                            return Convert.ToInt32(Math.Round(availableFreeSpaceGB));
-                        else if (type == 2) // More than X percent occupied
-                            return Convert.ToInt32(Math.Round(usedSpacePercentage));
-                        else if (type == 3) // Less than X percent free
-                            return Convert.ToInt32(Math.Round(100 - usedSpacePercentage));
-                        else
-                            return 0;
-                    }
+                    if (type == 0) // More than X GB occupied
+                        return Convert.ToInt32(Math.Round(usedSpaceGB));
+                    else if (type == 1) // Less than X GB free
+                        return Convert.ToInt32(Math.Round(availableFreeSpaceGB));
+                    else if (type == 2) // More than X percent occupied
+                        return Convert.ToInt32(Math.Round(usedSpacePercentage));
+                    else if (type == 3) // Less than X percent free
+                        return Convert.ToInt32(Math.Round(100 - usedSpacePercentage));
                     else
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "The drive is not ready", drive_letter.ToString());
+                        return 0;
                 }
-                else if (OperatingSystem.IsLinux())
+                else
                 {
-                    if (OperatingSystem.IsLinux())
-                    {
-                        string output = Linux.Helper.Bash.Execute_Command($"df -BG {drive_letter}"); // Ohne --output=avail,total, nutzt die Standardausgabe
-
-                        // Sample output from df: 
-                        // Dateisystem 1G-Blöcke Verwendet Verfügbar Verwendung% Eingehängt auf
-                        // /dev/sda1 50G 20G 30G 40% /
-
-                        var lines = output.Split('\n');
-                        if (lines.Length < 2)
-                        {
-                            return 0; // No valid issue received
-                        }
-
-                        var parts = lines[1].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                        // Parse the available and total memory sizes in GB
-                        long totalSizeGB = long.Parse(parts[1].Replace("G", ""));
-                        long availableFreeSpaceGB = long.Parse(parts[3].Replace("G", ""));
-
-                        // Calculate the memory used
-                        double usedSpaceGB = totalSizeGB - availableFreeSpaceGB;
-
-                        // Calculate the percentage of memory used
-                        double usedSpacePercentage = 100 * (usedSpaceGB / totalSizeGB);
-                        usedSpacePercentage = Math.Round(usedSpacePercentage, 2);
-
-                        // Output of the results
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Total memory GB", totalSizeGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Free memory GB", availableFreeSpaceGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used GB", usedSpaceGB.ToString());
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "Memory used %", usedSpacePercentage.ToString());
-
-                        // Return values based on the type
-                        if (type == 0) // More than X GB occupied
-                            return Convert.ToInt32(Math.Round((double)usedSpaceGB, 2)); // Conversion to double
-                        else if (type == 1) // Weniger als X GB frei
-                            return Convert.ToInt32(Math.Round((double)availableFreeSpaceGB, 2)); // Conversion to double
-                        else if (type == 2) // Mehr als X Prozent belegt
-                            return Convert.ToInt32(Math.Round(usedSpacePercentage, 2)); // Already a double
-                        else if (type == 3) // Weniger als X Prozent frei
-                            return Convert.ToInt32(Math.Round(100 - usedSpacePercentage, 2)); // Already a double
-                        else
-                            return 0;
-                    }
-
+                    Logging.Device_Information("Device_Information.Hardware.Drive_Usage", "The drive is not ready", drive_letter.ToString());
                     return 0;
                 }
-
-                return 0;
             }
             catch (Exception ex)
             {
@@ -1516,10 +1464,10 @@ foreach (var diskObj in allDisks)
         {
             try
             {
+                DriveInfo driveInfo = new DriveInfo(drivePath);
+
                 if (OperatingSystem.IsWindows())
                 {
-                    DriveInfo driveInfo = new DriveInfo(drivePath);
-
                     if (driveInfo.IsReady)
                     {
                         // Total memory size in bytes
@@ -1541,27 +1489,43 @@ foreach (var diskObj in allDisks)
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    string output = Linux.Helper.Bash.Execute_Command($"df -BG {drivePath}");
-
-                    string[] lines = output.Split('\n');
-
-                    if (lines.Length > 1)
+                    if (driveInfo.IsReady)
                     {
-                        // The second line contains the relevant information
-                        string[] columns = lines[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        // Total memory size in bytes
+                        long totalSizeBytes = driveInfo.TotalSize;
 
-                        // Die Gesamtgröße ist die zweite Spalte in der Ausgabe von df
-                        string totalSizeGBString = columns[1].Replace("G", ""); // Removes the "G"
-                        long totalSizeGB = Convert.ToInt64(totalSizeGBString);
+                        // Conversion from bytes to gigabytes
+                        double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
 
-                        // Logging the result
+                        // Logging the results
                         Logging.Device_Information("Device_Information.Hardware.Drive_Size", "Total memory GB", totalSizeGB.ToString());
 
-                        return Convert.ToInt32(Math.Round((double)totalSizeGB)); // Conversion from long to double
+                        return Convert.ToInt32(Math.Round(totalSizeGB));
                     }
                     else
                     {
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Size", "Unable to retrieve disk information", drivePath);
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Size", "The drive is not ready", drivePath);
+                        return 0;
+                    }
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    if (driveInfo.IsReady)
+                    {
+                        // Total memory size in bytes
+                        long totalSizeBytes = driveInfo.TotalSize;
+
+                        // Conversion from bytes to gigabytes
+                        double totalSizeGB = totalSizeBytes / (1024.0 * 1024.0 * 1024.0);
+
+                        // Logging the results
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Size", "Total memory GB", totalSizeGB.ToString());
+
+                        return Convert.ToInt32(Math.Round(totalSizeGB));
+                    }
+                    else
+                    {
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Size", "The drive is not ready", drivePath);
                         return 0;
                     }
                 }
@@ -1579,17 +1543,21 @@ foreach (var diskObj in allDisks)
         {
             try
             {
+                DriveInfo driveInfo = new DriveInfo(drivePath);
+
                 if (OperatingSystem.IsWindows())
                 {
-                    DriveInfo driveInfo = new DriveInfo(drivePath);
                     if (driveInfo.IsReady)
                     {
                         // Free memory space in bytes
                         long freeSpaceBytes = driveInfo.AvailableFreeSpace;
+                        
                         // Conversion from bytes to gigabytes
                         double freeSpaceGB = freeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
+                        
                         // Logging the results
                         Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Free space GB", freeSpaceGB.ToString());
+                        
                         return Convert.ToInt32(Math.Round(freeSpaceGB));
                     }
                     else
@@ -1620,6 +1588,27 @@ foreach (var diskObj in allDisks)
                     else
                     {
                         Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Unable to retrieve disk information", drivePath);
+                        return 0;
+                    }
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    if (driveInfo.IsReady)
+                    {
+                        // Free memory space in bytes
+                        long freeSpaceBytes = driveInfo.AvailableFreeSpace;
+
+                        // Conversion from bytes to gigabytes
+                        double freeSpaceGB = freeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
+
+                        // Logging the results
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Free space GB", freeSpaceGB.ToString());
+
+                        return Convert.ToInt32(Math.Round(freeSpaceGB));
+                    }
+                    else
+                    {
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "The drive is not ready", drivePath);
                         return 0;
                     }
                 }

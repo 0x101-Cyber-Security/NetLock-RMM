@@ -71,6 +71,8 @@ namespace MacOS.Helper
                     
                     // Convert Windows line endings (\r\n) to Unix line endings (\n)
                     script = decoded_script.Replace("\r\n", "\n");
+
+                    Logging.Debug("MacOS.Helper.Zsh.Execute_Script", "Decoded script", script);
                 }
 
                 // Create a new process
