@@ -70,36 +70,43 @@ namespace Linux.Helper
 
         public static double Disks_Convert_Size_To_GB(string size)
         {
-            double sizeInGB = 0;
+            try
+            {
+                double sizeInGB = 0;
 
-            // Check for size in GB
-            if (size.EndsWith("G", StringComparison.OrdinalIgnoreCase))
-            {
-                sizeInGB = double.Parse(size.Replace("G", "").Trim());
-            }
-            // Check for size in MB (convert to GB)
-            else if (size.EndsWith("M", StringComparison.OrdinalIgnoreCase))
-            {
-                sizeInGB = double.Parse(size.Replace("M", "").Trim()) / 1024; // Convert MB to GB
-            }
-            // Check for size in TB (convert to GB)
-            else if (size.EndsWith("T", StringComparison.OrdinalIgnoreCase))
-            {
-                sizeInGB = double.Parse(size.Replace("T", "").Trim()) * 1024; // Convert TB to GB
-            }
-            // Handle case without unit (assuming size is in GB)
-            else if (double.TryParse(size, out double sizeValue))
-            {
-                sizeInGB = sizeValue;
-            }
-            else
-            {
-                throw new ArgumentException("Invalid size format.");
-            }
+                // Check for size in GB
+                if (size.EndsWith("G", StringComparison.OrdinalIgnoreCase))
+                {
+                    sizeInGB = double.Parse(size.Replace("G", "").Trim());
+                }
+                // Check for size in MB (convert to GB)
+                else if (size.EndsWith("M", StringComparison.OrdinalIgnoreCase))
+                {
+                    sizeInGB = double.Parse(size.Replace("M", "").Trim()) / 1024; // Convert MB to GB
+                }
+                // Check for size in TB (convert to GB)
+                else if (size.EndsWith("T", StringComparison.OrdinalIgnoreCase))
+                {
+                    sizeInGB = double.Parse(size.Replace("T", "").Trim()) * 1024; // Convert TB to GB
+                }
+                // Handle case without unit (assuming size is in GB)
+                else if (double.TryParse(size, out double sizeValue))
+                {
+                    sizeInGB = sizeValue;
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid size format.");
+                }
 
-            // Round to 2 decimal places for better display
-            return Math.Round(sizeInGB, 2);
+                // Round to 2 decimal places for better display
+                return Math.Round(sizeInGB, 2);
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Linux.Helper.Linux.Disks_Convert_Size_To_GB", "", ex.ToString());
+                return 0;
+            }
         }
-
     }
 }

@@ -881,7 +881,7 @@ namespace Global.Device_Information
                 else if (OperatingSystem.IsLinux())
                 {
                     // RAM utilisation under Linux
-                    string ramUsage = Linux.Helper.Bash.Execute_Command("free | grep Mem | awk '{print $3/$2 * 100}'");
+                    string ramUsage = Linux.Helper.Bash.Execute_Script("RAM_Usage", false, "free | grep Mem | awk '{print $3/$2 * 100}'");
                     return Convert.ToInt32(ramUsage);
                 }
                 else if (OperatingSystem.IsMacOS())
@@ -1119,71 +1119,63 @@ namespace Global.Device_Information
             {
                 try
                 {
-                    // Create a list of JSON strings for each hard drive
                     List<string> disksJsonList = new List<string>();
-                    List<string> collectedLettersList = new List<string>();
 
-                    // Retrieve all hard drives
-                    string lsblkOutput = Linux.Helper.Bash.Execute_Command("lsblk -J -o NAME,SIZE,TYPE,MODEL,SERIAL,TRAN,ROTA,FSTYPE,UUID,STATE");
+                    // List of JSON data for each hard drive
+                    DriveInfo[] allDrives = DriveInfo.GetDrives();
 
-                    Logging.Device_Information("Device_Information.Hardware.Disks", "lsblk-Output", lsblkOutput);
-
-                    // Deserialising the lsblk output
-                    var lsblkJson = JsonSerializer.Deserialize<JsonDocument>(lsblkOutput);
-                    var blockdevices = lsblkJson.RootElement.GetProperty("blockdevices").EnumerateArray();
-
-                    foreach (var device in blockdevices)
+                    foreach (var drive in allDrives)
                     {
                         try
                         {
-                            string name = device.GetProperty("name").GetString() ?? "N/A";
-                            string size = device.GetProperty("size").GetString() ?? "N/A";
-                            string type = device.GetProperty("type").GetString() ?? "N/A";
-                            string model = device.GetProperty("model").GetString() ?? "N/A";
-                            string serial = device.GetProperty("serial").GetString() ?? "N/A";
-                            string fstype = device.GetProperty("fstype").GetString() ?? "N/A";
-                            string uuid = device.GetProperty("uuid").GetString() ?? "N/A";
-                            string state = device.GetProperty("state").GetString() ?? "N/A";
+                            // Read out total size in bytes
+                            long totalSizeInBytes = drive.TotalSize; // Assumption: TotalSize is a long
+                            long freeSpaceInBytes = drive.TotalFreeSpace; // Free memory space in bytes
 
-                            // Calculate the capacity in GB (if available)
-                            double sizeInGB = Linux.Helper.Linux.Disks_Convert_Size_To_GB(size);
+                            // Convert sizes to GB
+                            double totalSizeInGB = totalSizeInBytes / (1024.0 * 1024.0 * 1024.0);
 
-                            // Use the df command to determine the current usage of the file system
-                            string dfOutput = Linux.Helper.Bash.Execute_Command($"df -h /dev/{name} | tail -n 1");
-                            string[] dfParts = dfOutput.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                            string usagePercent = dfParts.Length > 4 ? dfParts[4] : "N/A"; // Percent usage
+                            // Round the total size to two decimal places
+                            string sizeInGB = totalSizeInGB.ToString("F2");
 
-                            // Remove the percentage sign from the usage
-                            usagePercent = usagePercent.Replace("%", "");
+                            double freeSpaceInGB = freeSpaceInBytes / (1024.0 * 1024.0 * 1024.0);
 
-                            // Die Information für jedes Laufwerk
+                            // Calculation of utilisation in percent
+                            double usagePercentage = (totalSizeInBytes > 0)
+                                ? ((totalSizeInBytes - freeSpaceInBytes) / (double)totalSizeInBytes) * 100
+                                : 0;
+
+                            // Round the utilisation percentage to two decimal places
+                            string usagePercent = usagePercentage.ToString("F2");
+
+                            // Compile disk information
                             Disks diskInfo = new Disks
                             {
-                                letter = name,  // In Linux there are no drive letters as in Windows, so we use the name.
-                                label = "N/A",
-                                model = model,
+                                letter = drive.Name,  // In Linux there are no drive letters as in Windows, so we use the name.
+                                label = "N/A", // drive.VolumeLabel is the same as drive.Name
+                                model = "N/A",
                                 firmware_revision = "N/A",  // Linux does not provide a firmware version via lsblk
-                                serial_number = serial,
+                                serial_number = "N/A",
                                 interface_type = "N/A",  // Cannot be retrieved in lsblk
-                                drive_type = type,
-                                drive_format = fstype,
-                                drive_ready = state == "running" ? "True" : "False",
-                                capacity = sizeInGB.ToString(),
+                                drive_type = drive.DriveType.ToString(),
+                                drive_format = drive.DriveFormat,
+                                drive_ready = drive.IsReady ? "True" : "False",
+                                capacity = sizeInGB,
                                 usage = usagePercent,
-                                status = state,
+                                status = "N/A",
                             };
 
-                            // Serialize the disk object into a JSON string and add it to the list
+                            // Serialize disk object and add to list
                             string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                             disksJsonList.Add(disksJson);
                         }
                         catch (Exception ex)
                         {
-                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information from lsblk output.", ex.ToString());
+                            Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information.", ex.ToString());
                         }
                     }
 
-                    // Create and log JSON array
+                    // JSON-Array erstellen und loggen
                     disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
                     Logging.Device_Information("Device_Information.Hardware.Disks", "Collected the following disk information.", disks_json);
                 }
@@ -1346,7 +1338,7 @@ foreach (var diskObj in allDisks)
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    _ram = Linux.Helper.Bash.Execute_Command("grep MemTotal /proc/meminfo | awk '{print $2}'");
+                    _ram = Linux.Helper.Bash.Execute_Script("RAM_Total", false, "grep MemTotal /proc/meminfo | awk '{print $2}'");
                     _ram = Math.Round(Convert.ToDouble(_ram) / 1024 / 1024).ToString();
                 }
                 else if (OperatingSystem.IsMacOS())
@@ -1568,26 +1560,22 @@ foreach (var diskObj in allDisks)
                 }
                 else if (OperatingSystem.IsLinux())
                 {
-                    string output = Linux.Helper.Bash.Execute_Command($"df -BG {drivePath}");
-                    string[] lines = output.Split('\n');
-
-                    if (lines.Length > 1)
+                    if (driveInfo.IsReady)
                     {
-                        // The second line contains the relevant information
-                        string[] columns = lines[1].Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        // Free memory space in bytes
+                        long freeSpaceBytes = driveInfo.AvailableFreeSpace;
 
-                        // The free storage space is shown in the third column
-                        string freeSpaceGBString = columns[3].Replace("G", ""); // Removes the "G"
-                        long freeSpaceGB = Convert.ToInt64(freeSpaceGBString);
+                        // Conversion from bytes to gigabytes
+                        double freeSpaceGB = freeSpaceBytes / (1024.0 * 1024.0 * 1024.0);
 
-                        // Logging the result
+                        // Logging the results
                         Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Free space GB", freeSpaceGB.ToString());
 
-                        return Convert.ToInt32(Math.Round((double)freeSpaceGB)); // Conversion from long to double
+                        return Convert.ToInt32(Math.Round(freeSpaceGB));
                     }
                     else
                     {
-                        Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "Unable to retrieve disk information", drivePath);
+                        Logging.Device_Information("Device_Information.Hardware.Drive_Free_Space", "The drive is not ready", drivePath);
                         return 0;
                     }
                 }
@@ -1645,7 +1633,7 @@ foreach (var diskObj in allDisks)
                     {
                         if (File.Exists(path))
                         {
-                            _mainboard = Linux.Helper.Bash.Execute_Command($"cat {path}").Trim();
+                            _mainboard = Linux.Helper.Bash.Execute_Script("Mainboard_Name", false, $"cat {path}").Trim();
                             break;
                         }
                     }
@@ -1655,7 +1643,7 @@ foreach (var diskObj in allDisks)
                     {
                         if (File.Exists(path))
                         {
-                            mainboard_manufacturer = Linux.Helper.Bash.Execute_Command($"cat {path}").Trim();
+                            mainboard_manufacturer = Linux.Helper.Bash.Execute_Script("Mainboard_Name", false, $"cat {path}").Trim();
                             break;
                         }
                     }
@@ -1696,7 +1684,7 @@ foreach (var diskObj in allDisks)
             else if (OperatingSystem.IsLinux())
             {
                 // Get GPU
-                gpu = Linux.Helper.Bash.Execute_Command("lshw -C display");
+                gpu = Linux.Helper.Bash.Execute_Script("GPU_Name", false, "lshw -C display");
 
                 var match_product = Regex.Match(gpu, $@"product:\s*(.+)");
                 var match_vendor = Regex.Match(gpu, $@"vendor:\s*(.+)");

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Global.Helper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -23,70 +24,94 @@ namespace MacOS.Helper
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error parsing plist: {ex.Message}");
+                Logging.Error("MacOS.Helper.Plist.Parse", "Error parsing plist", ex.ToString());
                 return new Dictionary<string, object>();
             }
         }
 
         private static Dictionary<string, object> ParseDict(XElement dictElement)
         {
-            var result = new Dictionary<string, object>();
-            var keys = dictElement.Elements("key").ToList();
-            for (int i = 0; i < keys.Count; i++)
+            try
             {
-                var key = keys[i].Value;
-                var valueElement = keys[i].NextNode as XElement;
-                if (valueElement != null)
+                var result = new Dictionary<string, object>();
+                var keys = dictElement.Elements("key").ToList();
+                for (int i = 0; i < keys.Count; i++)
                 {
-                    var value = ParseValue(valueElement);
-                    result[key] = value;
-                    //Console.WriteLine($"Parsed key: {key}, Value: {value}"); // Debug-Ausgabe
+                    var key = keys[i].Value;
+                    var valueElement = keys[i].NextNode as XElement;
+                    if (valueElement != null)
+                    {
+                        var value = ParseValue(valueElement);
+                        result[key] = value;
+                        //Console.WriteLine($"Parsed key: {key}, Value: {value}"); // Debug-Ausgabe
+                    }
                 }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                Logging.Error("MacOS.Helper.Plist.ParseDict", "Error parsing dict", ex.ToString());
+                return new Dictionary<string, object>();
+            }
         }
 
 
         private static object ParseValue(XElement valueElement)
         {
-            switch (valueElement.Name.LocalName)
+            try
             {
-                case "string":
-                    return valueElement.Value;
-                case "integer":
-                    if (long.TryParse(valueElement.Value, out var longValue))
-                    {
-                        return longValue;
-                    }
-                    else
-                    {
-                        //Console.WriteLine($"Error parsing integer: {valueElement.Value}");
-                        return 0L; // Default value if parsing fails
-                    }
-                case "real":
-                    return double.TryParse(valueElement.Value, out var doubleValue) ? doubleValue : 0.0;
-                case "true":
-                    return true;
-                case "false":
-                    return false;
-                case "dict":
-                    return ParseDict(valueElement);
-                case "array":
-                    return ParseArray(valueElement);
-                default:
-                    return valueElement.Value;
+                switch (valueElement.Name.LocalName)
+                {
+                    case "string":
+                        return valueElement.Value;
+                    case "integer":
+                        if (long.TryParse(valueElement.Value, out var longValue))
+                        {
+                            return longValue;
+                        }
+                        else
+                        {
+                            //Console.WriteLine($"Error parsing integer: {valueElement.Value}");
+                            return 0L; // Default value if parsing fails
+                        }
+                    case "real":
+                        return double.TryParse(valueElement.Value, out var doubleValue) ? doubleValue : 0.0;
+                    case "true":
+                        return true;
+                    case "false":
+                        return false;
+                    case "dict":
+                        return ParseDict(valueElement);
+                    case "array":
+                        return ParseArray(valueElement);
+                    default:
+                        return valueElement.Value;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("MacOS.Helper.Plist.ParseValue", "Error parsing value", ex.ToString());
+                return null;
             }
         }
 
 
         private static List<object> ParseArray(XElement arrayElement)
         {
-            var result = new List<object>();
-            foreach (var childElement in arrayElement.Elements())
+            try
             {
-                result.Add(ParseValue(childElement));
+                var result = new List<object>();
+                foreach (var childElement in arrayElement.Elements())
+                {
+                    result.Add(ParseValue(childElement));
+                }
+                return result;
             }
-            return result;
+            catch (Exception ex)
+            {
+                Logging.Error("MacOS.Helper.Plist.ParseArray", "Error parsing array", ex.ToString());
+                return new List<object>();
+            }
         }
     }
 }

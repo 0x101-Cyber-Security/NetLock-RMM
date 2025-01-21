@@ -3,14 +3,19 @@ using Global.Helper;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+Console.WriteLine("Starting NetLock RMM Remote Agent");
+
 // Check if debug mode
 if (Logging.Check_Debug_Mode()) // debug_mode
 {
     Console.WriteLine("Debug mode enabled");
     Global.Configuration.Agent.debug_mode = true;
 }
+else
+    Console.WriteLine("Debug mode disabled");
 
-Global.Configuration.Agent.debug_mode = true;
+// Thats dev stuff
+//Global.Configuration.Agent.debug_mode = true;
 
 if (OperatingSystem.IsWindows())
     Global.Configuration.Agent.platform = "Windows";

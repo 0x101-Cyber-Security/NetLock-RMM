@@ -120,7 +120,7 @@ namespace Global.Device_Information
                     List<string> network_adapterJsonList = new List<string>();
 
                     // Run the 'ip link' command to get a list of network adapters
-                    string output = Linux.Helper.Bash.Execute_Command("ip link show");
+                    string output = Linux.Helper.Bash.Execute_Script("Network_Adapter_Information", false, "ip link show");
 
                     // Split the output into individual network adapters
                     var networkAdapters = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -131,7 +131,7 @@ namespace Global.Device_Information
                         string adapterName = adapterDetails[1].Trim();
 
                         // Run the 'ip' command to get IP address and other details for each adapter
-                        string output2 = Linux.Helper.Bash.Execute_Command($"ip addr show {adapterName}");
+                        string output2 = Linux.Helper.Bash.Execute_Script("", false, $"ip addr show {adapterName}"); 
 
                         // Parse the necessary information from the second command output
                         string ipv4Address = "N/A";

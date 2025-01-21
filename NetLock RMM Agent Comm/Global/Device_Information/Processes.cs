@@ -206,7 +206,7 @@ namespace Global.Device_Information
                 {
                     int processorCount = Environment.ProcessorCount;
 
-                    string processes_string = Linux.Helper.Bash.Execute_Command("ps -eo pid,ppid,comm,user,pcpu,pmem,etime,cmd --sort=-pcpu -w");
+                    string processes_string = Linux.Helper.Bash.Execute_Script("Collect Application", false, "ps -eo pid,ppid,comm,user,pcpu,pmem,etime,cmd --sort=-pcpu -w");
 
                     Logging.Device_Information("Device_Information.Process_List.Collect", "ps output", processes_string);
 
@@ -247,7 +247,7 @@ namespace Global.Device_Information
                         string commandline = string.Join(" ", process_info.Skip(7));
 
                         // Get process path
-                        string processPath = Linux.Helper.Bash.Execute_Command($"readlink -f /proc/{pid}/exe");
+                        string processPath = Linux.Helper.Bash.Execute_Script("Collect Applications", false, $"readlink -f /proc/{pid}/exe");
 
                         Process_Data processInfo = new Process_Data
                         {
@@ -856,7 +856,7 @@ namespace Global.Device_Information
             try
             {
                 // Use "getent passwd" to fetch username from UID
-                string result = Linux.Helper.Bash.Execute_Command($"getent passwd {uid}");
+                string result = Linux.Helper.Bash.Execute_Script("GetUsernameFromUid", false, $"getent passwd {uid}");
                 if (!string.IsNullOrEmpty(result))
                 {
                     string[] parts = result.Split(':');

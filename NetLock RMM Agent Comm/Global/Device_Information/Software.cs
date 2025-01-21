@@ -237,7 +237,7 @@ namespace Global.Device_Information
                     try
                     {
                         // Execute the command to get the list of installed packages
-                        var installedPackages = Linux.Helper.Bash.Execute_Command("apt list --installed 2>/dev/null");
+                        var installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "apt list --installed 2>/dev/null");
 
                         // Split the output into lines
                         var lines = installedPackages.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -532,7 +532,7 @@ namespace Global.Device_Information
                     List<string> applications_servicesJsonList = new List<string>();
 
                     // Execute the systemctl command to list services
-                    string output = Linux.Helper.Bash.Execute_Command("systemctl list-units --type=service --all --no-pager");
+                    string output = Linux.Helper.Bash.Execute_Script("Applications_Services", false, "systemctl list-units --type=service --all --no-pager");
 
                     // Split the output into lines (each line corresponds to a service)
                     var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
@@ -736,7 +736,7 @@ namespace Global.Device_Information
                 try
                 {
                     // Verwenden von `awk` oder besserem Parsing-Befehl
-                    string output = Linux.Helper.Bash.Execute_Command("systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'");
+                    string output = Linux.Helper.Bash.Execute_Script("Cronjobs", false, "systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'");
                     // Aufteilen der Ausgabe in Zeilen
                     var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 

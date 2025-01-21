@@ -543,7 +543,7 @@ namespace Global.Sensors
                                         if (OperatingSystem.IsWindows())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                         else if (OperatingSystem.IsLinux())
-                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                         else if (OperatingSystem.IsMacOS())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -636,7 +636,7 @@ namespace Global.Sensors
                                         if (OperatingSystem.IsWindows())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                         else if (OperatingSystem.IsLinux())
-                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                            action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                         else if (OperatingSystem.IsMacOS())
                                             action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -782,7 +782,7 @@ namespace Global.Sensors
                                                     if (OperatingSystem.IsWindows())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
-                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                                     else if (OperatingSystem.IsMacOS())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -877,7 +877,7 @@ namespace Global.Sensors
                                                     if (OperatingSystem.IsWindows())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
-                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                                     else if (OperatingSystem.IsMacOS())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -974,7 +974,7 @@ namespace Global.Sensors
                                                     if (OperatingSystem.IsWindows())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
-                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                                     else if (OperatingSystem.IsMacOS())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1069,7 +1069,7 @@ namespace Global.Sensors
                                                     if (OperatingSystem.IsWindows())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                                     else if (OperatingSystem.IsLinux())
-                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                                     else if (OperatingSystem.IsMacOS())
                                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1203,7 +1203,7 @@ namespace Global.Sensors
                                             if (OperatingSystem.IsWindows())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
-                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                             else if (OperatingSystem.IsMacOS())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1335,7 +1335,7 @@ namespace Global.Sensors
                                             if (OperatingSystem.IsWindows())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
-                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                             else if (OperatingSystem.IsMacOS())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1467,7 +1467,7 @@ namespace Global.Sensors
                                             if (OperatingSystem.IsWindows())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                             else if (OperatingSystem.IsLinux())
-                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                                action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                             else if (OperatingSystem.IsMacOS())
                                                 action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1629,8 +1629,6 @@ namespace Global.Sensors
                                             {
                                                 if (OperatingSystem.IsWindows())
                                                     action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
-                                                else if (OperatingSystem.IsLinux())
-                                                    action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
 
                                                 action_already_executed = true;
                                             }
@@ -1742,7 +1740,7 @@ namespace Global.Sensors
                             if (sensor_item.category == 2)
                                 result = Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
                             else if (sensor_item.category == 5)
-                                result = Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script);
+                                result = Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script);
                             else if (sensor_item.category == 6)
                                 result = MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script);
 
@@ -1756,7 +1754,7 @@ namespace Global.Sensors
                                     if (OperatingSystem.IsWindows())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                     else if (OperatingSystem.IsLinux())
-                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                     else if (OperatingSystem.IsMacOS())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
@@ -1893,26 +1891,37 @@ namespace Global.Sensors
                                 }
                                 else if (OperatingSystem.IsLinux()) // marked for refactoring for cleaner code
                                 {
-                                    string serviceCommand = $"systemctl is-active --quiet {sensor_item.service_name}";
+                                    string serviceCommand = $"systemctl list-units --type=service | grep {sensor_item.service_name}";
 
-                                    // Überprüfen, ob der Dienst aktiv ist. We do not use helper class here, because we need to verify the exit codes
-                                    var serviceStatusProcess = new System.Diagnostics.Process
+                                    string output = Linux.Helper.Bash.Execute_Script("Service Sensor", false, serviceCommand);
+
+                                    // Regex to extract only the line for the specific service
+                                    string pattern = $@"^\S+\s+\S+\s+{Regex.Escape(sensor_item.service_name)}.*$";
+                                    var match = Regex.Match(output, pattern, RegexOptions.Multiline);
+
+                                    if (match.Success)
                                     {
-                                        StartInfo = new System.Diagnostics.ProcessStartInfo
-                                        {
-                                            FileName = "/bin/bash",
-                                            Arguments = $"-c \"{serviceCommand}\"",
-                                            RedirectStandardOutput = true,
-                                            RedirectStandardError = true,
-                                            UseShellExecute = false,
-                                            CreateNoWindow = true
-                                        }
-                                    };
+                                        Console.WriteLine($"Service {sensor_item.service_name} found: {match.Value}");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine($"Service {sensor_item.service_name} not found.");
+                                    }
 
-                                    serviceStatusProcess.Start();
-                                    serviceStatusProcess.WaitForExit();
+                                    bool isServiceRunning = false;
 
-                                    bool isServiceRunning = serviceStatusProcess.ExitCode == 0; // ExitCode 0 bedeutet, der Dienst läuft
+                                    if (match.Success)
+                                    {
+                                        // Break up the line using spaces (systemctl output is usually column-based)
+                                        string[] parts = match.Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                                        // The ACTIVE status is in the third column (index 2), depending on the output
+                                        // Possible values for ACTIVE are "active" or "inactive"
+                                        string activeStatus = parts.Length > 2 ? parts[2] : "";
+
+                                        // The service is considered to be running if the status is "active"
+                                        isServiceRunning = activeStatus == "active";
+                                    }
 
                                     Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service status", sensor_item.service_name + " " + isServiceRunning.ToString());
 
@@ -1927,7 +1936,7 @@ namespace Global.Sensors
                                             Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is running, stopping", sensor_item.service_name + " " + isServiceRunning.ToString());
 
                                             // Stoppe den Dienst
-                                            Linux.Helper.Bash.Execute_Command($"systemctl stop {sensor_item.service_name}");
+                                            Linux.Helper.Bash.Execute_Script("", false, $"systemctl stop {sensor_item.service_name}");
                                         }
                                     }
                                     else if (sensor_item.service_condition == 1 && !isServiceRunning) // if service is stopped and condition is 1 = paused (simuliert als gestoppt)
@@ -1941,7 +1950,7 @@ namespace Global.Sensors
                                             Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, restarting", sensor_item.service_name + " " + isServiceRunning.ToString());
 
                                             // Starte den Dienst
-                                            Linux.Helper.Bash.Execute_Command($"systemctl start {sensor_item.service_name}");
+                                            Linux.Helper.Bash.Execute_Script("Sensor", false, $"systemctl start {sensor_item.service_name}");
                                         }
                                     }
                                     else if (sensor_item.service_condition == 2 && !isServiceRunning) // if service is stopped and condition is 2 = stopped
@@ -1955,7 +1964,7 @@ namespace Global.Sensors
                                             Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service is stopped, starting", sensor_item.service_name + " " + isServiceRunning.ToString());
 
                                             // Starte den Dienst
-                                            Linux.Helper.Bash.Execute_Command($"systemctl start {sensor_item.service_name}");
+                                            Linux.Helper.Bash.Execute_Script("Sensor", false, $"systemctl start {sensor_item.service_name}");
                                         }
                                     }
                                 }
@@ -2038,7 +2047,9 @@ namespace Global.Sensors
                                     if (OperatingSystem.IsWindows())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                     else if (OperatingSystem.IsLinux())
-                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
+                                    else if (OperatingSystem.IsMacOS())
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 
                                     // Create action history if not exists
                                     if (String.IsNullOrEmpty(sensor_item.action_history))
@@ -2202,7 +2213,7 @@ namespace Global.Sensors
                                     if (OperatingSystem.IsWindows())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Windows.Helper.PowerShell.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
                                     else if (OperatingSystem.IsLinux())
-                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, sensor_item.script_action);
+                                        action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + Linux.Helper.Bash.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
                                     else if (OperatingSystem.IsMacOS())
                                         action_result += Environment.NewLine + Environment.NewLine + " [" + DateTime.Now.ToString() + "]" + Environment.NewLine + MacOS.Helper.Zsh.Execute_Script("Sensors.Time_Scheduler.Check_Execution (execute action) " + sensor_item.name, true, sensor_item.script_action);
 

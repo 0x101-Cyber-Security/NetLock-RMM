@@ -25,6 +25,14 @@ namespace NetLock_RMM_Agent_Remote
             {
                 return "/var";
             }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return "/Library/Application Support";
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                return "/Library/Application Support";
+            }
             else
             {
                 throw new NotSupportedException("Unsupported OS");
@@ -40,6 +48,14 @@ namespace NetLock_RMM_Agent_Remote
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
                 return "/usr";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return "/Applications";
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                return "/Applications";
             }
             else
             {

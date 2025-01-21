@@ -329,21 +329,23 @@ namespace NetLock_RMM_Agent_Remote
 
                     try
                     {
-                        // if linux or macos convert the path to linux/macos path
-                        if (!String.IsNullOrEmpty(command_object.file_browser_path) && OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
-                            command_object.file_browser_path = command_object.file_browser_path.Replace("\\", "/");
-
                         if (command_object.type == 0) // Remote Shell
                         {
                             if (OperatingSystem.IsWindows())
                                 result = Windows.Helper.PowerShell.Execute_Script(command_object.type.ToString(), command_object.powershell_code);
                             else if (OperatingSystem.IsLinux())
-                                result = Linux.Helper.Bash.Execute_Command(Base64.Decode_Syncron(command_object.powershell_code));
+                                result = Linux.Helper.Bash.Execute_Script("Remote Shell", true, Base64.Decode_Syncron(command_object.powershell_code));
+                            else if (OperatingSystem.IsMacOS())
+                                result = MacOS.Helper.Zsh.Execute_Script("Remote Shell", true, command_object.powershell_code);
 
                             Logging.Debug("Client", "PowerShell executed", result);
                         }
                         else if (command_object.type == 1) // File Browser
                         {
+                            // if linux or macos convert the path to linux/macos path
+                            if (!String.IsNullOrEmpty(command_object.file_browser_path) && OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                                command_object.file_browser_path = command_object.file_browser_path.Replace("\\", "/");
+
                             // 0 = get drives, 1 = index, 2 = create dir, 3 = delete dir, 4 = move dir, 5 = rename dir, 6 = create file, 7 = delete file, 8 = move file, 9 = rename file, 10 = download file, 11 = upload file
 
                             // File Browser Command

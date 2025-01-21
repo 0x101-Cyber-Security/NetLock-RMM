@@ -186,7 +186,13 @@ class UserClient
             switch (command.type)
             {
                 case "0": // Screen Capture
-                    string base64Image = await ScreenCapture.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
+                    string base64Image = String.Empty;
+                    
+                    if (OperatingSystem.IsWindows())
+                        base64Image = await ScreenCapture.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
+                    /*else if (OperatingSystem.IsMacOS())
+                        base64Image = await ScreenCaptureMacOS.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
+                    */
                     await Local_Server_Send_Message($"screen_capture${command.response_id}${base64Image}");
                     break;
 
@@ -222,8 +228,14 @@ class UserClient
                     }
                     break;
                 case "3":
-                    int screen_indexes = ScreenCapture.Get_Screen_Indexes();
+                    int screen_indexes = 0;
+                    if (OperatingSystem.IsWindows())
+                        screen_indexes = ScreenCapture.Get_Screen_Indexes();
+                    else if (OperatingSystem.IsMacOS())
+                        screen_indexes = 0;
+
                     await Local_Server_Send_Message($"screen_indexes${command.response_id}${screen_indexes}");
+
                     break;
 
                 default:

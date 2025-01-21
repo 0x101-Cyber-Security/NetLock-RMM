@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v8.0": {
       "NetLock RMM Agent Comm/1.0.0": {
         "dependencies": {
+          "Costura.Fody": "6.0.0",
           "Microsoft.Extensions.Hosting": "8.0.1",
           "System.Data.SQLite": "1.0.119",
           "System.Diagnostics.PerformanceCounter": "9.0.0",
@@ -17,6 +18,11 @@
         },
         "runtime": {
           "NetLock RMM Agent Comm.dll": {}
+        }
+      },
+      "Costura.Fody/6.0.0": {
+        "dependencies": {
+          "Fody": "6.8.2"
         }
       },
       "EntityFramework/6.4.4": {
@@ -38,6 +44,7 @@
           }
         }
       },
+      "Fody/6.8.2": {},
       "Microsoft.CSharp/4.7.0": {},
       "Microsoft.Extensions.Configuration/8.0.0": {
         "dependencies": {
@@ -683,12 +690,26 @@
       "serviceable": false,
       "sha512": ""
     },
+    "Costura.Fody/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-3Uriu9GJABMivG0wXMJs6NQ7FNE3pylir1gZEBAWDvpii3cnrmxXnOG44MMDuIVOIk/Xhef7WZFsaCNV+py9qA==",
+      "path": "costura.fody/6.0.0",
+      "hashPath": "costura.fody.6.0.0.nupkg.sha512"
+    },
     "EntityFramework/6.4.4": {
       "type": "package",
       "serviceable": true,
       "sha512": "sha512-yj1+/4tci7Panu3jKDHYizxwVm0Jvm7b7m057b5h4u8NUHGCR8WIWirBTw+8EptRffwftIWPBeIRGNKD1ewEMQ==",
       "path": "entityframework/6.4.4",
       "hashPath": "entityframework.6.4.4.nupkg.sha512"
+    },
+    "Fody/6.8.2": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-sjGHrtGS1+kcrv99WXCvujOFBTQp4zCH3ZC9wo2LAtVaJkuLpHghQx3y4k1Q8ZKuDAbEw+HE6ZjPUJQK3ejepQ==",
+      "path": "fody/6.8.2",
+      "hashPath": "fody.6.8.2.nupkg.sha512"
     },
     "Microsoft.CSharp/4.7.0": {
       "type": "package",

@@ -50,20 +50,28 @@ namespace Global.Helper
 
         private static void Terminate_Child_Processes_Windows(int parentId)
         {
-            var searcher = new ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
-            foreach (var obj in searcher.Get())
+            try
             {
-                int childProcessId = Convert.ToInt32(obj["ProcessId"]);
-                try
+                var searcher = new ManagementObjectSearcher($"Select * From Win32_Process Where ParentProcessId={parentId}");
+                foreach (var obj in searcher.Get())
                 {
-                    Terminate_Child_Processes_Windows(childProcessId);
-                    Process childProcess = Process.GetProcessById(childProcessId);
-                    childProcess.Kill();
+                    int childProcessId = Convert.ToInt32(obj["ProcessId"]);
+                    try
+                    {
+                        Terminate_Child_Processes_Windows(childProcessId);
+                        Process childProcess = Process.GetProcessById(childProcessId);
+                        childProcess.Kill();
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore exceptions for already terminated processes
+                    }
                 }
-                catch (Exception)
-                {
-                    // Ignore exceptions for already terminated processes
-                }
+            }
+            catch (Exception)
+            {
+                Logging.Error("Global.Helper.Task_Manager.Terminate_Child_Processes_Windows", "Error terminating child processes", "An error occurred while terminating child processes.");
+                // Handle errors gracefully for unsupported systems
             }
         }
 

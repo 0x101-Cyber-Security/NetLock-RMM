@@ -11,51 +11,10 @@ namespace Linux.Helper
 {
     internal class Bash
     {
-        public static string Execute_Command(string command)
+        public static string Execute_Script(string type, bool decode, string script)
         {
             try
             {
-                // Create a new process
-                Process process = new Process();
-                // Set the process start information
-                process.StartInfo.FileName = "/bin/bash";
-                process.StartInfo.Arguments = $"-c \"{command}\"";
-                process.StartInfo.UseShellExecute = false;
-                process.StartInfo.RedirectStandardOutput = true;
-                process.StartInfo.RedirectStandardError = true;
-                process.StartInfo.CreateNoWindow = true;
-                // Start the process
-                process.Start();
-                // Read the output and error
-                string output = process.StandardOutput.ReadToEnd();
-                string error = process.StandardError.ReadToEnd();
-                // Wait for the process to exit
-                process.WaitForExit();
-                // Log and return the output
-                if (!string.IsNullOrEmpty(error))
-                {
-                    Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", error);
-                    return "-";
-                }
-                else
-                {
-                    Logging.Debug("Linux.Helper.Bash.Execute_Command", "Command executed", output);
-                    return output;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Linux.Helper.Bash.Execute_Command", "Error executing command", ex.ToString());
-                return "-";
-            }
-        }
-
-        public static string Execute_Script(string type, string script)
-        {
-            try
-            {
-                Global.Initialization.Health.Check_Directories();
-
                 Logging.Debug("Linux.Helper.Bash.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
 
                 if (String.IsNullOrEmpty(script))
@@ -65,11 +24,16 @@ namespace Linux.Helper
                 }
 
                 // Decode the script from Base64
-                byte[] script_data = Convert.FromBase64String(script);
-                string decoded_script = Encoding.UTF8.GetString(script_data);
+                if (decode)
+                {
+                    byte[] script_data = Convert.FromBase64String(script);
+                    string decoded_script = Encoding.UTF8.GetString(script_data);
 
-                // Convert Windows line endings (\r\n) to Unix line endings (\n)
-                decoded_script = decoded_script.Replace("\r\n", "\n");
+                    // Convert Windows line endings (\r\n) to Unix line endings (\n)
+                    script = decoded_script.Replace("\r\n", "\n");
+
+                    Logging.Debug("Linux.Helper.Bash.Execute_Script", "Decoded script", script);
+                }
 
                 // Create a new process
                 using (Process process = new Process())
@@ -88,7 +52,7 @@ namespace Linux.Helper
                     // Write the cleaned script to the process's standard input
                     using (StreamWriter writer = process.StandardInput)
                     {
-                        writer.Write(decoded_script);
+                        writer.Write(script);
                     }
 
                     // Read the output and error
