@@ -1,4 +1,5 @@
 ﻿using Global.Helper;
+using Linux.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,34 +70,6 @@ namespace MacOS.Helper
             {
                 Logging.Error("MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two", "Error converting size to GB", ex.ToString());
                 return 0;
-            }
-        }
-
-        public static bool Firewall_Status()
-        {
-            // Firewall states:
-            // 0 = Off
-            // 1 = On for specific services
-            // 2 = On for essential services
-
-            try
-            {
-                // Check if the firewall is enabled
-                string firewallStatus = Zsh.Execute_Script("Firewall_Status", false, "defaults read /Library/Preferences/com.apple.alf globalstate");
-
-                if (firewallStatus.Contains("1"))
-                {
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("MacOS.Helper.MacOS.Firewall_Status", "Error checking firewall status", ex.ToString());
-                return false;
             }
         }
     }

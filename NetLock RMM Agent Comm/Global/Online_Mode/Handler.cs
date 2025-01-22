@@ -327,7 +327,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "antivirus_solution", Device_Worker.antivirus_solution);
 
                     // Get Firewall status
-                    Device_Worker.firewall_status = MacOS.Helper.MacOS.Firewall_Status();
+                    Device_Worker.firewall_status = Device_Information.Network.Firewall_Status();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "firewall_status", Device_Worker.firewall_status.ToString());
 
                     // Get Architecture

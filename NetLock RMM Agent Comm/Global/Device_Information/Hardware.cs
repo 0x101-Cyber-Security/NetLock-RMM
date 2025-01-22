@@ -583,7 +583,7 @@ namespace Global.Device_Information
                                     ulong freeMemory = Convert.ToUInt64(obj["FreePhysicalMemory"] ?? 0); // Free memory in KB
                                     ulong hardwareReservedMemory = totalMemory - freeMemory; // Reserved memory
 
-                                    hardware_reserved = (hardwareReservedMemory / 1024d).ToString(); // Convert to MB
+                                    hardware_reserved = Math.Round(hardwareReservedMemory / 1024d).ToString(); // Convert to MB
                                 }
                             }
                         }
@@ -808,8 +808,7 @@ namespace Global.Device_Information
                             ulong speculativeMemory = ulong.Parse(pagesSpeculative) * pageSize;
 
                             // Available memory = free + inactive + speculative
-                            available = ((freeMemory + inactiveMemory + speculativeMemory) / (1024d * 1024d)).ToString("F2") + " MB";
-                            available = available.Replace(".", ",");
+                            available = Math.Round((freeMemory + inactiveMemory + speculativeMemory) / (1024d * 1024d)).ToString();
                             assured = (activeMemory / (1024d * 1024d)).ToString("F2");
                         }
                     }
@@ -823,7 +822,12 @@ namespace Global.Device_Information
                         if (match.Success)
                         {
                             ulong totalMemory = ulong.Parse(match.Groups[1].Value);
-                            hardware_reserved = (totalMemory / (1024d * 1024d * 1024d)).ToString("F2") + " GB";
+
+                            // Convert from bytes to MB
+                            double totalMemoryInMB = totalMemory / (1024d * 1024d);
+                            hardware_reserved = totalMemoryInMB.ToString();
+
+                            // Optional: Adjust thousands separator and decimal point
                             hardware_reserved = hardware_reserved.Replace(".", ",");
                         }
                     }
@@ -882,7 +886,15 @@ namespace Global.Device_Information
                 {
                     // RAM utilisation under Linux
                     string ramUsage = Linux.Helper.Bash.Execute_Script("RAM_Usage", false, "free | grep Mem | awk '{print $3/$2 * 100}'");
-                    return Convert.ToInt32(ramUsage);
+
+                    // Parse the result into a double to ensure proper rounding
+                    if (double.TryParse(ramUsage, out double usageValue))
+                    {
+                        int roundedUsage = (int)Math.Round(usageValue); // Round to the nearest integer
+                        return roundedUsage;
+                    }
+                    else
+                        return 0;
                 }
                 else if (OperatingSystem.IsMacOS())
                 {

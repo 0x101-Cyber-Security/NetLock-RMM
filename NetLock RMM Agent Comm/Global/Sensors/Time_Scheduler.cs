@@ -1891,37 +1891,26 @@ namespace Global.Sensors
                                 }
                                 else if (OperatingSystem.IsLinux()) // marked for refactoring for cleaner code
                                 {
-                                    string serviceCommand = $"systemctl list-units --type=service | grep {sensor_item.service_name}";
+                                    sensor_item.service_name = sensor_item.service_name.Replace(".service", ""); // remove .service from the service name
+                                    string serviceCommand = $"systemctl list-units --type=service --all | grep -w {sensor_item.service_name}.service";
 
+                                    // Execute bash script and save the output
                                     string output = Linux.Helper.Bash.Execute_Script("Service Sensor", false, serviceCommand);
 
-                                    // Regex to extract only the line for the specific service
-                                    string pattern = $@"^\S+\s+\S+\s+{Regex.Escape(sensor_item.service_name)}.*$";
-                                    var match = Regex.Match(output, pattern, RegexOptions.Multiline);
-
-                                    if (match.Success)
+                                    if (string.IsNullOrWhiteSpace(output))
                                     {
-                                        Console.WriteLine($"Service {sensor_item.service_name} found: {match.Value}");
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine($"Service {sensor_item.service_name} not found.");
+                                        //Console.WriteLine($"Service {sensor_item.service_name} not found or no output received.");
+                                        continue;
                                     }
 
                                     bool isServiceRunning = false;
 
+                                    // Check status
+                                    // Use Regex to match running status
+                                    var match = Regex.Match(output, $@"running", RegexOptions.Multiline);
+
                                     if (match.Success)
-                                    {
-                                        // Break up the line using spaces (systemctl output is usually column-based)
-                                        string[] parts = match.Value.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-
-                                        // The ACTIVE status is in the third column (index 2), depending on the output
-                                        // Possible values for ACTIVE are "active" or "inactive"
-                                        string activeStatus = parts.Length > 2 ? parts[2] : "";
-
-                                        // The service is considered to be running if the status is "active"
-                                        isServiceRunning = activeStatus == "active";
-                                    }
+                                        isServiceRunning = true;
 
                                     Logging.Sensors("Sensors.Time_Scheduler.Check_Execution", "Service status", sensor_item.service_name + " " + isServiceRunning.ToString());
 

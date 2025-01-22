@@ -14,6 +14,8 @@ using Global.Helper;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Net;
+using Linux.Helper;
+using MacOS.Helper;
 
 namespace Global.Device_Information
 {
@@ -264,15 +266,15 @@ namespace Global.Device_Information
                         // DHCP status can be checked using ipconfig (if available)
                         string dhcp_enabled = "N/A";
 
-                        var dhcpMatch = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, $"ipconfig getpacket {adapterName}");
+                        var dhcpMatch = Zsh.Execute_Script("Network_Adapter_Information", false, $"ipconfig getpacket {adapterName}");
                         if (!string.IsNullOrEmpty(dhcpMatch) && dhcpMatch.Contains("dhcp"))
-                            dhcp_enabled = "true";
+                            dhcp_enabled = "True";
                         else
-                            dhcp_enabled = "false";
+                            dhcp_enabled = "False";
 
                         // Subnet mask extraction (ifconfig example)
                         string subnet_mask = "N/A";
-                        var subnetMatch = MacOS.Helper.Zsh.Execute_Script("Network_Adapter_Information", false, $"ifconfig {adapterName}");
+                        var subnetMatch = Zsh.Execute_Script("Network_Adapter_Information", false, $"ifconfig {adapterName}");
                         var subnetMaskMatch = Regex.Match(subnetMatch, @"netmask\s+([a-fA-F0-9:]+)");
 
                         if (subnetMaskMatch.Success)
@@ -359,6 +361,66 @@ namespace Global.Device_Information
 
             Logging.Device_Information("Device_Information.Network.Ping", "Address pingable", $"{address} ({pingable})");
             return pingable;
+        }
+
+        public static bool Firewall_Status()
+        {
+            try
+            {
+                if (OperatingSystem.IsLinux())
+                {
+                    // Check whether UFW is installed
+                    string ufwCheck = Bash.Execute_Script("Check_UFW_Installed", false, "command -v ufw");
+
+                    if (string.IsNullOrWhiteSpace(ufwCheck))
+                    {
+                        // UFW is not installed
+                        Logging.Debug("Linux.Helper.Linux.Firewall_Status", "UFW is not installed on this system.", "");
+                        return false;
+                    }
+
+                    // Check the status of the firewall
+                    string firewallStatus = Bash.Execute_Script("Check_Firewall_Status", false, "ufw status");
+
+                    // Check whether UFW is active
+                    if (firewallStatus.Contains("active"))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    // Firewall states:
+                    // 0 = Off
+                    // 1 = On for specific services
+                    // 2 = On for essential services
+
+                    // Check if the firewall is enabled
+                    string firewallStatus = Zsh.Execute_Script("Firewall_Status", false, "defaults read /Library/Preferences/com.apple.alf globalstate");
+
+                    if (firewallStatus.Contains("1"))
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("MacOS.Helper.MacOS.Firewall_Status", "Error checking firewall status", ex.ToString());
+                return false;
+            }
         }
     }
 }
