@@ -1960,15 +1960,20 @@ else if (row.platform == "MacOS")
                                                         <MudTh Style="white-space: nowrap;">
                                                             <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.version)">Version</MudTableSortLabel>
                                                         </MudTh>
-                                                        <MudTh Style="white-space: nowrap;">
-                                                            <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.installation_date)">@Localizer["installation_date"]</MudTableSortLabel>
-                                                        </MudTh>
-                                                        <MudTh Style="white-space: nowrap;">
-                                                            <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.installation_path)">@Localizer["installation_path"]</MudTableSortLabel>
-                                                        </MudTh>
-                                                        <MudTh Style="white-space: nowrap;">
-                                                            <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.vendor)">@Localizer["manufacturer"]</MudTableSortLabel>
-                                                        </MudTh>
+
+                                                        @if (platform != "Linux")
+                                                        {
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.installation_date)">@Localizer["installation_date"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.installation_path)">@Localizer["installation_path"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                            <MudTh Style="white-space: nowrap;">
+                                                                <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.vendor)">@Localizer["manufacturer"]</MudTableSortLabel>
+                                                            </MudTh>
+                                                        }
+
                                                         <MudTh Style="white-space: nowrap;">
                                                             <MudTableSortLabel SortBy="new Func<Software_Installed_Entity, object>(x => x.uninstallation_string)">@Localizer["uninstallation_command"]</MudTableSortLabel>
                                                         </MudTh>
@@ -1987,23 +1992,26 @@ else if (row.platform == "MacOS")
                                                             </span>
                                                         </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@software_installed_row.installation_date
-                                                            </span>
-                                                        </MudTd>
+                                                        @if (platform != "Linux")
+                                                        {
+                                                            <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@software_installed_row.installation_date
+                                                                </span>
+                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@software_installed_row.installation_path
-                                                            </span>
-                                                        </MudTd>
+                                                            <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@software_installed_row.installation_path
+                                                                </span>
+                                                            </MudTd>
 
-                                                        <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
-                                                            <span style="display: flex; align-items: center;">
-                                                                &nbsp;@software_installed_row.vendor
-                                                            </span>
-                                                        </MudTd>
+                                                            <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
+                                                                <span style="display: flex; align-items: center;">
+                                                                    &nbsp;@software_installed_row.vendor
+                                                                </span>
+                                                            </MudTd>
+                                                        }
 
                                                         <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Software_Installed_RowClickHandler(software_installed_row)" class="@Software_Installed_GetRowClass(software_installed_row)" style="white-space: nowrap;">
                                                             <span style="display: flex; align-items: center;">
@@ -2050,9 +2058,14 @@ else if (row.platform == "MacOS")
                                                         <HeaderContent>
                                                             <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.name))" style="white-space: nowrap;">Name</MudTh>
                                                             <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.version))" style="white-space: nowrap;">Version</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.installation_date))" style="white-space: nowrap;">@Localizer["installation_date"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.installation_path))" style="white-space: nowrap;">@Localizer["installation_path"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.vendor))" style="white-space: nowrap;">@Localizer["manufacturer"]</MudTh>
+
+                                                            @if (platform != "Linux")
+                                                            {
+                                                                <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.installation_date))" style="white-space: nowrap;">@Localizer["installation_date"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.installation_path))" style="white-space: nowrap;">@Localizer["installation_path"]</MudTh>
+                                                                <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.vendor))" style="white-space: nowrap;">@Localizer["manufacturer"]</MudTh>
+                                                            }
+
                                                             <MudTh Sortable="true" @onclick="() => applications_installed_history_table_sorted_column = (nameof(Applications_Installed_History_Entity.uninstallation_string))" style="white-space: nowrap;">@Localizer["uninstallation_command"]</MudTh>
                                                         </HeaderContent>
                                                         <GroupHeaderTemplate Context="groupContext">
@@ -2070,21 +2083,26 @@ else if (row.platform == "MacOS")
                                                                     &nbsp;@applications_installed_history_row.version
                                                                 </span>
                                                             </MudTd>
-                                                            <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_installed_history_row.installation_date
-                                                                </span>
-                                                            </MudTd>
-                                                            <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_installed_history_row.installation_path
-                                                                </span>
-                                                            </MudTd>
-                                                            <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@applications_installed_history_row.vendor
-                                                                </span>
-                                                            </MudTd>
+
+                                                            @if (platform != "Linux")
+                                                            {
+                                                                <MudTd DataLabel="@Localizer["installation_date"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@applications_installed_history_row.installation_date
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["installation_path"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@applications_installed_history_row.installation_path
+                                                                    </span>
+                                                                </MudTd>
+                                                                <MudTd DataLabel="@Localizer["manufacturer"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
+                                                                    <span style="display: flex; align-items: center;">
+                                                                        &nbsp;@applications_installed_history_row.vendor
+                                                                    </span>
+                                                                </MudTd>
+                                                            }
+
                                                             <MudTd DataLabel="@Localizer["uninstallation_command"]" @onclick="() => Applications_Installed_History_RowClickHandler(applications_installed_history_row)" class="@Applications_Installed_History_GetRowClass(applications_installed_history_row)" style="white-space: nowrap;">
                                                                 <span style="display: flex; align-items: center;">
                                                                     &nbsp;@applications_installed_history_row.uninstallation_string
