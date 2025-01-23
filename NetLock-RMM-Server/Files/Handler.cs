@@ -10,6 +10,8 @@ using Microsoft.Extensions.FileSystemGlobbing.Internal;
 using System.Text.Json;
 using System.Diagnostics;
 using System.Security.Principal;
+using System.IO.Compression;
+using NetLock_RMM_Server.Files.Compiler;
 
 namespace NetLock_RMM_Server.Files
 {
@@ -52,7 +54,7 @@ namespace NetLock_RMM_Server.Files
                     {
                         if (reader.HasRows)
                             api_key_exists = true;
-                        else 
+                        else
                             api_key_exists = false;
                     }
                 }
@@ -74,7 +76,7 @@ namespace NetLock_RMM_Server.Files
             }
         }
 
-        public static async Task<string> Register_File (string file_path, string directory_path, string tenant_guid, string location_guid, string device_name)
+        public static async Task<string> Register_File(string file_path, string tenant_guid, string location_guid, string device_name)
         {
             try
             {
@@ -270,7 +272,7 @@ namespace NetLock_RMM_Server.Files
                 }
                 else if (command.command == "delete_file")
                 {
-                    if (File.Exists(Path.Combine(safePath, command.name))) 
+                    if (File.Exists(Path.Combine(safePath, command.name)))
                     {
                         await Unregister_File(command.guid); // Remove the file from the DB
                         File.Delete(Path.Combine(safePath, command.name));
@@ -431,7 +433,7 @@ namespace NetLock_RMM_Server.Files
                     {
                         if (reader.HasRows)
                         {
-                            Logging.Handler.Debug("Files.Verify_File_Access", "File exists in DB", "true"); 
+                            Logging.Handler.Debug("Files.Verify_File_Access", "File exists in DB", "true");
 
                             await reader.ReadAsync();
 
@@ -639,6 +641,56 @@ namespace NetLock_RMM_Server.Files
             }
 
             return guid;
+        }
+
+        public static async Task<string> Create_Custom_Installer(string name, string json)
+        {
+            try
+            {
+                // Remove .zip from the name
+                name = name.Replace(".zip", "");
+
+                string installer_extracted_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
+                string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
+                string installer_executable = Path.Combine(installer_extracted_dir, "NetLock RMM Agent Installer (Windows).exe");
+
+                // Extract installer.package to temp folder 
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths._private_files_netlock, "installer.package"), installer_extracted_dir);
+
+                // Write ressource to the installer
+                await Assembly_Manipulation.Write_Ressource(installer_executable, json);
+
+                string new_installer_package = Path.Combine(installer_packed_dir, name + ".zip");
+
+                // Check if the directory exists
+                if (!Directory.Exists(installer_packed_dir))
+                    Directory.CreateDirectory(installer_packed_dir);
+
+                // Package the installer
+                ZipFile.CreateFromDirectory(installer_extracted_dir, new_installer_package);
+
+                string installer_download_location = Path.Combine(Application_Paths._private_files_netlock, "installers", name + ".zip");
+
+                // Check if the directory exists
+                if (!Directory.Exists(Application_Paths._private_files_netlock_installers))
+                    Directory.CreateDirectory(Application_Paths._private_files_netlock_installers);
+
+                // Copy the packed installer to the private files directory
+                File.Copy(new_installer_package, installer_download_location, true);
+
+                // Delete the temp directories
+                Directory.Delete(installer_extracted_dir, true);
+                Directory.Delete(installer_packed_dir, true);
+
+                string register_result = await Files.Handler.Register_File(installer_download_location, String.Empty, String.Empty, String.Empty);
+
+                return register_result;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Files.Create_Custom_Installer", "general_error", ex.ToString());
+                return string.Empty;
+            }
         }
     }
 }

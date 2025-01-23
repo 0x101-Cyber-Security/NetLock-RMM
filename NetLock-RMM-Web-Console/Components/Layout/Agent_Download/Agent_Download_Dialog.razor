@@ -142,6 +142,14 @@
                 if (trust_servers_split[1] != "7443")
                     trust_servers = trust_servers_split[0] + ":7443";
             }
+            
+            if (file_servers.Contains(":"))
+            {
+                string[] file_servers_split = file_servers.Split(':');
+
+                if (file_servers_split[1] != "7443")
+                    file_servers = file_servers_split[0] + ":7443";
+            }
         }
         else
         {
@@ -597,7 +605,8 @@
     {
         var options = new DialogOptions
             {
-
+                CloseButton = true,
+                FullWidth = true,
                 MaxWidth = MaxWidth.Small,
                 BackgroundClass = "dialog-blurring",
             };
@@ -611,6 +620,19 @@
 
         if (result.Data.ToString() == "success")
             await Get_Configurations();
+    }
+
+    private async Task Download_Installer()
+    {
+        try
+        {
+
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Download_Installer", "Result", ex.ToString());
+        }
     }
 
     private void Cancel() => MudDialog.Cancel();

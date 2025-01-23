@@ -979,7 +979,7 @@ if (role_file)
             Logging.Handler.Debug("/admin/files/upload", "File uploaded successfully: " + file.FileName, "");
 
             // Register the file with the correct directory path (excluding file name)
-            string register_json = await NetLock_RMM_Server.Files.Handler.Register_File(filePath, directoryPath, tenant_guid, location_guid, device_name);
+            string register_json = await NetLock_RMM_Server.Files.Handler.Register_File(filePath, tenant_guid, location_guid, device_name);
 
             context.Response.StatusCode = 200;
 
@@ -1002,7 +1002,6 @@ if (role_file)
         }
     });
 }
-
 
 // NetLock admin files, download
 if (role_file)
@@ -1308,7 +1307,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
             Logging.Handler.Debug("/admin/files/upload/device", "File uploaded successfully: " + file.FileName, "");
 
             // Register the file with the correct directory path (excluding file name)
-            string register_json = await NetLock_RMM_Server.Files.Handler.Register_File(filePath, directoryPath, tenant_guid, location_guid, device_name);
+            string register_json = await NetLock_RMM_Server.Files.Handler.Register_File(filePath, tenant_guid, location_guid, device_name);
 
             context.Response.StatusCode = 200;
             await context.Response.WriteAsync(register_json);
@@ -1578,6 +1577,53 @@ if (role_remote)
 
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("Invalid request.");
+        }
+    });
+}
+
+// Admin command: Create custom installer
+// NetLock admin files, download
+if (role_file)
+{
+    app.MapGet("/admin/create_installer", async (HttpContext context) =>
+    {
+        try
+        {
+            Logging.Handler.Debug("/admin/create_installer", "Request received.", "");
+
+            // Add security headers
+            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+
+            // Get api key | is not required
+            bool hasApiKey = context.Request.Headers.TryGetValue("x-api-key", out StringValues files_api_key);
+
+            // Verify API key
+            if (!hasApiKey || !await NetLock_RMM_Server.Files.Handler.Verify_Api_Key(files_api_key))
+            {
+                Logging.Handler.Debug("/admin/create_installer", "Missing or invalid API key.", "");
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Unauthorized.");
+                return;
+            }
+
+            // Query parameters
+            string name = context.Request.Query["name"].ToString();
+            string json = context.Request.Query["json"].ToString();
+
+            // Create installer file
+            string result = await NetLock_RMM_Server.Files.Handler.Create_Custom_Installer(name, json);
+
+            // Return the result as a JSON string
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(result);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.ToString());
+            Logging.Handler.Error("/admin/create_installer", "General error", ex.ToString());
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("1"); // something went wrong
         }
     });
 }

@@ -67,7 +67,7 @@ namespace Helper
 
                         // Register all files
                         foreach (string file in Directory.GetFiles(Application_Paths._private_files_netlock, "*", SearchOption.AllDirectories))
-                            await NetLock_RMM_Server.Files.Handler.Register_File(file, "netlock", String.Empty, String.Empty, String.Empty);
+                            await NetLock_RMM_Server.Files.Handler.Register_File(file, String.Empty, String.Empty, String.Empty);
 
                         Console.ForegroundColor = ConsoleColor.Green;
                         Console.WriteLine("Packages successfully setup & ready...");

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Primitives;
 using System.Runtime.InteropServices;
 
 namespace NetLock_RMM_Server
@@ -22,6 +23,11 @@ namespace NetLock_RMM_Server
 
         public static string _private_files_netlock = Path.Combine(GetCurrentDirectory(), "www", "private", "files", "netlock");
         public static string _private_files_netlock_temp = Path.Combine(GetCurrentDirectory(), "www", "private", "files", "netlock", "temp");
+        
+        public static string _private_files_netlock_installers = Path.Combine(GetCurrentDirectory(), "www", "private", "files", "netlock", "installers");
+        
+
+        public static string internal_temp_folder = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
 
         // URLs
