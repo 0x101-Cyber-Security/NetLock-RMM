@@ -1,4 +1,8 @@
-﻿using System.Net;
+﻿using MudBlazor;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.Json;
 
 namespace NetLock_RMM_Web_Console.Classes.Helper
 {
@@ -19,7 +23,7 @@ namespace NetLock_RMM_Web_Console.Classes.Helper
                     // Check if the status code is OK
                     if (response.IsSuccessStatusCode)
                         return true;
-                    else 
+                    else
                         return false;
                 }
                 catch (Exception ex)
@@ -28,6 +32,56 @@ namespace NetLock_RMM_Web_Console.Classes.Helper
                     Logging.Handler.Error("Networking.Test_Connection", url, ex.ToString());
                     return false;
                 }
+            }
+        }
+
+        public static async Task<string> HTTP_Post_Request_Json(string url, string json, bool admin_api)
+        {
+            try
+            {
+                Logging.Handler.Debug("Classes.Networking.HTTP_Post_Request_Json", "begin post request: url", url);
+
+                var jsonContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+                string api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+                using (var httpClient = new HttpClient())
+                {
+                    // Set the API key in the header
+                    if (admin_api)
+                        httpClient.DefaultRequestHeaders.Add("x-api-key", api_key);
+
+                    // Debug output for the upload URL
+                    Logging.Handler.Debug("Classes.Networking.HTTP_Post_Request_Json -> OK", "url", url);
+
+                    // POST request with JSON data
+                    var response = await httpClient.PostAsync(url, jsonContent);
+
+                    // Process the answer
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+                        Logging.Handler.Debug("/manage_files -> OK", "result", result);
+
+                        if (result == "Unauthorized.")
+                        {
+                            return "unauthorized";
+                        }
+                        else
+                            return result;
+                    }
+                    else
+                    {
+                        Logging.Handler.Error("/manage_files -> OK", "response", response.StatusCode.ToString());
+                        return "error";
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/manage_files -> OK", "", ex.ToString());
+                return "error";
             }
         }
     }

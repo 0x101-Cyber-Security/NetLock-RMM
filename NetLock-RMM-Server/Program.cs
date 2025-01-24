@@ -1585,7 +1585,7 @@ if (role_remote)
 // NetLock admin files, download
 if (role_file)
 {
-    app.MapGet("/admin/create_installer", async (HttpContext context) =>
+    app.MapPost("/admin/create_installer", async (HttpContext context) =>
     {
         try
         {
@@ -1606,12 +1606,29 @@ if (role_file)
                 return;
             }
 
-            // Query parameters
-            string name = context.Request.Query["name"].ToString();
-            string json = context.Request.Query["json"].ToString();
+            // Read the JSON data
+            string body;
+            using (StreamReader reader = new StreamReader(context.Request.Body))
+            {
+                body = await reader.ReadToEndAsync() ?? string.Empty;
+            }
+
+            // Extract the name and the JSON data
+            // Deserialisierung des gesamten JSON-Strings
+            string name = String.Empty;
+            string server_config = String.Empty;
+
+            using (JsonDocument document = JsonDocument.Parse(body))
+            {
+                JsonElement name_element = document.RootElement.GetProperty("name");
+                name = name_element.ToString();
+
+                JsonElement json_element = document.RootElement.GetProperty("server_config");
+                server_config = json_element.ToString();
+            }
 
             // Create installer file
-            string result = await NetLock_RMM_Server.Files.Handler.Create_Custom_Installer(name, json);
+            string result = await NetLock_RMM_Server.Files.Handler.Create_Custom_Installer(name, server_config);
 
             // Return the result as a JSON string
             context.Response.StatusCode = 200;
@@ -1620,7 +1637,6 @@ if (role_file)
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.ToString());
             Logging.Handler.Error("/admin/create_installer", "General error", ex.ToString());
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("1"); // something went wrong

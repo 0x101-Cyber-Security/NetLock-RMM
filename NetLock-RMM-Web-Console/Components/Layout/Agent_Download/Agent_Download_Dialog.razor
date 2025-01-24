@@ -9,6 +9,10 @@
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Layout.Agent_Download.Agent_Download_Dialog> Localizer
 
+<MudOverlay Visible="@loading_overlay" DarkBackground="true" Absolute="false">
+    <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+</MudOverlay>
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">@Localizer["agent_server_configurations"]</MudText>
@@ -41,7 +45,7 @@
         <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
         <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
         <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-        
+
         <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
             @{
                 foreach (var name in tenants_list)
@@ -69,13 +73,15 @@
     <DialogActions>
 
         <MudButton OnClick="Update_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["save"]</MudButton>
-        <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download"]</MudButton>
+        <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_config"]</MudButton>
+        <MudButton OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_installer"]</MudButton>
         <!-- <MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">Herunterladen</MudButton> -->
 
     </DialogActions>
 </MudDialog>
 
 @code {
+    private bool loading_overlay = false;
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
 
@@ -105,7 +111,7 @@
         await Get_Tenants();
         await Get_Configurations();
     }
-    
+
     // Update ports
     private async Task Update_Ports()
     {
@@ -142,7 +148,7 @@
                 if (trust_servers_split[1] != "7443")
                     trust_servers = trust_servers_split[0] + ":7443";
             }
-            
+
             if (file_servers.Contains(":"))
             {
                 string[] file_servers_split = file_servers.Split(':');
@@ -626,12 +632,58 @@
     {
         try
         {
+            loading_overlay = true;
 
+            // Create the JSON object
+            var jsonObject = new
+            {
+                ssl = ssl,
+                package_guid = package_guid,
+                communication_servers = communication_servers,
+                remote_servers = remote_servers,
+                update_servers = update_servers,
+                trust_servers = trust_servers,
+                file_servers = file_servers,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid,
+                language = language,
+                access_key = String.Empty,
+                authorized = false,
+            };
 
+            // Convert the object into a JSON string
+            string server_config_json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "json", server_config_json);
+
+            // Create the JSON object (command, path)
+            string installerjsonObject = JsonSerializer.Serialize(new { name = name, server_config = server_config_json });
+
+            // Do post request
+            string result = await Classes.Helper.Networking.HTTP_Post_Request_Json(NetLock_RMM_Web_Console.Configuration.File_Server.Connection_String + "/admin/create_installer", installerjsonObject, true);
+
+            if (result == "unauthorized" || result == "error")
+            {
+                Snackbar.Add("Saved", Severity.Success, config => { config.ShowCloseIcon = true; config.SnackbarTypeClass = Defaults.Classes.Position.BottomRight; });
+            }
+
+            // Extract result
+            var json = JsonDocument.Parse(result);
+
+            // Get guid
+            string guid = json.RootElement.GetProperty("guid").GetString();
+
+            // Get password for file from guid
+            string password = await Classes.File_Server.Handler.Get_File_Password_By_Guid(guid);
+
+            loading_overlay = false;
+
+            string url = Configuration.File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
+            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/MainLayout -> Download_Installer", "Result", ex.ToString());
+            loading_overlay = false;
         }
     }
 

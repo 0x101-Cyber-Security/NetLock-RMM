@@ -669,11 +669,7 @@ namespace NetLock_RMM_Server.Files
                 // Package the installer
                 ZipFile.CreateFromDirectory(installer_extracted_dir, new_installer_package);
 
-                string installer_download_location = Path.Combine(Application_Paths._private_files_netlock, "installers", name + ".zip");
-
-                // Check if the directory exists
-                if (!Directory.Exists(Application_Paths._private_files_netlock_installers))
-                    Directory.CreateDirectory(Application_Paths._private_files_netlock_installers);
+                string installer_download_location = Path.Combine(Application_Paths._private_files_netlock_temp, name + ".zip");
 
                 // Copy the packed installer to the private files directory
                 File.Copy(new_installer_package, installer_download_location, true);
