@@ -165,6 +165,12 @@
   <data name="download" xml:space="preserve">
     <value>Download</value>
   </data>
+  <data name="download_config" xml:space="preserve">
+    <value>Download config</value>
+  </data>
+  <data name="download_installer" xml:space="preserve">
+    <value>Download installer</value>
+  </data>
   <data name="equal..." xml:space="preserve">
     <value>Gleich...</value>
   </data>

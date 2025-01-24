@@ -663,7 +663,7 @@
 
             if (result == "unauthorized" || result == "error")
             {
-                Snackbar.Add("Saved", Severity.Success, config => { config.ShowCloseIcon = true; config.SnackbarTypeClass = Defaults.Classes.Position.BottomRight; });
+                Snackbar.Add("A error occurred. Please check logs.", Severity.Error, config => { config.ShowCloseIcon = true; config.SnackbarTypeClass = Defaults.Classes.Position.BottomRight; });
             }
 
             // Extract result
