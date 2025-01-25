@@ -49,16 +49,19 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_data_user_process_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "User Agent");
         public static string program_files_user_process_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock RMM User Process.exe");
 
-        public static string comm_agent_package_path = @"\comm.package";
-        public static string remote_agent_package_path = @"\remote.package";
-        public static string health_agent_package_path = @"\health.package";
-        public static string user_process_package_path = @"\user_process.package";
-        public static string uninstaller_package_path = @"\uninstaller.package";
-
+        public static string comm_agent_package_path = @"comm.package";
+        public static string remote_agent_package_path = @"remote.package";
+        public static string health_agent_package_path = @"health.package";
+        public static string user_process_package_path = @"user_process.package";
+        
         public static string c_temp_server_config_backup_path = Path.Combine(GetTempPath(), "netlock rmm", "installer", "server_config.json");
 
         public static string program_files_0x101_cyber_security_dir = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security");
         public static string program_data_0x101_cyber_security_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security");
+
+        // Linux specific
+        public static string linux_program_files_comm_agent_service_path = "/etc/systemd/system/netlock-rmm-comm-agent.service";
+
 
         private static string GetBasePath_CommonApplicationData()
         {

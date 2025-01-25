@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Helper;
+using MacOS.Helper;
+using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
@@ -196,26 +198,26 @@ namespace NetLock_RMM_Agent_Installer
                 bool http_status = true;
 
                 // Download comm agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.comm_agent_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.comm_agent_package_path, server_config_new.package_guid);
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.comm_agent_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path), server_config_new.package_guid);
 
                 Logging.Handler.Debug("Main", "Download comm agent package", http_status.ToString());
                 Logging.Handler.Debug("Main", "Download comm agent package", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download comm agent package: Done.");
 
                 // Download remote agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.remote_agent_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.remote_agent_package_path, server_config_new.package_guid);
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.remote_agent_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.remote_agent_package_path), server_config_new.package_guid);
                 Logging.Handler.Debug("Main", "Download remote agent package", http_status.ToString());
                 Logging.Handler.Debug("Main", "Download remote agent package", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download remote agent package: Done.");
 
                 // Download health agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.health_agent_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.health_agent_package_path, server_config_new.package_guid);
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.health_agent_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path), server_config_new.package_guid);
                 Logging.Handler.Debug("Main", "Download health agent package", http_status.ToString());
                 Logging.Handler.Debug("Main", "Download health agent package", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download health agent package: Done.");
 
                 // Download User Process
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.user_process_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.user_process_package_path, server_config_new.package_guid);
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + Application_Paths.user_process_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), server_config_new.package_guid);
                 Logging.Handler.Debug("Main", "Download user process package", http_status.ToString());
                 Logging.Handler.Debug("Main", "Download user process package", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download user process package: Done.");
@@ -250,7 +252,7 @@ namespace NetLock_RMM_Agent_Installer
                 }
 
                 // Check hash comm agent package
-                string comm_agent_package_path = Application_Paths.c_temp_netlock_dir + Application_Paths.comm_agent_package_path;
+                string comm_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path);
                 string comm_agent_package_hash_local = Helper.IO.Get_SHA512(comm_agent_package_path);
 
                 Logging.Handler.Debug("Main", "Check hash comm agent package", comm_agent_package_hash_local);
@@ -271,7 +273,7 @@ namespace NetLock_RMM_Agent_Installer
                 }
 
                 // Check hash remote agent package
-                string remote_agent_package_path = Application_Paths.c_temp_netlock_dir + Application_Paths.remote_agent_package_path;
+                string remote_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.remote_agent_package_path);
                 string remote_agent_package_hash_local = Helper.IO.Get_SHA512(remote_agent_package_path);
 
                 Logging.Handler.Debug("Main", "Check hash remote agent package", remote_agent_package_hash_local);
@@ -292,7 +294,7 @@ namespace NetLock_RMM_Agent_Installer
                 }
 
                 // Check hash health agent package
-                string health_agent_package_path = Application_Paths.c_temp_netlock_dir + Application_Paths.health_agent_package_path;
+                string health_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path);
                 string health_agent_package_hash_local = Helper.IO.Get_SHA512(health_agent_package_path);
 
                 Logging.Handler.Debug("Main", "Check hash health agent package", health_agent_package_hash_local);
@@ -313,7 +315,7 @@ namespace NetLock_RMM_Agent_Installer
                 }
 
                 // Check hash user process package
-                string user_process_package_path = Application_Paths.c_temp_netlock_dir + Application_Paths.user_process_package_path;
+                string user_process_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path);
                 string user_process_package_hash_local = Helper.IO.Get_SHA512(user_process_package_path);
 
                 Logging.Handler.Debug("Main", "Check hash user process package", user_process_package_hash_local);
@@ -378,31 +380,85 @@ namespace NetLock_RMM_Agent_Installer
 
                     // Stop services
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Stopping services.");
-                    Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Comm_Agent_Windows");
-                    Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Remote_Agent_Windows");
-                    Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Comm_Agent_Windows");
+                        Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Remote_Agent_Windows");
+                        Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-remote-agent");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-remote-agent");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
                     // Kill processes
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminating processes.");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Comm Agent (Windows).exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Comm Agent (Windows).exe\"");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Remote Agent (Windows).exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Remote Agent (Windows).exe\"");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
-
-                    //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
-                    //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Comm Agent (Windows).exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Comm Agent (Windows).exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Remote Agent (Windows).exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Remote Agent (Windows).exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
+                        //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                        //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
                     // Delete services
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting services.");
-                    Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Comm_Agent_Windows");
-                    Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Comm_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Remote_Agent_Windows");
-                    Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Remote_Agent_Windows");
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Comm_Agent_Windows");
+                        Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Comm_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Remote_Agent_Windows");
+                        Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Remote_Agent_Windows");
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-remote-agent");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-comm-agent.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-remote-agent.plist");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services deleted.");
 
                     // Delete files
@@ -448,36 +504,103 @@ namespace NetLock_RMM_Agent_Installer
                 {
                     // Stop services
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Stopping services.");
-                    Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Comm_Agent_Windows");
-                    Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Remote_Agent_Windows");
-                    Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Health_Agent_Windows");
-                    Helper.Service.Stop("NetLock_RMM_Health_Agent_Windows");
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Comm_Agent_Windows");
+                        Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Remote_Agent_Windows");
+                        Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Health_Agent_Windows");
+                        Helper.Service.Stop("NetLock_RMM_Health_Agent_Windows");
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-health-agent");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-health-agent");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
                     // Kill processes
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminating processes.");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Comm Agent (Windows).exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Comm Agent (Windows).exe\"");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Remote Agent (Windows).exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Remote Agent (Windows).exe\"");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Health Agent (Windows).exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Health Agent (Windows).exe\"");
-                    Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
-                    Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
-                    //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
-                    //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Comm Agent (Windows).exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Comm Agent (Windows).exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Remote Agent (Windows).exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Remote Agent (Windows).exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Health Agent (Windows).exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Health Agent (Windows).exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
+                        //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                        //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-health-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-health-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
                     // Delete services
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting services.");
-                    Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Comm_Agent_Windows");
-                    Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Comm_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Remote_Agent_Windows");
-                    Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Remote_Agent_Windows");
-                    Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Health_Agent_Windows");
-                    Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Health_Agent_Windows");
+                    if (OperatingSystem.IsWindows())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Comm_Agent_Windows");
+                        Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Comm_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Remote_Agent_Windows");
+                        Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Remote_Agent_Windows");
+                        Logging.Handler.Debug("Main", "Deleting services.", "NetLock_RMM_Health_Agent_Windows");
+                        Helper._Process.Start("cmd.exe", "/c sc delete NetLock_RMM_Health_Agent_Windows");
+                    }
+                    else if (OperatingSystem.IsLinux())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-comm-agent");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-health-agent");
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-comm-agent.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-remote-agent.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-health-agent");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-health-agent.plist");
+                    }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services deleted.");
 
                     // Delete directories
@@ -520,7 +643,7 @@ namespace NetLock_RMM_Agent_Installer
                 // Extract comm agent package
                 Logging.Handler.Debug("Main", "Extracting comm agent package", "");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting comm agent package.");
-                ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.comm_agent_package_path, Application_Paths.program_files_comm_agent_dir);
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path), Application_Paths.program_files_comm_agent_dir);
 
                 // Fix server_config.json
                 if (arg1 == "fix")
@@ -563,18 +686,18 @@ namespace NetLock_RMM_Agent_Installer
                     // Extract health agent package
                     Logging.Handler.Debug("Main", "Extracting health agent package", "");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting health agent package.");
-                    ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.health_agent_package_path, Application_Paths.program_files_health_agent_dir);
+                    ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path), Application_Paths.program_files_health_agent_dir);
                 }
 
                 // Extract remote agent package
                 Logging.Handler.Debug("Main", "Extracting remote agent package", "");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting remote agent package.");
-                ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.remote_agent_package_path, Application_Paths.program_files_remote_agent_dir);
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir + Application_Paths.remote_agent_package_path), Application_Paths.program_files_remote_agent_dir);
 
                 // Extract user process package
                 Logging.Handler.Debug("Main", "Extracting user process package", "");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process package.");
-                ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.user_process_package_path, Application_Paths.program_files_user_process_dir);
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir + Application_Paths.user_process_package_path), Application_Paths.program_files_user_process_dir);
 
                 // Copy server config json to program data dir
                 if (arg1 == "clean")
@@ -591,28 +714,85 @@ namespace NetLock_RMM_Agent_Installer
                 File.Create(Application_Paths.program_data_comm_agent_just_installed);
 
                 // Register comm agent as service
-                Logging.Handler.Debug("Main", "Registering comm agent as service", "");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering comm agent as service.");
-                Process.Start("sc", "create NetLock_RMM_Comm_Agent_Windows binPath= \"" + Application_Paths.program_files_comm_agent_path + "\" start= auto").WaitForExit();
-                Logging.Handler.Debug("Main", "Register comm agent as service", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register comm agent as service: Done.");
-
-                // Register remote agent as service
-                Logging.Handler.Debug("Main", "Registering remote agent as service", "");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering remote agent as service.");
-                Process.Start("sc", "create NetLock_RMM_Remote_Agent_Windows binPath= \"" + Application_Paths.program_files_remote_agent_path + "\" start= auto").WaitForExit();
-                Logging.Handler.Debug("Main", "Register remote agent as service", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register remote agent as service: Done.");
-
-                // Register health agent as service
-                if (arg1 == "clean")
+                if (OperatingSystem.IsWindows())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering health agent as service.");
-                    Logging.Handler.Debug("Main", "Registering health agent as service", "");
-                    Process.Start("sc", "create NetLock_RMM_Health_Agent_Windows binPath= \"" + Application_Paths.program_files_health_agent_path + "\" start= auto").WaitForExit();
-                    Logging.Handler.Debug("Main", "Register health agent as service", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register health agent as service: Done.");
+                    Logging.Handler.Debug("Main", "Registering comm agent as service", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering comm agent as service.");
+                    Process.Start("sc", "create NetLock_RMM_Comm_Agent_Windows binPath= \"" + Application_Paths.program_files_comm_agent_path + "\" start= auto").WaitForExit();
+                    Logging.Handler.Debug("Main", "Register comm agent as service", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register comm agent as service: Done.");
+
+                    // Register remote agent as service
+                    Logging.Handler.Debug("Main", "Registering remote agent as service", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering remote agent as service.");
+                    Process.Start("sc", "create NetLock_RMM_Remote_Agent_Windows binPath= \"" + Application_Paths.program_files_remote_agent_path + "\" start= auto").WaitForExit();
+                    Logging.Handler.Debug("Main", "Register remote agent as service", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register remote agent as service: Done.");
+
+                    // Register health agent as service
+                    if (arg1 == "clean")
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering health agent as service.");
+                        Logging.Handler.Debug("Main", "Registering health agent as service", "");
+                        Process.Start("sc", "create NetLock_RMM_Health_Agent_Windows binPath= \"" + Application_Paths.program_files_health_agent_path + "\" start= auto").WaitForExit();
+                        Logging.Handler.Debug("Main", "Register health agent as service", "Done.");
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register health agent as service: Done.");
+                    }
                 }
+                else if (OperatingSystem.IsLinux())
+                {
+                    // Register comm agent as service
+                    Logging.Handler.Debug("Main", "Registering comm agent as service", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering comm agent as service.");
+                    Bash.Execute_Script("Registering comm agent as service", false,
+                        "cp /path/to/comm-agent /usr/bin/netlock-rmm-comm-agent");
+                    Bash.Execute_Script("Registering comm agent as service", false,
+                        "chmod +x /usr/bin/netlock-rmm-comm-agent");
+
+                    // Create service file for comm agent
+                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-comm-agent.service", "netlock-rmm-comm-agent", "/usr/bin/netlock-rmm-comm-agent");
+
+                    Bash.Execute_Script("Registering comm agent as service", false,
+                        "systemctl enable netlock-rmm-comm-agent");
+                    Logging.Handler.Debug("Main", "Register comm agent as service", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register comm agent as service: Done.");
+
+                    // Register remote agent as service
+                    Logging.Handler.Debug("Main", "Registering remote agent as service", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering remote agent as service.");
+                    Bash.Execute_Script("Registering remote agent as service", false,
+                        "cp /path/to/remote-agent /usr/bin/netlock-rmm-remote-agent");
+                    Bash.Execute_Script("Registering remote agent as service", false,
+                        "chmod +x /usr/bin/netlock-rmm-remote-agent");
+
+                    // Create service file for remote agent
+                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-remote-agent.service", "netlock-rmm-remote-agent", "/usr/bin/netlock-rmm-remote-agent");
+
+                    Bash.Execute_Script("Registering remote agent as service", false,
+                        "systemctl enable netlock-rmm-remote-agent");
+                    Logging.Handler.Debug("Main", "Register remote agent as service", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register remote agent as service: Done.");
+
+                    // Register health agent as service
+                    if (arg1 == "clean")
+                    {
+                        Logging.Handler.Debug("Main", "Registering health agent as service", "");
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering health agent as service.");
+                        Bash.Execute_Script("Registering health agent as service", false,
+                            "cp /path/to/health-agent /usr/bin/netlock-rmm-health-agent");
+                        Bash.Execute_Script("Registering health agent as service", false,
+                            "chmod +x /usr/bin/netlock-rmm-health-agent");
+
+                        // Create service file for health agent
+                        Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-health-agent.service", "netlock-rmm-health-agent", "/usr/bin/netlock-rmm-health-agent");
+
+                        Bash.Execute_Script("Registering health agent as service", false,
+                            "systemctl enable netlock-rmm-health-agent");
+                        Logging.Handler.Debug("Main", "Register health agent as service", "Done.");
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register health agent as service: Done.");
+                    }
+                }
+
 
                 // Start comm agent service
                 Logging.Handler.Debug("Main", "Starting comm agent service", "");
