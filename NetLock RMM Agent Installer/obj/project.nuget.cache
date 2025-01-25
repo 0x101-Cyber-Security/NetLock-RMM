@@ -1,8 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "CTQl+sKeXq0=",
+  "dgSpecHash": "Oc/OdMA1ixM=",
   "success": true,
   "projectFilePath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\NetLock RMM Agent Installer.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\NicoMak\\.nuget\\packages\\system.diagnostics.eventlog\\9.0.1\\system.diagnostics.eventlog.9.0.1.nupkg.sha512",
+    "C:\\Users\\NicoMak\\.nuget\\packages\\system.serviceprocess.servicecontroller\\9.0.1\\system.serviceprocess.servicecontroller.9.0.1.nupkg.sha512"
+  ],
   "logs": []
 }

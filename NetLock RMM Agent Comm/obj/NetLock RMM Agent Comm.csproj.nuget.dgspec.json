@@ -52,23 +52,27 @@
           "dependencies": {
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.0.1, )"
+              "version": "[9.0.1, )"
             },
             "System.Data.SQLite": {
               "target": "Package",
               "version": "[1.0.119, )"
             },
+            "System.Data.SqlClient": {
+              "target": "Package",
+              "version": "[4.9.0, )"
+            },
             "System.Diagnostics.PerformanceCounter": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[9.0.1, )"
             },
             "System.Management": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[9.0.1, )"
             },
             "System.ServiceProcess.ServiceController": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[9.0.1, )"
             },
             "TaskScheduler": {
               "target": "Package",

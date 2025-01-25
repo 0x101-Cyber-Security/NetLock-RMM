@@ -1,0 +1,58 @@
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\NetLock RMM Comm Agent (Windows).exe.config
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\NetLock RMM Comm Agent (Windows).exe.manifest
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\NetLock RMM Comm Agent (Windows).application
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\NetLock RMM Comm Agent (Windows).exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\NetLock RMM Comm Agent (Windows).pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\EntityFramework.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\EntityFramework.SqlServer.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Microsoft.Bcl.AsyncInterfaces.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Microsoft.Win32.TaskScheduler.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Newtonsoft.Json.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Buffers.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Data.SQLite.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Data.SQLite.EF6.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Data.SQLite.Linq.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Memory.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Numerics.Vectors.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Runtime.CompilerServices.Unsafe.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Text.Encodings.Web.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Text.Json.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Threading.Tasks.Extensions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.ValueTuple.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\EntityFramework.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Microsoft.Bcl.AsyncInterfaces.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Microsoft.Win32.TaskScheduler.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\Newtonsoft.Json.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Buffers.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Data.SQLite.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Memory.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Numerics.Vectors.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Runtime.CompilerServices.Unsafe.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Text.Encodings.Web.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Text.Json.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.Threading.Tasks.Extensions.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\System.ValueTuple.xml
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\de\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\es\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\fr\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\it\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\ja\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\pl\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\ru\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\sv\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\tr\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\zh-CN\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\bin\Debug\zh-Hant\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).csproj.AssemblyReference.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\Interop.NetFwTypeLib.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).csproj.ResolveComReference.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock_RMM_Comm_Agent_Windows.Service.resources
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock_RMM_Comm_Agent_Windows.ProjectInstaller.resources
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).csproj.GenerateResource.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).csproj.CoreCompileInputs.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).exe.manifest
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).application
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock .14427D14.Up2Date
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock-RMM-Comm-Agent-Windows\NetLock RMM Comm Agent (Windows)\obj\Debug\NetLock RMM Comm Agent (Windows).pdb

@@ -255,3 +255,4 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\w
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-x64\tr\Microsoft.Win32.TaskScheduler.resources.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-x64\zh-CN\Microsoft.Win32.TaskScheduler.resources.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-x64\zh-Hant\Microsoft.Win32.TaskScheduler.resources.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-x64\System.IO.Pipelines.dll

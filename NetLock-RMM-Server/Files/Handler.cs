@@ -652,7 +652,7 @@ namespace NetLock_RMM_Server.Files
 
                 string installer_extracted_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
                 string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
-                string installer_executable = Path.Combine(installer_extracted_dir, "NetLock RMM Agent Installer (Windows).exe");
+                string installer_executable = Path.Combine(installer_extracted_dir, "NetLock RMM Agent Installer.exe");
 
                 // Extract installer.package to temp folder 
                 ZipFile.ExtractToDirectory(Path.Combine(Application_Paths._private_files_netlock, "installer.package"), installer_extracted_dir);
