@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Timers;
 using System.ServiceProcess;
+using Helper;
+using System.Text.RegularExpressions;
 
 namespace NetLock_RMM_Agent_Health
 {
@@ -17,81 +19,151 @@ namespace NetLock_RMM_Agent_Health
 
         public static bool debug_mode = false; //enables/disables logging
 
+        public static string update_server = string.Empty;
+        public static string trust_server = string.Empty;
+
+        public static bool update_server_status = false;
+        public static bool trust_server_status = false;
+
         int failed_count = 0;
         public static System.Timers.Timer check_health_timer;
 
-        // Server config
-        public static bool ssl = false;
-        public static string package_guid = String.Empty;
-        public static string update_servers = String.Empty;
-        public static string trust_servers = String.Empty;
-        public static string tenant_guid = String.Empty;
-        public static string location_guid = String.Empty;
-        public static string language = String.Empty;
-        public static string access_key = String.Empty;
-        public static bool authorized = false;
-
-        // Server communication
-        public static string update_server = String.Empty;
-        public static string trust_server = String.Empty;
-        public static bool communication_server_status = false;
-        public static bool remote_server_status = false;
-        public static bool trust_server_status = false;
-        public static bool update_server_status = false;
-        public static string http_https = String.Empty;
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.Run(async () =>
         {
+            bool first_run = true;
+
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (_logger.IsEnabled(LogLevel.Information))
+                if (first_run)
                 {
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                    if (_logger.IsEnabled(LogLevel.Information))
+                    {
+                        _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+
+                        // Load server config
+                        Server_Config.Load();
+
+                        Check_Health();
+
+                        check_health_timer = new System.Timers.Timer(300000); //Do every 5 minutes
+                        check_health_timer.Elapsed += new ElapsedEventHandler(Tick);
+                        check_health_timer.Enabled = true;
+
+                        first_run = false;
+                    }
                 }
+                
                 await Task.Delay(1000, stoppingToken);
             }
-        }
-
-        private void Init()
-        {
-            // Load server config
-            Server_Config.Load();
-
-            Check_Health();
-
-            check_health_timer = new System.Timers.Timer(300000); //Do every 5 minutes
-            check_health_timer.Elapsed += new ElapsedEventHandler(Tick);
-            check_health_timer.Enabled = true;
-        }
+            await Task.Delay(5000, stoppingToken);
+        });
 
         private async void Check_Health()
         {
+            Console.WriteLine("Check_Health");
+
             bool comm_agent_healthy = false;
             bool remote_agent_healthy = false;
 
             //If still not running, reinstall the client.
             try
             {
-                ServiceController sc = new ServiceController("NetLock_RMM_Comm_Agent_Windows");
-                if (sc.Status.Equals(ServiceControllerStatus.StartPending) || sc.Status.Equals(ServiceControllerStatus.Running))
+                if (OperatingSystem.IsWindows())
                 {
-                    Logging.Debug("Check_Health (NetLock_RMM_Comm_Agent_Windows)", "Running", "Installed & running.");
-                    comm_agent_healthy = true;
-                }
-                else if (sc.Status.Equals(ServiceControllerStatus.Stopped) || sc.Status.Equals(ServiceControllerStatus.StopPending))
-                {
-                    Logging.Debug("Check_Health (NetLock_RMM_Comm_Agent_Windows)", "Stopped|StopPending", "Installed, but stopped or stop is pending.");
-                }
+                    ServiceController sc = new ServiceController("NetLock_RMM_Agent_Comm");
+                    if (sc.Status.Equals(ServiceControllerStatus.StartPending) || sc.Status.Equals(ServiceControllerStatus.Running))
+                    {
+                        Logging.Debug("Check_Health (NetLock_RMM_Agent_Comm)", "Running", "Installed & running.");
+                        comm_agent_healthy = true;
+                    }
+                    else if (sc.Status.Equals(ServiceControllerStatus.Stopped) || sc.Status.Equals(ServiceControllerStatus.StopPending))
+                    {
+                        Logging.Debug("Check_Health (NetLock_RMM_Agent_Comm)", "Stopped|StopPending", "Installed, but stopped or stop is pending.");
+                    }
 
-                sc = new ServiceController("NetLock_RMM_Remote_Agent_Windows");
-                if (sc.Status.Equals(ServiceControllerStatus.StartPending) || sc.Status.Equals(ServiceControllerStatus.Running))
-                {
-                    Logging.Debug("Check_Health (NetLock_RMM_Remote_Agent_Windows)", "Running", "Installed & running.");
-                    remote_agent_healthy = true;
+                    sc = new ServiceController("NetLock_RMM_Agent_Remote");
+                    if (sc.Status.Equals(ServiceControllerStatus.StartPending) || sc.Status.Equals(ServiceControllerStatus.Running))
+                    {
+                        Logging.Debug("Check_Health (NetLock_RMM_Agent_Remote)", "Running", "Installed & running.");
+                        remote_agent_healthy = true;
+                    }
+                    else if (sc.Status.Equals(ServiceControllerStatus.Stopped) || sc.Status.Equals(ServiceControllerStatus.StopPending))
+                    {
+                        Logging.Debug("Check_Health (NetLock_RMM_Agent_Remote)", "Stopped|StopPending", "Installed, but stopped or stop is pending.");
+                    }
                 }
-                else if (sc.Status.Equals(ServiceControllerStatus.Stopped) || sc.Status.Equals(ServiceControllerStatus.StopPending))
+                else if (OperatingSystem.IsLinux())
                 {
-                    Logging.Debug("Check_Health (NetLock_RMM_Remote_Agent_Windows)", "Stopped|StopPending", "Installed, but stopped or stop is pending.");
+                    string[] servicesToCheck = { "netlock-rmm-agent-comm", "netlock-rmm-agent-remote" };
+
+                    foreach (var serviceName in servicesToCheck)
+                    {
+                        string serviceCommand = $"systemctl list-units --type=service --all | grep -w {serviceName}.service";
+
+                        // Execute bash script and save the output
+                        string output = Bash.Execute_Script("Service Sensor", false, serviceCommand);
+
+                        if (string.IsNullOrWhiteSpace(output))
+                        {
+                            //Console.WriteLine($"Service {sensor_item.service_name} not found or no output received.");
+                            continue;
+                        }
+
+                        bool isServiceRunning = false;
+
+                        // Check status
+                        // Use Regex to match running status
+                        var match = Regex.Match(output, $@"running", RegexOptions.Multiline);
+
+                        if (match.Success)
+                            isServiceRunning = true;
+
+                        if (isServiceRunning)
+                        {
+                            Logging.Debug($"Check_Health ({serviceName})", "Running", "Installed & running.");
+                            if (serviceName == "netlock-rmm-agent-comm")
+                                comm_agent_healthy = true;
+                            else if (serviceName == "netlock-rmm-agent-remote")
+                                remote_agent_healthy = true;
+                        }
+                        else
+                        {
+                            Logging.Debug($"Check_Health ({serviceName})", "Stopped", "Installed, but stopped.");
+                        }
+                    }
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    string[] servicesToCheck = { "netlock-rmm-agent-comm", "netlock-rmm-agent-remote" };
+
+                    foreach (var serviceName in servicesToCheck)
+                    {
+                        string serviceCommand = $"launchctl list | grep -w {serviceName}";
+
+                        // Execute bash script and save the output
+                        string output = Bash.Execute_Script("Service Health Check", false, serviceCommand);
+
+                        if (!string.IsNullOrEmpty(output))
+                        {
+                            // Check if the service is running by inspecting the output
+                            if (output.Contains("PID") || output.Contains("running", StringComparison.OrdinalIgnoreCase))
+                            {
+                                Logging.Debug($"Check_Health ({serviceName})", "Running", "Installed & running.");
+                                if (serviceName == "netlock-rmm-agent-comm")
+                                    comm_agent_healthy = true;
+                                else if (serviceName == "netlock-rmm-agent-remote")
+                                    remote_agent_healthy = true;
+                            }
+                            else
+                            {
+                                Logging.Debug($"Check_Health ({serviceName})", "Stopped", "Installed, but stopped.");
+                            }
+                        }
+                        else
+                        {
+                            Logging.Debug($"Check_Health ({serviceName})", "Unknown", $"Service {serviceName} not found or in an unknown state.");
+                        }
+                    }
                 }
             }
             catch (Exception ex)
@@ -108,20 +180,138 @@ namespace NetLock_RMM_Agent_Health
 
                 try
                 {
-                    ServiceController sc;
-
-                    if (!comm_agent_healthy)
+                    if (OperatingSystem.IsWindows())
                     {
-                        sc = new ServiceController("NetLock_RMM_Comm_Agent_Windows");
-                        sc.Start();
-                        failed_count = 0;
+                        ServiceController sc;
+
+                        if (!comm_agent_healthy)
+                        {
+                            sc = new ServiceController("NetLock_RMM_Comm_Agent_Windows");
+                            sc.Start();
+                            failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service_Healthy", "Service started.");
+                        }
+
+                        if (!remote_agent_healthy)
+                        {
+                            sc = new ServiceController("NetLock_RMM_Remote_Agent_Windows");
+                            sc.Start();
+                            failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service_Healthy", "Service started.");
+                        }
                     }
-
-                    if (!remote_agent_healthy)
+                    else if (OperatingSystem.IsLinux())
                     {
-                        sc = new ServiceController("NetLock_RMM_Remote_Agent_Windows");
-                        sc.Start();
-                        failed_count = 0;
+                        if (!comm_agent_healthy)
+                        {
+                            // Start the service
+                            Bash.Execute_Script("Service Start", false, "systemctl start netlock-rmm-agent-comm.service");
+
+                            // Check status
+                            string output = Bash.Execute_Script("Service status", false, "systemctl list-units --type=service --all | grep -w netlock-rmm-agent-comm.service");
+
+                            Logging.Debug("Check_Health", "Service status output", output);
+
+                            if (string.IsNullOrWhiteSpace(output))
+                            {
+                                Logging.Debug("Check_Health", "Service status output", "Service not found or no output received.");
+                                //Console.WriteLine($"Service {sensor_item.service_name} not found or no output received.");
+                                return;
+                            }
+
+                            // Check status
+                            // Use Regex to match running status
+                            var match = Regex.Match(output, $@"running", RegexOptions.Multiline);
+
+                            if (match.Success)
+                                failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service status match", match.Success.ToString());
+                        }
+
+                        if (!remote_agent_healthy)
+                        {
+                            // Start the service
+                            Bash.Execute_Script("Service Start", false, "systemctl start netlock-rmm-agent-remote.service");
+                            
+                            // Check status
+                            string output = Bash.Execute_Script("Service Sensor", false, "systemctl list-units --type=service --all | grep -w netlock-rmm-agent-remote.service");
+                            
+                            if (string.IsNullOrWhiteSpace(output))
+                            {
+                                //Console.WriteLine($"Service {sensor_item.service_name} not found or no output received.");
+                                return;
+                            }
+                                                        
+                            // Check status
+                            // Use Regex to match running status
+                            var match = Regex.Match(output, $@"running", RegexOptions.Multiline);
+                         
+                            if (match.Success)
+                                failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service status match", match.Success.ToString());
+                        }
+                    }
+                    else if (OperatingSystem.IsMacOS())
+                    {
+                        if (!comm_agent_healthy)
+                        {
+                            // Start the service
+                            MacOS.Helper.Zsh.Execute_Script("Service Start", false, "launchctl start netlock-rmm-agent-comm");
+
+                            string output = MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl list | grep netlock-rmm-agent-comm");
+
+                            Logging.Debug("Check_Health", "Service status output", output);
+
+                            // Regex to extract only the line for the specific service
+                            string pattern = $@"^\S+\s+\S+\s+netlock-rmm-agent-comm$";
+                            var match = Regex.Match(output, pattern, RegexOptions.Multiline);
+
+                            bool isServiceRunning = false;
+
+                            if (match.Success)
+                            {
+                                // Extrahiere den PID-Wert oder das "-" am Anfang der Zeile
+                                string[] parts = match.Value.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                isServiceRunning = parts[0] != "-"; // "-" means the service is not running
+                            }
+
+                            if (isServiceRunning)
+                                failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service status match", match.Success.ToString());
+                        }
+
+                        if (!remote_agent_healthy)
+                        {
+                            // Start the service
+                            MacOS.Helper.Zsh.Execute_Script("Service Start", false, "launchctl start netlock-rmm-agent-remote");
+                         
+                            string output = MacOS.Helper.Zsh.Execute_Script("Service Sensor", false, $"launchctl list | grep netlock-rmm-agent-remote");
+
+                            Logging.Debug("Check_Health", "Service status output", output);
+
+                            // Regex to extract only the line for the specific service
+                            string pattern = $@"^\S+\s+\S+\s+netlock-rmm-agent-remote$";
+                            var match = Regex.Match(output, pattern, RegexOptions.Multiline);
+                            
+                            bool isServiceRunning = false;
+
+                            if (match.Success)
+                            {
+                                // Extract the PID value or the `-` at the beginning of the line
+                                string[] parts = match.Value.Split(new[] { '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                                isServiceRunning = parts[0] != "-"; // "-" means the service is not running
+                            }
+
+                            if (isServiceRunning)
+                                failed_count = 0;
+
+                            Logging.Debug("Check_Health", "Service status match", match.Success.ToString());
+                        }
                     }
 
                     Logging.Debug("Check_Health", "Service_Healthy", "Service started.");
@@ -148,34 +338,55 @@ namespace NetLock_RMM_Agent_Health
                 bool http_status = true;
 
                 // Download comm agent package
-                http_status = await Helper.Http.DownloadFileAsync(ssl, update_server + Application_Paths.installer_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path, package_guid);
+                http_status = await Http.DownloadFileAsync(Global.Configuration.Agent.ssl, update_server + Application_Paths.installer_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Global.Configuration.Agent.package_guid);
                 Logging.Debug("Main", "Download installer package", http_status.ToString());
 
                 // Get hash uninstaller
-                string installer_hash = await Helper.Http.GetHashAsync(ssl, trust_server + Application_Paths.installer_package_url + ".sha512", package_guid);
+                string installer_hash = await Http.GetHashAsync(Global.Configuration.Agent.ssl, trust_server + Application_Paths.installer_package_url + ".sha512", Global.Configuration.Agent.package_guid);
                 Logging.Debug("Main", "Get hash installer", installer_hash);
 
-                if (http_status && !String.IsNullOrEmpty(installer_hash) && Helper.IO.Get_SHA512(Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path) == installer_hash)
+                if (http_status && !String.IsNullOrEmpty(installer_hash) && IO.Get_SHA512(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path)) == installer_hash)
                 {
                     Logging.Debug("Main", "Check hash installer package", "OK");
 
                     // Extract the installer
                     try
                     {
-                        ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path, Application_Paths.c_temp_netlock_installer_dir);
+                        ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Application_Paths.c_temp_netlock_installer_dir);
                         Logging.Debug("Main", "Extract installer package", "OK");
 
                         Logging.Debug("Main", "Argument", "fix " + Application_Paths.program_data_server_config_json);
 
                         // Run the installer
-                        Process installer = new Process();
-                        installer.StartInfo.FileName = Application_Paths.c_temp_netlock_installer_path;
-                        installer.StartInfo.Arguments = $"fix \"{Application_Paths.program_data_server_config_json}\"";
-                        installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                        installer.Start();
-                        installer.WaitForExit();
+                        if (OperatingSystem.IsWindows())
+                        {
+                            Process installer = new Process();
+                            installer.StartInfo.FileName = Application_Paths.c_temp_netlock_installer_path;
+                            installer.StartInfo.Arguments = $"fix \"{Application_Paths.program_data_server_config_json}\"";
+                            installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            installer.Start();
+                            installer.WaitForExit();
+                        }
+                        else if (OperatingSystem.IsLinux())
+                        {
+                            Process installer = new Process();
+                            installer.StartInfo.FileName = "bash";
+                            installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_netlock_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
+                            installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            installer.Start();
+                            installer.WaitForExit();
+                        }
+                        else if (OperatingSystem.IsMacOS())
+                        {
+                            Process installer = new Process();
+                            installer.StartInfo.FileName = "zsh";
+                            installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_netlock_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
+                            installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            installer.Start();
+                            installer.WaitForExit();
 
-                        Logging.Debug("Main", "Run installer", "OK");
+                            Logging.Debug("Main", "Run installer", "OK");
+                        }
                     }
                     catch (Exception ex)
                     {

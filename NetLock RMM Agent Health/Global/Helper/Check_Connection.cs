@@ -41,7 +41,7 @@ namespace Global.Helper
                 }
 
                 // Check connections to trust server. Split trust_servers with "," and check each server
-                values = new List<string>(Worker.trust_servers.Split(','));
+                values = new List<string>(Configuration.Agent.trust_servers.Split(','));
 
                 foreach (var value in values)
                 {

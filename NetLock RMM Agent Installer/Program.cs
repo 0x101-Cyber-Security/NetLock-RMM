@@ -389,17 +389,17 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-agent-remote");
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-remote");
                     }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
@@ -418,19 +418,19 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
                         Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
                         Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
                     }
@@ -447,17 +447,17 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-agent-remote");
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-comm-agent.plist");
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-remote-agent.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-comm.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-remote.plist");
                     }
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services deleted.");
 
@@ -515,19 +515,19 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Stopping services", false, "systemctl stop netlock-rmm-health-agent");
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-health-agent");
                     }
@@ -550,10 +550,10 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-health-agent");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
@@ -561,10 +561,10 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-health-agent");
                         Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
@@ -585,19 +585,19 @@ namespace NetLock_RMM_Agent_Installer
                     }
                     else if (OperatingSystem.IsLinux())
                     {
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-comm-agent");
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-remote-agent");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-agent-comm");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-agent-remote");
                         Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Deleting services", false, "systemctl disable netlock-rmm-health-agent");
                     }
                     else if (OperatingSystem.IsMacOS())
                     {
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-comm-agent");
-                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-comm-agent.plist");
-                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-remote-agent");
-                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-remote-agent.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-comm.plist");
+                        Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
+                        Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-remote.plist");
                         Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-health-agent");
                         Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-health-agent.plist");
                     }
@@ -745,15 +745,15 @@ namespace NetLock_RMM_Agent_Installer
                     Logging.Handler.Debug("Main", "Registering comm agent as service", "");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering comm agent as service.");
                     Bash.Execute_Script("Registering comm agent as service", false,
-                        "cp /path/to/comm-agent /usr/bin/netlock-rmm-comm-agent");
+                        "cp /path/to/comm-agent /usr/bin/netlock-rmm-agent-comm");
                     Bash.Execute_Script("Registering comm agent as service", false,
-                        "chmod +x /usr/bin/netlock-rmm-comm-agent");
+                        "chmod +x /usr/bin/netlock-rmm-agent-comm");
 
                     // Create service file for comm agent
-                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-comm-agent.service", "netlock-rmm-comm-agent", "/usr/bin/netlock-rmm-comm-agent");
+                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-agent-comm.service", "netlock-rmm-agent-comm", "/usr/bin/netlock-rmm-agent-comm");
 
                     Bash.Execute_Script("Registering comm agent as service", false,
-                        "systemctl enable netlock-rmm-comm-agent");
+                        "systemctl enable netlock-rmm-agent-comm");
                     Logging.Handler.Debug("Main", "Register comm agent as service", "Done.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register comm agent as service: Done.");
 
@@ -761,15 +761,15 @@ namespace NetLock_RMM_Agent_Installer
                     Logging.Handler.Debug("Main", "Registering remote agent as service", "");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering remote agent as service.");
                     Bash.Execute_Script("Registering remote agent as service", false,
-                        "cp /path/to/remote-agent /usr/bin/netlock-rmm-remote-agent");
+                        "cp /path/to/remote-agent /usr/bin/netlock-rmm-agent-remote");
                     Bash.Execute_Script("Registering remote agent as service", false,
-                        "chmod +x /usr/bin/netlock-rmm-remote-agent");
+                        "chmod +x /usr/bin/netlock-rmm-agent-remote");
 
                     // Create service file for remote agent
-                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-remote-agent.service", "netlock-rmm-remote-agent", "/usr/bin/netlock-rmm-remote-agent");
+                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-agent-remote.service", "netlock-rmm-agent-remote", "/usr/bin/netlock-rmm-agent-remote");
 
                     Bash.Execute_Script("Registering remote agent as service", false,
-                        "systemctl enable netlock-rmm-remote-agent");
+                        "systemctl enable netlock-rmm-agent-remote");
                     Logging.Handler.Debug("Main", "Register remote agent as service", "Done.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Register remote agent as service: Done.");
 
