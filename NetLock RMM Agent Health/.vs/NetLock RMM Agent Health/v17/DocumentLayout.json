@@ -69,6 +69,10 @@
           "SelectedChildIndex": 9,
           "Children": [
             {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+            },
+            {
               "$type": "Document",
               "DocumentIndex": 3,
               "Title": "Bash.cs",
@@ -78,8 +82,7 @@
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
               "ViewState": "AgIAABkAAAAAAAAAAAAgwD0AAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-26T00:09:17.966Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-26T00:09:17.966Z"
             },
             {
               "$type": "Document",
@@ -91,8 +94,7 @@
               "RelativeToolTip": "MacOS\\Helper\\Zsh.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-26T00:08:16.818Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-26T00:08:16.818Z"
             },
             {
               "$type": "Document",
@@ -104,12 +106,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2025-01-25T23:20:18.623Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Bookmark",
-              "Name": "ST:0:0:{e5c86464-96be-4d7c-9a8b-abcb3bbf5f92}"
+              "WhenOpened": "2025-01-25T23:20:18.623Z"
             },
             {
               "$type": "Document",
@@ -121,8 +118,7 @@
               "RelativeToolTip": "Initialization\\Server_Config.cs",
               "ViewState": "AgIAAKEAAAAAAAAAAAAuwJ8AAABcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T23:21:40.803Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T23:21:40.803Z"
             },
             {
               "$type": "Document",
@@ -134,8 +130,7 @@
               "RelativeToolTip": "Initialization\\Health.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T23:17:10.604Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T23:17:10.604Z"
             },
             {
               "$type": "Document",
@@ -147,7 +142,8 @@
               "RelativeToolTip": "Global\\Helper\\IO.cs",
               "ViewState": "AgIAABMAAAAAAAAAAAAgwBYAAAAbAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T16:02:40.725Z"
+              "WhenOpened": "2025-01-25T16:02:40.725Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -159,7 +155,8 @@
               "RelativeToolTip": "Global\\Helper\\Http.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAAEQAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T16:02:36.888Z"
+              "WhenOpened": "2025-01-25T16:02:36.888Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -171,8 +168,7 @@
               "RelativeToolTip": "Global\\Helper\\Check_Connection.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAAwDUAAAA6AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T16:02:30.719Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T16:02:30.719Z"
             },
             {
               "$type": "Document",
@@ -182,7 +178,7 @@
               "RelativeDocumentMoniker": "Worker.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Health\\Worker.cs",
               "RelativeToolTip": "Worker.cs",
-              "ViewState": "AgIAACsBAAAAAAAAAAAtwEMBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAPIAAAAAAAAAAAAtwEoBAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-25T15:55:16.811Z",
               "EditorCaption": ""
@@ -197,8 +193,7 @@
               "RelativeToolTip": "Global\\Helper\\Server_Config.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAgwBMAAABYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T16:02:44.64Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T16:02:44.64Z"
             },
             {
               "$type": "Document",
@@ -210,8 +205,7 @@
               "RelativeToolTip": "Application_Paths.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T16:00:51.873Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T16:00:51.873Z"
             },
             {
               "$type": "Document",
@@ -223,8 +217,7 @@
               "RelativeToolTip": "Global\\Configuration\\Agent.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T15:56:54.815Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T15:56:54.815Z"
             },
             {
               "$type": "Document",
@@ -248,8 +241,7 @@
               "RelativeToolTip": "Program.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-25T15:55:15.13Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-25T15:55:15.13Z"
             }
           ]
         }

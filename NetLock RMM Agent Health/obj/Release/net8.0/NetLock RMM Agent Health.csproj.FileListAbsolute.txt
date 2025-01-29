@@ -1,0 +1,51 @@
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\appsettings.Development.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\appsettings.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\NetLock RMM Agent Health.exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\NetLock RMM Agent Health.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\NetLock RMM Agent Health.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\NetLock RMM Agent Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\NetLock RMM Agent Health.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.CommandLine.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.EnvironmentVariables.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.FileExtensions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.Json.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Configuration.UserSecrets.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Diagnostics.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Diagnostics.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.FileProviders.Physical.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.FileSystemGlobbing.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Hosting.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.Configuration.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.Console.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.Debug.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Logging.EventSource.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Options.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Options.ConfigurationExtensions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\Microsoft.Extensions.Primitives.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\System.ServiceProcess.ServiceController.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.Messages.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Diagnostics.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\runtimes\win\lib\net8.0\System.ServiceProcess.ServiceController.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.csproj.AssemblyReference.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.AssemblyInfoInputs.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.AssemblyInfo.cs
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.csproj.CoreCompileInputs.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.sourcelink.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock .F8918C41.Up2Date
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\refint\NetLock RMM Agent Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\NetLock RMM Agent Health.genruntimeconfig.cache
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\ref\NetLock RMM Agent Health.dll

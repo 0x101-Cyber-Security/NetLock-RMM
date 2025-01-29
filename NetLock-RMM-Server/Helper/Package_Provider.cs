@@ -28,7 +28,7 @@ namespace Helper
                     if (version != Application_Settings.version || String.IsNullOrEmpty(version) || String.IsNullOrEmpty(old_package_url) || package_url != old_package_url)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkYellow;
-                        Console.WriteLine("Packages are not setup. Version or package url is different. Attempting to download from package provider...");
+                        Console.WriteLine("Package is not setup. Version or package url is different. Attempting to download from package provider...");
 
                         if (Directory.Exists(Application_Paths._private_files_netlock))
                         {
@@ -40,7 +40,6 @@ namespace Helper
                                 File.Delete(file);
 
                             // Delete files in temp folder
-
                             if (Directory.Exists(Application_Paths._private_files_netlock_temp))
                             {
                                 foreach (string file in Directory.GetFiles(Application_Paths._private_files_netlock_temp))
@@ -48,16 +47,21 @@ namespace Helper
                             }
                         }
 
+                        Console.WriteLine("Cleaned previous package.");
+
+                        // Create temp folder
                         if (!Directory.Exists(Application_Paths._private_files_netlock_temp))
                             Directory.CreateDirectory(Application_Paths._private_files_netlock_temp);
 
                         string package_download_location = Path.Combine(Application_Paths._private_files_netlock_temp, "package.zip");
+                        
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.WriteLine("Downloading new package. This might take a while...");
 
                         // Download the new version
-                        using (WebClient client = new WebClient())
-                        {
-                            client.DownloadFile(package_url, package_download_location);
-                        }
+                        await Http.Download_File(package_url, package_download_location);
+
+                        Console.WriteLine("Package downloaded. Extracting...");
 
                         // Unzip the new version
                         ZipFile.ExtractToDirectory(package_download_location, Application_Paths._private_files_netlock);
@@ -65,18 +69,20 @@ namespace Helper
                         // Write new package_url to package_url.txt
                         File.WriteAllText(Path.Combine(Application_Paths._private_files_netlock, "package_url.txt"), package_url);
 
+                        Console.WriteLine("Registering packages...");
+
                         // Register all files
                         foreach (string file in Directory.GetFiles(Application_Paths._private_files_netlock, "*", SearchOption.AllDirectories))
                             await NetLock_RMM_Server.Files.Handler.Register_File(file, String.Empty, String.Empty, String.Empty);
 
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Packages successfully setup & ready...");
+                        Console.WriteLine("Packages successfully setup & ready! :)");
                         Console.ResetColor();
                     }
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Green;
-                        Console.WriteLine("Packages are ready...");
+                        Console.WriteLine("Packages are ready.");
                         Console.ResetColor();
                     }
                 }
@@ -87,6 +93,7 @@ namespace Helper
 
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine("Packages could not be setup. Please make sure you provided a package provider url in the webconsole and that it can be accessed from the backend. Otherwise you cannot install or update agents with this backend.");
+                Console.WriteLine("Error: " + ex.Message);
                 Console.ResetColor();
             }
         }

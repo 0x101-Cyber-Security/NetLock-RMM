@@ -1373,7 +1373,11 @@ if (role_update || role_trust)
             // Verify roles to make sure that the correct files are provided
             if (!role_update)
             {
-                if (fileName == "comm.package" || fileName == "health.package" || fileName == "remote.package" || fileName == "uninstaller.package")
+                if (fileName == "comm.package.win-x64.zip" || fileName == "comm.package.win-arm64.zip" || fileName == "comm.package.osx-x64.zip" || fileName == "comm.package.osx-arm64.zip" || fileName == "comm.package.linux-x64.zip" || fileName == "comm.package.linux-arm64.zip" ||
+                fileName == "remote.package.win-x64.zip" || fileName == "remote.package.win-arm64.zip" || fileName == "remote.package.osx-x64.zip" || fileName == "remote.package.osx-arm64.zip" || fileName == "remote.package.linux-x64.zip" || fileName == "remote.package.linux-arm64.zip" ||
+                fileName == "health.package.win-x64.zip" || fileName == "health.package.win-arm64.zip" || fileName == "health.package.osx-x64.zip" || fileName == "health.package.osx-arm64.zip" || fileName == "health.package.linux-x64.zip" || fileName == "health.package.linux-arm64.zip" ||
+                fileName == "user.process.package.win-x64.zip" || fileName == "user.process.package.win-arm64.zip" || fileName == "user.process.package.osx-x64.zip" || fileName == "user.process.package.osx-arm64.zip" || fileName == "user.process.package.linux-x64.zip" || fileName == "user.process.package.linux-arm64.zip"
+                )
                 {
                     context.Response.StatusCode = 401;
                     await context.Response.WriteAsync("Unauthorized.");
@@ -1383,7 +1387,11 @@ if (role_update || role_trust)
 
             if (!role_trust)
             {
-                if (fileName == "comm.package.sha512" || fileName == "health.package.sha512" || fileName == "remote.package.sha512" || fileName == "uninstaller.package.sha512")
+                if (fileName == "comm.package.win-x64.sha512" || fileName == "comm.package.win-arm64.sha512" || fileName == "comm.package.osx-x64.sha512" || fileName == "comm.package.osx-arm64.sha512" || fileName == "comm.package.linux-x64.sha512" || fileName == "comm.package.linux-arm64.sha512" ||
+                fileName == "remote.package.win-x64.sha512" || fileName == "remote.package.win-arm64.sha512" || fileName == "remote.package.osx-x64.sha512" || fileName == "remote.package.osx-arm64.sha512" || fileName == "remote.package.linux-x64.sha512" || fileName == "remote.package.linux-arm64.sha512" ||
+                fileName == "health.package.win-x64.sha512" || fileName == "health.package.win-arm64.sha512" || fileName == "health.package.osx-x64.sha512" || fileName == "health.package.osx-arm64.sha512" || fileName == "health.package.linux-x64.sha512" || fileName == "health.package.linux-arm64.sha512" ||
+                fileName == "user.process.package.win-x64.sha512" || fileName == "user.process.package.win-arm64.sha512" || fileName == "user.process.package.osx-x64.sha512" || fileName == "user.process.package.osx-arm64.sha512" || fileName == "user.process.package.linux-x64.sha512" || fileName == "user.process.package.linux-arm64.sha512"
+                )
                 {
                     context.Response.StatusCode = 401;
                     await context.Response.WriteAsync("Unauthorized.");

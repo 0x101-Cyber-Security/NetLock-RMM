@@ -2,6 +2,7 @@ using _x101.HWID_System;
 using Global.Helper;
 using NetLock_RMM_Agent_Comm;
 using System.Net;
+using Microsoft.Extensions.Hosting;
 
 Console.WriteLine("Starting NetLock RMM Comm Agent");
 
@@ -86,6 +87,7 @@ if (OperatingSystem.IsWindows())
     Logging.Debug("Program.cs", "Startup", "Starting Windows Worker");
 
     builder.Services.AddHostedService<Windows_Worker>();
+    builder.Services.AddWindowsService();
 }
 else if (OperatingSystem.IsLinux())
 {    
@@ -101,6 +103,9 @@ else if (OperatingSystem.IsMacOS())
     Logging.Debug("Program.cs", "Startup", "Starting MacOS Worker");
     builder.Services.AddHostedService<MacOS_Worker>();*/
 }
+
+Console.WriteLine("Starting Host");
+Logging.Debug("Program.cs", "Startup", "Starting Host");
 
 var host = builder.Build();
 host.Run();
