@@ -48,70 +48,80 @@ namespace NetLock_RMM_Agent_Comm
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            bool first_run = true;
+            bool firstRun = true;
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (first_run)
+                if (firstRun)
                 {
-                    _logger.LogInformation("Windows worker first run: {time}", DateTimeOffset.Now);
-
-                    Logging.Debug("Windows.ExecuteAsync", "Service started", "Service started");
-                     
-                    // Check OS version (legacy code for Windows 7. Need to verify it's still working and not causing security issues)
-                    string osVersion = Environment.OSVersion.Version.ToString();
-
-                    if (!string.IsNullOrEmpty(osVersion))
-                    {
-                        char osVersionChar = osVersion[0];
-
-                        if (osVersionChar == '6')
-                        {
-                            Logging.Debug("Windows.ExecuteAsync", "OS_Version", $"OS ({osVersionChar}) is old. Switching to compatibility mode.");
-                            ServicePointManager.Expect100Continue = true;
-                            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                        }
-                        else
-                        {
-                            Logging.Debug("Windows.ExecuteAsync", "OS_Version", $"OS ({osVersionChar}) is new.");
-                        }
-                    }
-                    else
-                    {
-                        Logging.Debug("Windows.ExecuteAsync", "OS_Version", "OS version could not be determined.");
-                    }
-
-                    // Check directories
-                    Windows.Initialization.Health.Handler.Check_Directories();
-                    Windows.Initialization.Health.Handler.Check_Registry();
-
-                    // Setup synchronize timer
-                    try
-                    {
-                        sync_timer = new System.Timers.Timer(600000); //sync 10 minutes
-                        sync_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
-                        sync_timer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Error("Windows.ExecuteAsync", "Start sync_timer", ex.ToString());
-                    }
-
-                    //Start Init Timer. We are doing this to get the service instantly running on service manager. Afterwards we will dispose the timer in Synchronize function
-                    try
-                    {
-                        start_timer = new System.Timers.Timer(2500);
-                        start_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
-                        start_timer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Debug("Windows.ExecuteAsync", "Start start_timer", ex.ToString());
-                    }
-
-                    first_run = false;
+                    await InitializeOnFirstRun(stoppingToken); // 
+                    firstRun = false;
                 }
+
                 await Task.Delay(5000, stoppingToken);
+            }
+        }
+
+        /// <summary>
+        /// Initialises all one-off tasks without blocking the main loop.
+        /// </summary>
+        private async Task InitializeOnFirstRun(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Windows worker first run: {time}", DateTimeOffset.Now);
+            Logging.Debug("Windows.ExecuteAsync", "Service started", "Service started");
+
+            // Check OS version
+            string osVersion = Environment.OSVersion.Version.ToString();
+            if (!string.IsNullOrEmpty(osVersion))
+            {
+                char osVersionChar = osVersion[0];
+
+                if (osVersionChar == '6')
+                {
+                    Logging.Debug("Windows.ExecuteAsync", "OS_Version", $"OS ({osVersionChar}) is old. Switching to compatibility mode.");
+                    ServicePointManager.Expect100Continue = true;
+                    ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+                }
+                else
+                {
+                    Logging.Debug("Windows.ExecuteAsync", "OS_Version", $"OS ({osVersionChar}) is new.");
+                }
+            }
+            else
+            {
+                Logging.Debug("Windows.ExecuteAsync", "OS_Version", "OS version could not be determined.");
+            }
+
+            // Check directories and registration asynchronously
+            Windows.Initialization.Health.Handler.Check_Directories();
+            Windows.Initialization.Health.Handler.Check_Registry();
+
+            // Set up synchronisation timer
+            try
+            {
+                sync_timer?.Dispose(); // Falls vorher schon ein Timer existierte, aufräumen
+                sync_timer = new System.Timers.Timer(600000); // 10 Minuten
+                sync_timer.Elapsed += Initialize_Timer_Tick;
+                sync_timer.AutoReset = true;
+                sync_timer.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Windows.ExecuteAsync", "Start sync_timer", ex.ToString());
+            }
+
+            // Start timer for immediate start
+            try
+            {
+                start_timer?.Dispose();
+                start_timer = new System.Timers.Timer(2500);
+                start_timer.Elapsed += Initialize_Timer_Tick;
+                start_timer.AutoReset = false; // Nur einmal ausführen
+                start_timer.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Debug("Windows.ExecuteAsync", "Start start_timer", ex.ToString());
             }
         }
 

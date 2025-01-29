@@ -80,64 +80,71 @@ namespace NetLock_RMM_Agent_Comm
         public static System.Timers.Timer events_timer;
         public static System.Timers.Timer jobs_time_scheduler_timer;
         public static System.Timers.Timer sensors_time_scheduler_timer;
-
-        protected override Task ExecuteAsync(CancellationToken stoppingToken) => Task.Run(async () =>
+        
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            bool first_run = true;
+            bool firstRun = true;
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                if (first_run)
+                if (firstRun)
                 {
-                    _logger.LogInformation("Device worker first run: {time}", DateTimeOffset.Now);
-
-                    Logging.Debug("Device_Worker.ExecuteAsync", "Service started", "Service started");
-
-                    // Setup local server
-                    _ = Task.Run(async () => await Local_Server_Start());
-
-                    //Start events timer (testing it to run at the end, to prevent a locked service)
-                    try
-                    {
-                        events_timer = new System.Timers.Timer(10000);
-                        events_timer.Elapsed += new ElapsedEventHandler(Process_Events_Timer_Tick);
-                        events_timer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Error("Device_Worker.ExecuteAsync", "Start Event_Processor_Timer", ex.ToString());
-                    }
-
-                    // Setup synchronize timer
-                    try
-                    {
-                        sync_timer = new System.Timers.Timer(600000); //sync 10 minutes
-                        sync_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
-                        sync_timer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Error("Device_Worker.ExecuteAsync", "Start sync_timer", ex.ToString());
-                    }
-
-                    //Start Init Timer. We are doing this to get the service instantly running on service manager. Afterwards we will dispose the timer in Synchronize function
-                    try
-                    {
-                        start_timer = new System.Timers.Timer(2500);
-                        start_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
-                        start_timer.Enabled = true;
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Debug("Device_Worker.ExecuteAsync", "Start start_timer", ex.ToString());
-                    }
-
-                    first_run = false;
+                    await InitializeOnFirstRun(stoppingToken); // Initialize all one-off tasks without blocking the main loop
+                    firstRun = false;
                 }
+
+                await Task.Delay(5000, stoppingToken);
+            }
+        }
+
+        /// <summary>
+        /// Initialises all one-off tasks without blocking the main loop.
+        /// </summary>
+        private async Task InitializeOnFirstRun(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Device worker first run: {time}", DateTimeOffset.Now);
+
+            Logging.Debug("Device_Worker.ExecuteAsync", "Service started", "Service started");
+
+            // Setup local server
+            _ = Task.Run(async () => await Local_Server_Start());
+
+            //Start events timer (testing it to run at the end, to prevent a locked service)
+            try
+            {
+                events_timer = new System.Timers.Timer(10000);
+                events_timer.Elapsed += new ElapsedEventHandler(Process_Events_Timer_Tick);
+                events_timer.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Worker.ExecuteAsync", "Start Event_Processor_Timer", ex.ToString());
             }
 
-            await Task.Delay(5000, stoppingToken);
-        });
+            // Setup synchronize timer
+            try
+            {
+                sync_timer = new System.Timers.Timer(600000); //sync 10 minutes
+                sync_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
+                sync_timer.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Worker.ExecuteAsync", "Start sync_timer", ex.ToString());
+            }
+
+            //Start Init Timer. We are doing this to get the service instantly running on service manager. Afterwards we will dispose the timer in Synchronize function
+            try
+            {
+                start_timer = new System.Timers.Timer(2500);
+                start_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
+                start_timer.Enabled = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Debug("Device_Worker.ExecuteAsync", "Start start_timer", ex.ToString());
+            }
+        }
 
         private async void Process_Events_Timer_Tick(object source, ElapsedEventArgs e)
         {

@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
+using Microsoft.Win32;
 
 namespace NetLock_RMM_Agent_Installer
 {
@@ -33,9 +34,6 @@ namespace NetLock_RMM_Agent_Installer
 
         static void Main(string[] args)
         {
-            // Set the execution directory
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
-
             Task.Run(() => MainAsync(args)).GetAwaiter().GetResult();
         }
 
@@ -55,7 +53,6 @@ namespace NetLock_RMM_Agent_Installer
 ";
 
                 Console.WriteLine(title);
-                Console.WriteLine("[" + DateTime.Now + "] - [Execution path] -> " + Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
                 Console.ForegroundColor = ConsoleColor.White;
 
                 string arg1 = String.Empty;
@@ -784,6 +781,17 @@ namespace NetLock_RMM_Agent_Installer
                 Logging.Handler.Debug("Main", "Extracting user process package", "");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process package.");
                 ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), Application_Paths.program_files_user_process_dir);
+
+                // Setup user process to start with user logon (Windows only)
+                if (OperatingSystem.IsWindows())
+                {
+                    Logging.Handler.Debug("Main", "Setup user process to start with user logon", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Setup user process to start with user logon.");
+                    // Create registry key
+                    RegistryKey registry_key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+                    registry_key.SetValue("NetLock RMM User Process", Application_Paths.program_files_user_process_path);
+                    registry_key.Close();
+                }
 
                 // Copy server config json to program data dir
                 if (arg1 == "clean")

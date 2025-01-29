@@ -50,6 +50,10 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.Win32.Registry": {
+              "target": "Package",
+              "version": "[5.0.0, )"
+            },
             "System.ServiceProcess.ServiceController": {
               "target": "Package",
               "version": "[9.0.1, )"
