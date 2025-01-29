@@ -89,3 +89,4 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\S
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\unix\lib\net8.0\System.Data.SqlClient.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\runtimes\win\lib\net8.0\System.Data.SqlClient.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\Microsoft.Extensions.Hosting.WindowsServices.dll

@@ -52,7 +52,11 @@
           "dependencies": {
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.0.1, )"
+              "version": "[9.0.1, )"
+            },
+            "Microsoft.Extensions.Hosting.WindowsServices": {
+              "target": "Package",
+              "version": "[9.0.1, )"
             },
             "System.ServiceProcess.ServiceController": {
               "target": "Package",

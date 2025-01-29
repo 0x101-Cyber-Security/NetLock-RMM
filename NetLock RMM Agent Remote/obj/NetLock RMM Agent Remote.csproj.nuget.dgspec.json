@@ -56,7 +56,11 @@
             },
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.0.1, )"
+              "version": "[9.0.1, )"
+            },
+            "Microsoft.Extensions.Hosting.WindowsServices": {
+              "target": "Package",
+              "version": "[9.0.1, )"
             },
             "System.Management": {
               "target": "Package",
@@ -64,7 +68,7 @@
             },
             "System.ServiceProcess.ServiceController": {
               "target": "Package",
-              "version": "[9.0.0, )"
+              "version": "[9.0.1, )"
             }
           },
           "imports": [

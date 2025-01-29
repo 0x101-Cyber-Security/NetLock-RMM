@@ -5,6 +5,6 @@
   </PropertyGroup>
   <PropertyGroup>
     <ActiveDebugProfile>WSL</ActiveDebugProfile>
-    <_LastSelectedProfileId>C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Remote\Properties\PublishProfiles\linux-arm64.pubxml</_LastSelectedProfileId>
+    <_LastSelectedProfileId>C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Remote\Properties\PublishProfiles\win-x64.pubxml</_LastSelectedProfileId>
   </PropertyGroup>
 </Project>

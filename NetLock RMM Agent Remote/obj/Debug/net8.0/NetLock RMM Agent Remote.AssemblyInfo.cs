@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NetLock RMM Agent Remote")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e470adec4bbb30f88bf4f66cf3ec905dfffae770")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef1a8568083b3ba089ba6d2cf4166127f1e4e04a")]
 [assembly: System.Reflection.AssemblyProductAttribute("NetLock RMM Agent Remote")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NetLock RMM Agent Remote")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

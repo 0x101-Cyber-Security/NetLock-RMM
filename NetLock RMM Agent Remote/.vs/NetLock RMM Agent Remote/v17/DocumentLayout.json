@@ -3,20 +3,20 @@
   "WorkspaceRootPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\initialization\\health.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:initialization\\health.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\global\\helper\\service.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:global\\helper\\service.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\initialization\\health.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:initialization\\health.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\global\\helper\\service.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:global\\helper\\service.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\windows\\helper\\wmi.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -94,7 +94,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 11,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -110,8 +110,7 @@
               "RelativeToolTip": "Linux\\Helper\\Linux.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T23:52:38.092Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T23:52:38.092Z"
             },
             {
               "$type": "Document",
@@ -157,7 +156,7 @@
               "RelativeDocumentMoniker": "NetLock RMM Agent Remote.csproj",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\NetLock RMM Agent Remote.csproj",
               "RelativeToolTip": "NetLock RMM Agent Remote.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
               "WhenOpened": "2024-12-13T22:19:51.925Z"
             },
@@ -175,15 +174,16 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 0,
               "Title": "Remote_Worker.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Remote_Worker.cs",
               "RelativeDocumentMoniker": "Remote_Worker.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Remote_Worker.cs",
               "RelativeToolTip": "Remote_Worker.cs",
-              "ViewState": "AgIAAD0BAAAAAAAAAAAnwFABAABXAAAAAAAAAA==",
+              "ViewState": "AgIAAFIAAAAAAAAAAAAewGwAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:15:07.381Z"
+              "WhenOpened": "2024-12-13T22:15:07.381Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -199,16 +199,15 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Service.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Global\\Helper\\Service.cs",
               "RelativeDocumentMoniker": "Global\\Helper\\Service.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Global\\Helper\\Service.cs",
               "RelativeToolTip": "Global\\Helper\\Service.cs",
-              "ViewState": "AgIAAAYAAAAAAAAAAAAAAD8AAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAAMAAAAAAAAAAIBJwD8AAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:26:00.424Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:26:00.424Z"
             },
             {
               "$type": "Document",
@@ -224,7 +223,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Health.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Initialization\\Health.cs",
               "RelativeDocumentMoniker": "Initialization\\Health.cs",
@@ -232,8 +231,7 @@
               "RelativeToolTip": "Initialization\\Health.cs",
               "ViewState": "AgIAAAkAAAAAAAAAAAAAACMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:22:04.502Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T22:22:04.502Z"
             },
             {
               "$type": "Document",
@@ -243,7 +241,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-13T22:15:04.581Z",
               "EditorCaption": ""
