@@ -203,6 +203,8 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\p
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.FileSystemGlobbing.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Hosting.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Hosting.Systemd.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Logging.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.Extensions.Logging.Configuration.dll

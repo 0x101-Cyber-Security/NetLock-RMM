@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "WohrA6SPc14=",
+  "dgSpecHash": "eBHXt8edFD0=",
   "success": true,
   "projectFilePath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
   "expectedPackageFiles": [
@@ -23,6 +23,8 @@
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.filesystemglobbing\\9.0.1\\microsoft.extensions.filesystemglobbing.9.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.hosting\\9.0.1\\microsoft.extensions.hosting.9.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.hosting.abstractions\\9.0.1\\microsoft.extensions.hosting.abstractions.9.0.1.nupkg.sha512",
+    "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.hosting.systemd\\9.0.1\\microsoft.extensions.hosting.systemd.9.0.1.nupkg.sha512",
+    "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.hosting.windowsservices\\9.0.1\\microsoft.extensions.hosting.windowsservices.9.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.logging\\9.0.1\\microsoft.extensions.logging.9.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\9.0.1\\microsoft.extensions.logging.abstractions.9.0.1.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.extensions.logging.configuration\\9.0.1\\microsoft.extensions.logging.configuration.9.0.1.nupkg.sha512",

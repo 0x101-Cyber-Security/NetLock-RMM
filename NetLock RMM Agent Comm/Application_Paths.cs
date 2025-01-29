@@ -11,10 +11,10 @@ namespace NetLock_RMM_Agent_Comm
     internal class Application_Paths
     {
         // Paths
-        public static string c_temp = @"C:\temp";
-        public static string c_temp_netlock_dir = @"C:\temp\netlock rmm";
-        public static string c_temp_installer_dir = @"C:\temp\netlock rmm\installer";
-        public static string c_temp_installer_path = c_temp_installer_dir + @"\NetLock RMM Agent Installer (Windows).exe";
+        public static string c_temp = GetTempPath();
+        public static string c_temp_netlock_dir = Path.Combine(GetTempPath(), "netlock rmm");
+        public static string c_temp_installer_dir = Path.Combine(GetTempPath(), "netlock rmm", "installer");
+        public static string c_temp_installer_path = Path.Combine(c_temp_installer_dir, "NetLock RMM Agent Installer.exe");
 
         // NetLock Paths
         public static string netlock_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "NetLock RMM Comm Agent Windows", "NetLock RMM Comm Agent Windows.exe");
@@ -41,8 +41,14 @@ namespace NetLock_RMM_Agent_Comm
         public static string program_data_netlock_events_database = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "events.nlock");
 
         // Installer
-        public static string installer_package_url = "/private/downloads/netlock/installer.package";
-        public static string installer_package_path = @"\installer.package";
+        public static string installer_package_url_winx64 = "/private/downloads/netlock/installer.package.win-x64.zip";
+        public static string installer_package_url_winarm64 = "/private/downloads/netlock/installer.package.win-arm64.zip";
+        public static string installer_package_url_linuxx64 = "/private/downloads/netlock/installer.package.linux-x64.zip";
+        public static string installer_package_url_linuxarm64 = "/private/downloads/netlock/installer.package.linux-arm64.zip";
+        public static string installer_package_url_osx64 = "/private/downloads/netlock/installer.package.osx-x64.zip";
+        public static string installer_package_url_osxarm64 = "/private/downloads/netlock/installer.package.osx-arm64.zip";
+
+        public static string installer_package_path = @"installer.package";
 
         // Reg Keys
         public static string netlock_reg_path = @"SOFTWARE\WOW6432Node\NetLock RMM\Comm Agent";
@@ -104,6 +110,30 @@ namespace NetLock_RMM_Agent_Comm
             {
                 throw new NotSupportedException("Unsupported OS");
             }
+        }
+
+        public static string GetTempPath()
+        {
+            string basePath;
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                basePath = @"C:\temp";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                basePath = "/tmp";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                basePath = "/tmp";
+            }
+            else
+            {
+                throw new NotSupportedException("Unsupported OS");
+            }
+
+            return basePath;
         }
     }
 }

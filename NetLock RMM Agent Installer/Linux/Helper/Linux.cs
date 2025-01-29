@@ -12,12 +12,15 @@ namespace Linux.Helper
         // Helper method to create service files dynamically
         public static void CreateServiceFile(string serviceFilePath, string serviceName, string executablePath)
         {
+            // Wenn der Pfad Leerzeichen enthält, setzen wir ihn in doppelte Anführungszeichen
+            string formattedExecutablePath = $"\"{executablePath}\"";
+
             string serviceContent = @$"[Unit]
 Description={serviceName}
 After=network.target
 
 [Service]
-ExecStart={executablePath}
+ExecStart={formattedExecutablePath}
 Restart=always
 RestartSec=5s
 User=root

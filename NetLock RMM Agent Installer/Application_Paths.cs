@@ -21,6 +21,7 @@ namespace NetLock_RMM_Agent_Installer
         public static string comm_agent_package_url_osxarm64 = "/private/downloads/netlock/comm.package.osx-arm64.zip";
 
         public static string program_files_comm_agent_dir = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent");
+        public static string program_files_comm_agent_dir_linux = "/usr/bin/netlock-rmm-agent-comm";
         public static string program_files_comm_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "NetLock RMM Agent Comm.exe");
 
         public static string program_data_comm_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent");
@@ -71,7 +72,7 @@ namespace NetLock_RMM_Agent_Installer
 
         public static string program_files_user_process_dir = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent");
         public static string program_data_user_process_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "User Agent");
-        public static string program_files_user_process_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock RMM User Process.exe");
+        public static string program_files_user_process_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock RMM User Process.exe");
 
         public static string comm_agent_package_path = @"comm.package";
         public static string remote_agent_package_path = @"remote.package";
@@ -86,6 +87,8 @@ namespace NetLock_RMM_Agent_Installer
         // Linux specific
         public static string linux_program_files_comm_agent_service_path = "/etc/systemd/system/netlock-rmm-comm-agent.service";
 
+        // Windows registry
+        public static string hklm_run_directory_reg_path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
 
         private static string GetBasePath_CommonApplicationData()
         {

@@ -8,6 +8,17 @@ Console.WriteLine("Starting NetLock RMM Comm Agent");
 
 var builder = Host.CreateApplicationBuilder(args);
 
+foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+{
+    foreach (var type in assembly.GetTypes())
+    {
+        if (typeof(FileSystemWatcher).IsAssignableFrom(type) || type.Name.Contains("FileSystemWatcher"))
+        {
+            Console.WriteLine($"Gefunden in: {assembly.FullName}, Typ: {type.FullName}");
+        }
+    }
+}
+
 // Check if debug mode
 if (Logging.Check_Debug_Mode()) // debug_mode
 {
@@ -91,6 +102,7 @@ if (OperatingSystem.IsWindows())
 }
 else if (OperatingSystem.IsLinux())
 {    
+    builder.Services.AddSystemd();
     // Currently disabled because there are no linux only native functions implemented
     /*Console.WriteLine("Starting Linux Worker");
     Logging.Debug("Program.cs", "Startup", "Starting Linux Worker");

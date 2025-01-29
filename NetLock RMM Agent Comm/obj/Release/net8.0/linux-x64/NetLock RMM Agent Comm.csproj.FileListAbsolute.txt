@@ -254,3 +254,5 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\l
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\linux-x64\NetLock RMM Agent Comm.genruntimeconfig.cache
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\linux-x64\ref\NetLock RMM Agent Comm.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\linux-x64\System.IO.Pipelines.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\linux-x64\Microsoft.Extensions.Hosting.WindowsServices.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\linux-x64\Microsoft.Extensions.Hosting.Systemd.dll

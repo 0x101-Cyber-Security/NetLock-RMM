@@ -5,6 +5,7 @@ using System.Timers;
 using System.ServiceProcess;
 using Helper;
 using System.Text.RegularExpressions;
+using System.Reflection.Metadata.Ecma335;
 
 namespace NetLock_RMM_Agent_Health
 {
@@ -45,7 +46,7 @@ namespace NetLock_RMM_Agent_Health
 
                         Check_Health();
 
-                        check_health_timer = new System.Timers.Timer(300000); //Do every 5 minutes
+                        check_health_timer = new System.Timers.Timer(60000); //Do every minute
                         check_health_timer.Elapsed += new ElapsedEventHandler(Tick);
                         check_health_timer.Enabled = true;
 
@@ -169,6 +170,8 @@ namespace NetLock_RMM_Agent_Health
             catch (Exception ex)
             {
                 Logging.Debug("Check_Health", "Catch", "Not installed or error: " + ex.Message);
+                comm_agent_healthy = false;
+                remote_agent_healthy = false;
             }
 
             //If service is healthy do nothing, else reinstall the service
@@ -186,7 +189,7 @@ namespace NetLock_RMM_Agent_Health
 
                         if (!comm_agent_healthy)
                         {
-                            sc = new ServiceController("NetLock_RMM_Comm_Agent_Windows");
+                            sc = new ServiceController("NetLock_RMM_Agent_Comm");
                             sc.Start();
                             failed_count = 0;
 
@@ -195,7 +198,7 @@ namespace NetLock_RMM_Agent_Health
 
                         if (!remote_agent_healthy)
                         {
-                            sc = new ServiceController("NetLock_RMM_Remote_Agent_Windows");
+                            sc = new ServiceController("NetLock_RMM_Agent_Remote");
                             sc.Start();
                             failed_count = 0;
 
@@ -325,7 +328,18 @@ namespace NetLock_RMM_Agent_Health
             if (failed_count == 3 || failed_count > 3)
             {
                 Logging.Debug("Check_Health", "Service_Healthy", "Not healthy. Attempting reinstallation.");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Service not healthy. Attempting reinstallation.");
                 await Global.Helper.Check_Connection.Check_Servers();
+
+                // Check if online
+                if (!update_server_status || !trust_server_status)
+                {
+                    Logging.Debug("Check_Health", "Check_Servers", "Failed. Update server: " + update_server_status + " Trust server: " + trust_server_status);
+                    Logging.Debug("Check_Health", "Check_Servers", "Failed. Cannot connect to update or trust server.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Update server: " + update_server_status + " Trust server: " + trust_server_status);
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Cannot connect to update or trust server.");
+                    return;
+                }
 
                 // If installer exists, delete it and download the new one.
                 Delete_Installer();
@@ -334,15 +348,68 @@ namespace NetLock_RMM_Agent_Health
                 if (!Directory.Exists(Application_Paths.c_temp_netlock_installer_dir))
                     Directory.CreateDirectory(Application_Paths.c_temp_netlock_installer_dir);
 
+                // Check OS & Architecture
+                string installer_package_url = String.Empty;
+                
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
+                Logging.Debug("Main", "Detecting OS & Architecture", "");
+
+                if (OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
+                    Logging.Debug("Main", "Windows x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_winx64;
+                }
+                else if (OperatingSystem.IsWindows() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to WindowsARM.");
+                    Logging.Debug("Main", "Switching to WindowsARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_winarm64;
+                }
+                else if (OperatingSystem.IsLinux() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
+                    Logging.Debug("Main", "Linux x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_linuxx64;
+                }
+                else if (OperatingSystem.IsLinux() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to LinuxARM.");
+                    Logging.Debug("Main", "Switching to LinuxARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_linuxarm64;
+                }
+                else if (OperatingSystem.IsMacOS() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
+                    Logging.Debug("Main", "MacOS x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_osx64;
+                }
+                else if (OperatingSystem.IsMacOS() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to MacOSARM.");
+                    Logging.Debug("Main", "Switching to MacOSARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_osxarm64;
+                }
+                else
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Unsupported OS & Architecture.");
+                    Logging.Error("Main", "Unsupported OS & Architecture", "");
+                    Thread.Sleep(5000);
+                    Environment.Exit(0);
+                }
+
                 // Download Installer
                 bool http_status = true;
 
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Downloading installer package: " + update_server + installer_package_url);
+                Logging.Debug("Main", "Downloading installer package", update_server + installer_package_url);
+
                 // Download comm agent package
-                http_status = await Http.DownloadFileAsync(Global.Configuration.Agent.ssl, update_server + Application_Paths.installer_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Global.Configuration.Agent.package_guid);
+                http_status = await Http.DownloadFileAsync(Global.Configuration.Agent.ssl, update_server + installer_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Global.Configuration.Agent.package_guid);
                 Logging.Debug("Main", "Download installer package", http_status.ToString());
 
                 // Get hash uninstaller
-                string installer_hash = await Http.GetHashAsync(Global.Configuration.Agent.ssl, trust_server + Application_Paths.installer_package_url + ".sha512", Global.Configuration.Agent.package_guid);
+                string installer_hash = await Http.GetHashAsync(Global.Configuration.Agent.ssl, trust_server + installer_package_url + ".sha512", Global.Configuration.Agent.package_guid);
                 Logging.Debug("Main", "Get hash installer", installer_hash);
 
                 if (http_status && !String.IsNullOrEmpty(installer_hash) && IO.Get_SHA512(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path)) == installer_hash)
@@ -353,6 +420,7 @@ namespace NetLock_RMM_Agent_Health
                     try
                     {
                         ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Application_Paths.c_temp_netlock_installer_dir);
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extract installer package: OK");
                         Logging.Debug("Main", "Extract installer package", "OK");
 
                         Logging.Debug("Main", "Argument", "fix " + Application_Paths.program_data_server_config_json);
@@ -360,33 +428,50 @@ namespace NetLock_RMM_Agent_Health
                         // Run the installer
                         if (OperatingSystem.IsWindows())
                         {
+                            Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Windows");
+                            Logging.Debug("Main", "Run installer", "Windows");
                             Process installer = new Process();
                             installer.StartInfo.FileName = Application_Paths.c_temp_netlock_installer_path;
-                            installer.StartInfo.Arguments = $"fix \"{Application_Paths.program_data_server_config_json}\"";
-                            installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            installer.StartInfo.ArgumentList.Add("fix");
+                            installer.StartInfo.ArgumentList.Add(Application_Paths.program_data_server_config_json);
+                            installer.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                             installer.Start();
                             installer.WaitForExit();
                         }
                         else if (OperatingSystem.IsLinux())
                         {
+                            Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Linux");
+                            Logging.Debug("Main", "Run installer", "Linux");
+
                             Process installer = new Process();
-                            installer.StartInfo.FileName = "bash";
-                            installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_netlock_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
+                            installer.StartInfo.FileName = "/bin/bash";
+                            installer.StartInfo.ArgumentList.Add("-c");
+                            installer.StartInfo.ArgumentList.Add($"sudo \"{Application_Paths.c_temp_netlock_installer_path}\" fix \"{Application_Paths.program_data_server_config_json}\"");
+                            installer.StartInfo.UseShellExecute = false;
+                            installer.StartInfo.RedirectStandardOutput = true;
+                            installer.StartInfo.RedirectStandardError = true;
                             installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                             installer.Start();
                             installer.WaitForExit();
                         }
                         else if (OperatingSystem.IsMacOS())
                         {
+                            Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: MacOS");
+                            Logging.Debug("Main", "Run installer", "MacOS");
+
                             Process installer = new Process();
                             installer.StartInfo.FileName = "zsh";
                             installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_netlock_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
                             installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                            installer.StartInfo.UseShellExecute = false;
+                            installer.StartInfo.RedirectStandardOutput = true;
+                            installer.StartInfo.RedirectStandardError = true;
                             installer.Start();
                             installer.WaitForExit();
-
-                            Logging.Debug("Main", "Run installer", "OK");
                         }
+
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: OK");
+                        Logging.Debug("Main", "Run installer", "OK");
                     }
                     catch (Exception ex)
                     {

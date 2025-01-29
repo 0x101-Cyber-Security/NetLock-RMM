@@ -49,3 +49,9 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Debug\net8.0\r
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Debug\net8.0\NetLock RMM Agent Health.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Debug\net8.0\NetLock RMM Agent Health.genruntimeconfig.cache
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Debug\net8.0\ref\NetLock RMM Agent Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\Microsoft.Extensions.Hosting.WindowsServices.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\System.Diagnostics.DiagnosticSource.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\System.IO.Pipelines.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\System.Text.Encodings.Web.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\System.Text.Json.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Debug\net8.0\runtimes\browser\lib\net8.0\System.Text.Encodings.Web.dll

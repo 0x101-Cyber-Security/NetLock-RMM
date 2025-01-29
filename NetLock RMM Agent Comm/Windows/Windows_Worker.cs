@@ -95,6 +95,7 @@ namespace NetLock_RMM_Agent_Comm
             // Check directories and registration asynchronously
             Windows.Initialization.Health.Handler.Check_Directories();
             Windows.Initialization.Health.Handler.Check_Registry();
+            Windows.Initialization.Health.Handler.User_Process();
 
             // Set up synchronisation timer
             try

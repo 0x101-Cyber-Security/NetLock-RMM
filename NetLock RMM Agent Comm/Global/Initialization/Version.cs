@@ -117,16 +117,66 @@ namespace Global.Initialization
                     Directory.CreateDirectory(Application_Paths.c_temp_netlock_dir);
 
                 // Download the new version
+                // Check OS & Architecture
+                string installer_package_url = String.Empty;
+
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
+                Logging.Debug("Main", "Detecting OS & Architecture", "");
+
+                if (OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
+                    Logging.Debug("Main", "Windows x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_winx64;
+                }
+                else if (OperatingSystem.IsWindows() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to WindowsARM.");
+                    Logging.Debug("Main", "Switching to WindowsARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_winarm64;
+                }
+                else if (OperatingSystem.IsLinux() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
+                    Logging.Debug("Main", "Linux x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_linuxx64;
+                }
+                else if (OperatingSystem.IsLinux() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to LinuxARM.");
+                    Logging.Debug("Main", "Switching to LinuxARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_linuxarm64;
+                }
+                else if (OperatingSystem.IsMacOS() && Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
+                    Logging.Debug("Main", "MacOS x64 detected", "");
+                    installer_package_url = Application_Paths.installer_package_url_osx64;
+                }
+                else if (OperatingSystem.IsMacOS() && !Environment.Is64BitOperatingSystem)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to MacOSARM.");
+                    Logging.Debug("Main", "Switching to MacOSARM", "");
+                    installer_package_url = Application_Paths.installer_package_url_osxarm64;
+                }
+                else
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Unsupported OS & Architecture.");
+                    Logging.Error("Main", "Unsupported OS & Architecture", "");
+                    Thread.Sleep(5000);
+                    Environment.Exit(0);
+                }
+
                 Logging.Debug("Initialization.Version_Handler.Update", "Downloading new version", "true");
-                await Http.DownloadFileAsync(Configuration.Agent.ssl, Device_Worker.update_server + Application_Paths.installer_package_url, Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path, Configuration.Agent.package_guid);
+                await Http.DownloadFileAsync(Configuration.Agent.ssl, Device_Worker.update_server + installer_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Configuration.Agent.package_guid);
 
                 // Get the hash of the new version
                 Logging.Debug("Initialization.Version_Handler.Update", "Getting hash of new version", "true");
-                string hash = await Http.GetHashAsync(Configuration.Agent.ssl, Device_Worker.update_server + Application_Paths.installer_package_url + ".sha512", Configuration.Agent.package_guid);
+                string hash = await Http.GetHashAsync(Configuration.Agent.ssl, Device_Worker.update_server + installer_package_url + ".sha512", Configuration.Agent.package_guid);
 
                 // Get the hash of the downloaded file
                 Logging.Debug("Initialization.Version_Handler.Update", "Getting hash of downloaded file", "true");
-                string downloaded_hash = IO.Get_SHA512(Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path);
+                string downloaded_hash = IO.Get_SHA512(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path));
 
                 // Compare the hashes
                 if (hash != downloaded_hash)
@@ -139,11 +189,11 @@ namespace Global.Initialization
 
                 // Extract the new version
                 Logging.Debug("Initialization.Version_Handler.Update", "Extracting new version", "true");
-                ZipFile.ExtractToDirectory(Application_Paths.c_temp_netlock_dir + Application_Paths.installer_package_path, Application_Paths.c_temp_installer_dir);
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.installer_package_path), Application_Paths.c_temp_installer_dir, true);
 
                 // Start the installer
                 Logging.Debug("Initialization.Version_Handler.Update", "Starting installer", "true");
-                Process.Start(Application_Paths.c_temp_installer_path, $"fix \"\"{Application_Paths.program_data_server_config_json}\"\"");
+                Process.Start(Application_Paths.c_temp_installer_path, $"fix \"{Application_Paths.program_data_server_config_json}\"");
             }
             catch (Exception ex)
             {

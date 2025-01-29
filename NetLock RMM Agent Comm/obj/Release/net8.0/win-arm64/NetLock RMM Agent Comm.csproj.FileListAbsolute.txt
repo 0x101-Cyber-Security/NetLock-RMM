@@ -255,3 +255,4 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\w
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.genruntimeconfig.cache
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\ref\NetLock RMM Agent Comm.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\System.IO.Pipelines.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\Microsoft.Extensions.Hosting.WindowsServices.dll
