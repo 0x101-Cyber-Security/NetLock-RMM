@@ -1,10 +1,10 @@
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Health.exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Health.exe
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\appsettings.Development.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\appsettings.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Health.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Health.deps.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Health.runtimeconfig.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Health.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Health.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Health.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Health.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\Microsoft.CSharp.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\Microsoft.VisualBasic.Core.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\win-x64\Microsoft.VisualBasic.dll

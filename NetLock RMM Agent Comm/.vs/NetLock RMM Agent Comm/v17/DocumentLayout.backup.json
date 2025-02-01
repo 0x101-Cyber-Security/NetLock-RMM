@@ -255,8 +255,7 @@
               "RelativeToolTip": "Global\\Initialization\\Version.cs",
               "ViewState": "AgIAAJEAAAAAAAAAAAAowLEAAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T00:50:21.638Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T00:50:21.638Z"
             },
             {
               "$type": "Document",
@@ -294,8 +293,7 @@
               "RelativeToolTip": "Global\\Initialization\\Check_Connection.cs",
               "ViewState": "AgIAAHoAAAAAAAAAAAAQwBQAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T23:19:01.956Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T23:19:01.956Z"
             },
             {
               "$type": "Document",
@@ -333,8 +331,7 @@
               "RelativeToolTip": "Global\\Initialization\\Server_Config.cs",
               "ViewState": "AgIAAAQBAAAAAAAAAAAvwA4BAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T22:55:33.811Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T22:55:33.811Z"
             },
             {
               "$type": "Document",
@@ -372,8 +369,7 @@
               "RelativeToolTip": "Application_Settings.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T01:21:20.746Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T01:21:20.746Z"
             },
             {
               "$type": "Document",
@@ -398,8 +394,7 @@
               "RelativeToolTip": "appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2024-11-24T23:19:37.685Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T23:19:37.685Z"
             },
             {
               "$type": "Document",
@@ -411,8 +406,7 @@
               "RelativeToolTip": "Application_Paths.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACgAAACnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T22:49:33.984Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T22:49:33.984Z"
             },
             {
               "$type": "Document",
@@ -463,8 +457,7 @@
               "RelativeToolTip": "Windows\\Initialization\\Health.cs",
               "ViewState": "AgIAADIAAAAAAAAAAAAEwFIAAACNAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T23:01:23.046Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T23:01:23.046Z"
             },
             {
               "$type": "Document",
@@ -567,8 +560,7 @@
               "RelativeToolTip": "Global\\Configuration\\Agent.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAdAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T15:49:52.015Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-13T15:49:52.015Z"
             },
             {
               "$type": "Document",
@@ -580,8 +572,7 @@
               "RelativeToolTip": "Global\\Helper\\Logging.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAIBZwCIAAAAnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T22:49:08.557Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T22:49:08.557Z"
             },
             {
               "$type": "Document",
@@ -606,8 +597,7 @@
               "RelativeToolTip": "MacOS\\Helper\\MacOS.cs",
               "ViewState": "AgIAACcAAAAAAAAAAAAqwEkAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-07T23:09:34.71Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-07T23:09:34.71Z"
             },
             {
               "$type": "Document",
@@ -619,8 +609,7 @@
               "RelativeToolTip": "MacOS\\Helper\\Zsh.cs",
               "ViewState": "AgIAACIAAAAAAAAAAAAgwDwAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-07T22:09:41.579Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-07T22:09:41.579Z"
             },
             {
               "$type": "Document",
@@ -645,8 +634,7 @@
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
               "ViewState": "AgIAADUAAAAAAAAAAAAvwFQAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-11T23:45:16.09Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-12-11T23:45:16.09Z"
             },
             {
               "$type": "Document",
@@ -658,8 +646,7 @@
               "RelativeToolTip": "Global\\Initialization\\Health.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAUwBgAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T16:44:39.359Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T16:44:39.359Z"
             },
             {
               "$type": "Document",
@@ -684,8 +671,7 @@
               "RelativeToolTip": "Windows\\Helper\\Windows.cs",
               "ViewState": "AgIAAH4AAAAAAAAAAAAIwJwAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T15:01:55.735Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T15:01:55.735Z"
             },
             {
               "$type": "Document",
@@ -749,8 +735,7 @@
               "RelativeToolTip": "Windows\\Helper\\PowerShell.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAD4vzYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T20:35:05.699Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T20:35:05.699Z"
             },
             {
               "$type": "Document",
@@ -762,8 +747,7 @@
               "RelativeToolTip": "HWID_System\\gen.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACEAAAADAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T22:52:18.303Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T22:52:18.303Z"
             },
             {
               "$type": "Document",
@@ -801,8 +785,7 @@
               "RelativeToolTip": "HWID_System\\cpu.cs",
               "ViewState": "AgIAAAcAAAAAAAAAAAAiwCEAAABnAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-24T22:52:17.15Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-24T22:52:17.15Z"
             },
             {
               "$type": "Document",
@@ -814,8 +797,7 @@
               "RelativeToolTip": "Global\\Initialization\\Database.cs",
               "ViewState": "AgIAAK0AAAAAAAAAAAAIwMAAAAAxAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-11-25T16:42:20.793Z",
-              "EditorCaption": ""
+              "WhenOpened": "2024-11-25T16:42:20.793Z"
             },
             {
               "$type": "Document",

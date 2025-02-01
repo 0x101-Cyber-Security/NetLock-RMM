@@ -1,10 +1,10 @@
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock RMM Agent Comm
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock_RMM_Agent_Comm
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\appsettings.Development.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\appsettings.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock RMM Agent Comm.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock RMM Agent Comm.deps.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock RMM Agent Comm.runtimeconfig.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock RMM Agent Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock_RMM_Agent_Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock_RMM_Agent_Comm.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock_RMM_Agent_Comm.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\NetLock_RMM_Agent_Comm.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.CSharp.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.VisualBasic.Core.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\linux-x64\Microsoft.VisualBasic.dll

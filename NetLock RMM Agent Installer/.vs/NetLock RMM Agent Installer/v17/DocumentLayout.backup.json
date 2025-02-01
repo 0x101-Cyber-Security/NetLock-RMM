@@ -87,9 +87,9 @@
               "Title": "Linux.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Linux\\Helper\\Linux.cs",
               "RelativeDocumentMoniker": "Linux\\Helper\\Linux.cs",
-              "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Linux\\Helper\\Linux.cs",
-              "RelativeToolTip": "Linux\\Helper\\Linux.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAACQAAAAEAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Linux\\Helper\\Linux.cs*",
+              "RelativeToolTip": "Linux\\Helper\\Linux.cs*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-25T15:05:49.155Z",
               "EditorCaption": ""
@@ -114,7 +114,7 @@
               "RelativeDocumentMoniker": "Linux\\Helper\\Bash.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Linux\\Helper\\Bash.cs",
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAAEIAAABSAAAAAAAAAA==",
+              "ViewState": "AgIAACIAAAAAAAAAAAAgwEIAAABSAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-25T14:42:47.086Z",
               "EditorCaption": ""
@@ -139,7 +139,7 @@
               "RelativeDocumentMoniker": "Application_Paths.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Application_Paths.cs",
               "RelativeToolTip": "Application_Paths.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAABEAAAAAAAAAA==",
+              "ViewState": "AgIAABEAAAAAAAAAAAAtwDQAAACyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-24T22:30:58.323Z",
               "EditorCaption": ""
@@ -227,7 +227,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAEQDAAAAAAAAAAAtwGIDAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAE4DAAAAAAAAAAAYwG4DAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-24T22:28:25.477Z",
               "EditorCaption": ""

@@ -404,6 +404,25 @@
           "buildTransitive/net8.0/_._": {}
         }
       },
+      "Microsoft.Extensions.Hosting.Systemd/9.0.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "9.0.1"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
       "Microsoft.Extensions.Hosting.WindowsServices/9.0.1": {
         "type": "package",
         "dependencies": {
@@ -1528,6 +1547,25 @@
         },
         "runtime": {
           "lib/net8.0/Microsoft.Extensions.Hosting.Abstractions.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net8.0/_._": {}
+        }
+      },
+      "Microsoft.Extensions.Hosting.Systemd/9.0.1": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "9.0.1"
+        },
+        "compile": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll": {
             "related": ".xml"
           }
         },
@@ -2792,6 +2830,30 @@
         "useSharedDesignerContext.txt"
       ]
     },
+    "Microsoft.Extensions.Hosting.Systemd/9.0.1": {
+      "sha512": "DCVM34Ey7NmfxicRuNZyZ+8HViO0Nee35r3ZFKfUY7qFVNAJ+VI4FUnz1mbyCFKFF1CsPmHVo/ZHqKfJkGTygw==",
+      "type": "package",
+      "path": "microsoft.extensions.hosting.systemd/9.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "PACKAGE.md",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net8.0/_._",
+        "buildTransitive/netcoreapp2.0/Microsoft.Extensions.Hosting.Systemd.targets",
+        "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll",
+        "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.xml",
+        "lib/net9.0/Microsoft.Extensions.Hosting.Systemd.dll",
+        "lib/net9.0/Microsoft.Extensions.Hosting.Systemd.xml",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Systemd.dll",
+        "lib/netstandard2.1/Microsoft.Extensions.Hosting.Systemd.xml",
+        "microsoft.extensions.hosting.systemd.9.0.1.nupkg.sha512",
+        "microsoft.extensions.hosting.systemd.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "Microsoft.Extensions.Hosting.WindowsServices/9.0.1": {
       "sha512": "FLapgOXQzPjUsbMqjjagCFCiGjroRmrmHQVK3/PEovRIvDU6nLk7KKs4PalzEHaIfqG+PySlY/BeLTyZtjcshg==",
       "type": "package",
@@ -4042,6 +4104,7 @@
   "projectFileDependencyGroups": {
     "net8.0": [
       "Microsoft.Extensions.Hosting >= 9.0.1",
+      "Microsoft.Extensions.Hosting.Systemd >= 9.0.1",
       "Microsoft.Extensions.Hosting.WindowsServices >= 9.0.1",
       "System.Data.SQLite >= 1.0.119",
       "System.Data.SqlClient >= 4.9.0",
@@ -4059,7 +4122,7 @@
     "version": "1.0.0",
     "restore": {
       "projectUniqueName": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
-      "projectName": "NetLock RMM Agent Comm",
+      "projectName": "NetLock_RMM_Agent_Comm",
       "projectPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
       "packagesPath": "C:\\Users\\NicoMak\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\obj\\publish\\win-arm64\\",
@@ -4102,6 +4165,10 @@
         "targetAlias": "net8.0",
         "dependencies": {
           "Microsoft.Extensions.Hosting": {
+            "target": "Package",
+            "version": "[9.0.1, )"
+          },
+          "Microsoft.Extensions.Hosting.Systemd": {
             "target": "Package",
             "version": "[9.0.1, )"
           },

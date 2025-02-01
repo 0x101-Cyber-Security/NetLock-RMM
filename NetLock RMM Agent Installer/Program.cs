@@ -485,10 +485,10 @@ namespace NetLock_RMM_Agent_Installer
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminating processes.");
                     if (OperatingSystem.IsWindows())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Agent Comm.exe");
-                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Agent Comm.exe\"");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Agent Remote.exe");
-                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Agent Remote.exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Comm.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Comm.exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Remote.exe\"");
                         Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
                         Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
                         //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
@@ -631,12 +631,12 @@ namespace NetLock_RMM_Agent_Installer
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminating processes.");
                     if (OperatingSystem.IsWindows())
                     {
-                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Agent Comm.exe");
-                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Agent Comm.exe\"");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Agent Remote.exe");
-                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Agent Remote.exe\"");
-                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM Agent Health.exe");
-                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM Agent Health.exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Comm.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Comm.exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Remote.exe\"");
+                        Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health.exe");
+                        Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Health.exe\"");
                         Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
                         Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
                         //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
@@ -872,7 +872,7 @@ namespace NetLock_RMM_Agent_Installer
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Registering comm agent as service.");
 
                     // Create service file for comm agent
-                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-agent-comm.service", "netlock-rmm-agent-comm", "/usr/bin/netlock-rmm-agent-comm/NetLock RMM Agent Comm");
+                    Linux.Helper.Linux.CreateServiceFile("/etc/systemd/system/netlock-rmm-agent-comm.service", "netlock-rmm-agent-comm", "/usr/bin/netlock-rmm-agent-comm/NetLock_RMM_Agent_Comm", "/usr/bin/netlock-rmm-agent-comm", "/var/log/netlock-rmm-agent-comm.log");
 
                     Bash.Execute_Script("Registering comm agent as service", false,
                         "systemctl enable netlock-rmm-agent-comm");

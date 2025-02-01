@@ -12,12 +12,12 @@ using System;
 using System.Reflection;
 
 [assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("dotnet-NetLock_RMM_Agent_Health-0d488fd0-d2b3-4258-8aa4-9ab5d22f2dd6")]
-[assembly: System.Reflection.AssemblyCompanyAttribute("NetLock RMM Agent Health")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("NetLock_RMM_Agent_Health")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5862d37e722aa820c630ea6c0662d5c17c367dca")]
-[assembly: System.Reflection.AssemblyProductAttribute("NetLock RMM Agent Health")]
-[assembly: System.Reflection.AssemblyTitleAttribute("NetLock RMM Agent Health")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+21adec3307e9e5958dfab51c382033a3d400a27a")]
+[assembly: System.Reflection.AssemblyProductAttribute("NetLock_RMM_Agent_Health")]
+[assembly: System.Reflection.AssemblyTitleAttribute("NetLock_RMM_Agent_Health")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Von der MSBuild WriteCodeFragment-Klasse generiert.

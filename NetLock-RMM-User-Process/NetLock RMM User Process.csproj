@@ -6,6 +6,7 @@
     <RootNamespace>NetLock_RMM_User_Process</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>NetLock_RMM_User_Process</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

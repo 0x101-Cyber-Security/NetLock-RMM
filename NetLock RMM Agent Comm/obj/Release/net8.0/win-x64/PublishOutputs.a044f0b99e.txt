@@ -1,10 +1,10 @@
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Comm.exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Comm.exe
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\appsettings.Development.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\appsettings.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Comm.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Comm.deps.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Comm.runtimeconfig.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock RMM Agent Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Comm.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Comm.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\NetLock_RMM_Agent_Comm.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.CSharp.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.VisualBasic.Core.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.VisualBasic.dll
@@ -203,6 +203,7 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\p
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.FileSystemGlobbing.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Hosting.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Hosting.Systemd.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Logging.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\publish\win-x64\Microsoft.Extensions.Logging.Abstractions.dll

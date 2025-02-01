@@ -14,14 +14,14 @@ namespace NetLock_RMM_Agent_Comm
         public static string c_temp = GetTempPath();
         public static string c_temp_netlock_dir = Path.Combine(GetTempPath(), "netlock rmm");
         public static string c_temp_installer_dir = Path.Combine(GetTempPath(), "netlock rmm", "installer");
-        public static string c_temp_installer_path = Path.Combine(c_temp_installer_dir, "NetLock RMM Agent Installer.exe");
+        public static string c_temp_installer_path = Path.Combine(c_temp_installer_dir, "NetLock_RMM_Agent_Installer.exe");
 
         // NetLock Paths
-        public static string netlock_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "NetLock RMM Comm Agent Windows", "NetLock RMM Comm Agent Windows.exe");
-        public static string netlock_health_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health", "NetLock RMM Health Agent.exe");
+        public static string netlock_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "NetLock RMM Comm Agent Windows", "NetLock_RMM_Comm_Agent_Windows.exe");
+        public static string netlock_health_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health", "NetLock_RMM_Health_Agent.exe");
         public static string netlock_installer_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Installer", "Installer.exe");
         public static string netlock_uninstaller_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Uninstaller", "Uninstaller.exe");
-        public static string netlock_user_process_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Process", "NetLock RMM User Process.exe");
+        public static string netlock_user_process_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Process", "NetLock_RMM_User_Process.exe");
 
         public static string program_data = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent");
         public static string program_data_logs = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Logs");

@@ -1,10 +1,10 @@
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock RMM Agent Health
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock_RMM_Agent_Health
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\appsettings.Development.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\appsettings.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock RMM Agent Health.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock RMM Agent Health.deps.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock RMM Agent Health.runtimeconfig.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock RMM Agent Health.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock_RMM_Agent_Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock_RMM_Agent_Health.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock_RMM_Agent_Health.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\NetLock_RMM_Agent_Health.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.CSharp.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.VisualBasic.Core.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.VisualBasic.dll
@@ -31,7 +31,6 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Data.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.Contracts.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.Debug.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.DiagnosticSource.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.FileVersionInfo.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.Process.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.StackTrace.dll
@@ -141,8 +140,6 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Encoding.CodePages.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Encoding.Extensions.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Encoding.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Encodings.Web.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Json.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.RegularExpressions.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Threading.Channels.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Threading.Overlapped.dll
@@ -204,6 +201,7 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.FileSystemGlobbing.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Hosting.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Hosting.Abstractions.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Hosting.WindowsServices.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Logging.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Logging.Abstractions.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Logging.Configuration.dll
@@ -214,5 +212,9 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Options.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Options.ConfigurationExtensions.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\Microsoft.Extensions.Primitives.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.DiagnosticSource.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Diagnostics.EventLog.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.IO.Pipelines.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.ServiceProcess.ServiceController.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Encodings.Web.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\publish\linux-arm64\System.Text.Json.dll

@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-NetLock_RMM_Agent_Remote-069835b7-0e4e-42de-bf97-f65bf75bb24d</UserSecretsId>
     <RootNamespace>NetLock_RMM_Agent_Remote</RootNamespace>
+    <AssemblyName>NetLock_RMM_Agent_Remote</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

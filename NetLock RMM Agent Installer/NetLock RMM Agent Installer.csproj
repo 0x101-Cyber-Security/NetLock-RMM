@@ -6,6 +6,7 @@
     <RootNamespace>NetLock_RMM_Agent_Installer</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <AssemblyName>NetLock_RMM_Agent_Installer</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

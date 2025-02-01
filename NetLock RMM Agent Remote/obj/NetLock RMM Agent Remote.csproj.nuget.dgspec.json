@@ -8,7 +8,7 @@
       "version": "1.0.0",
       "restore": {
         "projectUniqueName": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\NetLock RMM Agent Remote.csproj",
-        "projectName": "NetLock RMM Agent Remote",
+        "projectName": "NetLock_RMM_Agent_Remote",
         "projectPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\NetLock RMM Agent Remote.csproj",
         "packagesPath": "C:\\Users\\NicoMak\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\obj\\",

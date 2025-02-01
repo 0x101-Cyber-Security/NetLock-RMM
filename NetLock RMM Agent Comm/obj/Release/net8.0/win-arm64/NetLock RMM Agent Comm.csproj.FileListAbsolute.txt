@@ -1,10 +1,5 @@
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\appsettings.Development.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\appsettings.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock RMM Agent Comm.exe
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock RMM Agent Comm.deps.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock RMM Agent Comm.runtimeconfig.json
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock RMM Agent Comm.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock RMM Agent Comm.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\EntityFramework.SqlServer.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\EntityFramework.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\Microsoft.Extensions.Configuration.dll
@@ -249,10 +244,16 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\w
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.csproj.CoreCompileInputs.cache
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.sourcelink.json
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock .D706EACC.Up2Date
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\refint\NetLock RMM Agent Comm.dll
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock RMM Agent Comm.genruntimeconfig.cache
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\ref\NetLock RMM Agent Comm.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\System.IO.Pipelines.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\Microsoft.Extensions.Hosting.WindowsServices.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.exe
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.deps.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.runtimeconfig.json
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\bin\Release\net8.0\win-arm64\Microsoft.Extensions.Hosting.Systemd.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\refint\NetLock_RMM_Agent_Comm.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\NetLock_RMM_Agent_Comm.pdb
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Comm\obj\Release\net8.0\win-arm64\ref\NetLock_RMM_Agent_Comm.dll

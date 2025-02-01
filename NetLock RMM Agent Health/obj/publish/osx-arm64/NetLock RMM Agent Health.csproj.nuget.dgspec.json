@@ -8,7 +8,7 @@
       "version": "1.0.0",
       "restore": {
         "projectUniqueName": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Health\\NetLock RMM Agent Health.csproj",
-        "projectName": "NetLock RMM Agent Health",
+        "projectName": "NetLock_RMM_Agent_Health",
         "projectPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Health\\NetLock RMM Agent Health.csproj",
         "packagesPath": "C:\\Users\\NicoMak\\.nuget\\packages\\",
         "outputPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Health\\obj\\publish\\osx-arm64\\",
@@ -52,7 +52,11 @@
           "dependencies": {
             "Microsoft.Extensions.Hosting": {
               "target": "Package",
-              "version": "[8.0.1, )"
+              "version": "[9.0.1, )"
+            },
+            "Microsoft.Extensions.Hosting.WindowsServices": {
+              "target": "Package",
+              "version": "[9.0.1, )"
             },
             "System.ServiceProcess.ServiceController": {
               "target": "Package",

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>dotnet-NetLock_RMM_Agent_Health-0d488fd0-d2b3-4258-8aa4-9ab5d22f2dd6</UserSecretsId>
     <RootNamespace>NetLock_RMM_Agent_Health</RootNamespace>
+    <AssemblyName>NetLock_RMM_Agent_Health</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>

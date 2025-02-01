@@ -4121,7 +4121,7 @@
     "version": "1.0.0",
     "restore": {
       "projectUniqueName": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
-      "projectName": "NetLock RMM Agent Comm",
+      "projectName": "NetLock_RMM_Agent_Comm",
       "projectPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\NetLock RMM Agent Comm.csproj",
       "packagesPath": "C:\\Users\\NicoMak\\.nuget\\packages\\",
       "outputPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Comm\\obj\\publish\\linux-x64\\",

@@ -12,12 +12,12 @@ using System;
 using System.Reflection;
 
 [assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("dotnet-NetLock_RMM_Agent_Remote-069835b7-0e4e-42de-bf97-f65bf75bb24d")]
-[assembly: System.Reflection.AssemblyCompanyAttribute("NetLock RMM Agent Remote")]
+[assembly: System.Reflection.AssemblyCompanyAttribute("NetLock_RMM_Agent_Remote")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+ef1a8568083b3ba089ba6d2cf4166127f1e4e04a")]
-[assembly: System.Reflection.AssemblyProductAttribute("NetLock RMM Agent Remote")]
-[assembly: System.Reflection.AssemblyTitleAttribute("NetLock RMM Agent Remote")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+21adec3307e9e5958dfab51c382033a3d400a27a")]
+[assembly: System.Reflection.AssemblyProductAttribute("NetLock_RMM_Agent_Remote")]
+[assembly: System.Reflection.AssemblyTitleAttribute("NetLock_RMM_Agent_Remote")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
 
 // Von der MSBuild WriteCodeFragment-Klasse generiert.
