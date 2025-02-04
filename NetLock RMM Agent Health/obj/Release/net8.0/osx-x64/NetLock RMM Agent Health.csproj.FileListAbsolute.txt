@@ -230,3 +230,4 @@ C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\osx-x64\refint\NetLock_RMM_Agent_Health.dll
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\osx-x64\NetLock_RMM_Agent_Health.pdb
 C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\obj\Release\net8.0\osx-x64\ref\NetLock_RMM_Agent_Health.dll
+C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Health\bin\Release\net8.0\osx-x64\Microsoft.Extensions.Hosting.Systemd.dll

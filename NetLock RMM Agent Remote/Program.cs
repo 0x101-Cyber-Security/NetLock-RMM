@@ -31,6 +31,7 @@ else if (OperatingSystem.IsLinux())
     Logging.Debug("Program.cs", "Startup", "Linux platform detected");
 
     Global.Configuration.Agent.platform = "Linux";
+    builder.Services.AddSystemd();
 }
 else if (OperatingSystem.IsMacOS())
 {

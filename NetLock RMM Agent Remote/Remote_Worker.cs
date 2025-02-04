@@ -7,6 +7,7 @@ using System.Collections.Concurrent;
 using System.Net.Http.Headers;
 using System.Net;
 using System.Security.AccessControl;
+using System.Runtime.CompilerServices;
 
 namespace NetLock_RMM_Agent_Remote
 {
@@ -195,6 +196,8 @@ namespace NetLock_RMM_Agent_Remote
                             Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Remote server URL", remote_server_url);
                             Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Remote server URL (command)", remote_server_url_command);
                             Logging.Debug("Service.Local_Server_Handle_Server_Messages", "File server URL", file_server_url);
+
+                            await Remote_Server_Check_Connection_Status();
                         }
                     }
                 }
@@ -228,30 +231,25 @@ namespace NetLock_RMM_Agent_Remote
         {
             try
             {
-                // Check if the local_server_client is connected
+                if (local_server_client == null)
+                {
+                    Logging.Error("Service.Check_Connection_Status", "local_server_client is null.", "");
+                    return;
+                }
+
+                if (remote_server_client == null)
+                {
+                    Logging.Error("Service.Check_Connection_Status", "remote_server_client is null.", "");
+                    return;
+                }
+
+                // Check if the local_server_client is connected and if, execute regular tasks
                 if (local_server_client.Connected)
                 {
                     Logging.Debug("Service.Check_Connection_Status", "Local server connection is active.", "");
 
                     // Get the device identity from the local server
                     await Local_Server_Send_Message("get_device_identity");
-
-                    // Check if the remote_server_client is setup
-                    if (!String.IsNullOrEmpty(device_identity) && !remote_server_client_setup)
-                    {
-                        // If the device identity is not empty and the remote_server_client is not setup, setup the remote_server_client
-                        await Setup_SignalR();
-                    }
-                    else if (!String.IsNullOrEmpty(device_identity) && remote_server_client.State == HubConnectionState.Disconnected)
-                    {
-                        // If the device identity is not empty and the remote_server_client is disconnected, reconnect
-                        await Remote_Connect();
-                    }
-                    else if (!String.IsNullOrEmpty(device_identity) && remote_server_client.State == HubConnectionState.Connected)
-                    {
-                        // If the device identity is not empty and the remote_server_client is connected, do nothing
-                        Logging.Debug("Service.Check_Connection_Status", "Remote server connection is already active.", "");
-                    }
                 }
                 else
                 {
@@ -262,6 +260,32 @@ namespace NetLock_RMM_Agent_Remote
             catch (Exception ex)
             {
                 Logging.Error("Service.Check_Connection_Status", "Failed to check remote_server_client or local_server_client status.", ex.ToString());
+            }
+        }
+
+        private async Task Remote_Server_Check_Connection_Status()
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(device_identity))
+                {
+                    if (!remote_server_client_setup)
+                    {
+                        await Setup_SignalR();
+                    }
+                    else if (remote_server_client.State == HubConnectionState.Disconnected)
+                    {
+                        await Remote_Connect();
+                    }
+                    else if (remote_server_client.State == HubConnectionState.Connected)
+                    {
+                        Logging.Debug("Service.Check_Connection_Status", "Remote server connection is already active.", "");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Service.Check_Connection_Status", "Failed to check remote_server_client status.", ex.ToString());
             }
         }
 
@@ -334,7 +358,7 @@ namespace NetLock_RMM_Agent_Remote
                             if (OperatingSystem.IsWindows())
                                 result = Windows.Helper.PowerShell.Execute_Script(command_object.type.ToString(), command_object.powershell_code);
                             else if (OperatingSystem.IsLinux())
-                                result = Linux.Helper.Bash.Execute_Script("Remote Shell", true, Base64.Decode_Syncron(command_object.powershell_code));
+                                result = Linux.Helper.Bash.Execute_Script("Remote Shell", true, command_object.powershell_code);
                             else if (OperatingSystem.IsMacOS())
                                 result = MacOS.Helper.Zsh.Execute_Script("Remote Shell", true, command_object.powershell_code);
 

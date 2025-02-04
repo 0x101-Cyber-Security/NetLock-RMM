@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\application_paths.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:application_paths.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:remote_worker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\application_paths.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|solutionrelative:application_paths.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{00844A40-E629-40A5-B49C-5477B222044A}|NetLock RMM Agent Remote.csproj|c:\\users\\nicomak\\netlock\\netlock-rmm\\netlock rmm agent remote\\initialization\\health.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -94,7 +94,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 10,
+          "SelectedChildIndex": 7,
           "Children": [
             {
               "$type": "Bookmark",
@@ -110,7 +110,8 @@
               "RelativeToolTip": "Linux\\Helper\\Linux.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAgwAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T23:52:38.092Z"
+              "WhenOpened": "2024-12-13T23:52:38.092Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -122,7 +123,8 @@
               "RelativeToolTip": "Linux\\Helper\\Bash.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAgwCoAAABDAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T23:51:58.508Z"
+              "WhenOpened": "2024-12-13T23:51:58.508Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -134,7 +136,8 @@
               "RelativeToolTip": "Windows\\Helper\\PowerShell.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAgwBAAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:45.906Z"
+              "WhenOpened": "2024-12-13T22:25:45.906Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -146,7 +149,8 @@
               "RelativeToolTip": "Global\\Helper\\Encryption.cs",
               "ViewState": "AgIAAEYAAAAAAAAAAAAwwHYAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:30.817Z"
+              "WhenOpened": "2024-12-13T22:25:30.817Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -156,9 +160,10 @@
               "RelativeDocumentMoniker": "NetLock RMM Agent Remote.csproj",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\NetLock RMM Agent Remote.csproj",
               "RelativeToolTip": "NetLock RMM Agent Remote.csproj",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAOAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2024-12-13T22:19:51.925Z"
+              "WhenOpened": "2024-12-13T22:19:51.925Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -170,17 +175,18 @@
               "RelativeToolTip": "Global\\Helper\\Logging.cs",
               "ViewState": "AgIAAF4AAAAAAAAAAAAnwHkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:24:28.15Z"
+              "WhenOpened": "2024-12-13T22:24:28.15Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "Remote_Worker.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Remote_Worker.cs",
               "RelativeDocumentMoniker": "Remote_Worker.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Remote_Worker.cs",
               "RelativeToolTip": "Remote_Worker.cs",
-              "ViewState": "AgIAAFIAAAAAAAAAAIA1wHEAAAAoAAAAAAAAAA==",
+              "ViewState": "AgIAANMAAAAAAAAAAAAQwOUAAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-13T22:15:07.381Z",
               "EditorCaption": ""
@@ -195,7 +201,8 @@
               "RelativeToolTip": "Global\\Helper\\Randomnizer.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:53.065Z"
+              "WhenOpened": "2024-12-13T22:25:53.065Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -205,13 +212,14 @@
               "RelativeDocumentMoniker": "Global\\Helper\\Service.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Global\\Helper\\Service.cs",
               "RelativeToolTip": "Global\\Helper\\Service.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAIBJwD8AAAA2AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAIBZwD8AAAA2AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:26:00.424Z"
+              "WhenOpened": "2024-12-13T22:26:00.424Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "Application_Paths.cs",
               "DocumentMoniker": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Application_Paths.cs",
               "RelativeDocumentMoniker": "Application_Paths.cs",
@@ -230,9 +238,10 @@
               "RelativeDocumentMoniker": "Initialization\\Health.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Initialization\\Health.cs",
               "RelativeToolTip": "Initialization\\Health.cs",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAACMAAAAJAAAAAAAAAA==",
+              "ViewState": "AgIAAAYAAAAAAAAAAIBJwCMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:22:04.502Z"
+              "WhenOpened": "2024-12-13T22:22:04.502Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -242,7 +251,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Remote\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAAMAAAAAAAAAAAAAACwAAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACIAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-12-13T22:15:04.581Z",
               "EditorCaption": ""
@@ -257,7 +266,8 @@
               "RelativeToolTip": "MacOS\\Helper\\Zsh.cs",
               "ViewState": "AgIAACgAAAAAAAAAAAAgwA8AAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-18T23:30:14.859Z"
+              "WhenOpened": "2025-01-18T23:30:14.859Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -269,7 +279,8 @@
               "RelativeToolTip": "MacOS\\Helper\\Plist.cs",
               "ViewState": "AgIAAD4AAAAAAAAAAAAwwFUAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-20T21:12:32.383Z"
+              "WhenOpened": "2025-01-20T21:12:32.383Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -281,7 +292,8 @@
               "RelativeToolTip": "MacOS\\Helper\\MacOS.cs",
               "ViewState": "AgIAADQAAAAAAAAAAAAgwEEAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-20T21:12:32.816Z"
+              "WhenOpened": "2025-01-20T21:12:32.816Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -293,7 +305,8 @@
               "RelativeToolTip": "Global\\Helper\\Task_Manager.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAEgAAAC7AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:26:06.262Z"
+              "WhenOpened": "2024-12-13T22:26:06.262Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -305,7 +318,8 @@
               "RelativeToolTip": "Windows\\Helper\\Registry.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:57.059Z"
+              "WhenOpened": "2024-12-13T22:25:57.059Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -317,7 +331,8 @@
               "RelativeToolTip": "Windows\\Helper\\WMI.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:26:14.995Z"
+              "WhenOpened": "2024-12-13T22:26:14.995Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -329,7 +344,8 @@
               "RelativeToolTip": "Global\\Helper\\Http.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAqwA0AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:34.333Z"
+              "WhenOpened": "2024-12-13T22:25:34.333Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -341,7 +357,8 @@
               "RelativeToolTip": "Global\\Helper\\IO.cs",
               "ViewState": "AgIAADkBAAAAAAAAAAAwwGIBAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:25:38.989Z"
+              "WhenOpened": "2024-12-13T22:25:38.989Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
@@ -353,7 +370,8 @@
               "RelativeToolTip": "Global\\Helper\\Base64.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2024-12-13T22:22:01.75Z"
+              "WhenOpened": "2024-12-13T22:22:01.75Z",
+              "EditorCaption": ""
             }
           ]
         }

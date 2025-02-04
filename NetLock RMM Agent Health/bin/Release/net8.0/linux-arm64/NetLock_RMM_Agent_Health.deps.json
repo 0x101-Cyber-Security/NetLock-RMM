@@ -10,6 +10,7 @@
       "NetLock_RMM_Agent_Health/1.0.0": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "9.0.1",
+          "Microsoft.Extensions.Hosting.Systemd": "9.0.1",
           "Microsoft.Extensions.Hosting.WindowsServices": "9.0.1",
           "System.ServiceProcess.ServiceController": "9.0.1",
           "runtimepack.Microsoft.NETCore.App.Runtime.linux-arm64": "8.0.11"
@@ -952,6 +953,17 @@
           }
         }
       },
+      "Microsoft.Extensions.Hosting.Systemd/9.0.1": {
+        "dependencies": {
+          "Microsoft.Extensions.Hosting": "9.0.1"
+        },
+        "runtime": {
+          "lib/net8.0/Microsoft.Extensions.Hosting.Systemd.dll": {
+            "assemblyVersion": "9.0.0.1",
+            "fileVersion": "9.0.124.61010"
+          }
+        }
+      },
       "Microsoft.Extensions.Hosting.WindowsServices/9.0.1": {
         "dependencies": {
           "Microsoft.Extensions.Hosting": "9.0.1",
@@ -1289,6 +1301,13 @@
       "sha512": "sha512-CwSMhLNe8HLkfbFzdz0CHWJhtWH3TtfZSicLBd/itFD+NqQtfGHmvqXHQbaFFl3mQB5PBb2gxwzWQyW2pIj7PA==",
       "path": "microsoft.extensions.hosting.abstractions/9.0.1",
       "hashPath": "microsoft.extensions.hosting.abstractions.9.0.1.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Hosting.Systemd/9.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-DCVM34Ey7NmfxicRuNZyZ+8HViO0Nee35r3ZFKfUY7qFVNAJ+VI4FUnz1mbyCFKFF1CsPmHVo/ZHqKfJkGTygw==",
+      "path": "microsoft.extensions.hosting.systemd/9.0.1",
+      "hashPath": "microsoft.extensions.hosting.systemd.9.0.1.nupkg.sha512"
     },
     "Microsoft.Extensions.Hosting.WindowsServices/9.0.1": {
       "type": "package",

@@ -12,6 +12,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Systemd" Version="9.0.1" />
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.1" />
     <PackageReference Include="System.Management" Version="9.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.1" />
