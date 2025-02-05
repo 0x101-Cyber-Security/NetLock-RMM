@@ -613,7 +613,7 @@ namespace NetLock_RMM_Agent_Installer
                         "chmod +x /usr/0x101_Cyber_Security/NetLock_RMM/Comm_Agent/NetLock_RMM_Agent_Comm");
 
                     // Create service file for comm agent
-                    Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_comm_agent_service_config_path_linux, "netlock-rmm-agent-comm", Application_Paths.program_files_comm_agent_service_path_unix, Application_Paths.program_files_comm_agent_dir, Application_Paths.program_files_comm_agent_service_log_path_linux);
+                    Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_comm_agent_service_config_path_linux, "netlock-rmm-agent-comm", Application_Paths.program_files_comm_agent_service_path_unix, Application_Paths.program_files_comm_agent_dir, Application_Paths.program_files_comm_agent_service_log_path_unix);
 
                     Bash.Execute_Script("Registering comm agent as service", false,
                         "systemctl enable netlock-rmm-agent-comm");
@@ -630,7 +630,7 @@ namespace NetLock_RMM_Agent_Installer
                         "chmod +x /usr/0x101_Cyber_Security/NetLock_RMM/Remote_Agent/NetLock_RMM_Agent_Remote");
 
                     // Create service file for remote agent
-                    Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_remote_agent_service_config_path_linux, "netlock-rmm-agent-remote", Application_Paths.program_files_remote_agent_service_path_unix, Application_Paths.program_files_remote_agent_dir, Application_Paths.program_files_remote_agent_service_log_path_linux);
+                    Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_remote_agent_service_config_path_linux, "netlock-rmm-agent-remote", Application_Paths.program_files_remote_agent_service_path_unix, Application_Paths.program_files_remote_agent_dir, Application_Paths.program_files_remote_agent_service_log_path_unix);
 
                     Bash.Execute_Script("Registering remote agent as service", false,
                         "systemctl enable netlock-rmm-agent-remote");
@@ -646,7 +646,7 @@ namespace NetLock_RMM_Agent_Installer
                             "chmod +x /usr/0x101_Cyber_Security/NetLock_RMM/Health_Agent/NetLock_RMM_Agent_Health");
 
                         // Create service file for health agent
-                        Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_health_agent_service_config_path_linux, "netlock-rmm-agent_health", Application_Paths.program_files_health_agent_service_path_unix, Application_Paths.program_files_health_agent_dir, Application_Paths.program_files_health_agent_service_log_path_linux);
+                        Linux.Helper.Linux.CreateServiceFile(Application_Paths.program_files_health_agent_service_config_path_linux, "netlock-rmm-agent_health", Application_Paths.program_files_health_agent_service_path_unix, Application_Paths.program_files_health_agent_dir, Application_Paths.program_files_health_agent_service_log_path_unix);
 
                         Bash.Execute_Script("Registering health agent as service", false,
                             "systemctl enable netlock-rmm-agent-health");
@@ -670,7 +670,7 @@ namespace NetLock_RMM_Agent_Installer
                         $"sudo chmod +x {Application_Paths.program_files_comm_agent_service_path_unix}");
 
                     // Create service file for comm agent
-                    MacOS.Helper.MacOS.CreateMacServiceFile(Application_Paths.program_files_comm_agent_service_config_path_osx, Application_Paths.program_files_comm_agent_service_name_osx, Application_Paths.program_files_comm_agent_service_path_unix, Application_Paths.program_files_comm_agent_service_log_path_osx);
+                    MacOS.Helper.MacOS.CreateMacServiceFile();
 
                     Logging.Handler.Debug("Main", "Register comm agent as service", "Done.");
                 }
@@ -730,12 +730,7 @@ namespace NetLock_RMM_Agent_Installer
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
-                    // Start comm agent service
-                    Logging.Handler.Debug("Main", "Starting comm agent service", "");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Starting comm agent service.");
-                    Zsh.Execute_Script("Starting comm agent service", false, "launchctl load /Library/LaunchDaemons/netlock-rmm-agent-comm.plist");
-                    Logging.Handler.Debug("Main", "Start comm agent service", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Start comm agent service: Done.");
+                    // Happens automatically through the service file creation on MacOS
                 }
 
                 // Delete temp dir

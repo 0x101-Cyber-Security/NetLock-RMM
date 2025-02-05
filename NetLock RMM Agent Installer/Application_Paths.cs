@@ -28,9 +28,8 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_files_comm_agent_service_path_unix = Path.Combine(program_files_comm_agent_dir, "NetLock_RMM_Agent_Comm");
         public static string program_files_comm_agent_service_config_path_linux = "/etc/systemd/system/netlock-rmm-agent-comm.service";
         public static string program_files_comm_agent_service_config_path_osx = $"/Library/LaunchDaemons/{program_files_comm_agent_service_name_osx}.plist";
-        public static string program_files_comm_agent_service_log_path_linux = "/var/log/netlock-rmm-agent-comm.log";
-        public static string program_files_comm_agent_service_log_path_osx = "/var/log/netlock-rmm-agent-comm.log";
-
+        public static string program_files_comm_agent_service_log_path_unix = "/var/log/netlock-rmm-agent-comm.log";
+        
         public static string program_data_comm_agent_logs_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Logs");
         public static string program_data_comm_agent_jobs_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Jobs");
         public static string program_data_comm_agent_msdav_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Microsoft Defender Antivirus");
@@ -58,13 +57,12 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_data_remote_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent");
         public static string program_files_remote_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent", "NetLock_RMM_Agent_Remote.exe");
         public static string program_files_remote_agent_service_name_linux = "netlock-rmm-agent-remote";
-        public static string program_files_remote_agent_service_name_osx = "com.netlock.rmm.agent.remote";
+        public static string program_files_remote_agent_service_name_osx = "com.netlock.rmm.agentremote";
         public static string program_files_remote_agent_service_path_unix = Path.Combine(program_files_remote_agent_dir, "NetLock_RMM_Agent_Remote");
         public static string program_files_remote_agent_service_config_path_linux = "/etc/systemd/system/netlock-rmm-agent-remote.service";
-        public static string program_files_remote_agent_service_config_path_osx = "/Library/LaunchDaemons/netlock-rmm-agent-remote.plist";
-        public static string program_files_remote_agent_service_log_path_linux = "/var/log/netlock-rmm-agent-remote.log";
-        public static string program_files_remote_agent_service_log_path_osx = "/var/log/netlock-rmm-agent-remote.log";
-
+        public static string program_files_remote_agent_service_config_path_osx = $"/Library/LaunchDaemons/{program_files_remote_agent_service_name_osx}.plist";
+        public static string program_files_remote_agent_service_log_path_unix= "/var/log/netlock-rmm-agent-remote.log";
+        
         public static string health_agent_package_url_winx64 = "/private/downloads/netlock/health.package.win-x64.zip";
         public static string health_agent_package_url_winarm64 = "/private/downloads/netlock/health.package.win-arm64.zip";
         public static string health_agent_package_url_linuxx64 = "/private/downloads/netlock/health.package.linux-x64.zip";
@@ -76,13 +74,12 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_data_health_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Health Agent");
         public static string program_files_health_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health Agent", "NetLock_RMM_Agent_Health.exe");
         public static string program_files_health_agent_service_name_linux = "netlock-rmm-agent-health";
-        public static string program_files_health_agent_service_name_osx = "com.netlock.rmm.agent.health";
+        public static string program_files_health_agent_service_name_osx = "com.netlock.rmm.agenthealth";
         public static string program_files_health_agent_service_path_unix = Path.Combine(program_files_health_agent_dir, "NetLock_RMM_Agent_Health");
         public static string program_files_health_agent_service_config_path_linux = "/etc/systemd/system/netlock-rmm-agent-health.service";
-        public static string program_files_health_agent_service_config_path_osx = "/Library/LaunchDaemons/netlock-rmm-agent-health.plist";
-        public static string program_files_health_agent_service_log_path_linux = "/var/log/netlock-rmm-agent-health.log";
-        public static string program_files_health_agent_service_log_path_osx = "/var/log/netlock-rmm-agent-health.log";
-
+        public static string program_files_health_agent_service_config_path_osx = $"/Library/LaunchDaemons/{program_files_health_agent_service_name_osx}.plist";
+        public static string program_files_health_agent_service_log_path_unix = "/var/log/netlock-rmm-agent-health.log";
+        
         public static string user_process_package_url_winx64 = "/private/downloads/netlock/user.process.package.win-x64.zip";
         public static string user_process_package_url_winarm64 = "/private/downloads/netlock/user.process.package.win-arm64.zip";
         public static string user_process_package_url_linuxx64 = "/private/downloads/netlock/user.process.package.linux-x64.zip";

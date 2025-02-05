@@ -1,4 +1,5 @@
 ﻿using Helper;
+using MacOS.Helper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -42,12 +43,12 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-comm");
-                Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-remote");
-                Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-health");
-                Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-health");
+                Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_comm_agent_service_name_osx);
+                Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_comm_agent_service_name_osx}");
+                Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_remote_agent_service_name_osx);
+                Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_remote_agent_service_name_osx}");
+                Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_health_agent_service_name_osx);
+                Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_health_agent_service_name_osx}");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
@@ -79,14 +80,14 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-health");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-health");
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Comm");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Comm");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Remote");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Health");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_User_Process");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
@@ -128,12 +129,29 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-comm.plist");
-                Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-remote.plist");
-                Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-health-agent");
-                Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-health.plist");
+                // Unload the service
+                Logging.Handler.Debug("Main", "Unload service.", Application_Paths.program_files_comm_agent_service_config_path_osx);
+                Zsh.Execute_Script("Unload service", false, $"launchctl unload {Application_Paths.program_files_comm_agent_service_config_path_osx}");
+
+                // Delete the service file
+                Logging.Handler.Debug("Main", "Deleting service file.", Application_Paths.program_files_comm_agent_service_config_path_osx);
+                Zsh.Execute_Script("Deleting service file", false, $"rm -f {Application_Paths.program_files_comm_agent_service_config_path_osx}");
+
+                // Unload the service
+                Logging.Handler.Debug("Main", "Unload service.", Application_Paths.program_files_remote_agent_service_config_path_osx);
+                Zsh.Execute_Script("Unload service", false, $"launchctl unload {Application_Paths.program_files_remote_agent_service_config_path_osx}");
+
+                // Delete the service file
+                Logging.Handler.Debug("Main", "Deleting service file.", Application_Paths.program_files_remote_agent_service_config_path_osx);
+                Zsh.Execute_Script("Deleting service file", false, $"rm -f {Application_Paths.program_files_remote_agent_service_config_path_osx}");
+
+                // Unload the service
+                Logging.Handler.Debug("Main", "Unload service.", Application_Paths.program_files_health_agent_service_config_path_osx);
+                Zsh.Execute_Script("Unload service", false, $"launchctl unload {Application_Paths.program_files_health_agent_service_config_path_osx}");
+
+                // Delete the service file
+                Logging.Handler.Debug("Main", "Deleting service file.", Application_Paths.program_files_health_agent_service_config_path_osx);
+                Zsh.Execute_Script("Deleting service file", false, $"rm -f {Application_Paths.program_files_health_agent_service_config_path_osx}");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services deleted.");
 
@@ -145,22 +163,22 @@ namespace NetLock_RMM_Agent_Installer
             Helper.IO.Delete_Directory(Application_Paths.program_data_0x101_cyber_security_dir);
 
             // Delete logs
-            if (OperatingSystem.IsLinux())
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
                 // Delete comm agent service log
-                Logging.Handler.Debug("Main", "Deleting comm agent service log.", Application_Paths.program_files_comm_agent_service_log_path_linux);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting comm agent service log: " + Application_Paths.program_files_comm_agent_service_log_path_linux);
-                Bash.Execute_Script("Deleting comm agent service log", false, $"rm -f {Application_Paths.program_files_comm_agent_service_log_path_linux}");
+                Logging.Handler.Debug("Main", "Deleting comm agent service log.", Application_Paths.program_files_comm_agent_service_log_path_unix);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting comm agent service log: " + Application_Paths.program_files_comm_agent_service_log_path_unix);
+                Bash.Execute_Script("Deleting comm agent service log", false, $"rm -f {Application_Paths.program_files_comm_agent_service_log_path_unix}");
 
                 // Delete remote agent service log
-                Logging.Handler.Debug("Main", "Deleting remote agent service log.", Application_Paths.program_files_remote_agent_service_log_path_linux);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting remote agent service log: " + Application_Paths.program_files_remote_agent_service_log_path_linux);
-                Bash.Execute_Script("Deleting remote agent service log", false, $"rm -f {Application_Paths.program_files_remote_agent_service_log_path_linux}");
+                Logging.Handler.Debug("Main", "Deleting remote agent service log.", Application_Paths.program_files_remote_agent_service_log_path_unix);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting remote agent service log: " + Application_Paths.program_files_remote_agent_service_log_path_unix);
+                Bash.Execute_Script("Deleting remote agent service log", false, $"rm -f {Application_Paths.program_files_remote_agent_service_log_path_unix}");
 
                 // Delete health agent service log
-                Logging.Handler.Debug("Main", "Deleting health agent service log.", Application_Paths.program_files_health_agent_service_log_path_linux);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting health agent service log: " + Application_Paths.program_files_health_agent_service_log_path_linux);
-                Bash.Execute_Script("Deleting health agent service log", false, $"rm -f {Application_Paths.program_files_health_agent_service_log_path_linux}");
+                Logging.Handler.Debug("Main", "Deleting health agent service log.", Application_Paths.program_files_health_agent_service_log_path_unix);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting health agent service log: " + Application_Paths.program_files_health_agent_service_log_path_unix);
+                Bash.Execute_Script("Deleting health agent service log", false, $"rm -f {Application_Paths.program_files_health_agent_service_log_path_unix}");
             }
 
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Directories deleted.");
@@ -188,10 +206,10 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-comm");
-                Logging.Handler.Debug("Main", "Stopping services.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Stopping services", false, "launchctl stop netlock-rmm-agent-remote");
+                Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_comm_agent_service_name_osx);
+                Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_comm_agent_service_name_osx}");
+                Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_remote_agent_service_name_osx);
+                Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_remote_agent_service_name_osx}");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
@@ -222,12 +240,12 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
-                Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Comm");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Comm");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Remote");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Health");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
@@ -257,10 +275,21 @@ namespace NetLock_RMM_Agent_Installer
             }
             else if (OperatingSystem.IsMacOS())
             {
-                Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-comm.plist");
-                Logging.Handler.Debug("Main", "Deleting services.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Deleting services", false, "launchctl unload /Library/LaunchDaemons/netlock-rmm-agent-remote.plist");
+                // Unload the service
+                Logging.Handler.Debug("Main", "Unload service.", Application_Paths.program_files_comm_agent_service_config_path_osx);
+                Zsh.Execute_Script("Unload service", false, $"launchctl unload {Application_Paths.program_files_comm_agent_service_config_path_osx}");
+
+                // Delete the service file
+                Logging.Handler.Debug("Main", "Deleting service file.", Application_Paths.program_files_comm_agent_service_config_path_osx);
+                Zsh.Execute_Script("Deleting service file", false, $"rm -f {Application_Paths.program_files_comm_agent_service_config_path_osx}");
+
+                // Unload the service
+                Logging.Handler.Debug("Main", "Unload service.", Application_Paths.program_files_remote_agent_service_config_path_osx);
+                Zsh.Execute_Script("Unload service", false, $"launchctl unload {Application_Paths.program_files_remote_agent_service_config_path_osx}");
+
+                // Delete the service file
+                Logging.Handler.Debug("Main", "Deleting service file.", Application_Paths.program_files_remote_agent_service_config_path_osx);
+                Zsh.Execute_Script("Deleting service file", false, $"rm -f {Application_Paths.program_files_remote_agent_service_config_path_osx}");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services deleted.");
 
@@ -302,17 +331,17 @@ namespace NetLock_RMM_Agent_Installer
             Helper.IO.Delete_Directory(Application_Paths.program_data_remote_agent_dir);
 
             // Delete logs
-            if (OperatingSystem.IsLinux())
+            if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
             {
                 // Delete comm agent service log
-                Logging.Handler.Debug("Main", "Deleting comm agent service log.", Application_Paths.program_files_comm_agent_service_log_path_linux);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting comm agent service log: " + Application_Paths.program_files_comm_agent_service_log_path_linux);
-                Bash.Execute_Script("Deleting comm agent service log", false, $"rm -f {Application_Paths.program_files_comm_agent_service_log_path_linux}");
+                Logging.Handler.Debug("Main", "Deleting comm agent service log.", Application_Paths.program_files_comm_agent_service_log_path_unix);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting comm agent service log: " + Application_Paths.program_files_comm_agent_service_log_path_unix);
+                Bash.Execute_Script("Deleting comm agent service log", false, $"rm -f {Application_Paths.program_files_comm_agent_service_log_path_unix}");
 
                 // Delete remote agent service log
-                Logging.Handler.Debug("Main", "Deleting remote agent service log.", Application_Paths.program_files_remote_agent_service_log_path_linux);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting remote agent service log: " + Application_Paths.program_files_remote_agent_service_log_path_linux);
-                Bash.Execute_Script("Deleting remote agent service log", false, $"rm -f {Application_Paths.program_files_remote_agent_service_log_path_linux}");
+                Logging.Handler.Debug("Main", "Deleting remote agent service log.", Application_Paths.program_files_remote_agent_service_log_path_unix);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting remote agent service log: " + Application_Paths.program_files_remote_agent_service_log_path_unix);
+                Bash.Execute_Script("Deleting remote agent service log", false, $"rm -f {Application_Paths.program_files_remote_agent_service_log_path_unix}");
             }
 
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleted directories.");
