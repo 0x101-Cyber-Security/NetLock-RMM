@@ -12,6 +12,7 @@ using static Global.Online_Mode.Handler;
 using NetLock_RMM_Agent_Comm;
 using System.Text.Json;
 using Global.Helper;
+using Linux.Helper;
 
 namespace Global.Initialization
 {
@@ -193,7 +194,65 @@ namespace Global.Initialization
 
                 // Start the installer
                 Logging.Debug("Initialization.Version_Handler.Update", "Starting installer", "true");
-                Process.Start(Application_Paths.c_temp_installer_path, $"fix \"{Application_Paths.program_data_server_config_json}\"");
+
+                // Set permissions on linux & macos
+                if (OperatingSystem.IsLinux())
+                    Bash.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                else if (OperatingSystem.IsMacOS())
+                    Bash.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+
+                // Run the installer
+                if (OperatingSystem.IsWindows())
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Windows");
+                    Logging.Debug("Main", "Run installer", "Windows");
+                    Process installer = new Process();
+                    installer.StartInfo.FileName = Application_Paths.c_temp_installer_path;
+                    installer.StartInfo.ArgumentList.Add("fix");
+                    installer.StartInfo.ArgumentList.Add(Application_Paths.program_data_server_config_json);
+                    installer.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
+                    installer.Start();
+                    installer.WaitForExit();
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Linux");
+                    Logging.Debug("Main", "Run installer", "Linux");
+
+                    // Set permissions
+                    Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    Bash.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+
+                    Process installer = new Process();
+                    installer.StartInfo.FileName = "/bin/bash";
+                    installer.StartInfo.ArgumentList.Add("-c");
+                    installer.StartInfo.ArgumentList.Add($"sudo \"{Application_Paths.c_temp_installer_path}\" fix \"{Application_Paths.program_data_server_config_json}\"");
+                    installer.StartInfo.UseShellExecute = false;
+                    installer.StartInfo.RedirectStandardOutput = true;
+                    installer.StartInfo.RedirectStandardError = true;
+                    installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    installer.Start();
+                    installer.WaitForExit();
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: MacOS");
+                    Logging.Debug("Main", "Run installer", "MacOS");
+
+                    // Set permissions
+                    Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    MacOS.Helper.Zsh.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+
+                    Process installer = new Process();
+                    installer.StartInfo.FileName = "zsh";
+                    installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
+                    installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+                    installer.StartInfo.UseShellExecute = false;
+                    installer.StartInfo.RedirectStandardOutput = true;
+                    installer.StartInfo.RedirectStandardError = true;
+                    installer.Start();
+                    installer.WaitForExit();
+                }
             }
             catch (Exception ex)
             {

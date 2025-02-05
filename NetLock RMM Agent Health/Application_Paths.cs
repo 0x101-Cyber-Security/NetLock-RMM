@@ -13,7 +13,7 @@ namespace NetLock_RMM_Agent_Health
         public static string c_temp_netlock_dir = Path.Combine(GetTempPath() ,"netlock rmm");
         public static string c_temp_netlock_logs_dir = Path.Combine(GetTempPath(), "netlock rmm", "installer", "logs");
         public static string c_temp_netlock_installer_dir = Path.Combine(GetTempPath(), "netlock rmm", "installer");
-        public static string c_temp_netlock_installer_path = Path.Combine(GetTempPath(), "netlock rmm", "installer", "NetLock_RMM_Agent_Installer.exe");
+        public static string c_temp_netlock_installer_path = Path.Combine(c_temp_netlock_installer_dir, OperatingSystem.IsWindows() ? "NetLock_RMM_Agent_Installer.exe" : "NetLock_RMM_Agent_Installer");
 
         public static string installer_package_url_winx64 = "/private/downloads/netlock/installer.package.win-x64.zip";
         public static string installer_package_url_winarm64 = "/private/downloads/netlock/installer.package.win-arm64.zip";

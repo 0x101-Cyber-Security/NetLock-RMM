@@ -423,7 +423,7 @@ namespace NetLock_RMM_Agent_Health
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extract installer package: OK");
                         Logging.Debug("Main", "Extract installer package", "OK");
 
-                        Logging.Debug("Main", "Argument", "fix " + Application_Paths.program_data_server_config_json);
+                        Logging.Debug("Main", "Argument", $"fix \"{Application_Paths.program_data_server_config_json}\"");
 
                         // Run the installer
                         if (OperatingSystem.IsWindows())
@@ -443,6 +443,10 @@ namespace NetLock_RMM_Agent_Health
                             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Linux");
                             Logging.Debug("Main", "Run installer", "Linux");
 
+                            // Set permissions
+                            Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_netlock_installer_path}\"");
+                            Bash.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_netlock_installer_path}\"");
+
                             Process installer = new Process();
                             installer.StartInfo.FileName = "/bin/bash";
                             installer.StartInfo.ArgumentList.Add("-c");
@@ -458,6 +462,10 @@ namespace NetLock_RMM_Agent_Health
                         {
                             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: MacOS");
                             Logging.Debug("Main", "Run installer", "MacOS");
+
+                            // Set permissions
+                            Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_netlock_installer_path}\"");
+                            MacOS.Helper.Zsh.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_netlock_installer_path}\"");
 
                             Process installer = new Process();
                             installer.StartInfo.FileName = "zsh";

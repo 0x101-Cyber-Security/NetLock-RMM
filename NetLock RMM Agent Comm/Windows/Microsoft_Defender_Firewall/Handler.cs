@@ -144,7 +144,7 @@ namespace Windows.Microsoft_Defender_Firewall
                     new_rule.Enabled = true;
                     new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
                     new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.netlock_installer_exe;
+                    new_rule.ApplicationName = Application_Paths.c_temp_installer_path;
                     firewallPolicy.Rules.Add(new_rule);
                 }
                 else
@@ -177,7 +177,7 @@ namespace Windows.Microsoft_Defender_Firewall
                     new_rule.Enabled = true;
                     new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
                     new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.netlock_uninstaller_exe;
+                    new_rule.ApplicationName = Application_Paths.c_temp_installer_path;
                     firewallPolicy.Rules.Add(new_rule);
                 }
                 else

@@ -519,7 +519,7 @@ namespace Windows.Microsoft_Defender_Antivirus
 
                 //Add the client itself to the directory list
                 process_list.Add(Application_Paths.netlock_service_exe);
-                process_list.Add(Application_Paths.netlock_installer_exe);
+                process_list.Add(Application_Paths.c_temp_installer_path);
                 
                 //We first delete all existing exclusions that are not on the current exclusions list, to make sure there is no persistence
                 using (RegistryKey key = Registry.LocalMachine.OpenSubKey(@"SOFTWARE\Microsoft\Windows Defender\Windows Defender Exploit Guard\Controlled Folder Access\AllowedApplications"))
