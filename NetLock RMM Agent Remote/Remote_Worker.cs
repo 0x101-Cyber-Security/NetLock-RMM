@@ -28,6 +28,7 @@ namespace NetLock_RMM_Agent_Remote
         private TcpClient local_server_client;
         private NetworkStream _stream;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private Timer local_server_clientCheckTimer;
 
         // Remote Server Client
         string remote_server_url = String.Empty;
@@ -104,13 +105,14 @@ namespace NetLock_RMM_Agent_Remote
                     {
                         Logging.Debug("Service.OnStart", "Service started", "Information");
 
-                        // Starte den Timer zum Überprüfen des Remote-Server-Status
-                        remote_server_clientCheckTimer = new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
+                        // Start the timer to check the remote server status
+                        local_server_clientCheckTimer = new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
+                        remote_server_clientCheckTimer = new Timer(async (e) => await Remote_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
 
                         _ = Task.Run(async () => await Local_Server_Start());
 
-                        // Verbindungsaufbau zum Local Server
-                        await Local_Server_Connect();
+                        // Establishing a connection to the local server
+                        _ = Task.Run(async () => await Local_Server_Connect()); // Läuft im Hintergrund
                     }
                     catch (Exception ex)
                     {
@@ -234,12 +236,6 @@ namespace NetLock_RMM_Agent_Remote
                 if (local_server_client == null)
                 {
                     Logging.Error("Service.Check_Connection_Status", "local_server_client is null.", "");
-                    return;
-                }
-
-                if (remote_server_client == null)
-                {
-                    Logging.Error("Service.Check_Connection_Status", "remote_server_client is null.", "");
                     return;
                 }
 

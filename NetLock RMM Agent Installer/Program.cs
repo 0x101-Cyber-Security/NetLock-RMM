@@ -92,6 +92,7 @@ namespace NetLock_RMM_Agent_Installer
 
                 if (arguments)
                 {
+                    arg1 = arg1.ToLower(); // fix or clean or uninstall to lower case for comparison purposes
                     Logging.Handler.Debug("Main", "Arguments", arg1 + " " + arg2);
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Arguments: " + arg1 + " " + arg2);
                 }
