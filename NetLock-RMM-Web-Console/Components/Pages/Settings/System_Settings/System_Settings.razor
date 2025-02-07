@@ -19,34 +19,34 @@
 
 <style>
     .selected-row-light {
-        background-color: lightgray;
+    background-color: lightgray;
     }
 
     .selected-row-dark {
-        background-color: #141414;
+    background-color: #141414;
     }
 
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 </style>
 
@@ -77,7 +77,7 @@
                                         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
                                         <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>                                    
                                     </div>
-                                    
+
                                     <!-- Additional MySQL Info -->
                                     <MudText Typo="Typo.body2">Version: @mysqlVersion</MudText>
                                     <MudText Typo="Typo.body2">@Localizer["uptime"]: @mysqlUptime (seconds)</MudText>
@@ -161,7 +161,7 @@
                             </span>
                         </MudTd>
 
-                          <MudTd DataLabel="Info" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                        <MudTd DataLabel="Info" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center;">
                                 &nbsp;@row.Info
                             </span>
@@ -227,7 +227,7 @@
                     // Error handling for invalid or missing date
                     Logging.Handler.Error("Heartbeat-Parsing", "Error parsing server heartbeat", ex.ToString());
                 }
-                
+
                 <MudPaper Class="mt-3">
                     <MudText Class="ml-2" Typo="Typo.h6">@server.name (@server.os)</MudText>
                     <MudText Class="ml-2" Typo="Typo.subtitle2">IP: @server.ip_address | Domain: @server.domain</MudText>
@@ -283,8 +283,8 @@
             }
 
             <!-- NetLock RMM File Server Status -->
-                    
-             <MudPaper Class="mt-3">
+
+            <MudPaper Class="mt-3">
                 <MudText Class="ml-2" Typo="Typo.h6">@Localizer["NetLock RMM File Server"] (@Configuration.File_Server.Connection_String)</MudText>
 
                 <MudGrid>
@@ -346,6 +346,11 @@
                 <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Package Provider URL"]</MudText>
                 <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Text" @bind-Text="package_url" />
                 <MudButton Class="mt-2 ml-2 mb-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Package_Provider_URL" >@Localizer["save"]</MudButton>
+            </MudPaper>
+
+            <MudPaper Class="mt-5">
+                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Agent Updates"]</MudText>
+                <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary" />
             </MudPaper>
         }
 
@@ -530,6 +535,7 @@
         await MySQL_Status();
         await Get_Servers();
         await Get_Package_Provider_URL();
+        await Get_Agent_Updates();
 
         // Get CPU Usage
         cpuUsage = await Classes.System_Information.Handler.Get_CPU_Usage();
@@ -568,6 +574,9 @@
     private string mysqlFailedLogins = String.Empty;
     private string mysqlPrivilegedUsers = String.Empty;
     private string mysqlMaxConnections = String.Empty;
+
+    // Agent Update Settings    
+    private bool agent_updates_enabled = false;
 
     public class MySQL_Active_Queries
     {
@@ -803,4 +812,35 @@
         }
     }
 
+    // Get agent updates settings
+    private async Task Get_Agent_Updates()
+    {
+        string updates_enabled = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_enabled");
+
+        if (updates_enabled == "1")
+            agent_updates_enabled = true;
+        else
+            agent_updates_enabled = false;
+    }
+
+    // Set agent updates settings
+    private async Task Set_Agent_Updates()
+    {
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        if (agent_updates_enabled)
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_enabled", "true");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 1;");
+
+            Snackbar.Add(Localizer["agent updates enabled"], Severity.Success);
+        }
+        else
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_enabled", "false");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 0;");
+
+            Snackbar.Add(Localizer["agent updates disabled"], Severity.Success);
+        }
+    }
 }

@@ -3950,7 +3950,7 @@ else if (row.platform == "MacOS")
             cmd.Parameters.AddWithValue("@device_name", device_name);
             cmd.ExecuteNonQuery();
 
-            this.Snackbar.Add("Gerät deautorisiert.", Severity.Success);
+            this.Snackbar.Add(Localizer["device deauthorized"], Severity.Success);
         }
         catch (Exception ex)
         {

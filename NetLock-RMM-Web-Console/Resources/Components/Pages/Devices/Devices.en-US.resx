@@ -243,6 +243,9 @@
   <data name="device" xml:space="preserve">
     <value>Device</value>
   </data>
+  <data name="device deauthorized" xml:space="preserve">
+    <value>Device deauthorized.</value>
+  </data>
   <data name="devices" xml:space="preserve">
     <value>Devices</value>
   </data>
@@ -287,6 +290,9 @@
   </data>
   <data name="enabled" xml:space="preserve">
     <value>Enabled</value>
+  </data>
+  <data name="event" xml:space="preserve">
+    <value>Event</value>
   </data>
   <data name="events" xml:space="preserve">
     <value>Events</value>

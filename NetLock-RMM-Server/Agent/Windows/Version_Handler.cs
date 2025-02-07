@@ -47,6 +47,15 @@ namespace NetLock_RMM_Server.Agent.Windows
         {
             try
             {
+                // Check if updates are enabled
+                string updates_enabled = await MySQL.Handler.Quick_Reader("SELECT * FROM settings;" , "agent_updates_enabled");
+
+                if (updates_enabled == "0")
+                {
+                    Logging.Handler.Debug("Agent.Windows.Version_Handler.Check_Version", "Updates are disabled", "Returning identical to suppress updates.");
+                    return "identical";
+                }
+
                 // Extract JSON
                 Root_Entity rootData = JsonSerializer.Deserialize<Root_Entity>(json);
                 Device_Identity_Entity device_identity = rootData.device_identity;

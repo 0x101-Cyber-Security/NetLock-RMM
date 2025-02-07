@@ -215,7 +215,7 @@
     {
         if (remote_server_client_setup)
         {
-            if (e.CtrlKey && e.Code == "Enter" && !String.IsNullOrEmpty(remote_shell_powershell_code))
+            if (e.CtrlKey && e.Code == "Enter" && !String.IsNullOrEmpty(remote_shell_powershell_code) && !Regex.IsMatch(remote_shell_powershell_code, @"^\s*$"))
                 await Remote_Shell_Send_Command(remote_shell_powershell_code, remote_shell_wait_response);
         }
     }

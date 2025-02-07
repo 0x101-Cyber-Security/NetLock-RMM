@@ -118,63 +118,63 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="active connections" xml:space="preserve">
-    <value>Active connections</value>
+    <value />
   </data>
   <data name="active queries" xml:space="preserve">
-    <value>Active queries</value>
+    <value />
   </data>
   <data name="agent updates disabled" xml:space="preserve">
-    <value>Agent updates disabled.</value>
+    <value />
   </data>
   <data name="agent updates enabled" xml:space="preserve">
-    <value>Agent updates activated.</value>
+    <value />
   </data>
   <data name="connected" xml:space="preserve">
-    <value>Connected</value>
+    <value />
   </data>
   <data name="cpu usage" xml:space="preserve">
-    <value>CPU utilisation</value>
+    <value />
   </data>
   <data name="database size" xml:space="preserve">
-    <value>Size of the database</value>
+    <value />
   </data>
   <data name="disk usage" xml:space="preserve">
-    <value>Disk space used</value>
+    <value />
   </data>
   <data name="entries per page" xml:space="preserve">
-    <value>Entries per page</value>
+    <value />
   </data>
   <data name="failed logins" xml:space="preserve">
-    <value>Failed logins</value>
+    <value />
   </data>
   <data name="last hearthbeat" xml:space="preserve">
-    <value>Last heartbeat</value>
+    <value />
   </data>
   <data name="max connections" xml:space="preserve">
-    <value>Maximum connections</value>
+    <value />
   </data>
   <data name="not connected" xml:space="preserve">
-    <value>Not connected</value>
+    <value />
   </data>
   <data name="package provider" xml:space="preserve">
-    <value>Package Provider</value>
+    <value />
   </data>
   <data name="ram usage" xml:space="preserve">
-    <value>RAM utilisation</value>
+    <value />
   </data>
   <data name="save" xml:space="preserve">
-    <value>Save</value>
+    <value />
   </data>
   <data name="saved" xml:space="preserve">
-    <value>Saved.</value>
+    <value />
   </data>
   <data name="search" xml:space="preserve">
-    <value>Search</value>
+    <value />
   </data>
   <data name="title" xml:space="preserve">
-    <value>System</value>
+    <value />
   </data>
   <data name="uptime" xml:space="preserve">
-    <value>Uptime</value>
+    <value />
   </data>
 </root>

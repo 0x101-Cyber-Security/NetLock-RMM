@@ -123,6 +123,12 @@
   <data name="active queries" xml:space="preserve">
     <value>Aktive Queries</value>
   </data>
+  <data name="agent updates disabled" xml:space="preserve">
+    <value>Agent Updates deaktiviert.</value>
+  </data>
+  <data name="agent updates enabled" xml:space="preserve">
+    <value>Agent Updates aktiviert.</value>
+  </data>
   <data name="connected" xml:space="preserve">
     <value>Verbunden</value>
   </data>
