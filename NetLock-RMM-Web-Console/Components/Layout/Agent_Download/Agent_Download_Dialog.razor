@@ -9,10 +9,6 @@
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Layout.Agent_Download.Agent_Download_Dialog> Localizer
 
-<MudOverlay Visible="@loading_overlay" DarkBackground="true" Absolute="false">
-    <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
-</MudOverlay>
-
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">@Localizer["agent_server_configurations"]</MudText>
@@ -69,14 +65,37 @@
             <MudSelectItem Value="@("de-DE")" />
         </MudSelect>
 
+        <MudPaper Class="mt-2">
+            <MudText Typo="Typo.h6">@Localizer["download_installer"]</MudText>
+            <MudText Typo="Typo.body2">@Localizer["architecture_text"]</MudText>
+
+            <MudSelect Class="mt-2" T="string" Label="@Localizer["architecture selection"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="architecture" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelectItem Value="@("win-x64")" />
+                <MudSelectItem Value="@("win-arm64")" />
+                <MudSelectItem Value="@("linux-x64")" />
+                <MudSelectItem Value="@("linux-arm64")" />
+                <MudSelectItem Value="@("osx-x64")" />
+                <MudSelectItem Value="@("osx-arm64")" />
+            </MudSelect>
+
+            @if (loading_overlay)
+            {
+                <MudProgressLinear Color="Color.Info" Indeterminate="true">
+                <MudText Typo="Typo.subtitle1">
+                        @Localizer["your package is being created. This can take a while, please wait"]
+                    </MudText>
+                </MudProgressLinear>
+            }
+            
+            <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_installer"]</MudButton>
+        </MudPaper>
+
     </DialogContent>
     <DialogActions>
 
         <MudButton OnClick="Update_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["save"]</MudButton>
         <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_config"]</MudButton>
-        <MudButton OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_installer"]</MudButton>
-        <!-- <MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">Herunterladen</MudButton> -->
-
+       
     </DialogActions>
 </MudDialog>
 
@@ -104,7 +123,7 @@
     private string location_guid = String.Empty;
     private string location_id = String.Empty;
     private string language = String.Empty;
-    private string operating_system = String.Empty;
+    private string architecture = "win-x64";
 
     protected override async Task OnInitializedAsync()
     {
@@ -649,6 +668,7 @@
                 language = language,
                 access_key = String.Empty,
                 authorized = false,
+                architecture = architecture,
             };
 
             // Convert the object into a JSON string

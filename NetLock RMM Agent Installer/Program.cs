@@ -5,6 +5,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Text.Json;
 using Microsoft.Win32;
+using System.Text;
 
 namespace NetLock_RMM_Agent_Installer
 {
@@ -41,6 +42,7 @@ namespace NetLock_RMM_Agent_Installer
         {
             try
             {
+
                 Console.Title = "NetLock RMM Agent Installer";
                 Console.ForegroundColor = ConsoleColor.Red;
                 string title = @"//
@@ -120,21 +122,33 @@ namespace NetLock_RMM_Agent_Installer
 
                 if (!arguments)
                 {
-                    // Check if 1 click installer
-                    // Access custom resource
-                    string resources = Resources.Read_Resource(Assembly.GetExecutingAssembly().Location);
-
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> " + resources);
-
-                    if (resources != "No embedded server config found.")
+                    try
                     {
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Server config found.");
-                        server_config_json_new = resources;
-                        arg1 = "clean"; // Set mode to clean if using embedded server config. This will reinstall & unauthorize the agent.
+                        // Check if 1 click installer
+                        // Access custom resource
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Accessing embedded server config.");
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> " + Process.GetCurrentProcess().MainModule?.FileName);
+
+                        string extracted_config = Helper.Server_Config.ReadBase64Config(Process.GetCurrentProcess().MainModule?.FileName);
+
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> " + extracted_config + Environment.NewLine + Environment.NewLine);
+
+                        if (extracted_config != "No embedded server config found.")
+                        {
+                            Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Server config found.");
+                            server_config_json_new = extracted_config;
+                            arg1 = "clean"; // Set mode to clean if using embedded server config. This will reinstall & unauthorize the agent.
+                        }
+                        else
+                        {
+                            Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: Neither arguments provided or embedded server config found. Aborting.");
+                            Thread.Sleep(5000);
+                            Environment.Exit(0);
+                        }
                     }
-                    else
+                    catch 
                     {
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: Neither arguments provided or embedded server config found. Aborting.");
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: Embedded server config not found. Aborting.");
                         Thread.Sleep(5000);
                         Environment.Exit(0);
                     }

@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "I/gN5vOabH0=",
+  "dgSpecHash": "5q3HS1vPYz0=",
   "success": true,
   "projectFilePath": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\NetLock RMM Agent Installer.csproj",
   "expectedPackageFiles": [
+    "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.net.illink.tasks\\8.0.11\\microsoft.net.illink.tasks.8.0.11.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.netcore.platforms\\5.0.0\\microsoft.netcore.platforms.5.0.0.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\microsoft.win32.registry\\5.0.0\\microsoft.win32.registry.5.0.0.nupkg.sha512",
     "C:\\Users\\NicoMak\\.nuget\\packages\\system.diagnostics.eventlog\\9.0.1\\system.diagnostics.eventlog.9.0.1.nupkg.sha512",

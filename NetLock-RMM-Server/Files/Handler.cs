@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Security.Principal;
 using System.IO.Compression;
 using NetLock_RMM_Server.Files.Compiler;
+using System.Diagnostics.Eventing.Reader;
 
 namespace NetLock_RMM_Server.Files
 {
@@ -649,16 +650,51 @@ namespace NetLock_RMM_Server.Files
             {
                 // Remove .zip from the name
                 name = name.Replace(".zip", "");
+                string architecture = String.Empty;
 
+                string installer_archive = String.Empty;
                 string installer_extracted_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
                 string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
-                string installer_executable = Path.Combine(installer_extracted_dir, "NetLock RMM Agent Installer.exe");
+                string installer_executable = String.Empty;
+
+                // Deserialize JSON
+                using (JsonDocument document = JsonDocument.Parse(json))
+                {
+                    JsonElement architecture_element = document.RootElement.GetProperty("architecture");
+                    architecture = architecture_element.ToString();
+                }
+
+                // Check the architecture
+                if (architecture == "win-x64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.win-x64.zip");
+                else if (architecture == "win-arm64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.win-arm64.zip");
+                else if (architecture == "linux-x64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.linux-x64.zip");
+                else if (architecture == "linux-arm64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.linux-arm64.zip");
+                else if (architecture == "osx-x64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.osx-x64.zip");
+                else if (architecture == "osx-arm64")
+                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.osx-arm64.zip");
+                else
+                    return string.Empty;
 
                 // Extract installer.package to temp folder 
-                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths._private_files_netlock, "installer.package"), installer_extracted_dir);
+                ZipFile.ExtractToDirectory(installer_archive, installer_extracted_dir);
+
+                Thread.Sleep(20000);
+
+                // Check the architecture
+                if (architecture == "win-x64" || architecture == "win-arm64")
+                    installer_executable = Path.Combine(installer_extracted_dir, "NetLock_RMM_Agent_Installer.exe");
+                else if (architecture == "linux-x64" || architecture == "linux-arm64")
+                    installer_executable = Path.Combine(installer_extracted_dir, "NetLock_RMM_Agent_Installer");
+                else if (architecture == "osx-x64" || architecture == "osx-arm64")
+                    installer_executable = Path.Combine(installer_extracted_dir, "NetLock_RMM_Agent_Installer");
 
                 // Write ressource to the installer
-                await Assembly_Manipulation.Write_Ressource(installer_executable, json);
+                await Assembly_Manipulation.Embedd_Server_Config(installer_executable, json);
 
                 string new_installer_package = Path.Combine(installer_packed_dir, name + ".zip");
 
@@ -669,7 +705,7 @@ namespace NetLock_RMM_Server.Files
                 // Package the installer
                 ZipFile.CreateFromDirectory(installer_extracted_dir, new_installer_package);
 
-                string installer_download_location = Path.Combine(Application_Paths._private_files_netlock_temp, name + ".zip");
+                string installer_download_location = Path.Combine(Application_Paths._private_files_netlock_temp, name + "-" + architecture + ".zip");
 
                 // Copy the packed installer to the private files directory
                 File.Copy(new_installer_package, installer_download_location, true);
@@ -678,7 +714,7 @@ namespace NetLock_RMM_Server.Files
                 Directory.Delete(installer_extracted_dir, true);
                 Directory.Delete(installer_packed_dir, true);
 
-                string register_result = await Files.Handler.Register_File(installer_download_location, String.Empty, String.Empty, String.Empty);
+                string register_result = await Register_File(installer_download_location, String.Empty, String.Empty, String.Empty);
 
                 return register_result;
             }

@@ -50,6 +50,12 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.11, )",
+              "autoReferenced": true
+            },
             "Microsoft.Win32.Registry": {
               "target": "Package",
               "version": "[5.0.0, )"
