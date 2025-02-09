@@ -132,6 +132,12 @@
   <data name="any" xml:space="preserve">
     <value />
   </data>
+  <data name="architecture selection" xml:space="preserve">
+    <value />
+  </data>
+  <data name="architecture_text" xml:space="preserve">
+    <value />
+  </data>
   <data name="author" xml:space="preserve">
     <value />
   </data>
@@ -204,6 +210,9 @@
   <data name="name_already_in_use" xml:space="preserve">
     <value />
   </data>
+  <data name="no_configurations" xml:space="preserve">
+    <value />
+  </data>
   <data name="no_tenants_selected" xml:space="preserve">
     <value />
   </data>
@@ -247,6 +256,9 @@
     <value />
   </data>
   <data name="title" xml:space="preserve">
+    <value />
+  </data>
+  <data name="your package is being created. This can take a while, please wait" xml:space="preserve">
     <value />
   </data>
 </root>

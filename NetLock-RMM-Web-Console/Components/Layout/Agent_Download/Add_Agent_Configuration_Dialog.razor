@@ -20,7 +20,7 @@
     </DialogContent>
     <DialogActions>
 
-        <MudButton OnClick="@Create_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+        <MudButton OnClick="@Create_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name))" >@Localizer["confirm"]</MudButton>
 
     </DialogActions>
 </MudDialog>

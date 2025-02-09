@@ -519,7 +519,7 @@ namespace NetLock_RMM_Agent_Installer
                 ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path), Application_Paths.program_files_comm_agent_dir, true);
 
                 // Fix server_config.json
-                if (arg1 == "fix")
+                if (arg1 == "fix" && arguments) 
                 {
                     // Fix server_config.json
                     // Read old server_config.json
@@ -578,12 +578,19 @@ namespace NetLock_RMM_Agent_Installer
                 // We are not adding the user process to the registry, because the comm agent will do that for us
 
                 // Copy server config json to program data dir
-                if (arg1 == "clean")
+                if (arg1 == "clean" && arguments)
                 {
                     Logging.Handler.Debug("Main", "Copy server_config.json", "Clean mode.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Copy server_config.json: Clean mode.");
                     File.Copy(arg2, Application_Paths.program_data_comm_agent_server_config, true);
                     File.Copy(arg2, Application_Paths.program_data_health_agent_server_config, true);
+                }
+                else if (!arguments) // Embedded server config
+                {
+                    Logging.Handler.Debug("Main", "Copy server_config.json", "Embedded server config.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Copy server_config.json: Embedded server config.");
+                    File.WriteAllText(Application_Paths.program_data_comm_agent_server_config, server_config_json_new);
+                    File.WriteAllText(Application_Paths.program_data_health_agent_server_config, server_config_json_new);
                 }
 
                 // Create just installed file

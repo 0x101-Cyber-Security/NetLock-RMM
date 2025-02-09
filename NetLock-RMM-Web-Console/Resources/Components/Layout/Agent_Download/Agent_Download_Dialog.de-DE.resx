@@ -132,6 +132,12 @@
   <data name="any" xml:space="preserve">
     <value>Egal</value>
   </data>
+  <data name="architecture selection" xml:space="preserve">
+    <value>Verfügbare Architekturen</value>
+  </data>
+  <data name="architecture_text" xml:space="preserve">
+    <value>Bitte wählen Sie die Plattform aus, für die das Setup generiert werden soll.</value>
+  </data>
   <data name="author" xml:space="preserve">
     <value>Autor</value>
   </data>
@@ -204,6 +210,9 @@
   <data name="name_already_in_use" xml:space="preserve">
     <value>Name bereits vergeben.</value>
   </data>
+  <data name="no_configurations" xml:space="preserve">
+    <value>Keine Konfigurationen vorhanden. Bitte erstellen Sie eine.</value>
+  </data>
   <data name="no_tenants_selected" xml:space="preserve">
     <value>Es wurden keine Mandanten ausgewählt.</value>
   </data>
@@ -248,5 +257,8 @@
   </data>
   <data name="title" xml:space="preserve">
     <value>Benutzer hinzufügen</value>
+  </data>
+  <data name="your package is being created. This can take a while, please wait" xml:space="preserve">
+    <value>Ihr Setup wird erstellt. Dies kann einige Zeit dauern – bitte haben Sie Geduld.</value>
   </data>
 </root>

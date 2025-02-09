@@ -11,91 +11,109 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h5">@Localizer["agent_server_configurations"]</MudText>
+        <MudText Typo="Typo.h5">@Localizer["download_installer"]</MudText>
     </TitleContent>
     <DialogContent>
 
-        <MudButton Class="ml-2 mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
-
-        <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]">
-            @{ 
-                foreach (var name in agent_package_configurations_list)
-                {
-                    <MudSelectItem Value="@name" />
-                }
-            }
-        </MudSelect>
-
-        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@ssl" @bind-Value:after="Update_Ports" Label="SSL" Color="Color.Primary" />
-
-        <div style="display: flex; align-items: center;">
-            <MudText Typo="Typo.h6">@Localizer["target_server"]</MudText>
-
-            <MudTooltip Text="@Localizer["text"]">
-                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
-            </MudTooltip>
-        </div>
-
-        <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
-        <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
-        <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-        <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-        <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-
-        <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
-            @{
-                foreach (var name in tenants_list)
-                {
-                    <MudSelectItem Value="@name" />
-                }
-            }
-        </MudSelect>
-
-        <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
-            @{
-                foreach (var name in locations_list)
-                {
-                    <MudSelectItem Value="@name" />
-                }
-            }
-        </MudSelect>
-
-        <MudSelect Class="mt-2" T="string" Label="@Localizer["language"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="language" Required="true" RequiredError="@Localizer["required"]">
-            <MudSelectItem Value="@("en-US")" />
-            <MudSelectItem Value="@("de-DE")" />
-        </MudSelect>
-
-        <MudPaper Class="mt-2">
-            <MudText Typo="Typo.h6">@Localizer["download_installer"]</MudText>
-            <MudText Typo="Typo.body2">@Localizer["architecture_text"]</MudText>
-
-            <MudSelect Class="mt-2" T="string" Label="@Localizer["architecture selection"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="architecture" Required="true" RequiredError="@Localizer["required"]">
-                <MudSelectItem Value="@("win-x64")" />
-                <MudSelectItem Value="@("win-arm64")" />
-                <MudSelectItem Value="@("linux-x64")" />
-                <MudSelectItem Value="@("linux-arm64")" />
-                <MudSelectItem Value="@("osx-x64")" />
-                <MudSelectItem Value="@("osx-arm64")" />
-            </MudSelect>
-
-            @if (loading_overlay)
+        @if (!creating_installer)
+        {
+            @if (agent_package_configurations_list.Count == 0)
             {
-                <MudProgressLinear Color="Color.Info" Indeterminate="true">
-                <MudText Typo="Typo.subtitle1">
-                        @Localizer["your package is being created. This can take a while, please wait"]
-                    </MudText>
-                </MudProgressLinear>
+                <MudText Typo="Typo.h6">@Localizer["no_configurations"]</MudText>
+
+                <MudButton Class="ml-2 mt-2" Size="Size.Small" Color="Color.Info" Variant="Variant.Filled" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
             }
-            
-            <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_installer"]</MudButton>
-        </MudPaper>
+            else
+            {
+                <MudButton Class="ml-2 mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
+
+                <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
+                    @{
+                        foreach (var name in agent_package_configurations_list)
+                        {
+                            <MudSelectItem Value="@name" />
+                        }
+                    }
+                </MudSelect>
+            }
+
+            if (!String.IsNullOrEmpty(name))
+            {
+                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@ssl" @bind-Value:after="Update_Ports" Label="SSL" Color="Color.Primary" />
+
+                <div style="display: flex; align-items: center;">
+                    <MudText Typo="Typo.h6">@Localizer["target_server"]</MudText>
+
+                    <MudTooltip Text="@Localizer["text"]">
+                        <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                </div>
+
+                <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+                <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+                <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+                <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+                <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
+                    @{
+                        foreach (var name in tenants_list)
+                        {
+                            <MudSelectItem Value="@name" />
+                        }
+                    }
+                </MudSelect>
+
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
+                    @{
+                        foreach (var name in locations_list)
+                        {
+                            <MudSelectItem Value="@name" />
+                        }
+                    }
+                </MudSelect>
+
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["language"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="language" Required="true" RequiredError="@Localizer["required"]">
+                    <MudSelectItem Value="@("en-US")" />
+                    <MudSelectItem Value="@("de-DE")" />
+                </MudSelect>
+
+                <MudPaper Class="mt-2">
+                    <MudText Typo="Typo.h6">@Localizer["download_installer"]</MudText>
+                    <MudText Typo="Typo.body2">@Localizer["architecture_text"]</MudText>
+
+                    <MudSelect Class="mt-2" T="string" Label="@Localizer["architecture selection"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="architecture" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
+                        <MudSelectItem Value="@("win-x64")" />
+                        <MudSelectItem Value="@("win-arm64")" />
+                        <MudSelectItem Value="@("linux-x64")" />
+                        <MudSelectItem Value="@("linux-arm64")" />
+                        <MudSelectItem Value="@("osx-x64")" />
+                        <MudSelectItem Value="@("osx-arm64")" />
+                    </MudSelect>
+
+                    <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name) || creating_installer)">@Localizer["download_installer"]</MudButton>
+                </MudPaper>
+            }
+        }
+
+        @if (loading_overlay && creating_installer)
+        {
+            <MudText Typo="Typo.h6">
+                @Localizer["your package is being created. This can take a while, please wait"]
+            </MudText>
+
+            <MudProgressLinear Class="mt-2" Color="Color.Info" Indeterminate="true"></MudProgressLinear>
+        }
 
     </DialogContent>
     <DialogActions>
 
-        <MudButton OnClick="Update_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["save"]</MudButton>
-        <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_config"]</MudButton>
-       
+        @if (!String.IsNullOrEmpty(name) && !creating_installer)
+        {
+            <MudButton OnClick="Update_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["save"]</MudButton>
+            <MudButton OnClick="Download_Configuration" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name))">@Localizer["download_config"]</MudButton>
+        }
+
     </DialogActions>
 </MudDialog>
 
@@ -128,7 +146,10 @@
     protected override async Task OnInitializedAsync()
     {
         await Get_Tenants();
+        await Get_Locations("1"); // Default tenant
+
         await Get_Configurations();
+        StateHasChanged();
     }
 
     // Update ports
@@ -647,11 +668,16 @@
             await Get_Configurations();
     }
 
+    private bool creating_installer = false;
+
     private async Task Download_Installer()
     {
         try
         {
             loading_overlay = true;
+            creating_installer = true;
+
+            await Get_Guids();
 
             // Create the JSON object
             var jsonObject = new
@@ -703,6 +729,10 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/MainLayout -> Download_Installer", "Result", ex.ToString());
+        }
+        finally
+        {
+            creating_installer = false;
             loading_overlay = false;
         }
     }

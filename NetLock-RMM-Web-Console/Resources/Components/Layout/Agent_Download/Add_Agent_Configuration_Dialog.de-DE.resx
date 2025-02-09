@@ -171,6 +171,9 @@
   <data name="low" xml:space="preserve">
     <value>Niedrig</value>
   </data>
+  <data name="magic" xml:space="preserve">
+    <value>Ihr Paket wird gerade mit etwas Magie im Hintergrund erstellt. Bitte haben Sie einen Moment Geduld.</value>
+  </data>
   <data name="mail" xml:space="preserve">
     <value>E-Mail</value>
   </data>
