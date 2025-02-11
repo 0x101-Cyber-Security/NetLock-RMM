@@ -56,6 +56,12 @@ Roles.Notification = role_notification;
 Roles.File = role_file;
 Roles.LLM = role_llm;
 
+// Members Portal Api
+var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Server.Members_Portal.Config>();
+
+if (membersPortal.Enabled)
+    Members_Portal.api_enabled = true;
+
 // Output OS
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
 Console.WriteLine("Architecture: " + RuntimeInformation.OSArchitecture);
@@ -106,15 +112,20 @@ Console.WriteLine($"Server role (remote): {role_remote}");
 Console.WriteLine($"Server role (notification): {role_notification}");
 Console.WriteLine($"Server role (file): {role_file}");
 
+// Output members portal configuration
+Console.WriteLine("[Members Portal]");
+Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
+Console.WriteLine(Environment.NewLine);
+
 // Output firewall status
 bool microsoft_defender_firewall_status = NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Status();
 
-if (microsoft_defender_firewall_status && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
 {
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("Microsoft Defender Firewall is enabled.");
 }
-else
+else if (!microsoft_defender_firewall_status && OperatingSystem.IsWindows())
 {
     Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine("Microsoft Defender Firewall is disabled. You should enable it for your own safety. NetLock adds firewall rules automatically according to your configuration.");
@@ -256,6 +267,27 @@ void Server_Information_TimerCallback(object state)
 }
 
 Timer server_information_timer = new Timer(Server_Information_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+
+// Add timer to sync members portal license information regulary
+async Task Members_Portal_Task()
+{
+    if (Members_Portal.api_enabled)
+    {
+        await NetLock_RMM_Server.Members_Portal.Handler.Update_License_Information();
+    }
+}
+
+// Wrapper for Timer
+void Members_Portal_TimerCallback(object state)
+{
+    if (Members_Portal.api_enabled)
+    {
+        // Call the asynchronous method and do not block it
+        _ = Members_Portal_Task();
+    }
+}
+
+Timer members_portal_timer = new Timer(Members_Portal_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromHours(6));
 
 var app = builder.Build();
 

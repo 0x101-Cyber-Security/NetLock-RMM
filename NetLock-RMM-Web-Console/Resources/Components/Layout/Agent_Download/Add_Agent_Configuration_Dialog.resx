@@ -177,6 +177,9 @@
   <data name="mail" xml:space="preserve">
     <value />
   </data>
+  <data name="membership_hard_limit_reached" xml:space="preserve">
+    <value />
+  </data>
   <data name="moderate" xml:space="preserve">
     <value />
   </data>

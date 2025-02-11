@@ -8,6 +8,9 @@
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 @using Microsoft.AspNetCore.DataProtection;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using System.Net;
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -342,15 +345,48 @@
 
             </MudPaper>
 
-            <MudPaper Class="mt-5">
-                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Package Provider URL"]</MudText>
-                <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Text" @bind-Text="package_url" />
-                <MudButton Class="mt-2 ml-2 mb-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Package_Provider_URL" >@Localizer["save"]</MudButton>
-            </MudPaper>
-
-            <MudPaper Class="mt-5">
+            <MudPaper Class="mt-3">
                 <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Agent Updates"]</MudText>
                 <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary" />
+            </MudPaper>
+
+            <MudPaper Class="mt-3">
+
+                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
+                
+                @if (!Configuration.Members_Portal.api_enabled)
+                {
+                    <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.SyncDisabled">@Localizer["members portal api is not enabled. Please enable it in the appsettings.json"]</MudAlert>
+                }
+                else
+                {
+                    <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Filled" Label="@Localizer["enter your api key here"]" @bind-Text="members_portal_api_key" Immediate="true" />
+                    <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Api_Key" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["save"]</MudButton>
+
+                    <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["members portal license status"]</MudText>
+
+                    @if (members_portal_status == "Active")
+                    {
+                        <div style="display: flex; align-items: center;">
+                            <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                            <MudText Class="ml-2" Color="Color.Success">@Localizer["active"]</MudText>
+                        </div>
+                    }
+                    else
+                    {
+                        <div style="display: flex; align-items: center;">
+                            <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                            <MudText Class="ml-2" Color="Color.Error">@Localizer["expired"]</MudText>
+                        </div>
+                    }
+
+                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">@Localizer["name"]: @members_portal_name</MudText>
+                    <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
+                    <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard limit"]: @members_portal_licenses_hard_limit</MudText>
+
+                    <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
+                }
+        
             </MudPaper>
         }
 
@@ -537,6 +573,9 @@
         await Get_Package_Provider_URL();
         await Get_Agent_Updates();
 
+        if (Configuration.Members_Portal.api_enabled)
+            await Get_Members_Portal_License_Status();
+
         // Get CPU Usage
         cpuUsage = await Classes.System_Information.Handler.Get_CPU_Usage();
 
@@ -563,8 +602,6 @@
     private int ramUsage = 0;
     private int diskUsage = 0;
 
-    private string package_url = String.Empty;
-
     private string mysqlVersion = String.Empty;
     private string mysqlUptime = String.Empty;
     private string mysqlConnectedUsers = String.Empty;
@@ -577,6 +614,16 @@
 
     // Agent Update Settings    
     private bool agent_updates_enabled = false;
+
+    // Members Portal
+    private string members_portal_api_key = String.Empty;
+    private string members_portal_status = String.Empty;
+    private string members_portal_name = String.Empty;
+    private int members_portal_licenses_used = 0;
+    private int members_portal_licenses_max = 0;
+    private bool members_portal_licenses_hard_limit = false;
+
+    private string package_url = String.Empty;
 
     public class MySQL_Active_Queries
     {
@@ -783,28 +830,69 @@
         }
     }
 
-    // Save package provider URL to settings table
-    private async Task Save_Package_Provider_URL()
+    // Save api key for members portal
+    private async Task Save_Api_Key()
     {
         Snackbar.Configuration.ShowCloseIcon = true;
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
+        if (await Classes.Members_Portal.Handler.Request_Membership_License_Information(members_portal_api_key))
+        {
+            await Get_Members_Portal_License_Status();
+
+            Snackbar.Add(Localizer["authorization successfull, license information refreshed"], Severity.Success);
+        }
+        else
+            Snackbar.Add(Localizer["unauthorized, check your api key & make sure the members portal api is reachable"], Severity.Error);
+    }
+
+    // Update members portal license information
+    private async Task Update_Members_Portal_License_Information()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool updated = await Classes.Members_Portal.Handler.Request_Membership_License_Information(members_portal_api_key);
+
+        if (updated)
+        {
+            await Get_Members_Portal_License_Status();
+            Snackbar.Add(Localizer["license information refreshed"], Severity.Success);
+        }
+        else
+            Snackbar.Add(Localizer["unauthorized, check your api key & make sure the members portal api is reachable"], Severity.Error);
+    }
+
+    // Get members portal license status
+    private async Task Get_Members_Portal_License_Status()
+    {
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
-            await conn.OpenAsync();
+            conn.Open();
 
-            MySqlCommand command = new MySqlCommand("UPDATE settings SET package_provider_url = @package_provider_url;", conn);
-            command.Parameters.AddWithValue("@package_provider_url", package_url);
+            MySqlCommand command = new MySqlCommand("SELECT * FROM settings;", conn);
 
-            await command.ExecuteNonQueryAsync();
-
-            Snackbar.Add(Localizer["saved"], Severity.Success);
+            using (DbDataReader reader = command.ExecuteReader())
+            {
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        members_portal_api_key = reader["members_portal_api_key"].ToString() ?? String.Empty;
+                        members_portal_name = reader["members_portal_name"].ToString() ?? String.Empty;
+                        members_portal_status = reader["members_portal_license_status"].ToString() ?? String.Empty;
+                        members_portal_licenses_used = Convert.ToInt32(reader["members_portal_licenses_used"].ToString() ?? "0");
+                        members_portal_licenses_max = Convert.ToInt32(reader["members_portal_licenses_max"].ToString() ?? "0");
+                        members_portal_licenses_hard_limit = reader["members_portal_licenses_hard_limit"].ToString() == "1";
+                    }
+                }
+            }
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/system -> Save_Package_Provider_URL", "general_error", ex.ToString());
+            Logging.Handler.Error("/system -> Get_Members_Portal_License_Status", "general_error", ex.ToString());
         }
         finally
         {
@@ -840,7 +928,7 @@
             Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_enabled", "false");
             await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 0;");
 
-            Snackbar.Add(Localizer["agent updates disabled"], Severity.Success);
+            Snackbar.Add(Localizer["agent updates disabled"], Severity.Warning);
         }
     }
 }

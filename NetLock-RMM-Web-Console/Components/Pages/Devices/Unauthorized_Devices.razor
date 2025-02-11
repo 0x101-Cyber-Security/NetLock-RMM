@@ -61,12 +61,17 @@
                 <MudIconButton Class="mt-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="async () => { await Get_Clients_OverviewAsync(); }"></MudIconButton>
             </MudTooltip>
 
-            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@(String.IsNullOrEmpty(selectedRowContent))" @onclick="async () => { await Authorize_Device(selectedRowContent); }">@Localizer["authorize_device"]</MudButton>
+            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@(String.IsNullOrEmpty(selectedRowContent) || Configuration.Members_Portal.api_enabled && members_portal_license_limit_reached)" @onclick="async () => { await Authorize_Device(selectedRowContent); }">@Localizer["authorize_device"]</MudButton>
             <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" Disabled="@(String.IsNullOrEmpty(selectedRowContent))" @onclick="async () => { await Delete_Device(selectedRowContent); }">@Localizer["delete_device"]</MudButton>
 
             <MudTooltip Text="@Localizer["export_data"]">
                 <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
             </MudTooltip>
+
+            @if (Configuration.Members_Portal.api_enabled && members_portal_license_limit_reached)
+            {
+                <MudAlert Class="mt-2" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["membership_hard_limit_reached"] @Localizer["your configured limit is"] @members_portal_license_limit @Localizer["and you have this amount of active devices"] @members_portal_license_count</MudAlert>
+            }
 
             <MudTable Class="mt-5" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Device_Table_Filter_Func)">
                 <ToolBarContent>
@@ -104,7 +109,11 @@
                                     </span>
                                 </ActivatorContent>
                                 <ChildContent>
-                                    <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                    @if (!Configuration.Members_Portal.api_enabled || Configuration.Members_Portal.api_enabled && !members_portal_license_limit_reached)
+                                    {
+                                        <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                    }
+
                                     <MudMenuItem @onclick="async () => { await Delete_Device(row.id); }">@Localizer["delete_device"]</MudMenuItem>
                                 </ChildContent>
                             </MudMenu>
@@ -120,7 +129,10 @@
                                     </span>
                                 </ActivatorContent>
                                 <ChildContent>
-                                    <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                    @if (!Configuration.Members_Portal.api_enabled || Configuration.Members_Portal.api_enabled && !members_portal_license_limit_reached)
+                                    {
+                                        <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                    }
                                     <MudMenuItem @onclick="async () => { await Delete_Device(row.id); }">@Localizer["delete_device"]</MudMenuItem>
                                 </ChildContent>
                             </MudMenu>
@@ -128,19 +140,23 @@
                     }
                     else if (row.platform == "MacOS")
                     {
-                                                <MudTd DataLabel="Name" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
+                        <MudTd DataLabel="Name" @onclick="() => RowClickHandler(row)" class="@GetRowClass(row)" style="white-space: nowrap;">
 
-                        <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
-                            <ActivatorContent>
-                                <span style="display: flex; align-items: center;">
+                            <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
+                                <ActivatorContent>
+                                    <span style="display: flex; align-items: center;">
                                         <MudIcon Icon="@Icons.Custom.Brands.Apple" Size="Size.Small" class="desktop-icon" Style="@iconColor" />&nbsp;@row.device_name
-                                </span>
-                            </ActivatorContent>
-                            <ChildContent>
-                                <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
-                                <MudMenuItem @onclick="async () => { await Delete_Device(row.id); }">@Localizer["delete_device"]</MudMenuItem>
-                            </ChildContent>
-                        </MudMenu>
+                                    </span>
+                                </ActivatorContent>
+                                <ChildContent>
+                                    @if (!Configuration.Members_Portal.api_enabled || Configuration.Members_Portal.api_enabled && !members_portal_license_limit_reached)
+                                    {
+                                        <MudMenuItem @onclick="async () => { await Authorize_Device(row.id); }">@Localizer["authorize_device"]</MudMenuItem>
+                                    }
+
+                                    <MudMenuItem @onclick="async () => { await Delete_Device(row.id); }">@Localizer["delete_device"]</MudMenuItem>
+                                </ChildContent>
+                            </MudMenu>
 
                         </MudTd>
                     }
@@ -408,6 +424,9 @@
 
         await Get_Clients_OverviewAsync();
 
+        if (Configuration.Members_Portal.api_enabled)
+            await Get_Members_Portal_License_Limit();
+
         StateHasChanged();
     }
 
@@ -611,15 +630,37 @@
         NavigationManager.NavigateTo(path);
     }
 
+    private bool members_portal_license_limit_reached = false;
+    private bool members_portal_licenses_hard_limit = false;
+    private int members_portal_license_count = 0;
+    private int members_portal_license_limit = 0;
+
+    private async Task Get_Members_Portal_License_Limit()
+    {
+        try
+        {
+            members_portal_licenses_hard_limit = Convert.ToBoolean(Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_hard_limit FROM settings;", "members_portal_licenses_hard_limit")));
+
+            members_portal_license_count = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT COUNT(*) FROM devices WHERE authorized = '1';", "COUNT(*)"));
+            members_portal_license_limit = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_max FROM settings;", "members_portal_licenses_max"));
+            
+            members_portal_license_limit_reached = members_portal_license_count >= members_portal_license_limit;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("System_Logs", "Get_Members_Portal_License_Limit", ex.Message);
+        }
+    }
+
     #region Data_Export
     private async Task Trigger_Export_Device_Table_Dialog()
     {
         var options = new DialogOptions
             {
-                
-                MaxWidth = MaxWidth.Small,
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
                 BackgroundClass = "dialog-blurring",
-
             };
 
         var result = await this.DialogService.Show<Shared.Export_Data_Dialog>(string.Empty, new DialogParameters(), options).Result;

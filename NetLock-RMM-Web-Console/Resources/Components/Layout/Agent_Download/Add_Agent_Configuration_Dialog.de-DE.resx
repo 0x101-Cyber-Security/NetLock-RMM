@@ -177,6 +177,9 @@
   <data name="mail" xml:space="preserve">
     <value>E-Mail</value>
   </data>
+  <data name="membership_hard_limit_reached" xml:space="preserve">
+    <value>Die von Ihnen konfigurierte Grenze für zulässige Geräte wurde erreicht. Sie können sie im NetLock RMM Members Portal unter der entsprechenden Lizenz erhöhen.</value>
+  </data>
   <data name="moderate" xml:space="preserve">
     <value>Moderat</value>
   </data>

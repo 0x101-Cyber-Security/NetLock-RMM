@@ -54,6 +54,12 @@ else
 
 var language = builder.Configuration["Webinterface:Language"];
 
+// Members Portal Api
+var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Web_Console.Classes.Members_Portal.Config>();
+
+if (membersPortal.Enabled)
+    Members_Portal.api_enabled = true;
+
 // Output OS
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
 Console.WriteLine("Architecture: " + RuntimeInformation.OSArchitecture);
@@ -66,6 +72,7 @@ Console.WriteLine("Version: " + Application_Settings.version);
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Configuration loaded from appsettings.json");
 Console.WriteLine(Environment.NewLine);
+
 // Output http port
 Console.WriteLine("[Webserver]");
 Console.WriteLine($"Http: {builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Http:Enabled")}");
@@ -110,6 +117,11 @@ Console.WriteLine($"File Server: {fileServerConfig.Server}");
 Console.WriteLine($"File Port: {fileServerConfig.Port}");
 Console.WriteLine($"File Use SSL: {fileServerConfig.UseSSL}");
 Console.WriteLine($"File Connnection String: {File_Server.Connection_String}");
+Console.WriteLine(Environment.NewLine);
+
+// Output members portal configuration
+Console.WriteLine("[Members Portal]");
+Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
 Console.WriteLine(Environment.NewLine);
 
 // Language
@@ -279,4 +291,27 @@ if (https_force)
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
+
+// Add timer to sync members portal license information regulary
+async Task Members_Portal_Task()
+{
+    if (Members_Portal.api_enabled)
+    {
+        string api_key = await Handler.Quick_Reader("SELECT * FROM settings;", "members_portal_api_key");
+        await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_Membership_License_Information(api_key);
+    }
+}
+
+// Wrapper for Timer
+void Members_Portal_TimerCallback(object state)
+{
+    if (Members_Portal.api_enabled)
+    {
+        // Call the asynchronous method and do not block it
+        _ = Members_Portal_Task();
+    }
+}
+
+Timer members_portal_timer = new Timer(Members_Portal_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromHours(1));
+
 app.Run();

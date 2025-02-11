@@ -240,5 +240,33 @@ namespace NetLock_RMM_Server.MySQL
                 conn.Close();
             }
         }
+
+        public static async Task <int> Get_Authorized_Devices_Count_30_Days()
+        {
+            string query = "SELECT COUNT(*) FROM devices WHERE authorized = '1' AND last_access >= NOW() - INTERVAL 30 DAY;\r\n";
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                int count = Convert.ToInt32(cmd.ExecuteScalar());
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_Authorized_Devices", "Query", query);
+
+                return count;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_Authorized_Devices", "Query: " + query, ex.ToString());
+                return 0;
+            }
+            finally
+            {
+                conn.Close();
+            }
+        }
     }
 }
