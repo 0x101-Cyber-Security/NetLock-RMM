@@ -61,7 +61,12 @@
 
     <Authorized>
 
-        @if (permissions_settings_enabled && permissions_settings_system_enabled)
+        @if (Configuration.Members_Portal.cloud_enabled)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mt-2">This section is administered by the cloud team. :-)</MudAlert>
+        }
+
+        @if (permissions_settings_enabled && permissions_settings_system_enabled && !Configuration.Members_Portal.cloud_enabled)
         {
             <MudText Typo="Typo.h5" >System</MudText>
 
@@ -350,10 +355,11 @@
                 <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary" />
             </MudPaper>
 
+
             <MudPaper Class="mt-3">
 
                 <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
-                
+
                 @if (!Configuration.Members_Portal.api_enabled)
                 {
                     <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.SyncDisabled">@Localizer["members portal api is not enabled. Please enable it in the appsettings.json"]</MudAlert>
@@ -386,8 +392,9 @@
 
                     <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
                 }
-        
+
             </MudPaper>
+
         }
 
     </Authorized>
@@ -549,7 +556,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        loading_overlay = true;
+        if (!Configuration.Members_Portal.cloud_enabled)
+            loading_overlay = true;
 
         await base.OnInitializedAsync();
     }
@@ -566,7 +574,17 @@
     {
         await Get_Permissions();
 
+        //Check permissions
+        if (!permissions_settings_enabled || !permissions_settings_system_enabled)
+        {
+            NavigationManager.NavigateTo("/logout", true);
+            return;
+        }
+
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        if (Configuration.Members_Portal.cloud_enabled)
+            return;
 
         await MySQL_Status();
         await Get_Servers();

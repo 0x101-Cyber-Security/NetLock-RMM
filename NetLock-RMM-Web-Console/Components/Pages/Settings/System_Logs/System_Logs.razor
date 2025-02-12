@@ -18,7 +18,12 @@
 <AuthorizeView>
     <Authorized>
 
-        @if (permissions_settings_enabled && permissions_settings_protocols_enabled)
+        @if (Configuration.Members_Portal.cloud_enabled)
+        {
+            <MudAlert Severity="Severity.Warning" Class="mt-2">This section is administered by the cloud team. :-)</MudAlert>
+        }
+
+        @if (permissions_settings_enabled && permissions_settings_protocols_enabled && !Configuration.Members_Portal.cloud_enabled)
         {
             <MudText Typo="Typo.h5">Currently for dev purposes only. Please ignore. It will later be used for auditing & more.</MudText>
 
@@ -251,6 +256,7 @@
     private async Task AfterInitializedAsync()
     {
         await Get_Permissions();
+
         //Check permissions
         if (!permissions_settings_enabled || !permissions_settings_protocols_enabled)
         {
@@ -260,8 +266,9 @@
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
-        system_logs_mysql_data = await Get_System_Logs_Overview();
-
+        if (!Configuration.Members_Portal.cloud_enabled)
+            system_logs_mysql_data = await Get_System_Logs_Overview();
+        
         StateHasChanged();
     }
 

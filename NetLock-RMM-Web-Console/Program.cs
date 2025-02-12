@@ -60,6 +60,9 @@ var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<N
 if (membersPortal.Enabled)
     Members_Portal.api_enabled = true;
 
+if (membersPortal.Cloud)
+    Members_Portal.cloud_enabled = true;
+
 // Output OS
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
 Console.WriteLine("Architecture: " + RuntimeInformation.OSArchitecture);

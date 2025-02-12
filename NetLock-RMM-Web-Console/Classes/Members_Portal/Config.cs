@@ -3,5 +3,6 @@
     public class Config
     {
         public bool Enabled { get; set; } = false;
+        public bool Cloud { get; set; } = false;
     }
 }

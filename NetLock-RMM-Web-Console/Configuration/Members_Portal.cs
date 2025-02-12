@@ -3,5 +3,6 @@
     public class Members_Portal
     {
         public static bool api_enabled = false;
+        public static bool cloud_enabled = false;
     }
 }
