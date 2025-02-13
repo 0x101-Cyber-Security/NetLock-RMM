@@ -144,11 +144,13 @@
   <data name="text" xml:space="preserve">
     <value>NetLock RMM ist eine Open-Source-RMM-Lösung, die ich, Nico, in Vollzeit als Einzelentwickler entwickelt habe. Meine Vision ist es, ein robustes, hochmodernes RMM zu schaffen, das die Anforderungen von Unternehmen und kleinen Betrieben erfüllt und dessen Kernstück Transparenz und Unabhängigkeit ist.
 
-Seit Ende 2023 habe ich mich dem Aufbau der gesamten Grundlage von NetLock RMM gewidmet, aber zum jetzigen Zeitpunkt (25. Oktober 2024) habe ich noch keinen Gewinn erwirtschaftet und bin hauptsächlich auf meine Ersparnisse angewiesen. Obwohl ich Finanzierungsmöglichkeiten geprüft habe, habe ich mich entschieden, keine Investoren einzubeziehen, um das Projekt so unabhängig wie möglich zu halten.
+Seit Ende 2023 habe ich mich dem Aufbau des gesamten Fundaments von NetLock RMM gewidmet, aber ab jetzt (25. Oktober 2024). Obwohl ich Finanzierungsmöglichkeiten sondiert habe, habe ich mich entschieden, keine Investoren einzubeziehen, um das Projekt so unabhängig wie möglich zu halten.
 
-Da meine Ersparnisse fast aufgebraucht sind, beende ich die Early-Adopter-Phase vorzeitig und hoffe, dass Unternehmen, die NetLock RMM nutzen, das Projekt durch Mitgliedschaften oder von uns verwaltete Cloud-Instanzen unterstützen werden. Ich glaube, dass wir mit Ihrer Unterstützung ein wettbewerbsfähiges Open-Source-RMM aufbauen können, das sich neben den größeren Closed-Source-Lösungen behaupten kann.
+NetLock RMM ist mehr als nur ein Projekt - es ist mein Vollzeitjob und meine Leidenschaft. Diesen Service zu hosten und Ihnen anzubieten, kostet Geld und viel Zeit. 
 
-Das Projekt hat sich vor kurzem für das Gründerstipendium NRW qualifiziert, aber es kann einige Zeit dauern, bis diese Mittel zur Verfügung stehen. Ihre Unterstützung kann dazu beitragen, diese Lücke zu schließen und das weitere Wachstum von NetLock RMM sicherzustellen.</value>
+Ich hoffe, dass Unternehmen, die NetLock RMM nutzen, das Projekt durch Mitgliedschaften oder Cloud-Instanzen unterstützen werden. Ich glaube, dass wir mit Ihrer Unterstützung ein wettbewerbsfähiges, quelloffenes RMM aufbauen können, das sich neben den größeren Closed-Source-Lösungen behaupten kann.
+
+Vielen Dank, dass Sie sich dieser Reise anschließen.</value>
   </data>
   <data name="title" xml:space="preserve">
     <value>Willkommen bei NetLock RMM!</value>

@@ -271,7 +271,10 @@ var app = builder.Build();
 if (language == "en-US")
     app.UseRequestLocalization("en-US");
 else if (language == "de-DE")
+{
+    Web_Console.language = "de-DE";
     app.UseRequestLocalization("de-DE");
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

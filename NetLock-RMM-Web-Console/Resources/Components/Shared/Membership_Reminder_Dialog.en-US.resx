@@ -144,11 +144,13 @@
   <data name="text" xml:space="preserve">
     <value>NetLock RMM is an open-source RMM solution that I, Nico, have been developing full-time as a solo developer. My vision is to create a robust, state-of-the-art RMM that meets the needs of both enterprises and small businesses, with transparency and independence at its core.
 
-Since late 2023, I’ve dedicated myself to building the entire foundation of NetLock RMM, but, as of now (October 25, 2024), I haven’t yet turned a profit and am primarily relying on my savings. Although I explored funding options, I chose not to involve investors to keep the project as independent as possible.
+Since late 2023, I’ve dedicated myself to building the entire foundation of NetLock RMM, but, as of now (October 25, 2024). Although I explored funding options, I chose not to involve investors to keep the project as independent as possible.
 
-With my savings nearly exhausted, I’m ending the early adopter phase ahead of schedule, hoping that companies using NetLock RMM will support the project through memberships or cloud instances managed by us. I believe that, with your support, we can build a competitive, open-source RMM capable of standing alongside the larger closed-source solutions.
+NetLock RMM is more than just a project—it's my full-time job and my passion. Hosting and offering you that service costs money and a lot of time. 
 
-The project recently qualified for the Gründerstipendium NRW government grant, but it may take time for those funds to become available. Your support can help bridge that gap and ensure the continued growth of NetLock RMM.</value>
+I hope that companies using NetLock RMM will support the project through memberships or cloud instances. I believe that, with your support, we can build a competitive, open-source RMM capable of standing alongside the larger closed-source solutions.
+
+Thank you for joining this journey.</value>
   </data>
   <data name="title" xml:space="preserve">
     <value>Welcome to NetLock RMM!</value>
