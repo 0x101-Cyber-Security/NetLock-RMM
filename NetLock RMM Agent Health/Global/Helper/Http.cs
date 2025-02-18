@@ -16,7 +16,7 @@ namespace Global.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
 
                     HttpResponseMessage response = null;
 
@@ -50,7 +50,7 @@ namespace Global.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
 
                     HttpResponseMessage response = null;
 

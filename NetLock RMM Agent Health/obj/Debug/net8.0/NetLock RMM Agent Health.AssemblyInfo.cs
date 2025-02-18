@@ -15,7 +15,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("NetLock_RMM_Agent_Health")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+12d6aabfe3c4fc8f93f7c5704e656fef2741b82c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+1304246dad5056a52c54bab259ec05a20a4c755f")]
 [assembly: System.Reflection.AssemblyProductAttribute("NetLock_RMM_Agent_Health")]
 [assembly: System.Reflection.AssemblyTitleAttribute("NetLock_RMM_Agent_Health")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

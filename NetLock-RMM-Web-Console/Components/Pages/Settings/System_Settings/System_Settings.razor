@@ -386,7 +386,7 @@
                         </div>
                     }
 
-                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">@Localizer["name"]: @members_portal_name</MudText>
+                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">@Localizer["name"]: @members_portal_license_name</MudText>
                     <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
                     <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard limit"]: @members_portal_licenses_hard_limit</MudText>
 
@@ -636,7 +636,7 @@
     // Members Portal
     private string members_portal_api_key = String.Empty;
     private string members_portal_status = String.Empty;
-    private string members_portal_name = String.Empty;
+    private string members_portal_license_name = String.Empty;
     private int members_portal_licenses_used = 0;
     private int members_portal_licenses_max = 0;
     private bool members_portal_licenses_hard_limit = false;
@@ -899,7 +899,7 @@
                     while (reader.Read())
                     {
                         members_portal_api_key = reader["members_portal_api_key"].ToString() ?? String.Empty;
-                        members_portal_name = reader["members_portal_name"].ToString() ?? String.Empty;
+                        members_portal_license_name = reader["members_portal_license_name"].ToString() ?? String.Empty;
                         members_portal_status = reader["members_portal_license_status"].ToString() ?? String.Empty;
                         members_portal_licenses_used = Convert.ToInt32(reader["members_portal_licenses_used"].ToString() ?? "0");
                         members_portal_licenses_max = Convert.ToInt32(reader["members_portal_licenses_max"].ToString() ?? "0");

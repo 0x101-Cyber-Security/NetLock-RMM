@@ -117,7 +117,7 @@ namespace Global.Events
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", Configuration.Agent.package_guid);
 
                     Logging.Debug("Events.Sender.Send_Event", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Events");
 

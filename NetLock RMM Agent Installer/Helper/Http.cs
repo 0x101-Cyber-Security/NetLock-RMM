@@ -17,7 +17,7 @@ namespace Helper
                 using (HttpClient client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM User Agent");
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
                     client.Timeout = TimeSpan.FromMinutes(60);
 
                     HttpResponseMessage response = null;
@@ -59,7 +59,7 @@ namespace Helper
                 using (HttpClient client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM User Agent");
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
                     client.Timeout = TimeSpan.FromMinutes(1);
 
                     HttpResponseMessage response = null;

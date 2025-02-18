@@ -16,7 +16,7 @@ namespace Global.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
                     client.Timeout = TimeSpan.FromMinutes(60); // 60 minutes
 
                     HttpResponseMessage response = null;
@@ -50,7 +50,7 @@ namespace Global.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
                     client.Timeout = TimeSpan.FromSeconds(60); // 60 seconds
 
                     HttpResponseMessage response = null;

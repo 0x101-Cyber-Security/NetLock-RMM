@@ -112,7 +112,7 @@
               "RelativeDocumentMoniker": "Program.cs",
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\Program.cs",
               "RelativeToolTip": "Program.cs",
-              "ViewState": "AgIAAOoBAAAAAAAAAAAtwAgCAAApAAAAAAAAAA==",
+              "ViewState": "AgIAAOoBAAAAAAAAAAAtwAcCAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2025-01-24T22:28:25.477Z",
               "EditorCaption": ""
@@ -126,8 +126,7 @@
               "ToolTip": "C:\\Users\\NicoMak\\NetLock\\NetLock-RMM\\NetLock RMM Agent Installer\\NetLock RMM Agent Installer.csproj",
               "RelativeToolTip": "NetLock RMM Agent Installer.csproj",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2025-02-06T00:12:03.268Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-02-06T00:12:03.268Z"
             },
             {
               "$type": "Document",
@@ -151,8 +150,7 @@
               "RelativeToolTip": "Windows\\Helper\\Registry.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-29T16:58:19.445Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-29T16:58:19.445Z"
             },
             {
               "$type": "Document",
@@ -188,8 +186,7 @@
               "RelativeToolTip": "Helper\\Server_Config.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-24T22:44:17.223Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-24T22:44:17.223Z"
             },
             {
               "$type": "Document",
@@ -201,8 +198,7 @@
               "RelativeToolTip": "Helper\\Service.cs",
               "ViewState": "AgIAABAAAAAAAAAAAAAgwBcAAABwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-24T22:30:01.454Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-24T22:30:01.454Z"
             },
             {
               "$type": "Document",
@@ -238,8 +234,7 @@
               "RelativeToolTip": "Helper\\IO.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAKAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-01-24T22:29:49.53Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-01-24T22:29:49.53Z"
             },
             {
               "$type": "Document",

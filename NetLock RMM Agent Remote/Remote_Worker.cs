@@ -802,7 +802,7 @@ namespace NetLock_RMM_Agent_Remote
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", device_identity_object.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", device_identity_object.package_guid);
 
                     Logging.Debug("Remote_Control_Send_Screen", "communication_server", remote_server_url_command + "/Agent/Windows/Remote/Command");
 

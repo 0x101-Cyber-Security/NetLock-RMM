@@ -414,7 +414,7 @@ namespace Global.Online_Mode
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", Configuration.Agent.package_guid);
 
                     Logging.Debug("Online_Mode.Handler.Authenticate", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Verify_Device");
 
@@ -599,7 +599,7 @@ namespace Global.Online_Mode
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", Configuration.Agent.package_guid);
 
                     Logging.Debug("Online_Mode.Handler.Update_Device_Information", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Update_Device_Information");
 
@@ -734,7 +734,7 @@ namespace Global.Online_Mode
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", Configuration.Agent.package_guid);
 
                     Logging.Debug("Online_Mode.Handler.Policy", "communication_server", Configuration.Agent.http_https + Device_Worker.communication_server + "/Agent/Windows/Policy");
 

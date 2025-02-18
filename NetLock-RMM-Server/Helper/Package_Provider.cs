@@ -56,7 +56,7 @@ namespace Helper
                         string package_download_location = Path.Combine(Application_Paths._private_files_netlock_temp, "package.zip");
                         
                         Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.WriteLine("Downloading new package. This might take a while...");
+                        Console.WriteLine("Downloading new package. The package size is around 1 gb. This might take a while... Get a coffee and check back later. :-)");
 
                         // Download the new version
                         await Http.Download_File(package_url, package_download_location);

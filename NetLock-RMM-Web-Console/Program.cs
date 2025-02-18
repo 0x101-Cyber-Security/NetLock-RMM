@@ -298,7 +298,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-// Add timer to sync members portal license information regulary
+// Add timer to sync members portal license usage regulary
 async Task Members_Portal_Task()
 {
     if (Members_Portal.api_enabled)

@@ -22,7 +22,7 @@ namespace Global.Helper
                 using (HttpClient client = new HttpClient(handler, disposeHandler: true))
                 {
                     client.Timeout = TimeSpan.FromHours(24); // Set timeout to 24 hours
-                    client.DefaultRequestHeaders.Add("Package_Guid", package_guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", package_guid);
 
                     HttpResponseMessage response = null;
 
@@ -65,7 +65,7 @@ namespace Global.Helper
 
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", package_guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", package_guid);
 
                     using (MultipartFormDataContent content = new MultipartFormDataContent())
                     using (FileStream fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read))
@@ -107,7 +107,7 @@ namespace Global.Helper
             {
                 using (HttpClient client = new HttpClient())
                 {
-                    client.DefaultRequestHeaders.Add("Package_Guid", guid);
+                    client.DefaultRequestHeaders.Add("Package-Guid", guid);
 
                     HttpResponseMessage response = null;
 

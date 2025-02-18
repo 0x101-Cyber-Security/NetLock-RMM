@@ -12,7 +12,7 @@ namespace Helper
                 using (HttpClient client = new HttpClient())
                 {
                     client.DefaultRequestHeaders.Add("User-Agent", "NetLock RMM Server Backend");
-                    client.Timeout = TimeSpan.FromMinutes(60); 
+                    client.Timeout = TimeSpan.FromMinutes(60); // needs to be long for large files
 
                     HttpResponseMessage response = null;
 

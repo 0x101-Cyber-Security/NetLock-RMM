@@ -724,6 +724,7 @@
             loading_overlay = false;
 
             string url = Configuration.File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
+           
             await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
         }
         catch (Exception ex)

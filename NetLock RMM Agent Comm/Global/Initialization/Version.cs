@@ -59,7 +59,7 @@ namespace Global.Initialization
                 {
                     // Set the content type header
                     httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-                    httpClient.DefaultRequestHeaders.Add("Package_Guid", Configuration.Agent.package_guid);
+                    httpClient.DefaultRequestHeaders.Add("Package-Guid", Configuration.Agent.package_guid);
 
                     Logging.Debug("Initialization.Version_Handler.Check_Version", "communication_server", Device_Worker.communication_server + "/Agent/Windows/Verify_Device");
 
