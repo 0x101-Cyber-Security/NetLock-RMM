@@ -415,9 +415,10 @@ namespace NetLock_RMM_Agent_Installer
                 }
 
                 // Check hash user process package
+                string user_process_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path);
+
                 if (OperatingSystem.IsWindows())
                 {
-                    string user_process_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path);
                     string user_process_package_hash_local = Helper.IO.Get_SHA512(user_process_package_path);
 
                     Logging.Handler.Debug("Main", "Check hash user process package", user_process_package_hash_local);
@@ -506,11 +507,14 @@ namespace NetLock_RMM_Agent_Installer
                 if (!Directory.Exists(Application_Paths.program_data_health_agent_dir))
                     Directory.CreateDirectory(Application_Paths.program_data_health_agent_dir);
 
-                // Create program data dir (user process)
+                // Create program data & files dir (user process/agent)
                 if (OperatingSystem.IsWindows())
                 {
-                    if (!Directory.Exists(Application_Paths.program_data_user_process_dir))
-                        Directory.CreateDirectory(Application_Paths.program_data_user_process_dir);
+                    if (!Directory.Exists(Application_Paths.program_files_user_agent_dir))
+                        Directory.CreateDirectory(Application_Paths.program_files_user_agent_dir);
+
+                    if (!Directory.Exists(Application_Paths.program_data_user_agent_dir))
+                        Directory.CreateDirectory(Application_Paths.program_data_user_agent_dir);
                 }
 
                 // Extract comm agent package
@@ -572,7 +576,7 @@ namespace NetLock_RMM_Agent_Installer
                 {
                     Logging.Handler.Debug("Main", "Extracting user process package", "");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process package.");
-                    ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), Application_Paths.program_files_user_process_dir, true);
+                    ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), Application_Paths.program_files_user_agent_dir, true);
                 }
 
                 // We are not adding the user process to the registry, because the comm agent will do that for us
@@ -762,6 +766,21 @@ namespace NetLock_RMM_Agent_Installer
                 Logging.Handler.Debug("Main", "Delete temp dir", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete temp dir: Done.");
                 */
+
+                // Delete unnecessary leftovers
+                if (File.Exists(comm_agent_package_path))
+                    File.Delete(comm_agent_package_path);
+
+                if (File.Exists(remote_agent_package_path))
+                    File.Delete(remote_agent_package_path);
+
+                if (File.Exists(health_agent_package_path))
+                    File.Delete(health_agent_package_path);
+
+                if (OperatingSystem.IsWindows())
+                    if (File.Exists(user_process_package_path))
+                        File.Delete(user_process_package_path);
+
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Installation finished.");
 
                 // Wait for 5 seconds

@@ -111,6 +111,7 @@ Console.WriteLine($"Server role (trust): {role_trust}");
 Console.WriteLine($"Server role (remote): {role_remote}");
 Console.WriteLine($"Server role (notification): {role_notification}");
 Console.WriteLine($"Server role (file): {role_file}");
+Console.WriteLine(Environment.NewLine);
 
 // Output members portal configuration
 Console.WriteLine("[Members Portal]");

@@ -46,118 +46,118 @@ namespace NetLock_RMM_Server.Agent.Windows
 
         public class Automation_Entity
         {
-            public string name { get; set; }
-            public string date { get; set; }
-            public string author { get; set; }
-            public string description { get; set; }
-            public int category { get; set; }
-            public int sub_category { get; set; }
-            public int condition { get; set; }
-            public string expected_result { get; set; }
-            public string trigger { get; set; }
+            public string? name { get; set; }
+            public string? date { get; set; }
+            public string? author { get; set; }
+            public string? description { get; set; }
+            public int? category { get; set; }
+            public int? sub_category { get; set; }
+            public int? condition { get; set; }
+            public string? expected_result { get; set; }
+            public string? trigger { get; set; }
         }
 
         public class Sensors_Entity
         {
-            public string id { get; set; }
-            public string name { get; set; }
-            public string date { get; set; }
-            public string last_run { get; set; }
-            public string author { get; set; }
-            public string description { get; set; }
-            public string platform { get; set; }
-            public int severity { get; set; }
-            public int category { get; set; }
-            public int sub_category { get; set; }
-            public int utilization_category { get; set; }
-            public int notification_treshold_count { get; set; }
-            public int notification_treshold_max { get; set; }
-            public string notification_history { get; set; }
-            public int action_treshold_count { get; set; }
-            public int action_treshold_max { get; set; }
-            public string action_history { get; set; }
-            public bool auto_reset { get; set; }
-            public string script { get; set; }
-            public string script_action { get; set; }
-            public int cpu_usage { get; set; }
-            public string process_name { get; set; }
-            public int ram_usage { get; set; }
-            public int disk_usage { get; set; }
-            public int disk_minimum_capacity { get; set; }
-            public int disk_category { get; set; }
-            public string disk_letters { get; set; }
-            public bool disk_include_network_disks { get; set; }
-            public bool disk_include_removable_disks { get; set; }
-            public string eventlog { get; set; }
-            public string eventlog_event_id { get; set; }
-            public string expected_result { get; set; }
+            public string? id { get; set; }
+            public string? name { get; set; }
+            public string? date { get; set; }
+            public string? last_run { get; set; }
+            public string? author { get; set; }
+            public string? description { get; set; }
+            public string? platform { get; set; }
+            public int? severity { get; set; }
+            public int? category { get; set; }
+            public int? sub_category { get; set; }
+            public int? utilization_category { get; set; }
+            public int? notification_treshold_count { get; set; }
+            public int? notification_treshold_max { get; set; }
+            public string? notification_history { get; set; }
+            public int? action_treshold_count { get; set; }
+            public int? action_treshold_max { get; set; }
+            public string? action_history { get; set; }
+            public bool? auto_reset { get; set; }
+            public string? script { get; set; }
+            public string? script_action { get; set; }
+            public int? cpu_usage { get; set; }
+            public string? process_name { get; set; }
+            public int? ram_usage { get; set; }
+            public int? disk_usage { get; set; }
+            public int? disk_minimum_capacity { get; set; }
+            public int? disk_category { get; set; }
+            public string? disk_letters { get; set; }
+            public bool? disk_include_network_disks { get; set; }
+            public bool? disk_include_removable_disks { get; set; }
+            public string? eventlog { get; set; }
+            public string? eventlog_event_id { get; set; }
+            public string? expected_result { get; set; }
 
             //service sensor
-            public string service_name { get; set; }
-            public int service_condition { get; set; }
-            public int service_action { get; set; }
+            public string? service_name { get; set; }
+            public int? service_condition { get; set; }
+            public int? service_action { get; set; }
 
             //ping sensor
-            public string ping_address { get; set; }
-            public int ping_timeout { get; set; }
-            public int ping_condition { get; set; }
+            public string? ping_address { get; set; }
+            public int? ping_timeout { get; set; }
+            public int? ping_condition { get; set; }
 
             //time schedule
-            public int time_scheduler_type { get; set; }
-            public int time_scheduler_seconds { get; set; }
-            public int time_scheduler_minutes { get; set; }
-            public int time_scheduler_hours { get; set; }
-            public string time_scheduler_time { get; set; }
-            public string time_scheduler_date { get; set; }
-            public bool time_scheduler_monday { get; set; }
-            public bool time_scheduler_tuesday { get; set; }
-            public bool time_scheduler_wednesday { get; set; }
-            public bool time_scheduler_thursday { get; set; }
-            public bool time_scheduler_friday { get; set; }
-            public bool time_scheduler_saturday { get; set; }
-            public bool time_scheduler_sunday { get; set; }
+            public int? time_scheduler_type { get; set; }
+            public int? time_scheduler_seconds { get; set; }
+            public int? time_scheduler_minutes { get; set; }
+            public int? time_scheduler_hours { get; set; }
+            public string? time_scheduler_time { get; set; }
+            public string? time_scheduler_date { get; set; }
+            public bool? time_scheduler_monday { get; set; }
+            public bool? time_scheduler_tuesday { get; set; }
+            public bool? time_scheduler_wednesday { get; set; }
+            public bool? time_scheduler_thursday { get; set; }
+            public bool? time_scheduler_friday { get; set; }
+            public bool? time_scheduler_saturday { get; set; }
+            public bool? time_scheduler_sunday { get; set; }
 
             // NetLock notifications
-            public bool notifications_mail { get; set; }
-            public bool notifications_microsoft_teams { get; set; }
-            public bool notifications_telegram { get; set; }
-            public bool notifications_ntfy_sh { get; set; }
+            public bool? notifications_mail { get; set; }
+            public bool? notifications_microsoft_teams { get; set; }
+            public bool? notifications_telegram { get; set; }
+            public bool? notifications_ntfy_sh { get; set; }
         }
 
         public class Sensors_Device_Entity
         {
-            public string id { get; set; }
+            public string? id { get; set; }
         }
 
         public class Jobs_Entity
         {
-            public string id { get; set; }
-            public string name { get; set; }
-            public string date { get; set; }
-            public string author { get; set; }
-            public string description { get; set; }
-            public string platform { get; set; }
-            public string type { get; set; }
-            public string script { get; set; }
+            public string? id { get; set; }
+            public string? name { get; set; }
+            public string? date { get; set; }
+            public string? author { get; set; }
+            public string? description { get; set; }
+            public string? platform { get; set; }
+            public string? type { get; set; }
+            public string? script { get; set; }
 
-            public int time_scheduler_type { get; set; }
-            public int time_scheduler_seconds { get; set; }
-            public int time_scheduler_minutes { get; set; }
-            public int time_scheduler_hours { get; set; }
-            public string time_scheduler_time { get; set; }
-            public string time_scheduler_date { get; set; }
-            public bool time_scheduler_monday { get; set; }
-            public bool time_scheduler_tuesday { get; set; }
-            public bool time_scheduler_wednesday { get; set; }
-            public bool time_scheduler_thursday { get; set; }
-            public bool time_scheduler_friday { get; set; }
-            public bool time_scheduler_saturday { get; set; }
-            public bool time_scheduler_sunday { get; set; }
+            public int? time_scheduler_type { get; set; }
+            public int? time_scheduler_seconds { get; set; }
+            public int? time_scheduler_minutes { get; set; }
+            public int? time_scheduler_hours { get; set; }
+            public string? time_scheduler_time { get; set; }
+            public string? time_scheduler_date { get; set; }
+            public bool? time_scheduler_monday { get; set; }
+            public bool? time_scheduler_tuesday { get; set; }
+            public bool? time_scheduler_wednesday { get; set; }
+            public bool? time_scheduler_thursday { get; set; }
+            public bool? time_scheduler_friday { get; set; }
+            public bool? time_scheduler_saturday { get; set; }
+            public bool? time_scheduler_sunday { get; set; }
         }
 
         public class Jobs_Device_Entity
         {
-            public string id { get; set; }
+            public string? id { get; set; }
         }
 
         public static async Task<string> Get_Policy(string json, string external_ip_address)

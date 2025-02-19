@@ -62,8 +62,10 @@ namespace NetLock_RMM_Agent_Installer
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Remote.exe\"");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health.exe");
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Health.exe\"");
-                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
-                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process.exe");
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_User_Process.exe\"");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe"); // kill legacy process
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\""); // kill legacy process
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
             }
@@ -224,8 +226,10 @@ namespace NetLock_RMM_Agent_Installer
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Comm.exe\"");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote.exe");
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Remote.exe\"");
-                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe");
-                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\"");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process.exe");
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_User_Process.exe\"");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe"); // kill legacy process
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\""); // kill legacy process
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
             }
@@ -307,8 +311,14 @@ namespace NetLock_RMM_Agent_Installer
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting directories.");
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_files_comm_agent_dir);
             Helper.IO.Delete_Directory(Application_Paths.program_files_comm_agent_dir);
+            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_files_remote_agent_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_files_remote_agent_dir);
+            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_files_user_agent_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_files_user_agent_dir);
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_comm_agent_dir);
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_dir);
+            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_remote_agent_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_data_remote_agent_dir);
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_comm_agent_logs_dir);
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_logs_dir);
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_comm_agent_jobs_dir);
@@ -325,10 +335,12 @@ namespace NetLock_RMM_Agent_Installer
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_dumps_dir);
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_comm_agent_temp_dir);
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_temp_dir);
-            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_files_remote_agent_dir);
-            Helper.IO.Delete_Directory(Application_Paths.program_files_remote_agent_dir);
-            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_remote_agent_dir);
-            Helper.IO.Delete_Directory(Application_Paths.program_data_remote_agent_dir);
+            
+            // Delete legacy directories
+            Logging.Handler.Debug("Main", "Deleting directories (legacy).", Application_Paths.program_files_user_process_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_files_user_process_dir);
+            Logging.Handler.Debug("Main", "Deleting directories (legacy).", Application_Paths.program_data_user_process_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_data_user_process_dir);
 
             // Delete logs
             if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())

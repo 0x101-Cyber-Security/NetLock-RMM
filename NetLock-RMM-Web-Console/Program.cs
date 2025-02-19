@@ -213,18 +213,33 @@ if (!await Database.Check_Connection())
 else
 {
     Console.WriteLine("MySQL connection successful.");
-}
 
-// Check if database exists
-if (!await Database.Check_Table_Existing())
-{
-    Console.WriteLine("Database tables do not exist. Creating database...");
-    await Database.Execute_Installation_Script();
-    Console.WriteLine("Database tables created.");
-}
-else
-{
-    Console.WriteLine("Database tables exist.");
+    // Check if tables exist
+    if (!await Database.Check_Table_Existing()) // Table does not exist
+    {
+        Console.WriteLine("Database tables do not exist. Creating tables...");
+        await Database.Execute_Installation_Script();
+        Console.WriteLine("Database tables created.");
+    }
+    else // Table exists
+    {
+        Console.WriteLine("Database tables exist.");
+
+        // Check db version
+        if (await Database.Check_NetLock_Database_Version() != Application_Settings.version)
+        {
+            Console.WriteLine("Database structure is outdated. Trying to update.");
+
+            // Update database
+            await Database.Execute_Update_Script();
+
+            Console.WriteLine("Database structure updated.");
+        }
+        else
+        {
+            Console.WriteLine("Database version is up to date.");
+        }
+    }
 }
 
 // Add MudBlazor services

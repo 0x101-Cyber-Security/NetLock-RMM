@@ -105,6 +105,11 @@
             <MudProgressLinear Class="mt-2" Color="Color.Info" Indeterminate="true"></MudProgressLinear>
         }
 
+        @if (!String.IsNullOrEmpty(installer_url) && !creating_installer)
+        {
+            <MudText Class="mt-2" Typo="Typo.body1">Url: @installer_url</MudText>
+        }
+
     </DialogContent>
     <DialogActions>
 
@@ -669,6 +674,7 @@
     }
 
     private bool creating_installer = false;
+    private string installer_url = String.Empty;
 
     private async Task Download_Installer()
     {
@@ -723,9 +729,9 @@
 
             loading_overlay = false;
 
-            string url = Configuration.File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
-           
-            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+            installer_url = Configuration.File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
+
+            await Download_Installer_Popup();
         }
         catch (Exception ex)
         {
@@ -736,6 +742,11 @@
             creating_installer = false;
             loading_overlay = false;
         }
+    }
+
+    private async Task Download_Installer_Popup()
+    {
+        await JSRuntime.InvokeVoidAsync("window.open", installer_url, "_blank");
     }
 
     private void Cancel() => MudDialog.Cancel();

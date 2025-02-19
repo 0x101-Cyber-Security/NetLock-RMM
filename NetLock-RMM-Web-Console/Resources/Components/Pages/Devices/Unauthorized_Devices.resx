@@ -118,573 +118,573 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="add" xml:space="preserve">
-    <value>add</value>
+    <value />
   </data>
   <data name="agent_version" xml:space="preserve">
-    <value>Version</value>
+    <value />
   </data>
   <data name="all_devices" xml:space="preserve">
-    <value>All devices</value>
+    <value />
   </data>
   <data name="antivirus_information_amengineversion" xml:space="preserve">
-    <value>Antimalware-Engineversion</value>
+    <value />
   </data>
   <data name="antivirus_information_amproductversion" xml:space="preserve">
-    <value>Antimalware product version</value>
+    <value />
   </data>
   <data name="antivirus_information_amserviceenabled" xml:space="preserve">
-    <value>Antimalware-Service</value>
+    <value />
   </data>
   <data name="antivirus_information_amserviceversion" xml:space="preserve">
-    <value>Antimalware service version</value>
+    <value />
   </data>
   <data name="antivirus_information_antispywaresignaturelastupdated" xml:space="preserve">
-    <value>Last update of the antispyware signature</value>
+    <value />
   </data>
   <data name="antivirus_information_antispywaresignatureversion" xml:space="preserve">
-    <value>Antispyware-Signaturversion</value>
+    <value />
   </data>
   <data name="antivirus_information_antivirussignaturelastupdated" xml:space="preserve">
-    <value>Last update of the antivirus signature</value>
+    <value />
   </data>
   <data name="antivirus_information_antivirussignatureversion" xml:space="preserve">
-    <value>Antivirus-Signaturversion</value>
+    <value />
   </data>
   <data name="antivirus_information_nis" xml:space="preserve">
-    <value>Network Inspection System (NIS)</value>
+    <value />
   </data>
   <data name="antivirus_information_nisengineversion" xml:space="preserve">
-    <value>Engineversion</value>
+    <value />
   </data>
   <data name="antivirus_information_nissignaturelastupdated" xml:space="preserve">
-    <value>Last update of the NIS signature</value>
+    <value />
   </data>
   <data name="antivirus_information_nissignatureversion" xml:space="preserve">
-    <value>NIS signature version</value>
+    <value />
   </data>
   <data name="antivirus_products" xml:space="preserve">
-    <value>Antivirus products</value>
+    <value />
   </data>
   <data name="antivirus_solution" xml:space="preserve">
-    <value>Antivirus solution</value>
+    <value />
   </data>
   <data name="any" xml:space="preserve">
-    <value>Any</value>
+    <value />
   </data>
   <data name="architecture" xml:space="preserve">
-    <value>Architecture</value>
+    <value />
   </data>
   <data name="Are you sure you want to delete the directory?" xml:space="preserve">
-    <value>Are you sure you want to delete the directory?</value>
+    <value />
   </data>
   <data name="Are you sure you want to delete the file?" xml:space="preserve">
-    <value>Are you sure you want to delete the file?</value>
+    <value />
   </data>
   <data name="author" xml:space="preserve">
-    <value>Author</value>
+    <value />
   </data>
   <data name="authorize_device" xml:space="preserve">
-    <value>Authorize device</value>
+    <value />
   </data>
   <data name="back" xml:space="preserve">
-    <value>Back</value>
+    <value />
   </data>
   <data name="base_clock_speed_mhz" xml:space="preserve">
-    <value>Base clock speed (MHz)</value>
+    <value />
   </data>
   <data name="behavior_monitoring" xml:space="preserve">
-    <value>Behavior monitoring</value>
+    <value />
   </data>
   <data name="cancel" xml:space="preserve">
-    <value>Cancel</value>
+    <value />
   </data>
   <data name="capacity_gb" xml:space="preserve">
-    <value>Capacity (GB)</value>
+    <value />
   </data>
   <data name="category" xml:space="preserve">
-    <value>Category</value>
+    <value />
   </data>
   <data name="command" xml:space="preserve">
-    <value>Command</value>
+    <value />
   </data>
   <data name="confirm" xml:space="preserve">
-    <value>Confirm</value>
+    <value />
   </data>
   <data name="connect" xml:space="preserve">
-    <value>Connect</value>
+    <value />
   </data>
   <data name="connection_type" xml:space="preserve">
-    <value>Connection type</value>
+    <value />
   </data>
   <data name="cores" xml:space="preserve">
-    <value>Cores</value>
+    <value />
   </data>
   <data name="created" xml:space="preserve">
-    <value>Created</value>
+    <value />
   </data>
   <data name="critical" xml:space="preserve">
-    <value>Critical</value>
+    <value />
   </data>
   <data name="date" xml:space="preserve">
-    <value>Date</value>
+    <value />
   </data>
   <data name="delete" xml:space="preserve">
-    <value>Delete</value>
+    <value />
   </data>
   <data name="delete_device" xml:space="preserve">
-    <value>Delete device</value>
+    <value />
   </data>
   <data name="description" xml:space="preserve">
-    <value>Description</value>
+    <value />
   </data>
   <data name="devices" xml:space="preserve">
-    <value>Devices</value>
+    <value />
   </data>
   <data name="device_authorized" xml:space="preserve">
-    <value>Device authorized.</value>
+    <value />
   </data>
   <data name="device_deleted" xml:space="preserve">
-    <value>Device deleted.</value>
+    <value />
   </data>
   <data name="dhcp_enabled" xml:space="preserve">
-    <value>DHCP activated</value>
+    <value />
   </data>
   <data name="dhcp_server" xml:space="preserve">
-    <value>DHCP-Server</value>
+    <value />
   </data>
   <data name="directory" xml:space="preserve">
-    <value>Directory</value>
+    <value />
   </data>
   <data name="disabled" xml:space="preserve">
-    <value>Disabled</value>
+    <value />
   </data>
   <data name="display_name" xml:space="preserve">
-    <value>Display name</value>
+    <value />
   </data>
   <data name="dns_domain" xml:space="preserve">
-    <value>DNS Domain</value>
+    <value />
   </data>
   <data name="dns_hostname" xml:space="preserve">
-    <value>DNS Hostname</value>
+    <value />
   </data>
   <data name="domain" xml:space="preserve">
-    <value>Domain</value>
+    <value />
   </data>
   <data name="drive" xml:space="preserve">
-    <value>Drive</value>
+    <value />
   </data>
   <data name="drivers" xml:space="preserve">
-    <value>Driver</value>
+    <value />
   </data>
   <data name="drives" xml:space="preserve">
-    <value>Drives</value>
+    <value />
   </data>
   <data name="edit" xml:space="preserve">
-    <value>Edit</value>
+    <value />
   </data>
   <data name="enabled" xml:space="preserve">
-    <value>Enabled</value>
+    <value />
   </data>
   <data name="events" xml:space="preserve">
-    <value>Events</value>
+    <value />
   </data>
   <data name="execute" xml:space="preserve">
-    <value>Execute</value>
+    <value />
   </data>
   <data name="exit" xml:space="preserve">
-    <value>Exit</value>
+    <value />
   </data>
   <data name="export_data" xml:space="preserve">
-    <value>Export data</value>
+    <value />
   </data>
   <data name="external_ip" xml:space="preserve">
-    <value>External IP address</value>
+    <value />
   </data>
   <data name="file_browser" xml:space="preserve">
-    <value>File browser</value>
+    <value />
   </data>
   <data name="file_system" xml:space="preserve">
-    <value>File system</value>
+    <value />
   </data>
   <data name="firewall" xml:space="preserve">
-    <value>Firewall</value>
+    <value />
   </data>
   <data name="firewall_disabled" xml:space="preserve">
-    <value>Deactivated</value>
+    <value />
   </data>
   <data name="firewall_enabled" xml:space="preserve">
-    <value>Activated</value>
+    <value />
   </data>
   <data name="firmware_revision" xml:space="preserve">
-    <value>Firmware-Revision</value>
+    <value />
   </data>
   <data name="form_factor" xml:space="preserve">
-    <value>Form factor</value>
+    <value />
   </data>
   <data name="free" xml:space="preserve">
-    <value>Free</value>
+    <value />
   </data>
   <data name="general" xml:space="preserve">
-    <value>General</value>
+    <value />
   </data>
   <data name="gpu" xml:space="preserve">
-    <value>Graphics card</value>
+    <value />
   </data>
   <data name="group" xml:space="preserve">
-    <value>Group</value>
+    <value />
   </data>
   <data name="high" xml:space="preserve">
-    <value>High</value>
+    <value />
   </data>
   <data name="history" xml:space="preserve">
-    <value>History</value>
+    <value />
   </data>
   <data name="information" xml:space="preserve">
-    <value>Information</value>
+    <value />
   </data>
   <data name="input" xml:space="preserve">
-    <value>Input</value>
+    <value />
   </data>
   <data name="installation_date" xml:space="preserve">
-    <value>Installation date</value>
+    <value />
   </data>
   <data name="installation_path" xml:space="preserve">
-    <value>Installation path</value>
+    <value />
   </data>
   <data name="installed" xml:space="preserve">
-    <value>Installed</value>
+    <value />
   </data>
   <data name="instance_guid" xml:space="preserve">
-    <value>Instanz-GUID</value>
+    <value />
   </data>
   <data name="internal_ip" xml:space="preserve">
-    <value>Internal IP address</value>
+    <value />
   </data>
   <data name="internal_ips" xml:space="preserve">
-    <value>Internal IP address(es)</value>
+    <value />
   </data>
   <data name="ioav" xml:space="preserve">
-    <value>Integrity monitoring and attack protection (IOAV)</value>
+    <value />
   </data>
   <data name="ipv4_address" xml:space="preserve">
-    <value>IPv4 address</value>
+    <value />
   </data>
   <data name="ipv6_address" xml:space="preserve">
-    <value>IPv6 address</value>
+    <value />
   </data>
   <data name="ip_address" xml:space="preserve">
-    <value>IP address</value>
+    <value />
   </data>
   <data name="last_access" xml:space="preserve">
-    <value>Last contact</value>
+    <value />
   </data>
   <data name="last_boot" xml:space="preserve">
-    <value>Last boot</value>
+    <value />
   </data>
   <data name="last_execution" xml:space="preserve">
-    <value>Last execution</value>
+    <value />
   </data>
   <data name="letter" xml:space="preserve">
-    <value>Letter</value>
+    <value />
   </data>
   <data name="Link_speed_(MBit/s)" xml:space="preserve">
-    <value>Link speed (MBit/s)</value>
+    <value />
   </data>
   <data name="location" xml:space="preserve">
-    <value>Location</value>
+    <value />
   </data>
   <data name="logical_processors" xml:space="preserve">
-    <value>Logical processors</value>
+    <value />
   </data>
   <data name="login_as" xml:space="preserve">
-    <value>Login as</value>
+    <value />
   </data>
   <data name="low" xml:space="preserve">
-    <value>Low</value>
+    <value />
   </data>
   <data name="mac_address" xml:space="preserve">
-    <value>MAC address</value>
+    <value />
   </data>
   <data name="manufacturer" xml:space="preserve">
-    <value>Manufacturer</value>
+    <value />
   </data>
   <data name="model" xml:space="preserve">
-    <value>Model</value>
+    <value />
   </data>
   <data name="moderate" xml:space="preserve">
-    <value>Moderate</value>
+    <value />
   </data>
   <data name="modification_date" xml:space="preserve">
-    <value>Modification date</value>
+    <value />
   </data>
   <data name="move" xml:space="preserve">
-    <value>Move</value>
+    <value />
   </data>
   <data name="move_devices" xml:space="preserve">
-    <value>Move devices</value>
+    <value />
   </data>
   <data name="name" xml:space="preserve">
-    <value>Name</value>
+    <value />
   </data>
   <data name="network" xml:space="preserve">
-    <value>Network</value>
+    <value />
   </data>
   <data name="network_adapters" xml:space="preserve">
-    <value>Network adapter</value>
+    <value />
   </data>
   <data name="new_directory" xml:space="preserve">
-    <value>New directory</value>
+    <value />
   </data>
   <data name="new_file" xml:space="preserve">
-    <value>New file</value>
+    <value />
   </data>
   <data name="next_execution" xml:space="preserve">
-    <value>Next execution</value>
+    <value />
   </data>
   <data name="note" xml:space="preserve">
-    <value>Note</value>
+    <value />
   </data>
   <data name="notes" xml:space="preserve">
-    <value>Notes</value>
+    <value />
   </data>
   <data name="occupied" xml:space="preserve">
-    <value>Occupied</value>
+    <value />
   </data>
   <data name="occupied_%" xml:space="preserve">
-    <value>Occupied (%)</value>
+    <value />
   </data>
   <data name="on_access_protection" xml:space="preserve">
-    <value>Access protection (On Access Protection)</value>
+    <value />
   </data>
   <data name="os" xml:space="preserve">
-    <value>Operating system</value>
+    <value />
   </data>
   <data name="output" xml:space="preserve">
-    <value>Output</value>
+    <value />
   </data>
   <data name="parent_name" xml:space="preserve">
-    <value>Parent Name</value>
+    <value />
   </data>
   <data name="path" xml:space="preserve">
-    <value>Path</value>
+    <value />
   </data>
   <data name="Path to the signed product executable" xml:space="preserve">
-    <value>Path to the signed product executable</value>
+    <value />
   </data>
   <data name="Path to the signed reporting executable" xml:space="preserve">
-    <value>Path to the signed reporting executable</value>
+    <value />
   </data>
   <data name="platform" xml:space="preserve">
-    <value>Platform</value>
+    <value />
   </data>
   <data name="policy" xml:space="preserve">
-    <value>Policy</value>
+    <value />
   </data>
   <data name="processes" xml:space="preserve">
-    <value>Processes</value>
+    <value />
   </data>
   <data name="processor" xml:space="preserve">
-    <value>Processor</value>
+    <value />
   </data>
   <data name="processor_id" xml:space="preserve">
-    <value>Processor ID</value>
+    <value />
   </data>
   <data name="process_cpu_usage_%" xml:space="preserve">
-    <value>Process CPU utilization (%)</value>
+    <value />
   </data>
   <data name="process_ram_usage_%" xml:space="preserve">
-    <value>Process RAM utilization (%)</value>
+    <value />
   </data>
   <data name="process_ram_usage_mb" xml:space="preserve">
-    <value>Process RAM usage (MB)</value>
+    <value />
   </data>
   <data name="product_state" xml:space="preserve">
-    <value>Product State</value>
+    <value />
   </data>
   <data name="ram" xml:space="preserve">
-    <value>RAM</value>
+    <value />
   </data>
   <data name="ram_available_mb" xml:space="preserve">
-    <value>Available (MB)</value>
+    <value />
   </data>
   <data name="ram_in_cache_mb" xml:space="preserve">
-    <value>In cache (MB)</value>
+    <value />
   </data>
   <data name="ram_not_outsources_pool_mb" xml:space="preserve">
-    <value>Non-externalized pool (MB)</value>
+    <value />
   </data>
   <data name="ram_outsourced_pool_mb" xml:space="preserve">
-    <value>Outsourced pool (MB)</value>
+    <value />
   </data>
   <data name="ram_reserved_for_hardware_mb" xml:space="preserve">
-    <value>Reserved for hardware (MB)</value>
+    <value />
   </data>
   <data name="ready" xml:space="preserve">
-    <value>Ready</value>
+    <value />
   </data>
   <data name="read_operations" xml:space="preserve">
-    <value>Read operations</value>
+    <value />
   </data>
   <data name="read_transfer" xml:space="preserve">
-    <value>Read Transfer</value>
+    <value />
   </data>
   <data name="real_time_protection" xml:space="preserve">
-    <value>Real-time protection</value>
+    <value />
   </data>
   <data name="receive_kbits" xml:space="preserve">
-    <value>Receive (kbit/s)</value>
+    <value />
   </data>
   <data name="refresh" xml:space="preserve">
-    <value>Refresh</value>
+    <value />
   </data>
   <data name="rename" xml:space="preserve">
-    <value>Rename</value>
+    <value />
   </data>
   <data name="reported_by" xml:space="preserve">
-    <value>Reported by</value>
+    <value />
   </data>
   <data name="reset" xml:space="preserve">
-    <value>Reset</value>
+    <value />
   </data>
   <data name="result" xml:space="preserve">
-    <value>Result</value>
+    <value />
   </data>
   <data name="rows_per_page" xml:space="preserve">
-    <value>Entries per page</value>
+    <value />
   </data>
   <data name="save" xml:space="preserve">
-    <value>Save</value>
+    <value />
   </data>
   <data name="search" xml:space="preserve">
-    <value>Search</value>
+    <value />
   </data>
   <data name="security" xml:space="preserve">
-    <value>Sicherheit</value>
+    <value />
   </data>
   <data name="send_kbits" xml:space="preserve">
-    <value>Send (kbit/s)</value>
+    <value />
   </data>
   <data name="serial_number" xml:space="preserve">
-    <value>Serial number</value>
+    <value />
   </data>
   <data name="service" xml:space="preserve">
-    <value>Service</value>
+    <value />
   </data>
   <data name="services" xml:space="preserve">
-    <value>Services</value>
+    <value />
   </data>
   <data name="service_name" xml:space="preserve">
-    <value>Service name</value>
+    <value />
   </data>
   <data name="severity" xml:space="preserve">
-    <value>Severity</value>
+    <value />
   </data>
   <data name="size_gb" xml:space="preserve">
-    <value>Size (GB)</value>
+    <value />
   </data>
   <data name="slots" xml:space="preserve">
-    <value>Slots</value>
+    <value />
   </data>
   <data name="slots_used" xml:space="preserve">
-    <value>Slots used</value>
+    <value />
   </data>
   <data name="socket_designation" xml:space="preserve">
-    <value>Socket designation</value>
+    <value />
   </data>
   <data name="software" xml:space="preserve">
-    <value>Applications</value>
+    <value />
   </data>
   <data name="speed_mhz" xml:space="preserve">
-    <value>Speed (MHz)</value>
+    <value />
   </data>
   <data name="start" xml:space="preserve">
-    <value>Start</value>
+    <value />
   </data>
   <data name="start_type" xml:space="preserve">
-    <value>Start type</value>
+    <value />
   </data>
   <data name="stop" xml:space="preserve">
-    <value>Stop</value>
+    <value />
   </data>
   <data name="subnet_mask" xml:space="preserve">
-    <value>Subnet Mask</value>
+    <value />
   </data>
   <data name="sub_category" xml:space="preserve">
-    <value>Subcategory</value>
+    <value />
   </data>
   <data name="tamper_protection" xml:space="preserve">
-    <value>Manipulationsschutz</value>
+    <value />
   </data>
   <data name="task_scheduler" xml:space="preserve">
-    <value>Task Scheduler</value>
+    <value />
   </data>
   <data name="tenant" xml:space="preserve">
-    <value>Tenant</value>
+    <value />
   </data>
   <data name="timestamp" xml:space="preserve">
-    <value>Timestamp</value>
+    <value />
   </data>
   <data name="timezone" xml:space="preserve">
-    <value>Timezone</value>
+    <value />
   </data>
   <data name="time_span" xml:space="preserve">
-    <value>Time span</value>
+    <value />
   </data>
   <data name="title" xml:space="preserve">
-    <value>Sensors</value>
+    <value />
   </data>
   <data name="type" xml:space="preserve">
-    <value>Type</value>
+    <value />
   </data>
   <data name="unauthorize" xml:space="preserve">
-    <value>Withdraw authorization</value>
+    <value />
   </data>
   <data name="unauthorized_devices" xml:space="preserve">
-    <value>Unauthorized devices</value>
+    <value />
   </data>
   <data name="uninstall" xml:space="preserve">
-    <value>Uninstall</value>
+    <value />
   </data>
   <data name="uninstallation_command" xml:space="preserve">
-    <value>Uninstall command</value>
+    <value />
   </data>
   <data name="user" xml:space="preserve">
-    <value>User</value>
+    <value />
   </data>
   <data name="user_sid" xml:space="preserve">
-    <value>User SID</value>
+    <value />
   </data>
   <data name="utilization" xml:space="preserve">
-    <value>Utilization</value>
+    <value />
   </data>
   <data name="virtualization" xml:space="preserve">
-    <value>Virtualization</value>
+    <value />
   </data>
   <data name="warning" xml:space="preserve">
-    <value>Warning</value>
+    <value />
   </data>
   <data name="write_operations" xml:space="preserve">
-    <value>Write operations</value>
+    <value />
   </data>
   <data name="write_transfer" xml:space="preserve">
-    <value>Write transfer</value>
+    <value />
   </data>
   <data name="authorize" xml:space="preserve">
-    <value>Authorize</value>
+    <value />
   </data>
   <data name="membership_hard_limit_reached" xml:space="preserve">
-    <value>Membership configured hard limit reached.</value>
+    <value />
   </data>
   <data name="your configured limit is" xml:space="preserve">
-    <value>Your configured limit is</value>
+    <value />
   </data>
   <data name="and_you_currently_have" xml:space="preserve">
-    <value>and you currently have</value>
+    <value />
   </data>
   <data name="active_devices" xml:space="preserve">
-    <value>active devices.</value>
+    <value />
   </data>
   <data name="please_remove_or_increase_memberships_limit" xml:space="preserve">
-    <value>Please remove authorization of other devices, or increase the hard limit in the members portal.</value>
+    <value />
   </data>
 </root>

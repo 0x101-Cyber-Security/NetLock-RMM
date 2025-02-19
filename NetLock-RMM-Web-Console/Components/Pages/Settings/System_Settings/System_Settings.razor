@@ -63,7 +63,7 @@
 
         @if (Configuration.Members_Portal.cloud_enabled)
         {
-            <MudAlert Severity="Severity.Warning" Class="mt-2">This section is administered by the cloud team. :-)</MudAlert>
+            <MudAlert Severity="Severity.Warning">This section is administered by the cloud team. :-)</MudAlert>
         }
 
         @if (permissions_settings_enabled && permissions_settings_system_enabled && !Configuration.Members_Portal.cloud_enabled)
@@ -369,7 +369,7 @@
                     <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Filled" Label="@Localizer["enter your api key here"]" @bind-Text="members_portal_api_key" Immediate="true" />
                     <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Api_Key" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["save"]</MudButton>
 
-                    <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["members portal license status"]</MudText>
+                    <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["license status"]</MudText>
 
                     @if (members_portal_status == "Active")
                     {
@@ -386,9 +386,9 @@
                         </div>
                     }
 
-                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">@Localizer["name"]: @members_portal_license_name</MudText>
+                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">Name: @members_portal_license_name</MudText>
                     <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
-                    <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard limit"]: @members_portal_licenses_hard_limit</MudText>
+                    <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard_limit"]: @members_portal_licenses_hard_limit</MudText>
 
                     <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
                 }
@@ -858,10 +858,10 @@
         {
             await Get_Members_Portal_License_Status();
 
-            Snackbar.Add(Localizer["authorization successfull, license information refreshed"], Severity.Success);
+            Snackbar.Add(Localizer["authorization_successful_refreshed_license_information"], Severity.Success);
         }
         else
-            Snackbar.Add(Localizer["unauthorized, check your api key & make sure the members portal api is reachable"], Severity.Error);
+            Snackbar.Add(Localizer["unauthorized_check_api_key_members_portable_reachable"], Severity.Error);
     }
 
     // Update members portal license information
@@ -875,10 +875,10 @@
         if (updated)
         {
             await Get_Members_Portal_License_Status();
-            Snackbar.Add(Localizer["license information refreshed"], Severity.Success);
+            Snackbar.Add(Localizer["license_information_refreshed"], Severity.Success);
         }
         else
-            Snackbar.Add(Localizer["unauthorized, check your api key & make sure the members portal api is reachable"], Severity.Error);
+            Snackbar.Add(Localizer["unauthorized_check_api_key_members_portable_reachable"], Severity.Error);
     }
 
     // Get members portal license status

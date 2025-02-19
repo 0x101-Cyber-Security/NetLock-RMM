@@ -13,7 +13,7 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                 bool unauthorized = false;
 
                 string members_portal_status = String.Empty;
-                string members_portal_name = String.Empty;
+                string members_portal_license_name = String.Empty;
                 int members_portal_licenses_used = 0;
                 int members_portal_licenses_max = 0;
                 bool members_portal_licenses_hard_limit = false;
@@ -26,7 +26,7 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                     httpClient.DefaultRequestHeaders.Add("X-API-Key", members_portal_api_key);
 
                     // Send the JSON data to the server
-                    var response = await httpClient.GetAsync(Application_Settings.Members_Portal_Api_Url + "/api/membership/information");
+                    var response = await httpClient.GetAsync(Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test + "/api/membership/information");
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
@@ -52,7 +52,7 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                                 members_portal_status = status_element.ToString();
 
                                 JsonElement name_element = document.RootElement.GetProperty("name");
-                                members_portal_name = name_element.ToString();
+                                members_portal_license_name = name_element.ToString();
 
                                 JsonElement licenses_used_element = document.RootElement.GetProperty("licenses_used");
                                 members_portal_licenses_used = licenses_used_element.GetInt32();
@@ -74,9 +74,9 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                             {
                                 await conn.OpenAsync();
 
-                                MySqlCommand command = new MySqlCommand("UPDATE settings SET members_portal_api_key = @members_portal_api_key, members_portal_name = @members_portal_name, members_portal_license_status = @members_portal_license_status, members_portal_licenses_used = @members_portal_licenses_used, members_portal_licenses_max = @members_portal_licenses_max, members_portal_licenses_hard_limit = @members_portal_licenses_hard_limit, package_provider_url = @package_provider_url;", conn);
+                                MySqlCommand command = new MySqlCommand("UPDATE settings SET members_portal_api_key = @members_portal_api_key, members_portal_license_name = @members_portal_license_name, members_portal_license_status = @members_portal_license_status, members_portal_licenses_used = @members_portal_licenses_used, members_portal_licenses_max = @members_portal_licenses_max, members_portal_licenses_hard_limit = @members_portal_licenses_hard_limit, package_provider_url = @package_provider_url;", conn);
                                 command.Parameters.AddWithValue("@members_portal_api_key", members_portal_api_key);
-                                command.Parameters.AddWithValue("@members_portal_name", members_portal_name);
+                                command.Parameters.AddWithValue("@members_portal_license_name", members_portal_license_name);
                                 command.Parameters.AddWithValue("@members_portal_license_status", members_portal_status);
                                 command.Parameters.AddWithValue("@members_portal_licenses_used", members_portal_licenses_used);
                                 command.Parameters.AddWithValue("@members_portal_licenses_max", members_portal_licenses_max);
@@ -111,9 +111,9 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                         {
                             await conn.OpenAsync();
 
-                            MySqlCommand command = new MySqlCommand("UPDATE settings SET members_portal_api_key = @members_portal_api_key, members_portal_name = @members_portal_name, members_portal_license_status = @members_portal_license_status, members_portal_licenses_used = @members_portal_licenses_used, members_portal_licenses_max = @members_portal_licenses_max, members_portal_licenses_hard_limit = @members_portal_licenses_hard_limit;", conn);
+                            MySqlCommand command = new MySqlCommand("UPDATE settings SET members_portal_api_key = @members_portal_api_key, members_portal_license_name = @members_portal_license_name, members_portal_license_status = @members_portal_license_status, members_portal_licenses_used = @members_portal_licenses_used, members_portal_licenses_max = @members_portal_licenses_max, members_portal_licenses_hard_limit = @members_portal_licenses_hard_limit;", conn);
                             command.Parameters.AddWithValue("@members_portal_api_key", members_portal_api_key);
-                            command.Parameters.AddWithValue("@members_portal_name", "-");
+                            command.Parameters.AddWithValue("@members_portal_license_name", "-");
                             command.Parameters.AddWithValue("@members_portal_license_status", "Expired");
                             command.Parameters.AddWithValue("@members_portal_licenses_used", "0");
                             command.Parameters.AddWithValue("@members_portal_licenses_max", "0");

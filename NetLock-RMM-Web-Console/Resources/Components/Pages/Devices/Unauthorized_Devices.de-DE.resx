@@ -669,4 +669,19 @@
   <data name="write_transfer" xml:space="preserve">
     <value>Schreib Transfer</value>
   </data>
+  <data name="membership_hard_limit_reached" xml:space="preserve">
+    <value>Konfiguriertes Limit der Mitgliedschaft erreicht.</value>
+  </data>
+  <data name="your configured limit is" xml:space="preserve">
+    <value>Ihr konfiguriertes Limit ist</value>
+  </data>
+  <data name="and_you_currently_have" xml:space="preserve">
+    <value>und Sie haben derzeit</value>
+  </data>
+  <data name="active_devices" xml:space="preserve">
+    <value>aktive Geräte.</value>
+  </data>
+  <data name="please_remove_or_increase_memberships_limit" xml:space="preserve">
+    <value>Bitte entfernen Sie die Autorisierung anderer Geräte, oder erhöhen Sie das harte Limit im Mitgliederportal.</value>
+  </data>
 </root>

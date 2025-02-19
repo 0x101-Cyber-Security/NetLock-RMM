@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="active" xml:space="preserve">
+    <value>Aktiv</value>
+  </data>
   <data name="active connections" xml:space="preserve">
     <value>Aktive Verbindungen</value>
   </data>
@@ -128,6 +131,9 @@
   </data>
   <data name="agent updates enabled" xml:space="preserve">
     <value>Agent Updates aktiviert.</value>
+  </data>
+  <data name="authorization_successful_refreshed_license_information" xml:space="preserve">
+    <value>Autorisierung erfolgreich, Lizenzinformationen aktualisiert.</value>
   </data>
   <data name="connected" xml:space="preserve">
     <value>Verbunden</value>
@@ -141,17 +147,38 @@
   <data name="disk usage" xml:space="preserve">
     <value>Festplattenspeicher belegt</value>
   </data>
+  <data name="enter your api key here" xml:space="preserve">
+    <value>Bitte geben Sie hier Ihren API-Schlüssel ein.</value>
+  </data>
   <data name="entries per page" xml:space="preserve">
     <value>Einträge pro Seite</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>Abgelaufen</value>
   </data>
   <data name="failed logins" xml:space="preserve">
     <value>Fehlgeschlagene Logins</value>
   </data>
+  <data name="hard_limit" xml:space="preserve">
+    <value>Festgelegtes Limit</value>
+  </data>
   <data name="last hearthbeat" xml:space="preserve">
     <value>Letzter Herzschlag</value>
   </data>
+  <data name="license status" xml:space="preserve">
+    <value>Lizenz Status</value>
+  </data>
+  <data name="licenses used" xml:space="preserve">
+    <value>Verwendete Lizenzen</value>
+  </data>
+  <data name="license_information_refreshed" xml:space="preserve">
+    <value>Lizenzinformationen aktualisiert.</value>
+  </data>
   <data name="max connections" xml:space="preserve">
     <value>Maximale Verbindungen</value>
+  </data>
+  <data name="members_portal_api_not_enabled" xml:space="preserve">
+    <value>Die Mitgliederportal-API ist nicht aktiviert. Bitte aktivieren Sie sie in der Datei appsettings.json.</value>
   </data>
   <data name="not connected" xml:space="preserve">
     <value>Nicht verbunden</value>
@@ -161,6 +188,9 @@
   </data>
   <data name="ram usage" xml:space="preserve">
     <value>RAM-Nutzung</value>
+  </data>
+  <data name="refresh license information" xml:space="preserve">
+    <value>Lizenzinformationen aktualisieren</value>
   </data>
   <data name="save" xml:space="preserve">
     <value>Speichern</value>
@@ -173,6 +203,9 @@
   </data>
   <data name="title" xml:space="preserve">
     <value>System</value>
+  </data>
+  <data name="unauthorized_check_api_key_members_portable_reachable" xml:space="preserve">
+    <value>Unbefugter Zugriff. Bitte überprüfen Sie Ihren API-Schlüssel und stellen Sie sicher, dass die Mitgliederportal-API erreichbar ist.</value>
   </data>
   <data name="uptime" xml:space="preserve">
     <value>Betriebszeit</value>

@@ -117,6 +117,9 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="active" xml:space="preserve">
+    <value>Active</value>
+  </data>
   <data name="active connections" xml:space="preserve">
     <value>Active connections</value>
   </data>
@@ -128,6 +131,9 @@
   </data>
   <data name="agent updates enabled" xml:space="preserve">
     <value>Agent updates activated.</value>
+  </data>
+  <data name="authorization_successful_refreshed_license_information" xml:space="preserve">
+    <value>Authorization successful, license information updated.</value>
   </data>
   <data name="connected" xml:space="preserve">
     <value>Connected</value>
@@ -141,17 +147,38 @@
   <data name="disk usage" xml:space="preserve">
     <value>Disk space used</value>
   </data>
+  <data name="enter your api key here" xml:space="preserve">
+    <value>Please enter your API key here.</value>
+  </data>
   <data name="entries per page" xml:space="preserve">
     <value>Entries per page</value>
+  </data>
+  <data name="expired" xml:space="preserve">
+    <value>Expired</value>
   </data>
   <data name="failed logins" xml:space="preserve">
     <value>Failed logins</value>
   </data>
+  <data name="hard_limit" xml:space="preserve">
+    <value>Hard limit</value>
+  </data>
   <data name="last hearthbeat" xml:space="preserve">
     <value>Last heartbeat</value>
   </data>
+  <data name="license status" xml:space="preserve">
+    <value>License status</value>
+  </data>
+  <data name="licenses used" xml:space="preserve">
+    <value>Licenses used</value>
+  </data>
+  <data name="license_information_refreshed" xml:space="preserve">
+    <value>License information updated.</value>
+  </data>
   <data name="max connections" xml:space="preserve">
     <value>Maximum connections</value>
+  </data>
+  <data name="members_portal_api_not_enabled" xml:space="preserve">
+    <value>The Members Portal API is not enabled. Please enable it in the appsettings.json file.</value>
   </data>
   <data name="not connected" xml:space="preserve">
     <value>Not connected</value>
@@ -161,6 +188,9 @@
   </data>
   <data name="ram usage" xml:space="preserve">
     <value>RAM utilisation</value>
+  </data>
+  <data name="refresh license information" xml:space="preserve">
+    <value>Update license information</value>
   </data>
   <data name="save" xml:space="preserve">
     <value>Save</value>
@@ -173,6 +203,9 @@
   </data>
   <data name="title" xml:space="preserve">
     <value>System</value>
+  </data>
+  <data name="unauthorized_check_api_key_members_portable_reachable" xml:space="preserve">
+    <value>Unauthorized access. Please verify your API key and ensure the Member Portal API is reachable.</value>
   </data>
   <data name="uptime" xml:space="preserve">
     <value>Uptime</value>
