@@ -26,7 +26,7 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                     httpClient.DefaultRequestHeaders.Add("X-API-Key", members_portal_api_key);
 
                     // Send the JSON data to the server
-                    var response = await httpClient.GetAsync(Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test + "/api/membership/information");
+                    var response = await httpClient.GetAsync(Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live + "/api/membership/information" : Application_Settings.Members_Portal_Api_Url_Test + "/api/membership/information");
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
@@ -99,7 +99,10 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
                         }
                     }
                     else
+                    {
+                        Logging.Handler.Debug("Online_Mode.Handler.Authenticate", "response", "unauthorized");
                         unauthorized = true;
+                    }
 
                     // Check if the API key is unauthorized, if the case, reset settings
                     if (unauthorized)
@@ -138,7 +141,7 @@ namespace NetLock_RMM_Web_Console.Classes.Members_Portal
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("/system -> Save_Package_Provider_URL", "general_error", ex.ToString());
+                Logging.Handler.Error("/system ->   ", "general_error", ex.ToString());
                 return false;
             }
         }

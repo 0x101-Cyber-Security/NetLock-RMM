@@ -39,7 +39,7 @@ namespace NetLock_RMM_Server.Members_Portal
                     });
 
                     // Send the JSON data to the server
-                    var response = await httpClient.PostAsync(Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test + "/api/membership/information/history", new StringContent(json, Encoding.UTF8, "application/json"));
+                    var response = await httpClient.PostAsync(Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live + "/api/membership/information/history" : Application_Settings.Members_Portal_Api_Url_Test + "/api/membership/information/history", new StringContent(json, Encoding.UTF8, "application/json"));
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
