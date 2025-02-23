@@ -26,7 +26,7 @@ namespace NetLock_RMM_Server
 
         public static string internal_temp_folder = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
-        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "LetsEncrypt");
+        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
 
         // URLs
         public static string redirect_path = "/";
