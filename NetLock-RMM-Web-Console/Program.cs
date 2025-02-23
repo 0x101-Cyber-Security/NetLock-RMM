@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Web_Console.Components.Pages.Devices;
+using LettuceEncrypt;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,7 @@ var https_force = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:F
 var hsts = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Hsts:Enabled");
 var hsts_max_age = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Hsts:MaxAge");
 var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled");
+var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword");
 var cert_path = builder.Configuration["Kestrel:Endpoint:Https:Certificate:Path"];
 var cert_password = builder.Configuration["Kestrel:Endpoint:Https:Certificate:Password"];
 
@@ -158,7 +160,7 @@ if (https)
     Microsoft_Defender_Firewall.Rule_Outbound(builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port").ToString());
 
     if (letsencrypt)
-        builder.Services.AddLettuceEncrypt();
+        builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo(Application_Paths.lettuceencrypt_persistent_data_dir), letsencrypt_password);
 }
 
 builder.WebHost.UseKestrel(k =>

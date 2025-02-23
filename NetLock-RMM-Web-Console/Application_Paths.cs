@@ -10,6 +10,8 @@ namespace NetLock_RMM_Web_Console
         //public static string _private_files_admin= Path.Combine(GetCurrentDirectory(), "www", "private", "files", "admin");
         public static string _private_files_devices = "devices";
 
+        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "LetsEncrypt");
+
         private static string GetBasePath()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
