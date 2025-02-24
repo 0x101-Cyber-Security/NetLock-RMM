@@ -7,90 +7,43 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 
 ## [Website](https://netlockrmm.com/)
 ## [Members Portal](https://members.netlockrmm.com/)
-## [Discord](https://discord.gg/HqUpZgtX4U)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
-## [Supported OS/Distributions](https://docs.netlockrmm.com/en/supported-os)
+## [Discord](https://discord.gg/HqUpZgtX4U)
+## [Supported OS & Features](https://docs.netlockrmm.com/en/supported-os)
 ## [Live Demo](https://netlockrmm.com/demo.html)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
-## [LinkedIn Company](https://www.linkedin.com/company/netlockrmm/about)
-## [LinkedIn Developer](https://www.linkedin.com/in/nico-mak/)
 
 ## Features? We have plenty of them. Here is a small preview
 
 The Web Console and server software come as a standalone server based on Kestrel, eliminating the need to configure and maintain complex server software such as Apache. Do you like Let's Encrypt? The Let's Encrypt integration by LettuceEncrypt offers an easy way to protect your connection with SSL. Our security concept offers high flexibility with server roles, meaning you could run all server components on one machine or split them into different roles. You can also define fallback servers for each role.
+
+- Multi platform. The agent supports windows, linux & macos. (x64 & arm64) 
 
 - Multi-tenancy, including locations and group management
 - Real-time remote shell, file browser, task manager & service manager
 - Remote control & support your users. It's as easy to use as TeamViewer. ;)
 - File server. Host your favourite tools directly with NetLock RMM and embed them directly into your scripting.
 - Event notifications (email, Microsoft Teams, ntfy.sh, and Telegram)
-- Software Inventory (Installed, Logon, Task Scheduler, Services, and Drivers)
+- Software & hardware inventory
 - Microsoft Defender Antivirus Management
 - Policy Management (define policies that will be applied to your devices. Example: Microsoft Defender Antivirus settings and notifications, sensors, and jobs)
 - Dashboard (statistics and unread events)
 - Events (browsing through events, filtered by severity and more)
+- Jobs (run PowerShell, Bash & Zsh scripts on a regular basis)
+- Sensors (like cpu, drive, ram utilization, windows event logs, services, ping, custom via powershell, bash, zsh & regex)
 - Users (add/edit/remove)
   - Two-factor authentication
   - Permissions system
     - Assigned tenants
     - Access to panels (e.g., authorizing devices, accessing remote shell, and more)
 
-### Jobs Scheduler
+### Jobs
 
-- Run scripts regularly
-- The time scheduler is detailed to cover all possible scenarios 
+- All kind of sensors, take a look on the documentation for more details.
 
-### Sensors preview
+### Sensors
 
-- The time scheduler is detailed to cover all possible scenarios
-- Threshold (controls how often the sensor should trigger before performing the following)
-  - Notification
-  - Action
-- Custom notification triggers
-- All sensors can either execute a script or perform other native actions if configured
-- Categories:
-  - **Utilization**
-    - Processor usage (%)
-    - RAM usage (%)
-    - Drive Space
-      - More than X GB or X % occupied, and more
-      - All drives or selected ones
-      - Network drives
-      - Removable drives
-      - Only check drives with a capacity of X gigabytes or more
-      - And more
-    - Process CPU utilization (%)
-    - Process RAM utilization (% or MB)
-    - Actions:
-      - PowerShell
-  - **Windows Eventlog**
-    - Eventlog support
-      - Application
-      - Security
-      - Setup
-      - System
-      - Custom (define the one you want to monitor)
-    - Event ID for filtering
-      - RegEx is supported and can be used to trigger only on specific content
-    - Actions:
-      - PowerShell
-  - **PowerShell**
-    - Execute a custom script that returns a result
-    - Define an expected PowerShell result that triggers the sensor
-  - **Service**
-    - Condition:
-      - Running, paused, or stopped
-    - Actions:
-      - Start or stop the service depending on your selection and its status
-      - PowerShell
-    - Note: If your actions fail, you get back the error message.
-  - **Ping**
-    - IP address or hostname
-    - Timeout
-    - Condition:
-      - Successful or failed
-    - Actions:
-      - PowerShell
+- All kind of sensors, take a look on the documentation for more details.
 
 Note: Why are the unsigned packages not on GitHub?
 https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-github/
