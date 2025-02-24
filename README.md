@@ -44,5 +44,7 @@ The Web Console and server software come as a standalone server based on Kestrel
 
 - All kind of sensors, take a look on the documentation for more details.
 
+& a lot more...
+
 Note: Why are the unsigned packages not on GitHub?
 https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-github/
