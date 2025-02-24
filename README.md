@@ -6,12 +6,11 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 ![Web Console Preview](https://netlockrmm.com/assets/images/remote-features.gif)
 
 ## [Website](https://netlockrmm.com/)
-## [Members Portal](https://members.netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
-## [Discord](https://discord.gg/HqUpZgtX4U)
-## [Supported OS & Features](https://docs.netlockrmm.com/en/supported-os)
 ## [Live Demo](https://netlockrmm.com/demo.html)
+## [Supported OS & Features](https://docs.netlockrmm.com/en/supported-os)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
+## [Discord](https://discord.gg/HqUpZgtX4U)
 
 ## Features? We have plenty of them. Here is a small preview
 
