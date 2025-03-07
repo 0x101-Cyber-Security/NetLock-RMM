@@ -21,7 +21,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string? tenant_guid { get; set; }
             public string? access_key { get; set; }
             public string? hwid { get; set; }
-            public string? platform { get; set; }
+            public string? platform { get; set; } = "Windows"; // Default because of version 2.0.0.0 and below. Needs to be removed in version 3.x and above
             public string? ip_address_internal { get; set; }
             public string? operating_system { get; set; }
             public string? domain { get; set; }
@@ -593,6 +593,10 @@ namespace NetLock_RMM_Server.Agent.Windows
                                 password_db = reader["password"].ToString() ?? String.Empty;
                                 session_guid_db = reader["session_guid"].ToString() ?? String.Empty;
                                 isPasswordCorrect = BCrypt.Net.BCrypt.Verify(admin_password_decrypted, reader["password"].ToString());
+
+                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "password_db", password_db);
+                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", session_guid_db);
+                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", isPasswordCorrect.ToString());
                             }
 
                             await reader.CloseAsync();
@@ -601,18 +605,23 @@ namespace NetLock_RMM_Server.Agent.Windows
                         // Check if the password is correct
                         if (isPasswordCorrect)
                         {
+                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", "Password is correct.");
+
                             // Check if the session_guid is correct
                             if (session_guid_db == admin_identity.session_guid)
                             {
+                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", "Session GUID is correct.");
                                 authentification_result = "authorized";
                             }
                             else
                             {
+                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", "Session GUID is incorrect.");
                                 authentification_result = "unauthorized";
                             }
                         }
                         else
                         {
+                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", "Password is incorrect.");
                             authentification_result = "unauthorized";
                         }
                     }
@@ -629,7 +638,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     // Device is not authorized or invalid, remove from client connections
                     if (authentification_result == "unauthorized" || authentification_result == "invalid")
                     {
-                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "authentification_result", "Unauthorized device.");
+                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "authentification_result", "Unauthorized device or admin.");
 
                         var clientId = context.Connection.Id;
 

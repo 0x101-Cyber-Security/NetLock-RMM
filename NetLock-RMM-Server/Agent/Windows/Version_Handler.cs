@@ -19,7 +19,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string? tenant_guid { get; set; }
             public string? access_key { get; set; }
             public string? hwid { get; set; }
-            public string? platform { get; set; }
+            public string? platform { get; set; } = "Windows"; // Default because of version 2.0.0.0 and below. Needs to be removed in version 3.x and above
             public string? ip_address_internal { get; set; }
             public string? operating_system { get; set; }
             public string? domain { get; set; }

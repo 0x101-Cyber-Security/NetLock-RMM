@@ -26,11 +26,11 @@ namespace NetLock_RMM_Agent_Installer
 
                 // For legacy installations (2.0.0.0)
                 Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Comm_Agent_Windows");
-                Helper.Service.Stop("NetLock_RMM_Agent_Comm");
+                Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
                 Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Health_Agent_Windows");
-                Helper.Service.Stop("NetLock_RMM_Agent_Remote");
+                Helper.Service.Stop("NetLock_RMM_Health_Agent_Windows");
                 Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Remote_Agent_Windows");
-                Helper.Service.Stop("NetLock_RMM_Agent_Health");
+                Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
             }
             else if (OperatingSystem.IsLinux())
             {
@@ -198,6 +198,14 @@ namespace NetLock_RMM_Agent_Installer
                 Helper.Service.Stop("NetLock_RMM_Agent_Comm");
                 Logging.Handler.Debug("Main", "Stopping services.", "NetLock_RMM_Agent_Remote");
                 Helper.Service.Stop("NetLock_RMM_Agent_Remote");
+
+                // For legacy installations (2.0.0.0)
+                Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Comm_Agent_Windows");
+                Helper.Service.Stop("NetLock_RMM_Comm_Agent_Windows");
+                Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Health_Agent_Windows");
+                Helper.Service.Stop("NetLock_RMM_Health_Agent_Windows");
+                Logging.Handler.Debug("Main", "Stopping services (legacy).", "NetLock_RMM_Remote_Agent_Windows");
+                Helper.Service.Stop("NetLock_RMM_Remote_Agent_Windows");
             }
             else if (OperatingSystem.IsLinux())
             {
