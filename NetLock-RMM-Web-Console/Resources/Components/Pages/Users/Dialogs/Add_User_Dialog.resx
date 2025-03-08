@@ -118,105 +118,105 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="add" xml:space="preserve">
-    <value>Hinzufügen</value>
+    <value />
   </data>
   <data name="added" xml:space="preserve">
-    <value>Hinzugefügt</value>
+    <value />
   </data>
   <data name="adding_failed" xml:space="preserve">
-    <value>Hinzufügen fehlgeschlagen.</value>
+    <value />
   </data>
   <data name="any" xml:space="preserve">
-    <value>Egal</value>
+    <value />
   </data>
   <data name="author" xml:space="preserve">
-    <value>Autor</value>
+    <value />
   </data>
   <data name="cancel" xml:space="preserve">
-    <value>Abbrechen</value>
+    <value />
   </data>
   <data name="company" xml:space="preserve">
-    <value>Unternehmen</value>
+    <value />
   </data>
   <data name="confirm" xml:space="preserve">
-    <value>Bestätigen</value>
+    <value />
   </data>
   <data name="created" xml:space="preserve">
-    <value>Erstellt</value>
+    <value />
   </data>
   <data name="critical" xml:space="preserve">
-    <value>Kritisch</value>
+    <value />
   </data>
   <data name="description" xml:space="preserve">
-    <value>Beschreibung</value>
+    <value />
   </data>
   <data name="equal..." xml:space="preserve">
-    <value>Gleich...</value>
+    <value />
   </data>
   <data name="error_occurred" xml:space="preserve">
-    <value>Es ist ein Fehler aufgetreten.</value>
+    <value />
   </data>
   <data name="high" xml:space="preserve">
-    <value>Hoch</value>
+    <value />
   </data>
   <data name="if..." xml:space="preserve">
-    <value>Wenn...</value>
+    <value />
   </data>
   <data name="language" xml:space="preserve">
-    <value>Sprache</value>
+    <value />
   </data>
   <data name="low" xml:space="preserve">
-    <value>Niedrig</value>
+    <value />
   </data>
   <data name="mail" xml:space="preserve">
-    <value>E-Mail</value>
+    <value />
   </data>
   <data name="moderate" xml:space="preserve">
-    <value>Moderat</value>
+    <value />
   </data>
   <data name="name" xml:space="preserve">
-    <value>Name</value>
+    <value />
   </data>
   <data name="name_already_in_use" xml:space="preserve">
-    <value>Name bereits vergeben.</value>
+    <value />
   </data>
   <data name="no_tenants_selected" xml:space="preserve">
-    <value>Es wurden keine Mandanten ausgewählt.</value>
+    <value />
   </data>
   <data name="policy" xml:space="preserve">
-    <value>Richtlinie</value>
+    <value />
   </data>
   <data name="regex_supported" xml:space="preserve">
-    <value>Reguläre Ausdrücke (RegEx) werden unterstützt.</value>
+    <value />
   </data>
   <data name="required" xml:space="preserve">
-    <value>Erforderlich</value>
+    <value />
   </data>
   <data name="role" xml:space="preserve">
-    <value>Rolle</value>
+    <value />
   </data>
   <data name="rows_per_page" xml:space="preserve">
-    <value>Einträge pro Seite</value>
+    <value />
   </data>
   <data name="search" xml:space="preserve">
-    <value>Suche</value>
+    <value />
   </data>
   <data name="selected_tenants" xml:space="preserve">
-    <value>Ausgewählte Mandanten</value>
+    <value />
   </data>
   <data name="severity" xml:space="preserve">
-    <value>Schweregrad</value>
+    <value />
   </data>
   <data name="successfully_added" xml:space="preserve">
-    <value>Erfolgreich hinzugefügt.</value>
+    <value />
   </data>
   <data name="text" xml:space="preserve">
-    <value>Einmalpasswort (NOTIEREN!)</value>
+    <value />
   </data>
   <data name="title" xml:space="preserve">
-    <value>Benutzer hinzufügen</value>
+    <value />
   </data>
   <data name="username_exists" xml:space="preserve">
-    <value>Der Benutzer existiert bereits.</value>
+    <value />
   </data>
 </root>

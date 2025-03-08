@@ -216,4 +216,7 @@
   <data name="title" xml:space="preserve">
     <value>Add user</value>
   </data>
+  <data name="username_exists" xml:space="preserve">
+    <value>The user already exists.</value>
+  </data>
 </root>

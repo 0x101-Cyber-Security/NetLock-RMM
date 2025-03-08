@@ -14,7 +14,7 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
             {
                 await conn.OpenAsync();
 
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM accounts WHERE username = @username;", conn);
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM accounts WHERE username = @username LIMIT 1;", conn);
                 cmd.Parameters.AddWithValue("@username", username);
 
                 MySqlDataReader reader = cmd.ExecuteReader();

@@ -19,7 +19,6 @@
             
         <MudSelect Class="mt-3" T="string" @bind-Value="role" Label="@Localizer["role"]" AnchorOrigin="Origin.BottomCenter" >
             <MudSelectItem Value="@("Administrator")" />
-            <MudSelectItem Value="@("Moderator")" />
         </MudSelect>
     </DialogContent>
     <DialogActions>
@@ -62,19 +61,35 @@
 
         try
         {
-            string password_hashed = BCrypt.HashPassword(password);
-
             await conn.OpenAsync();
 
-            string execute_query = "INSERT INTO `accounts` (`username`, `password`, `role`, `reset_password`, `tenants`) VALUES (@username, @password, @role, 1, '[]');";
+            // Check whether the user name already exists
+            using (MySqlCommand checkCmd = new MySqlCommand("SELECT COUNT(*) FROM accounts WHERE username = @username LIMIT 1;", conn))
+            {
+                checkCmd.Parameters.AddWithValue("@username", username);
+                long count = (long)await checkCmd.ExecuteScalarAsync();
+                if (count > 0)
+                {
+                    Logging.Handler.Debug("/user_settings (Add_User_Dialog)", "Username already exists", username);
+                    success = false;
 
-            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
-            cmd.Parameters.AddWithValue("@username", username);
-            cmd.Parameters.AddWithValue("@password", password_hashed);
-            cmd.Parameters.AddWithValue("@role", role);
-            cmd.ExecuteNonQuery();
+                    this.Snackbar.Add(@Localizer["username_exists"], Severity.Error);
 
-            success = true;
+                    return;
+                }
+            }
+
+            // Username does not exist, so insert new entry
+            string password_hashed = BCrypt.HashPassword(password);
+
+            using (MySqlCommand cmd = new MySqlCommand("INSERT INTO `accounts` (`username`, `password`, `role`, `reset_password`, `tenants`) VALUES (@username, @password, @role, 1, '[]');", conn))
+            {
+                cmd.Parameters.AddWithValue("@username", username);
+                cmd.Parameters.AddWithValue("@password", password_hashed);
+                cmd.Parameters.AddWithValue("@role", role);
+                await cmd.ExecuteNonQueryAsync();
+                success = true;
+            }
         }
         catch (Exception ex)
         {
