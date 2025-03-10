@@ -19,6 +19,7 @@ The Web Console and server software come as a standalone server based on Kestrel
 - Multi platform. The agent supports windows, linux & macos. (x64 & arm64) 
 
 - Multi-tenancy, including locations and group management
+- One-click agent installer for all platforms
 - Real-time remote shell, file browser, task manager & service manager
 - Remote control & support your users. It's as easy to use as TeamViewer. ;)
 - File server. Host your favourite tools directly with NetLock RMM and embed them directly into your scripting.
