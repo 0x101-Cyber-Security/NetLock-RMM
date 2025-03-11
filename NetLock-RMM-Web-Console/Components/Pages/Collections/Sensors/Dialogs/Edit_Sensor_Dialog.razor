@@ -1457,7 +1457,7 @@
 
         if (success)
         {
-            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty);
+            await Classes.MySQL.Handler.Reset_Device_Sync(true, String.Empty);
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else

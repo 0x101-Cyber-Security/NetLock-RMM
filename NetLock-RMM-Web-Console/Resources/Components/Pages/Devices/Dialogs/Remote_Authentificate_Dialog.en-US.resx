@@ -120,6 +120,9 @@
   <data name="authentification" xml:space="preserve">
     <value>Authentication</value>
   </data>
+  <data name="auth_failed_check_credentials" xml:space="preserve">
+    <value>Authorization failed. Check your credentials.</value>
+  </data>
   <data name="cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
@@ -137,6 +140,9 @@
   </data>
   <data name="file_format" xml:space="preserve">
     <value>Format</value>
+  </data>
+  <data name="invalid_session_guid" xml:space="preserve">
+    <value>Session GUID mismatch. Please logout and login from the web console again. This happens due to security reasons.</value>
   </data>
   <data name="password" xml:space="preserve">
     <value>Password</value>

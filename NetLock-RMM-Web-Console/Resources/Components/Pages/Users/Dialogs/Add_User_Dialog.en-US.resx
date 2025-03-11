@@ -118,10 +118,10 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="add" xml:space="preserve">
-    <value>Hinzufügen</value>
+    <value>Add</value>
   </data>
   <data name="added" xml:space="preserve">
-    <value>Added</value>
+    <value>Added.</value>
   </data>
   <data name="adding_failed" xml:space="preserve">
     <value>Hinzufügen fehlgeschlagen.</value>
@@ -139,7 +139,10 @@
     <value>Unternehmen</value>
   </data>
   <data name="confirm" xml:space="preserve">
-    <value>Bestätigen</value>
+    <value>Confirm</value>
+  </data>
+  <data name="copied_to_clipboard" xml:space="preserve">
+    <value>Copied to clipboard.</value>
   </data>
   <data name="created" xml:space="preserve">
     <value>Erstellt</value>

@@ -578,7 +578,7 @@
 
             await Get_Clients_OverviewAsync();
 
-            await Classes.MySQL.Database.Reset_Device_Sync(false, device_id);
+            await Classes.MySQL.Handler.Reset_Device_Sync(false, device_id);
 
             this.Snackbar.Add(Localizer["device_authorized"].ToString(), Severity.Success);
         }

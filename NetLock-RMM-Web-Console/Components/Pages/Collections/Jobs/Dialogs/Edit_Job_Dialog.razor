@@ -598,7 +598,7 @@
 
         if (success)
         {
-            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty); // Reset the device sync to force reload of the jobs
+            await Classes.MySQL.Handler.Reset_Device_Sync(true, String.Empty); // Reset the device sync to force reload of the jobs
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else

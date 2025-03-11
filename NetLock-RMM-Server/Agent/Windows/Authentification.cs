@@ -592,7 +592,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                             {
                                 password_db = reader["password"].ToString() ?? String.Empty;
                                 session_guid_db = reader["session_guid"].ToString() ?? String.Empty;
-                                isPasswordCorrect = BCrypt.Net.BCrypt.Verify(admin_password_decrypted, reader["password"].ToString());
+                                isPasswordCorrect = BCrypt.Net.BCrypt.Verify(await Base64.Handler.Decode(admin_password_decrypted), reader["password"].ToString());
 
                                 Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "password_db", password_db);
                                 Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", session_guid_db);
@@ -600,6 +600,11 @@ namespace NetLock_RMM_Server.Agent.Windows
                             }
 
                             await reader.CloseAsync();
+                        }
+                        else
+                        {
+                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "Invalid JSON", "Admin identity provided, but no admin found.");
+                            authentification_result = "unauthorized";
                         }
 
                         // Check if the password is correct

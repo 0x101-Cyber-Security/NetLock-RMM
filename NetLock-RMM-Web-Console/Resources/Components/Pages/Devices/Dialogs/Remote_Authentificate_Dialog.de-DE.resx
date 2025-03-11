@@ -120,6 +120,9 @@
   <data name="authentification" xml:space="preserve">
     <value>Authentifizierung</value>
   </data>
+  <data name="auth_failed_check_credentials" xml:space="preserve">
+    <value>Autorisierung fehlgeschlagen. Überprüfen Sie Ihre Anmeldeinformationen.</value>
+  </data>
   <data name="cancel" xml:space="preserve">
     <value>Abbrechen</value>
   </data>
@@ -137,6 +140,9 @@
   </data>
   <data name="file_format" xml:space="preserve">
     <value>Format</value>
+  </data>
+  <data name="invalid_session_guid" xml:space="preserve">
+    <value>Die Sitzungs-GUID stimmt nicht überein. Bitte loggen Sie sich aus und melden Sie sich erneut über die Webkonsole an. Dies geschieht aus Sicherheitsgründen.</value>
   </data>
   <data name="password" xml:space="preserve">
     <value>Kennwort</value>

@@ -732,7 +732,7 @@
 
         if (success)
         {
-            await Classes.MySQL.Database.Reset_Device_Sync(true, String.Empty); // Reset the device sync. Doing this will not require to generate a new id for jobs & sensors
+            await Classes.MySQL.Handler.Reset_Device_Sync(true, String.Empty); // Reset the device sync. Doing this will not require to generate a new id for jobs & sensors
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else

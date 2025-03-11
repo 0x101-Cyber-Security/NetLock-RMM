@@ -19,7 +19,7 @@
     <DialogContent>
 
         <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
-        <MudTextField Label="@Localizer["username"]" T="string" Lines="1" @bind-Value="@username" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+        <MudTextField Class="mt-2" Label="@Localizer["username"]" T="string" Lines="1" @bind-Value="@username" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
         <MudTextField Label="@Localizer["password"]" T="string" Lines="1" @bind-Value="@password" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" InputType="@InputType.Password" ReadOnly="false" />
        
     </DialogContent>
@@ -64,47 +64,41 @@
         this.Snackbar.Configuration.ShowCloseIcon = true;
         this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
-        bool success = false;
+        bool session_guid_valid = false;
         string session_guid_database = String.Empty;
 
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+        bool user_verified = await Classes.Authentication.User.Verify_User(username, password);
 
-        try
+        if (user_verified) // Check custom session guid
         {
-            success = await Classes.Authentication.User.Verify_User(username, password);
+            // Get session_guid from database
+            session_guid_database = await Classes.MySQL.Handler.Get_Session_Guid_By_Username(username);
 
-            if (success) // Check custom session guid
+            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "session_guid_database", session_guid_database);
+
+            // Check if database session_guid is equal to the local session_guid
+            if (session_guid_local == session_guid_database)
+                session_guid_valid = true;
+            else
+                session_guid_valid = false;
+
+            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "sessions_guid_equal", session_guid_valid.ToString());
+
+            // Check if session_guid is valid
+            if (session_guid_valid)
             {
-                // Get session_guid from database
-                session_guid_database = await Classes.MySQL.Handler.Quick_Reader("SELECT session_guid FROM accounts WHERE username = '" + username + "';", "session_guid");
-                Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "session_guid_database", session_guid_database);
-
-                // Check if database session_guid is equal to the local session_guid
-                if (session_guid_local == session_guid_database)
-                    success = true;
-                else
-                    success = false;
-
-                Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "sessions_guid_equal", success.ToString());
+                this.MudDialog.Close(DialogResult.Ok("authentificated"));
             }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> OK", "Result", ex.Message);
-        }
-        finally
-        {
-            await conn.CloseAsync();
-        }
-
-        if (success)
-        {
-            this.MudDialog.Close(DialogResult.Ok("authentificated"));
+            else
+            {
+                this.Snackbar.Add(Localizer["invalid_session_guid"], Severity.Error);
+                this.MudDialog.Close(DialogResult.Ok("error"));
+            }
         }
         else
         {
-            this.Snackbar.Add(Localizer["error_occurred"] +  "Session GUID mismatch. Please logout and login from the web console again. This happens due to security reasons.", Severity.Error);
-            this.MudDialog.Close(DialogResult.Ok("error"));
+            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "success", session_guid_valid.ToString());
+            this.Snackbar.Add(Localizer["auth_failed_check_credentials"], Severity.Error);
         }
     }
 

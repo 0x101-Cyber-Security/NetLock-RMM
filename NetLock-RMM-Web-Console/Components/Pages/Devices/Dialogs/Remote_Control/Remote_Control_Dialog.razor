@@ -164,7 +164,6 @@
 
     private string username = String.Empty;
     private string password = String.Empty;
-    private string password_hashed = String.Empty;
     private string session_guid = String.Empty;
 
     private string imageSrc = String.Empty;
@@ -194,7 +193,6 @@
 
         username = session_username_result.Value;
         password = session_password_result.Value;
-        password_hashed = BCrypt.HashPassword(password);
         session_guid = session_guid_result.Value;
     }
 
@@ -252,13 +250,13 @@
 
             string username = session_username_result.Value;
             string password = session_password_result.Value;
-            string password_hashed = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
+            string password_encrypted = Encryption.String_Encryption.Encrypt(await Base64.Handler.Encode(password), Application_Settings.Local_Encryption_Key);
             string session_guid = session_guid_result.Value;
 
             Remote_Admin_Identity identity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
+                    admin_password = password_encrypted,
                     session_guid = session_guid
                 };
 
@@ -504,7 +502,6 @@
             var adminIdentity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
                     session_guid = session_guid
                 };
 
@@ -571,7 +568,6 @@
             var adminIdentity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
                     session_guid = session_guid
                 };
 
@@ -641,7 +637,6 @@
             var adminIdentity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
                     session_guid = session_guid
                 };
 
@@ -717,7 +712,6 @@
             var adminIdentity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
                     session_guid = session_guid
                 };
 
@@ -789,7 +783,6 @@
             var adminIdentity = new Remote_Admin_Identity
                 {
                     admin_username = username,
-                    admin_password = password_hashed,
                     session_guid = session_guid
                 };
 

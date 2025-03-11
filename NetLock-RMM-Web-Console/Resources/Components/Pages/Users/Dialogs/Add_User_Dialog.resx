@@ -141,6 +141,9 @@
   <data name="confirm" xml:space="preserve">
     <value />
   </data>
+  <data name="copied_to_clipboard" xml:space="preserve">
+    <value />
+  </data>
   <data name="created" xml:space="preserve">
     <value />
   </data>

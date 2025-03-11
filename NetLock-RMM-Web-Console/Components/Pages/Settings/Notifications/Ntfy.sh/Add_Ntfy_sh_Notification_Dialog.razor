@@ -156,7 +156,7 @@
         // foreach filtered tenant, get tenant_id
         foreach (var tenant in filtered_tenants)
         {
-            int tenant_id = await Classes.MySQL.Database.Get_Tenant_Id(tenant.id);
+            int tenant_id = await Classes.MySQL.Handler.Get_Tenant_Id(tenant.id);
 
             // replace name with id
             tenant.id = tenant_id.ToString();

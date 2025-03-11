@@ -611,7 +611,7 @@
         location_names.Clear();
 
         // Get tenant_id from database
-        int tenant_id = await Classes.MySQL.Database.Get_Tenant_Id(tenant_name);
+        int tenant_id = await Classes.MySQL.Handler.Get_Tenant_Id(tenant_name);
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -648,7 +648,7 @@
     private async Task Get_Devices()
     {
         // Get tenant & location id from database
-        int tenant_id = await Classes.MySQL.Database.Get_Tenant_Id(tenant_name);
+        int tenant_id = await Classes.MySQL.Handler.Get_Tenant_Id(tenant_name);
         
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 

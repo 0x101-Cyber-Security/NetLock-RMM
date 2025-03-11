@@ -16,7 +16,8 @@
     <DialogContent>
         <MudTextField Label="Name" T="string" @bind-Value="@username" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["text"]" T="string" @bind-Value="@password" ReadOnly="true" Immediate="@true" />
-            
+        <MudButton Class="mt-3 ml-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Warning" OnClick="Copy_Credentials_To_Clipboard" Disabled="(String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))">Copy to clipboard</MudButton>
+
         <MudSelect Class="mt-3" T="string" @bind-Value="role" Label="@Localizer["role"]" AnchorOrigin="Origin.BottomCenter" >
             <MudSelectItem Value="@("Administrator")" />
         </MudSelect>
@@ -24,7 +25,7 @@
     <DialogActions>
         <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
 
-        <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+        <MudButton OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="(String.IsNullOrEmpty(username) || String.IsNullOrEmpty(password))" >@Localizer["confirm"]</MudButton>
     </DialogActions>
 </MudDialog>
 
@@ -42,12 +43,15 @@
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
 
-    private bool Form_Valid()
+    private async Task Copy_Credentials_To_Clipboard()
     {
-        if (String.IsNullOrEmpty(username))
-            return true;
-        else
-            return false;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        string credentials = @"Username: " + username + "\nOTP: " + password;
+
+        await JSRuntime.InvokeVoidAsync("copyToClipboard", credentials);
+
+        Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info, config => { config.ShowCloseIcon = true; });
     }
 
     private async Task OK()

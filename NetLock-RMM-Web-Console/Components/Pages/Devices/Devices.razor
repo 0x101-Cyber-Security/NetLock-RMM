@@ -3918,7 +3918,7 @@ else if (row.platform == "MacOS")
 
         support_history_mysql_data = await Get_Device_Support_History(row.tenant_name, row.location_name, row.device_name, false);
 
-        (tenant_guid, location_guid) = await Classes.MySQL.Database.Get_Tenant_Location_Guid(row.tenant_name, row.location_name);
+        (tenant_guid, location_guid) = await Classes.MySQL.Handler.Get_Tenant_Location_Guid(row.tenant_name, row.location_name);
 
         events_mysql_data = await Events_Load(row.device_id, true);
 

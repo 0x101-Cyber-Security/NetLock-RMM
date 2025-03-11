@@ -1079,7 +1079,7 @@
                             foreach (var tenant in tenants_list)
                                 if (tenant.ContainsKey("id"))
                                 {
-                                    tenants_string = tenants_string + await Classes.MySQL.Database.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
+                                    tenants_string = tenants_string + await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
                                 }
 
                             tenants_string = tenants_string.Remove(tenants_string.Length - 2);
@@ -1326,7 +1326,7 @@
                             foreach (var tenant in tenants_list)
                                 if (tenant.ContainsKey("id"))
                                 {
-                                    tenants_string = tenants_string + await Classes.MySQL.Database.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
+                                    tenants_string = tenants_string + await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
                                 }
 
                             tenants_string = tenants_string.Remove(tenants_string.Length - 2);
@@ -1576,7 +1576,7 @@
                             foreach (var tenant in tenants_list)
                                 if (tenant.ContainsKey("id"))
                                 {
-                                    tenants_string = tenants_string + await Classes.MySQL.Database.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
+                                    tenants_string = tenants_string + await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
                                 }
 
                             tenants_string = tenants_string.Remove(tenants_string.Length - 2);
@@ -1828,7 +1828,7 @@
                             foreach (var tenant in tenants_list)
                                 if (tenant.ContainsKey("id"))
                                 {
-                                    tenants_string = tenants_string + await Classes.MySQL.Database.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
+                                    tenants_string = tenants_string + await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
                                 }
 
                             tenants_string = tenants_string.Remove(tenants_string.Length - 2);

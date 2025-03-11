@@ -117,109 +117,43 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="add" xml:space="preserve">
-    <value>Hinzufügen</value>
+  <data name="authentification" xml:space="preserve">
+    <value />
   </data>
-  <data name="added" xml:space="preserve">
-    <value>Hinzugefügt.</value>
-  </data>
-  <data name="adding_failed" xml:space="preserve">
-    <value>Hinzufügen fehlgeschlagen.</value>
-  </data>
-  <data name="any" xml:space="preserve">
-    <value>Egal</value>
-  </data>
-  <data name="author" xml:space="preserve">
-    <value>Autor</value>
+  <data name="auth_failed_check_credentials" xml:space="preserve">
+    <value />
   </data>
   <data name="cancel" xml:space="preserve">
-    <value>Abbrechen</value>
-  </data>
-  <data name="company" xml:space="preserve">
-    <value>Unternehmen</value>
+    <value />
   </data>
   <data name="confirm" xml:space="preserve">
-    <value>Bestätigen</value>
-  </data>
-  <data name="copied_to_clipboard" xml:space="preserve">
-    <value>In die Zwischenablage kopiert.</value>
-  </data>
-  <data name="created" xml:space="preserve">
-    <value>Erstellt</value>
-  </data>
-  <data name="critical" xml:space="preserve">
-    <value>Kritisch</value>
-  </data>
-  <data name="description" xml:space="preserve">
-    <value>Beschreibung</value>
-  </data>
-  <data name="equal..." xml:space="preserve">
-    <value>Gleich...</value>
+    <value />
   </data>
   <data name="error_occurred" xml:space="preserve">
-    <value>Es ist ein Fehler aufgetreten.</value>
+    <value />
   </data>
-  <data name="high" xml:space="preserve">
-    <value>Hoch</value>
+  <data name="export" xml:space="preserve">
+    <value />
   </data>
-  <data name="if..." xml:space="preserve">
-    <value>Wenn...</value>
+  <data name="export_data" xml:space="preserve">
+    <value />
   </data>
-  <data name="language" xml:space="preserve">
-    <value>Sprache</value>
+  <data name="file_format" xml:space="preserve">
+    <value />
   </data>
-  <data name="low" xml:space="preserve">
-    <value>Niedrig</value>
+  <data name="invalid_session_guid" xml:space="preserve">
+    <value />
   </data>
-  <data name="mail" xml:space="preserve">
-    <value>E-Mail</value>
-  </data>
-  <data name="moderate" xml:space="preserve">
-    <value>Moderat</value>
-  </data>
-  <data name="name" xml:space="preserve">
-    <value>Name</value>
-  </data>
-  <data name="name_already_in_use" xml:space="preserve">
-    <value>Name bereits vergeben.</value>
-  </data>
-  <data name="no_tenants_selected" xml:space="preserve">
-    <value>Es wurden keine Mandanten ausgewählt.</value>
-  </data>
-  <data name="policy" xml:space="preserve">
-    <value>Richtlinie</value>
-  </data>
-  <data name="regex_supported" xml:space="preserve">
-    <value>Reguläre Ausdrücke (RegEx) werden unterstützt.</value>
+  <data name="password" xml:space="preserve">
+    <value />
   </data>
   <data name="required" xml:space="preserve">
-    <value>Erforderlich</value>
-  </data>
-  <data name="role" xml:space="preserve">
-    <value>Rolle</value>
-  </data>
-  <data name="rows_per_page" xml:space="preserve">
-    <value>Einträge pro Seite</value>
-  </data>
-  <data name="search" xml:space="preserve">
-    <value>Suche</value>
-  </data>
-  <data name="selected_tenants" xml:space="preserve">
-    <value>Ausgewählte Mandanten</value>
-  </data>
-  <data name="severity" xml:space="preserve">
-    <value>Schweregrad</value>
-  </data>
-  <data name="successfully_added" xml:space="preserve">
-    <value>Erfolgreich hinzugefügt.</value>
+    <value />
   </data>
   <data name="text" xml:space="preserve">
-    <value>Einmalpasswort (NOTIEREN!)</value>
+    <value />
   </data>
-  <data name="title" xml:space="preserve">
-    <value>Benutzer hinzufügen</value>
-  </data>
-  <data name="username_exists" xml:space="preserve">
-    <value>Der Benutzer existiert bereits.</value>
+  <data name="username" xml:space="preserve">
+    <value />
   </data>
 </root>
