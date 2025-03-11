@@ -38,12 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="version.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
     <Folder Include="LLM\" />
   </ItemGroup>
 

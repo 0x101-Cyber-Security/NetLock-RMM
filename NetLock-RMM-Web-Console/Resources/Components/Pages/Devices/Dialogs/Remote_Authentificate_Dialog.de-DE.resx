@@ -144,6 +144,9 @@
   <data name="invalid_session_guid" xml:space="preserve">
     <value>Die Sitzungs-GUID stimmt nicht überein. Bitte loggen Sie sich aus und melden Sie sich erneut über die Webkonsole an. Dies geschieht aus Sicherheitsgründen.</value>
   </data>
+  <data name="is_docker_info" xml:space="preserve">
+    <value>Wenn die Backends als Docker-Container ausgeführt werden und neu erstellt werden, registrieren sie sich jedes Mal neu. Um dies zu vermeiden, sollten feste Container-Namen vergeben werden. Alternativ können die Server in der Datenbank wieder entfernt werden. Im Falle von Docker-Containern wird keine Downtime-Warnung innerhalb der Web-Konsole angezeigt.</value>
+  </data>
   <data name="password" xml:space="preserve">
     <value>Kennwort</value>
   </data>

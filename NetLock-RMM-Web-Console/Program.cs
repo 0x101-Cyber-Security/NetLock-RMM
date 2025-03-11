@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
+using LettuceEncrypt.Acme;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,15 +23,20 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 
 // Get UseHttps from config
-var https = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Enabled");
-var https_force = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Force");
-
-var hsts = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Hsts:Enabled");
+var http = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Http:Enabled", true);
+var http_port = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port", 80);
+var https = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Enabled", true);
+var https_port = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port", 443);
+var https_force = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Force", true);
+var hsts = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Hsts:Enabled", true);
 var hsts_max_age = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Hsts:MaxAge");
-var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled");
-var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword");
-var cert_path = builder.Configuration["Kestrel:Endpoint:Https:Certificate:Path"];
-var cert_password = builder.Configuration["Kestrel:Endpoint:Https:Certificate:Password"];
+var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled", true);
+var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
+var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
+var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
+var isRunningInDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "1";
+
+Web_Console.isDocker = isRunningInDocker;
 
 // Add Remote_Server to the services
 var remoteServerConfig = builder.Configuration.GetSection("NetLock_Remote_Server").Get<NetLock_RMM_Web_Console.Classes.Remote_Server.Config>();
@@ -57,7 +63,7 @@ else
 var language = builder.Configuration["Webinterface:Language"];
 
 // Members Portal Api
-var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Web_Console.Classes.Members_Portal.Config>();
+var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Web_Console.Classes.Members_Portal.Config>() ?? new NetLock_RMM_Web_Console.Classes.Members_Portal.Config();
 
 if (membersPortal.Enabled)
     Members_Portal.api_enabled = true;
@@ -73,17 +79,18 @@ Console.WriteLine(Environment.NewLine);
 
 // Output version
 Console.WriteLine("NetLock RMM Web Console");
-Console.WriteLine("Version: " + Application_Settings.version);
+Console.WriteLine("Web Console Version: " + Application_Settings.web_console_version);
+Console.WriteLine("Database Version: " + Application_Settings.db_version);
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Configuration loaded from appsettings.json");
 Console.WriteLine(Environment.NewLine);
 
 // Output http port
-Console.WriteLine("[Webserver]");
-Console.WriteLine($"Http: {builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Http:Enabled")}");
-Console.WriteLine($"Http Port: {builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port")}");
+Console.WriteLine("[Kestrel Configuration]");
+Console.WriteLine($"Http: {http}");
+Console.WriteLine($"Http Port: {http_port}");
 Console.WriteLine($"Https: {https}");
-Console.WriteLine($"Https Port: {builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port")}");
+Console.WriteLine($"Https Port: {https_port}");
 Console.WriteLine($"Https (force): {https_force}");
 Console.WriteLine($"Hsts: {hsts}");
 Console.WriteLine($"Hsts Max Age: {hsts_max_age}");
@@ -94,7 +101,7 @@ Console.WriteLine($"Custom Certificate Password: {cert_password}");
 Console.WriteLine(Environment.NewLine);
 
 // Output mysql configuration
-var mysqlConfig = builder.Configuration.GetSection("MySQL").Get<Config>();
+var mysqlConfig = builder.Configuration.GetSection("MySQL").Get<Config>() ?? new Config();
 MySQL.Connection_String = $"Server={mysqlConfig.Server};Port={mysqlConfig.Port};Database={mysqlConfig.Database};User={mysqlConfig.User};Password={mysqlConfig.Password};SslMode={mysqlConfig.SslMode};{mysqlConfig.AdditionalConnectionParameters}";
 MySQL.Database = mysqlConfig.Database;
 
@@ -105,7 +112,7 @@ Console.WriteLine($"MySQL Database: {mysqlConfig.Database}");
 Console.WriteLine($"MySQL User: {mysqlConfig.User}");
 Console.WriteLine($"MySQL Password: {mysqlConfig.Password}");
 Console.WriteLine($"MySQL SSL Mode: {mysqlConfig.SslMode}");
-Console.WriteLine($"MySQL additional parameters: {mysqlConfig.AdditionalConnectionParameters}");
+Console.WriteLine($"MySQL Additional Parameters: {mysqlConfig.AdditionalConnectionParameters}");
 Console.WriteLine(Environment.NewLine);
 
 // Output remote server configuration
@@ -133,15 +140,18 @@ Console.WriteLine(Environment.NewLine);
 Console.WriteLine("[Webinterface]");
 Console.WriteLine($"Language: {language}");
 
+// Miscellanous
+Console.WriteLine($"Running in Docker: {isRunningInDocker}");
+
 // Output firewall status
 bool microsoft_defender_firewall_status = Microsoft_Defender_Firewall.Status();
 
-if (microsoft_defender_firewall_status && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
 {
     Console.ForegroundColor = ConsoleColor.Green;
     Console.WriteLine("Microsoft Defender Firewall is enabled.");
 }
-else
+else if (!microsoft_defender_firewall_status && OperatingSystem.IsWindows())
 {
     Console.ForegroundColor = ConsoleColor.Red;
     Console.WriteLine("Microsoft Defender Firewall is disabled. You should enable it for your own safety. NetLock adds firewall rules automatically according to your configuration.");
@@ -150,14 +160,14 @@ else
 Console.ResetColor();
 
 // Add firewall rule for HTTP
-Microsoft_Defender_Firewall.Rule_Inbound(builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port").ToString());
-Microsoft_Defender_Firewall.Rule_Outbound(builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port").ToString());
+Microsoft_Defender_Firewall.Rule_Inbound(http_port.ToString());
+Microsoft_Defender_Firewall.Rule_Outbound(http_port.ToString());
 
 if (https)
 {
     // Add firewall rule for HTTPS
-    Microsoft_Defender_Firewall.Rule_Inbound(builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port").ToString());
-    Microsoft_Defender_Firewall.Rule_Outbound(builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port").ToString());
+    Microsoft_Defender_Firewall.Rule_Inbound(https_port.ToString());
+    Microsoft_Defender_Firewall.Rule_Outbound(https_port.ToString());
 
     if (letsencrypt)
         builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo(Application_Paths.lettuceencrypt_persistent_data_dir), letsencrypt_password);
@@ -172,7 +182,7 @@ builder.WebHost.UseKestrel(k =>
     
     if (https)
     {
-        k.Listen(IPAddress.Any, builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Port"), o =>
+        k.Listen(IPAddress.Any, https_port, o =>
         {
             if (letsencrypt)
             {
@@ -183,20 +193,26 @@ builder.WebHost.UseKestrel(k =>
             }
             else
             {
-                if (!string.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
+                if (String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
+                {
+                    o.UseHttps(cert_path);
+                }
+                else if (!String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
                 {
                     o.UseHttps(cert_path, cert_password);
                 }
                 else
                 {
-                    Console.WriteLine("Default certificate file not found and Let's Encrypt certificate is not enabled.");
+                    Console.WriteLine("Custom certificate path or password is not set or file does not exist. Exiting...");
+                    Thread.Sleep(5000);
+                    Environment.Exit(1);
                 }
             }
         });
     }
 
-    if (builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Http:Enabled"))
-        k.Listen(IPAddress.Any, builder.Configuration.GetValue<int>("Kestrel:Endpoint:Http:Port"));
+    if (http)
+        k.Listen(IPAddress.Any, http_port);
 });
 
 builder.Services.Configure<FormOptions>(x =>
@@ -228,12 +244,14 @@ else
         Console.WriteLine("Database tables exist.");
 
         // Check db version
-        if (await Database.Check_NetLock_Database_Version() != Application_Settings.version)
+        if (await Database.Check_NetLock_Database_Version() != Application_Settings.db_version)
         {
             Console.WriteLine("Database structure is outdated. Trying to update.");
 
             // Update database
-            await Database.Execute_Update_Script();
+            await Database.Execute_Update_Scripts();
+
+            await Database.Update_DB_Version();
 
             Console.WriteLine("Database structure updated.");
         }

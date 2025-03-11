@@ -160,7 +160,7 @@ namespace NetLock_RMM_Server.MySQL
                 if (count == 0)
                 {
                     // Insert new server
-                    query = "INSERT INTO servers (name, ip_address, domain, os, hearthbeat, appsettings, cpu_usage, ram_usage, disk_usage) VALUES (@name, @ip_address, @domain, @os, @hearthbeat, @appsettings, @cpu_usage, @ram_usage, @disk_usage);";
+                    query = "INSERT INTO servers (name, ip_address, domain, os, hearthbeat, appsettings, cpu_usage, ram_usage, disk_usage, docker) VALUES (@name, @ip_address, @domain, @os, @hearthbeat, @appsettings, @cpu_usage, @ram_usage, @disk_usage, @docker);";
 
                     cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@name", Environment.MachineName);
@@ -172,13 +172,14 @@ namespace NetLock_RMM_Server.MySQL
                     cmd.Parameters.AddWithValue("@cpu_usage", cpu_usage);
                     cmd.Parameters.AddWithValue("@ram_usage", ram_usage);
                     cmd.Parameters.AddWithValue("@disk_usage", disk_usage);
+                    cmd.Parameters.AddWithValue("@docker", Configuration.Server.isDocker ? 1 : 0);
 
                     cmd.ExecuteNonQuery();
                 }
                 else
                 {
                     // Update server
-                    query = "UPDATE servers SET ip_address = @ip_address, domain = @domain, os = @os, hearthbeat = @hearthbeat, appsettings = @appsettings, cpu_usage = @cpu_usage, ram_usage = @ram_usage, disk_usage = @disk_usage WHERE name = @name;";
+                    query = "UPDATE servers SET ip_address = @ip_address, domain = @domain, os = @os, hearthbeat = @hearthbeat, appsettings = @appsettings, cpu_usage = @cpu_usage, ram_usage = @ram_usage, disk_usage = @disk_usage, docker = @docker WHERE name = @name;";
 
                     cmd = new MySqlCommand(query, conn);
                     cmd.Parameters.AddWithValue("@name", Environment.MachineName);
@@ -190,6 +191,7 @@ namespace NetLock_RMM_Server.MySQL
                     cmd.Parameters.AddWithValue("@cpu_usage", cpu_usage);
                     cmd.Parameters.AddWithValue("@ram_usage", ram_usage);
                     cmd.Parameters.AddWithValue("@disk_usage", disk_usage);
+                    cmd.Parameters.AddWithValue("@docker", Configuration.Server.isDocker ? 1 : 0);
 
                     cmd.ExecuteNonQuery();
                 }

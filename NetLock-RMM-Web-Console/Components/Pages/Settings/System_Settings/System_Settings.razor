@@ -219,6 +219,11 @@
                 </MudGrid>
             </MudPaper>
 
+            @if (Configuration.Web_Console.isDocker)
+            {
+                <MudAlert Class="mt-3" Severity="Severity.Warning">@Localizer["is_docker_info"]</MudAlert>
+            }
+
             @foreach (var server in servers)
             {
                 DateTime lastHeartbeat;
@@ -237,7 +242,7 @@
                 }
 
                 <MudPaper Class="mt-3">
-                    <MudText Class="ml-2" Typo="Typo.h6">@server.name (@server.os)</MudText>
+                    <MudText Class="ml-2" Typo="Typo.h6">@server.name (@server.os) @(server.docker == "1" ? " (Docker)" : String.Empty)</MudText>
                     <MudText Class="ml-2" Typo="Typo.subtitle2">IP: @server.ip_address | Domain: @server.domain</MudText>
 
                     <MudText Class="ml-2" Typo="Typo.subtitle2" Color="@(isRecent ? Color.Success : Color.Error)">@Localizer["last hearthbeat"]: @server.hearthbeat</MudText>
@@ -770,6 +775,7 @@
         public string cpu_usage { get; set; }
         public string ram_usage { get; set; }
         public string disk_usage { get; set; }
+        public string docker { get; set; }
     }
 
     // Get servers from database
@@ -801,7 +807,8 @@
                             appsettings = reader["appsettings"].ToString() ?? String.Empty,
                             cpu_usage = reader["cpu_usage"].ToString() ?? String.Empty,
                             ram_usage = reader["ram_usage"].ToString() ?? String.Empty,
-                            disk_usage = reader["disk_usage"].ToString() ?? String.Empty
+                            disk_usage = reader["disk_usage"].ToString() ?? String.Empty,
+                            docker = reader["docker"].ToString() ?? String.Empty
                         });
                     }
                 }

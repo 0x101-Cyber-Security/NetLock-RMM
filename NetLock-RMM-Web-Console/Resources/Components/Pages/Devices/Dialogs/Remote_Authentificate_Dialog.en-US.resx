@@ -144,6 +144,9 @@
   <data name="invalid_session_guid" xml:space="preserve">
     <value>Session GUID mismatch. Please logout and login from the web console again. This happens due to security reasons.</value>
   </data>
+  <data name="is_docker_info" xml:space="preserve">
+    <value>If the backends are executed as Docker containers and are newly created, they register themselves anew each time. To avoid this, fixed container names should be assigned. Alternatively, the servers in the database can be removed again. In the case of Docker containers, no downtime warning is displayed within the web console.</value>
+  </data>
   <data name="password" xml:space="preserve">
     <value>Password</value>
   </data>

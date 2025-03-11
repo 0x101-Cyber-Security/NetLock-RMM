@@ -2,7 +2,8 @@
 {
     public class Application_Settings
     {
-        public static string version = "2.5.0.1";
+        public static string db_version = "2.5.0.2";
+        public static string web_console_version = "2.5.0.2";
         public static string Local_Encryption_Key = "01234567890123456789012345678901";
 
         public static bool IsLiveEnvironment = true;

@@ -32,7 +32,7 @@
 
                 <!-- Version for larger screens -->
                 <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary d-none d-md-flex">
-                    @Application_Settings.version
+                    @Application_Settings.web_console_version
                 </MudText>
 
                 <MudSpacer />
@@ -229,19 +229,22 @@
                         DateTime lastHeartbeat;
 
                         // Check if the last hearthbeat is older than 10 minutes
-                        if (DateTime.TryParse(reader["hearthbeat"].ToString(), out lastHeartbeat))
+                        if (reader["docker"].ToString() == "0") // Do not check hearthbeat if running in docker because downed containers will spam the user
                         {
-                            if ((DateTime.Now - lastHeartbeat).TotalMinutes > 5)
+                            if (DateTime.TryParse(reader["hearthbeat"].ToString(), out lastHeartbeat))
                             {
-                                await DialogService.ShowMessageBox(
-                                    Localizer["warning"],
-                                    Localizer["the following netlock rmm backend server seems to be down:"]
-                                    + " Name: " + reader["name"].ToString()
-                                    + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
-                                    + " " + Localizer["last hearthbeat"] + ": " + reader["hearthbeat"].ToString(),
-                                    yesText: Localizer["dismiss"],
-                                    options: options
-                                );
+                                if ((DateTime.Now - lastHeartbeat).TotalMinutes > 5)
+                                {
+                                    await DialogService.ShowMessageBox(
+                                        Localizer["warning"],
+                                        Localizer["the following netlock rmm backend server seems to be down:"]
+                                        + " Name: " + reader["name"].ToString()
+                                        + " " + Localizer["ip address"] + ": " + reader["ip_address"].ToString()
+                                        + " " + Localizer["last hearthbeat"] + ": " + reader["hearthbeat"].ToString(),
+                                        yesText: Localizer["dismiss"],
+                                        options: options
+                                    );
+                                }
                             }
                         }
 

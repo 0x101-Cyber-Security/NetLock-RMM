@@ -144,6 +144,9 @@
   <data name="invalid_session_guid" xml:space="preserve">
     <value />
   </data>
+  <data name="is_docker_info" xml:space="preserve">
+    <value />
+  </data>
   <data name="password" xml:space="preserve">
     <value />
   </data>

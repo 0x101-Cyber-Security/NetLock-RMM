@@ -25,7 +25,7 @@ namespace Helper
                     if (File.Exists(Path.Combine(Application_Paths._private_files_netlock, "package_url.txt")))
                         old_package_url = File.ReadAllText(Path.Combine(Application_Paths._private_files_netlock, "package_url.txt"));
 
-                    if (version != Application_Settings.version || String.IsNullOrEmpty(version) || String.IsNullOrEmpty(old_package_url) || package_url != old_package_url)
+                    if (version != Application_Settings.agent_version || String.IsNullOrEmpty(version) || String.IsNullOrEmpty(old_package_url) || package_url != old_package_url)
                     {
                         Console.ForegroundColor = ConsoleColor.DarkYellow;
                         Console.WriteLine("Package is not setup. Version or package url is different. Attempting to download from package provider...");
