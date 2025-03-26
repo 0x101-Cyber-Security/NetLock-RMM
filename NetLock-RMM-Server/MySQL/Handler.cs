@@ -36,6 +36,44 @@ namespace NetLock_RMM_Server.MySQL
             }
         }
 
+        // Check if MySQL is used (not MariaDB) and if the version is supported by NetLock
+        public static async Task<bool> Verify_Supported_SQL_Server()
+        {
+            using (MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+
+                    string query = "SELECT @@version, @@version_comment;";
+
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+
+                    using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+                    {
+                        if (await reader.ReadAsync())
+                        {
+                            string version = reader.GetString(0);
+                            string versionComment = reader.GetString(1);
+
+                            Logging.Handler.Debug("Classes.MySQL.Database.Verify_Supported_SQL_Server", "version", version);
+                            Logging.Handler.Debug("Classes.MySQL.Database.Verify_Supported_SQL_Server", "versionComment", versionComment);
+
+                            // Check whether it is MariaDB
+                            if (versionComment.Contains("MySQL"))
+                                return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("Classes.MySQL.Database.Verify_Supported_SQL_Server", "Result", ex.ToString());
+                }
+            }
+
+            return false;
+        }
+
         public static async Task<bool> Check_Duplicate(string query)
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);

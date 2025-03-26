@@ -222,6 +222,9 @@ builder.Services.Configure<FormOptions>(x =>
 });
 
 // Check mysql connection
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("Checking MySQL connection...");
+
 if (!await Database.Check_Connection())
 {
     Console.WriteLine("MySQL connection failed. Exiting...");
@@ -230,37 +233,44 @@ if (!await Database.Check_Connection())
 }
 else
 {
-    Console.WriteLine("MySQL connection successful.");
+    Console.WriteLine("SQL connection successful.");
 
-    // Check if tables exist
-    if (!await Database.Check_Table_Existing()) // Table does not exist
+    if (!await Database.Verify_Supported_SQL_Server())
     {
-        Console.WriteLine("Database tables do not exist. Creating tables...");
-        await Database.Execute_Installation_Script();
-        Console.WriteLine("Database tables created.");
+        Console.WriteLine("SQL Server version is not supported. We only support MySQL! Exiting...");
+        Thread.Sleep(5000);
+        Environment.Exit(1);
     }
-    else // Table exists
+    else
     {
-        Console.WriteLine("Database tables exist.");
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("SQL Server version is supported.");
+        Console.ResetColor();
 
-        // Check db version
-        if (await Database.Check_NetLock_Database_Version() != Application_Settings.db_version)
+        // Check if tables exist
+        if (!await Database.Check_Table_Existing()) // Table does not exist
         {
-            Console.WriteLine("Database structure is outdated. Trying to update.");
+            Console.WriteLine("Database tables do not exist. Creating tables...");
+            await Database.Execute_Installation_Script();
+            Console.WriteLine("Database tables created.");
+        }
+        else // Table exists
+        {
+            Console.WriteLine("Verifying & updating database structure if required.");
 
             // Update database
             await Database.Execute_Update_Scripts();
 
             await Database.Update_DB_Version();
 
-            Console.WriteLine("Database structure updated.");
-        }
-        else
-        {
-            Console.WriteLine("Database version is up to date.");
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Database structure okay.");
+            Console.ResetColor();
         }
     }
 }
+
+Console.WriteLine(Environment.NewLine);
 
 // Add MudBlazor services
 builder.Services.AddMudServices();

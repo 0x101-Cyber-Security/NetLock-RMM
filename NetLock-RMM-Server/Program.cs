@@ -209,6 +209,9 @@ builder.Services.Configure<FormOptions>(x =>
 });
 
 // Check mysql connection
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("Checking MySQL connection...");
+
 if (!await NetLock_RMM_Server.MySQL.Handler.Check_Connection())
 {
     Console.WriteLine("MySQL connection failed. Exiting...");
@@ -218,8 +221,24 @@ if (!await NetLock_RMM_Server.MySQL.Handler.Check_Connection())
 else
 {
     Console.WriteLine("MySQL connection successful.");
+
+    if (!await NetLock_RMM_Server.MySQL.Handler.Verify_Supported_SQL_Server())
+    {
+        Console.WriteLine("SQL Server version is not supported. We only support MySQL! Exiting...");
+        Thread.Sleep(5000);
+        Environment.Exit(1);
+    }
+    else
+    {
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("SQL Server version is supported.");
+        Console.ResetColor();
+    }
+
     await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
 }
+
+Console.WriteLine(Environment.NewLine);
 
 // Check Packages
 await Helper.Package_Provider.Check_Packages();

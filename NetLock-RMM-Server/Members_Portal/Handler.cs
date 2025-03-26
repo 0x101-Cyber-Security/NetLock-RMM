@@ -10,6 +10,6 @@ namespace NetLock_RMM_Server.Members_Portal
 {
     public class Handler
     {
-        public static async Task <bool> 64c1d9b6-6c7d-4ab5-b02e-2c898a19ac37 //OSSCH
+        //OSSCH_START 48aa9d9b-cb3d-47ae-b5e1-39474ea0bad3 //OSSCH_END
     }
 }

@@ -280,7 +280,7 @@
 
             string username = session_username_result.Value;
             string password = session_password_result.Value;
-            string password_encrypted = Encryption.String_Encryption.Encrypt(await Base64.Handler.Encode(password), Application_Settings.Local_Encryption_Key);
+            string password_encrypted = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
             string session_guid = session_guid_result.Value;
 
             Remote_Admin_Identity identity = new Remote_Admin_Identity

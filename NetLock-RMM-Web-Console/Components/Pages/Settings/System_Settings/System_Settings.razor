@@ -22,34 +22,34 @@
 
 <style>
     .selected-row-light {
-    background-color: lightgray;
+        background-color: lightgray;
     }
 
     .selected-row-dark {
-    background-color: #141414;
+        background-color: #141414;
     }
 
     .custom-expansion-panel {
-    background-color: transparent;
+        background-color: transparent;
     }
 
     .dialog-blurring {
-    backdrop-filter: blur(10px);
+        backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-    font-weight: 500;
+        font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-    padding-bottom: 50px;
-    text-align: right;
+        padding-bottom: 50px;
+        text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-    .desktop-icon {
-    display: none;
-    }
+        .desktop-icon {
+            display: none;
+        }
     }
 </style>
 
@@ -68,7 +68,7 @@
 
         @if (permissions_settings_enabled && permissions_settings_system_enabled && !Configuration.Members_Portal.cloud_enabled)
         {
-            <MudText Typo="Typo.h5" >System</MudText>
+            <MudText Typo="Typo.h5">System</MudText>
 
             <MudPaper Elevation="4" Class="mt-5">
 
@@ -83,7 +83,7 @@
                                 {
                                     <div style="display: flex; align-items: center;">
                                         <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                                        <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>                                    
+                                        <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
                                     </div>
 
                                     <!-- Additional MySQL Info -->
@@ -593,16 +593,248 @@
 
         await MySQL_Status();
         await Get_Servers();
-        await 1409abd0-21b2-4b9d-a48a-8de41abf2b3e //OSSCH
+        await Get_Package_Provider_URL();
+        await Get_Agent_Updates();
+
+        if (Configuration.Members_Portal.api_enabled)
+            await Get_Members_Portal_License_Status();
+
+        // Get CPU Usage
+        cpuUsage = await Classes.System_Information.Handler.Get_CPU_Usage();
+
+        // Get RAM Usage
+        ramUsage = await Classes.System_Information.Handler.Get_RAM_Usage();
+
+        // Get Disk Usage
+        diskUsage = await Classes.System_Information.Handler.Get_Disk_Usage();
+
+        fileServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.File_Server.Connection_String + "/test");
+
+        remoteServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.Remote_Server.Connection_String + "/test");
+
+        loading_overlay = false;
+
+        StateHasChanged();
+    }
+
+    private bool mysqlConnectionStatus = false;
+    private bool fileServerConnectionStatus = false;
+    private bool remoteServerConnectionStatus = false;
+
+    private int cpuUsage = 0;
+    private int ramUsage = 0;
+    private int diskUsage = 0;
+
+    private string mysqlVersion = String.Empty;
+    private string mysqlUptime = String.Empty;
+    private string mysqlConnectedUsers = String.Empty;
+    private string mysqlDatabaseSize = String.Empty;
+    private List<MySQL_Active_Queries> mysqlActiveQueries = new List<MySQL_Active_Queries>();
+    private bool mysqlSSLEnabled = false;
+    private string mysqlFailedLogins = String.Empty;
+    private string mysqlPrivilegedUsers = String.Empty;
+    private string mysqlMaxConnections = String.Empty;
+
+    // Agent Update Settings
+    private bool agent_updates_enabled = false;
+
+    // Members Portal
+    private string members_portal_api_key = String.Empty;
+    private string members_portal_status = String.Empty;
+    private string members_portal_license_name = String.Empty;
+    private int members_portal_licenses_used = 0;
+    private int members_portal_licenses_max = 0;
+    private bool members_portal_licenses_hard_limit = false;
+
+    private string package_url = String.Empty;
+
+    public class MySQL_Active_Queries
+    {
+        public int Id { get; set; }
+        public string User { get; set; }
+        public string Host { get; set; }
+        public string Database { get; set; }
+        public string Command { get; set; }
+        public int Time { get; set; }
+        public string State { get; set; }
+        public string Info { get; set; }
+    }
+
+    private bool MySQL_Active_Queries_Table_Filter_Func(MySQL_Active_Queries row)
+    {
+        try
+        {
+            if (row == null) return false; // Überprüfe, ob row null ist
+
+            if (string.IsNullOrEmpty(mysql_active_queries_table_search_string))
+                return true;
+
+            return row.Id.ToString().Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   (row.User?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (row.Host?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (row.Database?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (row.Command?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   row.Time.ToString().Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   (row.State?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                   (row.Info?.Contains(mysql_active_queries_table_search_string, StringComparison.OrdinalIgnoreCase) ?? false);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/system -> MySQL_Active_Queries_Table_Filter_Func", "general_error", ex.ToString());
+            return false;
+        }
+    }
+
+    private string mysql_active_queries_table_sorted_column;
+    private string mysql_active_queries_table_search_string = String.Empty;
+    private string mysql_active_queries_selectedRowContent = ""; // Saving content of selected row
+
+    // Executes on row click
+    private void mysql_active_queries_RowClickHandler(MySQL_Active_Queries row)
+    {
+        mysql_active_queries_selectedRowContent = row.Id.ToString();
+    }
+
+    private string mysql_active_queries_GetRowClass(MySQL_Active_Queries row)
+    {
+        return row.Id.ToString() == mysql_active_queries_selectedRowContent ? "selected-row" : "";
+    }
+
+    // MySQL
+
+    private string GetCommandColor(string command, int time)
+    {
+        switch (command)
+        {
+            case "Daemon":
+                return "blue";
+            case "Sleep":
+                return "orange";
+            case "Query":
+                return time > 60 ? "red" : "green"; // Red for long queries, green for short
+            default:
+                return "inherit"; // Standard colour
+        }
+    }
+
+    private async Task MySQL_Status()
+    {
+        try
+        {
+            if (await Classes.MySQL.Database.Check_Connection())
+            {
+                mysqlConnectionStatus = true;
+
+                // Get MySQL Version
+                mysqlVersion = await Classes.MySQL.Database.Get_Version();
+
+                // Get MySQL Uptime
+                mysqlUptime = await Classes.MySQL.Database.Get_Uptime();
+
+                // Get MySQL Connected Users
+                mysqlConnectedUsers = await Classes.MySQL.Database.Get_Connected_Users();
+
+                // Get MySQL Active Queries
+                string mysqlActiveQueriesJson = await Classes.MySQL.Database.Get_Active_Queries();
+                Logging.Handler.Debug("/system -> MySQL_Status", "mysqlActiveQueriesJson", mysqlActiveQueriesJson);
+                mysqlActiveQueries = JsonSerializer.Deserialize<List<MySQL_Active_Queries>>(mysqlActiveQueriesJson);
+
+                // Get MySQL Failed Logins
+                mysqlFailedLogins = await Classes.MySQL.Database.Get_Failed_Logins();
+
+                // Get MySQL Max Connections
+                mysqlMaxConnections = await Classes.MySQL.Database.Get_Max_Connections();
+
+                // Get MySQL Database Size
+                mysqlDatabaseSize = await Classes.MySQL.Database.Get_Database_Size();
+            }
+            else
+            {
+                mysqlConnectionStatus = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/system -> MySQL_Status", "general_error", ex.ToString());
+        }
+
+    }
+
+    // Servers overview
+    private List<Servers> servers = new List<Servers>();
+
+    public class Servers
+    {
+        public string id { get; set; }
+        public string name { get; set; }
+        public string ip_address { get; set; }
+        public string domain { get; set; }
+        public string os { get; set; }
+        public string hearthbeat { get; set; }
+        public string appsettings { get; set; }
+        public string cpu_usage { get; set; }
+        public string ram_usage { get; set; }
+        public string disk_usage { get; set; }
+        public string docker { get; set; }
+    }
+
+    // Get servers from database
+    private async Task Get_Servers()
+    {
+        servers.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM servers;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        servers.Add(new Servers
+                            {
+                                id = reader["id"].ToString() ?? String.Empty,
+                                name = reader["name"].ToString() ?? String.Empty,
+                                ip_address = reader["ip_address"].ToString() ?? String.Empty,
+                                domain = reader["domain"].ToString() ?? String.Empty,
+                                os = reader["os"].ToString() ?? String.Empty,
+                                hearthbeat = reader["hearthbeat"].ToString() ?? String.Empty,
+                                appsettings = reader["appsettings"].ToString() ?? String.Empty,
+                                cpu_usage = reader["cpu_usage"].ToString() ?? String.Empty,
+                                ram_usage = reader["ram_usage"].ToString() ?? String.Empty,
+                                disk_usage = reader["disk_usage"].ToString() ?? String.Empty,
+                                docker = reader["docker"].ToString() ?? String.Empty
+                            });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/system -> Get_Servers", "general_error", ex.ToString());
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    // Get package provider URL
+    //OSSCH_START fdc43bf3-3295-4eb7-bbac-cff0f0e5af2d //OSSCH_END
 
     // Save api key for members portal
-    private async Task 75d95b9d-175b-4698-80b0-619f80a5e87d //OSSCH
+    //OSSCH_START fa031ed5-647c-4f96-8ff2-39c5d71631ac //OSSCH_END
 
     // Update members portal license information
-    private async Task c76b07a1-04d6-445a-876a-b43c5530da5b //OSSCH
+    //OSSCH_START 997e1df4-abad-4baa-a178-5859074e0265 //OSSCH_END
 
     // Get members portal license status
-    private async Task a99f4667-aa31-46f6-84bf-3129cd422d38 //OSSCH
+    //OSSCH_START 15da5d85-4e03-4bcf-91ba-0a119bd05dcc //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
