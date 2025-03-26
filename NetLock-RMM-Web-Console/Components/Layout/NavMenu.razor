@@ -64,6 +64,19 @@
                                 {
                                     <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.LocationCity" Title="@(location.name)" Expanded="true">
 
+                                        @{
+                                            if (permissions_devices_authorized_enabled)
+                                            {
+                                                <MudNavLink Icon="@Icons.Material.Filled.DesktopWindows" OnClick="@(async () => await Update_Selected_Group(tenant.guid, location.guid, location.name, "all", true, "/devices"))">@Localizer["authorized"]</MudNavLink>
+
+                                            }
+
+                                            if (permissions_devices_unauthorized_enabled)
+                                            {
+                                                <MudNavLink Icon="@Icons.Material.Filled.DesktopAccessDisabled" OnClick="@(async () => await Update_Selected_Group(tenant.guid, location.guid, location.name, "all", true, "/unauthorized_devices"))">@Localizer["unauthorized"]</MudNavLink>
+                                            }
+                                        }
+
                                         <!-- Groups -->
                                         @foreach (string group_name in groups_table.AsEnumerable().Where(row => row.Field<string>("tenant_name") == tenant.name && row.Field<string>("location_name") == location.name).Select(row => row.Field<string>("group_name")).Distinct())
                                         {

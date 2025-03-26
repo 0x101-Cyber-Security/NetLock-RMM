@@ -186,6 +186,9 @@
   <data name="author" xml:space="preserve">
     <value />
   </data>
+  <data name="authorized_devices" xml:space="preserve">
+    <value />
+  </data>
   <data name="back" xml:space="preserve">
     <value />
   </data>
