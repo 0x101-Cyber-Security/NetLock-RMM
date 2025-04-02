@@ -1,4 +1,4 @@
-﻿using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Primitives;
 using System.Runtime.InteropServices;
 
@@ -24,7 +24,11 @@ namespace NetLock_RMM_Server
         public static string _private_files_netlock = Path.Combine(GetCurrentDirectory(), "www", "private", "files", "netlock");
         public static string _private_files_netlock_temp = Path.Combine(GetCurrentDirectory(), "www", "private", "files", "netlock", "temp");        
 
-        public static string internal_temp_folder = Path.Combine(GetCurrentDirectory(), "internal", "temp");
+        public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
+        public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
+        //OSSCH_START a2abdcb9-03d4-4351-88cd-7f86b8695e88 //OSSCH_END
+
+        //OSSCH_START 7a90f509-ff8a-45b5-a777-07357008b1c6 //OSSCH_END
 
         public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
 

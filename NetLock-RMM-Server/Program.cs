@@ -25,6 +25,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Runtime.InteropServices;
 using NetLock_RMM_Server.Configuration;
 using System.Security.Cryptography;
+using NetLock_RMM_Server.Members_Portal;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -240,8 +241,56 @@ else
 
 Console.WriteLine(Environment.NewLine);
 
-// Check Packages
-await Helper.Package_Provider.Check_Packages();
+// Check Package Status and Request Packages from Members Portal API if roles apply, api enabled and API key is set
+if (Roles.Update || Roles.Trust)
+{
+    if (Members_Portal.api_enabled)
+    {
+        Console.WriteLine("Members Portal API enabled.");
+
+        string Members_Portal_Api_Key = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
+
+        if (String.IsNullOrEmpty(Members_Portal_Api_Key))
+        {
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("Members Portal API key is not set. Exiting...");
+            Thread.Sleep(5000);
+            Environment.Exit(1);
+        }
+        else if (!String.IsNullOrEmpty(Members_Portal_Api_Key))
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Members Portal API key is set.");
+            Console.ResetColor();
+
+            // Check if internal directory exists
+            if (!Directory.Exists(Application_Paths.internal_dir))
+                Directory.CreateDirectory(Application_Paths.internal_dir);
+
+            if (!await Package_Provider.Check_Package_Info_Status())
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Package information is invalid. Requesting latest packages from the members portal API.");
+                Console.ResetColor();
+
+                // Request latest packages from the members portal api
+                await Package_Provider.Get_Package();
+
+                await Package_Provider.Request_Package_Info_Json();
+
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Package successfully setup.");
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("Package information is valid.");
+                Console.ResetColor();
+            }
+        }
+    }
+}
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

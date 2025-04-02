@@ -653,8 +653,8 @@ namespace NetLock_RMM_Server.Files
                 string architecture = String.Empty;
 
                 string installer_archive = String.Empty;
-                string installer_extracted_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
-                string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_folder, Guid.NewGuid().ToString());
+                string installer_extracted_dir = Path.Combine(Application_Paths.internal_temp_dir, Guid.NewGuid().ToString());
+                string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_dir, Guid.NewGuid().ToString());
                 string installer_executable = String.Empty;
 
                 // Deserialize JSON
