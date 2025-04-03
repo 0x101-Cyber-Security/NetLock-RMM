@@ -267,6 +267,9 @@ if (Roles.Update || Roles.Trust)
             if (!Directory.Exists(Application_Paths.internal_dir))
                 Directory.CreateDirectory(Application_Paths.internal_dir);
 
+            // Request license info
+            await Handler.Request_License_Info_Json();
+
             if (!await Package_Provider.Check_Package_Info_Status())
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
