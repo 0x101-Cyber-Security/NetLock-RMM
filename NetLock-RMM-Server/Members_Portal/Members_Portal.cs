@@ -1,7 +1,1 @@
-﻿namespace NetLock_RMM_Server.Configuration
-{
-    public class Members_Portal
-    {
-        public static bool api_enabled = false;
-    }
-}
+//OSSCH_START c90dafae-8228-4069-9f43-39f1d95cdbb2 //OSSCH_END

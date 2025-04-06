@@ -10,6 +10,6 @@ namespace NetLock_RMM_Server
         public static string Members_Portal_Api_Url_Live = "https://api.members.netlockrmm.com";
         public static string Members_Portal_Api_Url_Test = "http://localhost:80";
 
-        //OSSCH_START 12369711-a7f2-41d1-ae9a-d6aaca93ea29 //OSSCH_END
+        //OSSCH_START 65849ee6-7dd9-4f4c-bf6e-cae42157bc7e //OSSCH_END
     }
 }

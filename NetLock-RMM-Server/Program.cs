@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Server.Agent.Windows;
@@ -26,6 +26,7 @@ using System.Runtime.InteropServices;
 using NetLock_RMM_Server.Configuration;
 using System.Security.Cryptography;
 using NetLock_RMM_Server.Members_Portal;
+using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -246,6 +247,8 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
+        Console.WriteLine(Environment.NewLine + "----------------------------------------");
+
         Console.WriteLine("Members Portal API enabled.");
 
         string Members_Portal_Api_Key = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
@@ -267,10 +270,43 @@ if (Roles.Update || Roles.Trust)
             if (!Directory.Exists(Application_Paths.internal_dir))
                 Directory.CreateDirectory(Application_Paths.internal_dir);
 
+            // Check license info
+            bool isLicenseValidStartUp = await Handler.Check_License_Valid_Status(false);
+
             // Request license info
             await Handler.Request_License_Info_Json();
 
-            if (!await Package_Provider.Check_Package_Info_Status())
+            // Check license info
+            bool isLicenseValid = await Handler.Check_License_Valid_Status(true);
+
+            var (validUntilStr, packageName, licensesMax, licensesHardLimit) = await Handler.Get_License_Info();
+
+            Members_Portal.license_valid_until = validUntilStr;
+            Members_Portal.license_name = packageName;
+            Members_Portal.licenses_max = licensesMax;
+            Members_Portal.licenses_hard_limit = licensesHardLimit;
+
+            if (isLicenseValid)
+            {
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("License information updated.");
+                Console.ResetColor();
+
+                // Show additional information about the license
+                Console.WriteLine("Package name: " + Members_Portal.license_name);
+                Console.WriteLine("Max licenses: " + Members_Portal.licenses_max);
+                Console.WriteLine("Hard limit: " + Members_Portal.licenses_hard_limit);
+                Console.ResetColor();
+            }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("License has finally expired since: " + Members_Portal.license_valid_until + ". Exiting...");
+                Thread.Sleep(5000);
+                Environment.Exit(1);
+            }
+
+            if (!await Package_Provider.Check_Package_Valid_Status(true) || !isLicenseValidStartUp)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine("Package information is invalid. Requesting latest packages from the members portal API.");
@@ -290,8 +326,38 @@ if (Roles.Update || Roles.Trust)
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Package information is valid.");
                 Console.ResetColor();
+
+                // Get package information (code signed, agent version, valid until)
+                var (codeSigned, agentVersion, packageValidUntil) = await Package_Provider.Get_Package_Info();
+
+                // Update Members_Portal properties
+                Members_Portal.code_signed = codeSigned;
+                Members_Portal.agent_version = agentVersion;
+                Members_Portal.package_valid_until = packageValidUntil;
+
+                // Check if the package is code signed
+                if (Members_Portal.code_signed)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Package is code signed.");
+                    Console.ResetColor();
+
+                    Members_Portal.agent_version += "cs"; // Append 'cs' if code signed
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Package is not code signed.");
+                    Console.ResetColor();
+                }
+
+                // Optionally display the agent version and valid until date
+                Console.WriteLine("Package is valid (incl. 7 days grace period) until: " + Members_Portal.package_valid_until);
+                Console.WriteLine("Package agent version: " + Members_Portal.agent_version);
             }
         }
+
+        Console.WriteLine("----------------------------------------");
     }
 }
 
@@ -1772,7 +1838,9 @@ if (role_file)
     });
 }
 
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("Server started.");
+
 //Start server
 app.Run();
 
-Console.WriteLine("Server running!");
