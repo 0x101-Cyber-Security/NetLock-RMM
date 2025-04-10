@@ -27,6 +27,7 @@ using NetLock_RMM_Server.Configuration;
 using System.Security.Cryptography;
 using NetLock_RMM_Server.Members_Portal;
 using System.Globalization;
+using System.IO.Compression;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -317,44 +318,49 @@ if (Roles.Update || Roles.Trust)
 
                 await Package_Provider.Request_Package_Info_Json();
 
+                // Extract package
+                ZipFile.ExtractToDirectory(Application_Paths.internal_package_path, Path.Combine(Application_Paths.internal_dir, "packages", "netlock_core"), true);
+
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine("Package successfully setup.");
                 Console.ResetColor();
             }
-            else
+
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine("Package information is valid.");
+            Console.ResetColor();
+
+            // Get package information (code signed, agent version, valid until)
+            var (codeSigned, agentVersion, packageValidUntil) = await Package_Provider.Get_Package_Info();
+
+            // Update Members_Portal properties
+            Members_Portal.code_signed = codeSigned;
+            Members_Portal.agent_version = agentVersion;
+            Members_Portal.package_valid_until = packageValidUntil;
+
+            // Check if the package is code signed
+            if (Members_Portal.code_signed)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Package information is valid.");
+                Console.WriteLine("Package is code signed.");
                 Console.ResetColor();
 
-                // Get package information (code signed, agent version, valid until)
-                var (codeSigned, agentVersion, packageValidUntil) = await Package_Provider.Get_Package_Info();
-
-                // Update Members_Portal properties
-                Members_Portal.code_signed = codeSigned;
-                Members_Portal.agent_version = agentVersion;
-                Members_Portal.package_valid_until = packageValidUntil;
-
-                // Check if the package is code signed
-                if (Members_Portal.code_signed)
-                {
-                    Console.ForegroundColor = ConsoleColor.Green;
-                    Console.WriteLine("Package is code signed.");
-                    Console.ResetColor();
-
-                    Members_Portal.agent_version += "cs"; // Append 'cs' if code signed
-                }
-                else
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine("Package is not code signed.");
-                    Console.ResetColor();
-                }
-
-                // Optionally display the agent version and valid until date
-                Console.WriteLine("Package is valid (incl. 7 days grace period) until: " + Members_Portal.package_valid_until);
-                Console.WriteLine("Package agent version: " + Members_Portal.agent_version);
+                Members_Portal.agent_version += "cs"; // Append 'cs' if code signed
             }
+            else
+            {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine("Package is not code signed.");
+                Console.ResetColor();
+            }
+
+            // Optionally display the agent version and valid until date
+            Console.WriteLine("Package is valid (incl. 7 days grace period) until: " + Members_Portal.package_valid_until);
+            Console.WriteLine("Package agent version: " + Members_Portal.agent_version);
+
+            // Load packages to memory
+            Console.WriteLine("Loading packages to memory...");
+            Members_Portal.installer_package_win_x64_zip_bytestream = await Obfuscation.Load_NetLock_Core_Package_To_Memory("comm.package.win-x64.zip");
         }
 
         Console.WriteLine("----------------------------------------");
@@ -1585,27 +1591,34 @@ if (role_update || role_trust)
                 }
             }
 
-            if (!File.Exists(downloadPath))
+            // Load requested package into memory
+            byte[] package_stream = await Obfuscation.Load_NetLock_Core_Package_To_Memory(fileName);
+
+            // Check whether the result is null (error handling)
+            if (package_stream == null)
             {
-                Logging.Handler.Error("/private/downloads/netlock", "File not found", downloadPath);
-                context.Response.StatusCode = 404;
-                await context.Response.WriteAsync("File not found.");
+                context.Response.StatusCode = 500;
+                await context.Response.WriteAsync("Fehler beim Laden oder Entschlüsseln des Pakets.");
                 return;
             }
 
-            using (var fileStream = new FileStream(downloadPath, FileMode.Open, FileAccess.Read))
-            {
-                context.Response.StatusCode = 200;
-                context.Response.ContentType = "application/octet-stream";
-                context.Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
+            // Set Response-Header
+            context.Response.StatusCode = 200;
+            context.Response.ContentType = "application/octet-stream";
+            context.Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
 
-                // Stream directly to the Response.body
-                await fileStream.CopyToAsync(context.Response.Body);
+            // Write the byte stream directly into the response
+            using (var memoryStream = new MemoryStream(package_stream))
+            {
+                await memoryStream.CopyToAsync(context.Response.Body);
             }
+
+            // Optional: Force garbage collection (usually not necessary in most cases)
+            GC.Collect(); // Nur in extremen Fällen erforderlich, um den Speicher sofort freizugeben.
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/private/downloads/netlock", "General error", ex.Message);
+            Logging.Handler.Error("/private/downloads/netlock", "General error", ex.ToString());
 
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("An error occurred while downloading the file.");
