@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Server.Agent.Windows;
@@ -28,6 +28,9 @@ using System.Security.Cryptography;
 using NetLock_RMM_Server.Members_Portal;
 using System.Globalization;
 using System.IO.Compression;
+using Microsoft.AspNetCore.Routing.Tree;
+using Microsoft.Extensions.FileSystemGlobbing.Internal.PatternContexts;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -248,120 +251,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        Console.WriteLine(Environment.NewLine + "----------------------------------------");
-
-        Console.WriteLine("Members Portal API enabled.");
-
-        string Members_Portal_Api_Key = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
-
-        if (String.IsNullOrEmpty(Members_Portal_Api_Key))
-        {
-            Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("Members Portal API key is not set. Exiting...");
-            Thread.Sleep(5000);
-            Environment.Exit(1);
-        }
-        else if (!String.IsNullOrEmpty(Members_Portal_Api_Key))
-        {
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Members Portal API key is set.");
-            Console.ResetColor();
-
-            // Check if internal directory exists
-            if (!Directory.Exists(Application_Paths.internal_dir))
-                Directory.CreateDirectory(Application_Paths.internal_dir);
-
-            // Check license info
-            bool isLicenseValidStartUp = await Handler.Check_License_Valid_Status(false);
-
-            // Request license info
-            await Handler.Request_License_Info_Json();
-
-            // Check license info
-            bool isLicenseValid = await Handler.Check_License_Valid_Status(true);
-
-            var (validUntilStr, packageName, licensesMax, licensesHardLimit) = await Handler.Get_License_Info();
-
-            Members_Portal.license_valid_until = validUntilStr;
-            Members_Portal.license_name = packageName;
-            Members_Portal.licenses_max = licensesMax;
-            Members_Portal.licenses_hard_limit = licensesHardLimit;
-
-            if (isLicenseValid)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("License information updated.");
-                Console.ResetColor();
-
-                // Show additional information about the license
-                Console.WriteLine("Package name: " + Members_Portal.license_name);
-                Console.WriteLine("Max licenses: " + Members_Portal.licenses_max);
-                Console.WriteLine("Hard limit: " + Members_Portal.licenses_hard_limit);
-                Console.ResetColor();
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("License has finally expired since: " + Members_Portal.license_valid_until + ". Exiting...");
-                Thread.Sleep(5000);
-                Environment.Exit(1);
-            }
-
-            if (!await Package_Provider.Check_Package_Valid_Status(true) || !isLicenseValidStartUp)
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Package information is invalid. Requesting latest packages from the members portal API.");
-                Console.ResetColor();
-
-                // Request latest packages from the members portal api
-                await Package_Provider.Get_Package();
-
-                await Package_Provider.Request_Package_Info_Json();
-
-                // Extract package
-                ZipFile.ExtractToDirectory(Application_Paths.internal_package_path, Path.Combine(Application_Paths.internal_dir, "packages", "netlock_core"), true);
-
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Package successfully setup.");
-                Console.ResetColor();
-            }
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine("Package information is valid.");
-            Console.ResetColor();
-
-            // Get package information (code signed, agent version, valid until)
-            var (codeSigned, agentVersion, packageValidUntil) = await Package_Provider.Get_Package_Info();
-
-            // Update Members_Portal properties
-            Members_Portal.code_signed = codeSigned;
-            Members_Portal.agent_version = agentVersion;
-            Members_Portal.package_valid_until = packageValidUntil;
-
-            // Check if the package is code signed
-            if (Members_Portal.code_signed)
-            {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("Package is code signed.");
-                Console.ResetColor();
-
-                Members_Portal.agent_version += "cs"; // Append 'cs' if code signed
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine("Package is not code signed.");
-                Console.ResetColor();
-            }
-
-            // Optionally display the agent version and valid until date
-            Console.WriteLine("Package is valid (incl. 7 days grace period) until: " + Members_Portal.package_valid_until);
-            Console.WriteLine("Package agent version: " + Members_Portal.agent_version);
-
-            // Load packages to memory
-            Console.WriteLine("Loading packages to memory...");
-            Members_Portal.installer_package_win_x64_zip_bytestream = await Obfuscation.Load_NetLock_Core_Package_To_Memory("comm.package.win-x64.zip");
-        }
+        //OSSCH_START 39b0b0b9-74f1-4050-a777-00de45c88c5c //OSSCH_END
 
         Console.WriteLine("----------------------------------------");
     }
@@ -1523,107 +1413,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    app.MapGet("/private/downloads/netlock/{fileName}", async context =>
-    {
-        try
-        {
-            Logging.Handler.Debug("/private/downloads/netlock", "Request received.", "");
-
-            // Add headers
-            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'"); // protect against XSS 
-
-            // Get the remote IP address from the X-Forwarded-For header
-            string ip_address_external = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue) ? headerValue.ToString() : context.Connection.RemoteIpAddress.ToString();
-
-            // Verify package guid
-            bool hasPackageGuid = context.Request.Headers.TryGetValue("Package_Guid", out StringValues package_guid) || context.Request.Headers.TryGetValue("Package-Guid", out package_guid);
-
-            Logging.Handler.Debug("/private/downloads/netlock", "hasGuid", hasPackageGuid.ToString());
-
-            if (hasPackageGuid == false)
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("Unauthorized.");
-                return;
-            }
-            else
-            {
-                bool package_guid_status = await Verify_NetLock_Package_Configurations_Guid(package_guid);
-
-                if (package_guid_status == false)
-                {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsync("Unauthorized.");
-                    return;
-                }
-            }
-
-            var fileName = (string)context.Request.RouteValues["fileName"];
-
-            var downloadPath = Path.Combine(Application_Paths._private_files_netlock, fileName);
-
-            // Verify roles to make sure that the correct files are provided
-            if (!role_update)
-            {
-                if (fileName == "comm.package.win-x64.zip" || fileName == "comm.package.win-arm64.zip" || fileName == "comm.package.osx-x64.zip" || fileName == "comm.package.osx-arm64.zip" || fileName == "comm.package.linux-x64.zip" || fileName == "comm.package.linux-arm64.zip" ||
-                fileName == "remote.package.win-x64.zip" || fileName == "remote.package.win-arm64.zip" || fileName == "remote.package.osx-x64.zip" || fileName == "remote.package.osx-arm64.zip" || fileName == "remote.package.linux-x64.zip" || fileName == "remote.package.linux-arm64.zip" ||
-                fileName == "health.package.win-x64.zip" || fileName == "health.package.win-arm64.zip" || fileName == "health.package.osx-x64.zip" || fileName == "health.package.osx-arm64.zip" || fileName == "health.package.linux-x64.zip" || fileName == "health.package.linux-arm64.zip" ||
-                fileName == "user.process.package.win-x64.zip" || fileName == "user.process.package.win-arm64.zip" || fileName == "user.process.package.osx-x64.zip" || fileName == "user.process.package.osx-arm64.zip" || fileName == "user.process.package.linux-x64.zip" || fileName == "user.process.package.linux-arm64.zip"
-                )
-                {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsync("Unauthorized.");
-                    return;
-                }
-            }
-
-            if (!role_trust)
-            {
-                if (fileName == "comm.package.win-x64.sha512" || fileName == "comm.package.win-arm64.sha512" || fileName == "comm.package.osx-x64.sha512" || fileName == "comm.package.osx-arm64.sha512" || fileName == "comm.package.linux-x64.sha512" || fileName == "comm.package.linux-arm64.sha512" ||
-                fileName == "remote.package.win-x64.sha512" || fileName == "remote.package.win-arm64.sha512" || fileName == "remote.package.osx-x64.sha512" || fileName == "remote.package.osx-arm64.sha512" || fileName == "remote.package.linux-x64.sha512" || fileName == "remote.package.linux-arm64.sha512" ||
-                fileName == "health.package.win-x64.sha512" || fileName == "health.package.win-arm64.sha512" || fileName == "health.package.osx-x64.sha512" || fileName == "health.package.osx-arm64.sha512" || fileName == "health.package.linux-x64.sha512" || fileName == "health.package.linux-arm64.sha512" ||
-                fileName == "user.process.package.win-x64.sha512" || fileName == "user.process.package.win-arm64.sha512" || fileName == "user.process.package.osx-x64.sha512" || fileName == "user.process.package.osx-arm64.sha512" || fileName == "user.process.package.linux-x64.sha512" || fileName == "user.process.package.linux-arm64.sha512"
-                )
-                {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsync("Unauthorized.");
-                    return;
-                }
-            }
-
-            // Load requested package into memory
-            byte[] package_stream = await Obfuscation.Load_NetLock_Core_Package_To_Memory(fileName);
-
-            // Check whether the result is null (error handling)
-            if (package_stream == null)
-            {
-                context.Response.StatusCode = 500;
-                await context.Response.WriteAsync("Fehler beim Laden oder Entschlüsseln des Pakets.");
-                return;
-            }
-
-            // Set Response-Header
-            context.Response.StatusCode = 200;
-            context.Response.ContentType = "application/octet-stream";
-            context.Response.Headers.Add("Content-Disposition", $"attachment; filename={fileName}");
-
-            // Write the byte stream directly into the response
-            using (var memoryStream = new MemoryStream(package_stream))
-            {
-                await memoryStream.CopyToAsync(context.Response.Body);
-            }
-
-            // Optional: Force garbage collection (usually not necessary in most cases)
-            GC.Collect(); // Nur in extremen Fällen erforderlich, um den Speicher sofort freizugeben.
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/private/downloads/netlock", "General error", ex.ToString());
-
-            context.Response.StatusCode = 500;
-            await context.Response.WriteAsync("An error occurred while downloading the file.");
-        }
-    });
+    //OSSCH_START e0dc89ee-dced-414c-844e-1fa53065a17b //OSSCH_END
 }
 
 /*
