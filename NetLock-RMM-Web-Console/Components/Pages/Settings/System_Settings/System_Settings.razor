@@ -22,34 +22,34 @@
 
 <style>
     .selected-row-light {
-        background-color: lightgray;
+    background-color: lightgray;
     }
 
     .selected-row-dark {
-        background-color: #141414;
+    background-color: #141414;
     }
 
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 </style>
 
@@ -353,6 +353,9 @@
                     </MudItem>
                 </MudGrid>
 
+                <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.NetworkCheck" OnClick="Test_Remote_File_Server_Connection">@Localizer["Check again"]</MudButton>
+                <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Dns" OnClick="Check_DNS">@Localizer["Check DNS"]</MudButton>
+
             </MudPaper>
 
             <MudPaper Class="mt-3">
@@ -394,6 +397,7 @@
                     <MudText Class="ml-2 mt-2" Typo="Typo.body1">Name: @members_portal_license_name</MudText>
                     <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
                     <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard_limit"]: @members_portal_licenses_hard_limit</MudText>
+                    <MudText Class="ml-2" Typo="Typo.body1">@Localizer["code_signed"]: @members_portal_code_signed</MudText>
 
                     <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
                 }
@@ -593,7 +597,6 @@
 
         await MySQL_Status();
         await Get_Servers();
-        await Get_Package_Provider_URL();
         await Get_Agent_Updates();
 
         if (Configuration.Members_Portal.api_enabled)
@@ -645,6 +648,7 @@
     private int members_portal_licenses_used = 0;
     private int members_portal_licenses_max = 0;
     private bool members_portal_licenses_hard_limit = false;
+    private bool members_portal_code_signed = false;
 
     private string package_url = String.Empty;
 
@@ -797,19 +801,19 @@
                     while (await reader.ReadAsync())
                     {
                         servers.Add(new Servers
-                            {
-                                id = reader["id"].ToString() ?? String.Empty,
-                                name = reader["name"].ToString() ?? String.Empty,
-                                ip_address = reader["ip_address"].ToString() ?? String.Empty,
-                                domain = reader["domain"].ToString() ?? String.Empty,
-                                os = reader["os"].ToString() ?? String.Empty,
-                                hearthbeat = reader["hearthbeat"].ToString() ?? String.Empty,
-                                appsettings = reader["appsettings"].ToString() ?? String.Empty,
-                                cpu_usage = reader["cpu_usage"].ToString() ?? String.Empty,
-                                ram_usage = reader["ram_usage"].ToString() ?? String.Empty,
-                                disk_usage = reader["disk_usage"].ToString() ?? String.Empty,
-                                docker = reader["docker"].ToString() ?? String.Empty
-                            });
+                        {
+                            id = reader["id"].ToString() ?? String.Empty,
+                            name = reader["name"].ToString() ?? String.Empty,
+                            ip_address = reader["ip_address"].ToString() ?? String.Empty,
+                            domain = reader["domain"].ToString() ?? String.Empty,
+                            os = reader["os"].ToString() ?? String.Empty,
+                            hearthbeat = reader["hearthbeat"].ToString() ?? String.Empty,
+                            appsettings = reader["appsettings"].ToString() ?? String.Empty,
+                            cpu_usage = reader["cpu_usage"].ToString() ?? String.Empty,
+                            ram_usage = reader["ram_usage"].ToString() ?? String.Empty,
+                            disk_usage = reader["disk_usage"].ToString() ?? String.Empty,
+                            docker = reader["docker"].ToString() ?? String.Empty
+                        });
                     }
                 }
             }
@@ -824,17 +828,14 @@
         }
     }
 
-    // Get package provider URL
-    //OSSCH_START 8ec7ae09-ddc3-42c0-8b3c-da98109cc605 //OSSCH_END
-
     // Save api key for members portal
-    //OSSCH_START b6b043ae-2ecc-4122-8c84-1c1f6467b2ec //OSSCH_END
+    //OSSCH_START 8ce777e8-b4fb-4d78-a6ca-8b3b1d578f33 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START e6e3fe8e-5519-43c5-9d70-d38fcfcf624c //OSSCH_END
+    //OSSCH_START e41dd8b9-2d05-4904-ae61-658beb64f2fb //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 176f0f5c-8116-4b98-8c0e-1a524eb1f182 //OSSCH_END
+    //OSSCH_START 7e6eace0-108c-4017-9991-13d092d94d4e //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
@@ -865,6 +866,55 @@
             await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 0;");
 
             Snackbar.Add(Localizer["agent updates disabled"], Severity.Warning);
+        }
+    }
+
+    // Check the dns ptr record
+    private async Task Check_DNS()
+    {
+        loading_overlay = true;
+
+        var dnsResult = await Classes.Setup.DNS.Check_Dns_Forward_Reverse(Configuration.Remote_Server.Hostname);
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        if (dnsResult.Item1)
+            Snackbar.Add("Looks good!", Severity.Error);
+        else
+        {
+            bool? dialog_result = await DialogService.ShowMessageBox("Warning", "PTR record mismatch detected! Your provided hostname resolves to: " + dnsResult.Item2 + " but it should resolve to: " + Configuration.Remote_Server.Hostname + " instead. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch", yesText: Localizer["confirm"], options: options);
+        }
+
+        loading_overlay = false;
+    }
+
+    // Check connection
+    private async Task Test_Remote_File_Server_Connection()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        loading_overlay = true;
+        fileServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.File_Server.Connection_String + "/test");
+
+        remoteServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.Remote_Server.Connection_String + "/test");    
+        loading_overlay = false;
+
+        StateHasChanged();
+
+        if (fileServerConnectionStatus && remoteServerConnectionStatus)
+        {
+            Snackbar.Add(Localizer["connected"] + ".", Severity.Success);
+        }
+        else
+        {
+            Snackbar.Add(Localizer["not connected"] + ".", Severity.Error);
         }
     }
 }

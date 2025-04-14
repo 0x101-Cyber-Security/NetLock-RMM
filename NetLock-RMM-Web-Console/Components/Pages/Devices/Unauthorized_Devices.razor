@@ -75,7 +75,7 @@
 
             @if (Configuration.Members_Portal.api_enabled && members_portal_license_limit_reached)
             {
-                <MudAlert Class="mt-2" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["membership_hard_limit_reached"] @Localizer["your configured limit is"] @members_portal_license_limit @Localizer["and_you_currently_have"] @members_portal_license_count @Localizer["active_devices"] @Localizer["please_remove_or_increase_memberships_limit"]</MudAlert>
+                <MudAlert Class="mt-3" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["membership_hard_limit_reached"] @Localizer["your configured limit is"] @members_portal_license_limit @Localizer["and_you_currently_have"] @members_portal_license_count @Localizer["active_devices"] @Localizer["please_remove_or_increase_memberships_limit"]</MudAlert>
             }
 
             <MudTable Class="mt-5" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Device_Table_Filter_Func)">
@@ -701,12 +701,10 @@
     {
         try
         {
-            members_portal_licenses_hard_limit = Convert.ToBoolean(Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_hard_limit FROM settings;", "members_portal_licenses_hard_limit")));
+            members_portal_license_limit_reached = await Classes.Members_Portal.Handler.Check_License_Limit_Reached();
 
             members_portal_license_count = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT COUNT(*) FROM devices WHERE authorized = '1';", "COUNT(*)"));
             members_portal_license_limit = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_max FROM settings;", "members_portal_licenses_max"));
-            
-            members_portal_license_limit_reached = members_portal_license_count >= members_portal_license_limit;
         }
         catch (Exception ex)
         {

@@ -17,6 +17,8 @@ using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
 using LettuceEncrypt.Acme;
 
+NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Load configuration from appsettings.json
@@ -40,6 +42,8 @@ Web_Console.isDocker = isRunningInDocker;
 
 // Add Remote_Server to the services
 var remoteServerConfig = builder.Configuration.GetSection("NetLock_Remote_Server").Get<NetLock_RMM_Web_Console.Classes.Remote_Server.Config>();
+Remote_Server.Hostname = remoteServerConfig.Server;
+
 if (remoteServerConfig.UseSSL)
 {
     Remote_Server.Connection_String = $"https://{remoteServerConfig.Server}:{remoteServerConfig.Port}";
@@ -51,6 +55,8 @@ else
 
 // Add File Server to the services
 var fileServerConfig = builder.Configuration.GetSection("NetLock_File_Server").Get<NetLock_RMM_Web_Console.Classes.File_Server.Config>();
+File_Server.Hostname = fileServerConfig.Server;
+
 if (fileServerConfig.UseSSL)
 {
     File_Server.Connection_String = $"https://{fileServerConfig.Server}:{fileServerConfig.Port}";
@@ -343,26 +349,6 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-// Add timer to sync members portal license usage regulary
-async Task Members_Portal_Task()
-{
-    if (Members_Portal.api_enabled)
-    {
-        string api_key = await Handler.Quick_Reader("SELECT * FROM settings;", "members_portal_api_key");
-        await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_Membership_License_Information(api_key);
-    }
-}
-
-// Wrapper for Timer
-void Members_Portal_TimerCallback(object state)
-{
-    if (Members_Portal.api_enabled)
-    {
-        // Call the asynchronous method and do not block it
-        _ = Members_Portal_Task();
-    }
-}
-
-Timer members_portal_timer = new Timer(Members_Portal_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromHours(1));
+//OSSCH_START d1e175c3-4116-4093-bb70-b5a3fb5a03ac //OSSCH_END
 
 app.Run();

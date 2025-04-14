@@ -1,13 +1,7 @@
 using MudBlazor;
 using MySqlConnector;
+using System.Globalization;
 using System.Text.Json;
 
-namespace NetLock_RMM_Web_Console.Classes.Members_Portal
-{
-    public class Handler
-    {
-        [System.Reflection.ObfuscationAttribute(Feature = "Virtualization", Exclude = false)]
+//OSSCH_START ad5028b1-875f-4f6b-8791-2c4b2a08efef //OSSCH_END
 
-        //OSSCH_START 08f87323-7c40-4c75-9c6e-fbb5cb419003 //OSSCH_END
-    }
-}

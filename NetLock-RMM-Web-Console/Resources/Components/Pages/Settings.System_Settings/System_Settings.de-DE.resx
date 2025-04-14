@@ -135,6 +135,9 @@
   <data name="authorization_successful_refreshed_license_information" xml:space="preserve">
     <value>Autorisierung erfolgreich, Lizenzinformationen aktualisiert.</value>
   </data>
+  <data name="code_signed" xml:space="preserve">
+    <value>Code Signed</value>
+  </data>
   <data name="connected" xml:space="preserve">
     <value>Verbunden</value>
   </data>

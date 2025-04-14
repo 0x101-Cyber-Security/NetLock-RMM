@@ -317,5 +317,11 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 await conn.CloseAsync();
             }
         }
+
+        // Get api_key from settings table
+        public static async Task<string> Get_Api_Key()
+        {
+            return await Quick_Reader("SELECT members_portal_api_key FROM settings;", "members_portal_api_key");
+        }
     }
 }
