@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
 using LettuceEncrypt.Acme;
+using static NetLock_RMM_Web_Console.Components.Pages.Settings.System_Settings.System_Settings;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
 
@@ -36,9 +37,11 @@ var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled",
 var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
-var isRunningInDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "1";
+var isRunningInDocker = builder.Configuration.GetValue<bool>("Environment:Docker", true);
+var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
 
 Web_Console.isDocker = isRunningInDocker;
+Web_Console.loggingEnabled = loggingEnabled;
 
 // Add Remote_Server to the services
 var remoteServerConfig = builder.Configuration.GetSection("NetLock_Remote_Server").Get<NetLock_RMM_Web_Console.Classes.Remote_Server.Config>();
@@ -146,10 +149,18 @@ Console.WriteLine(Environment.NewLine);
 Console.WriteLine("[Webinterface]");
 Console.WriteLine($"Language: {language}");
 
-// Miscellanous
-Console.WriteLine($"Running in Docker: {isRunningInDocker}");
+// Logging
+Console.WriteLine("[Logging]");
+Console.WriteLine($"Logging: {loggingEnabled}");
+Console.WriteLine(Environment.NewLine);
+
+// Environment
+Console.WriteLine("[Environment]");
+Console.WriteLine($"Running under Docker: {isRunningInDocker}");
 
 // Output firewall status
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("[Firewall Status]");
 bool microsoft_defender_firewall_status = Microsoft_Defender_Firewall.Status();
 
 if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
@@ -349,6 +360,10 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START d1e175c3-4116-4093-bb70-b5a3fb5a03ac //OSSCH_END
+//OSSCH_START d3125b86-c51d-4e12-a0ca-12fe64d5859f //OSSCH_END
 
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("Server started.");
+
+// Start server
 app.Run();

@@ -1,2 +1,0 @@
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Installer\bin\Debug\net8.0\publish\win-x64\NetLock RMM Agent Installer.pdb
-C:\Users\NicoMak\NetLock\NetLock-RMM\NetLock RMM Agent Installer\bin\Debug\net8.0\publish\win-x64\NetLock RMM Agent Installer.exe

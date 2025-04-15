@@ -49,9 +49,11 @@ var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled",
 var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
-var isRunningInDocker = Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "1";
+var isRunningInDocker = builder.Configuration.GetValue<bool>("Environment:Docker", true);
+var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
 
 Server.isDocker = isRunningInDocker;
+Server.loggingEnabled = loggingEnabled;
 
 var role_comm = builder.Configuration.GetValue<bool>("Kestrel:Roles:Comm", true);
 var role_update = builder.Configuration.GetValue<bool>("Kestrel:Roles:Update", true);
@@ -131,10 +133,18 @@ Console.WriteLine("[Members Portal]");
 Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
 Console.WriteLine(Environment.NewLine);
 
-// Miscellanous
-Console.WriteLine($"Running in Docker: {isRunningInDocker}");
+// Logging
+Console.WriteLine("[Logging]");
+Console.WriteLine($"Logging: {loggingEnabled}");
+Console.WriteLine(Environment.NewLine);
+
+// Environment
+Console.WriteLine("[Environment]");
+Console.WriteLine($"Running under Docker: {isRunningInDocker}");
 
 // Output firewall status
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("[Firewall Status]");
 bool microsoft_defender_firewall_status = NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Status();
 
 if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
@@ -251,7 +261,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START ca02a45f-7b61-4b4f-ad34-04aa8fa1b1df //OSSCH_END
+        //OSSCH_START ede7f362-450b-41e2-92a9-9214ed489385 //OSSCH_END
 
         Console.WriteLine("----------------------------------------");
     }
@@ -1413,7 +1423,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 51b43cf4-6b9a-4f09-bb9e-2fae2c90128d //OSSCH_END
+    //OSSCH_START c2cfe14e-2364-4c02-a5b5-4aedd27dd709 //OSSCH_END
 }
 
 /*

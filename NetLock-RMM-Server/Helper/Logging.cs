@@ -1,4 +1,5 @@
 ﻿using NetLock_RMM_Server;
+using NetLock_RMM_Server.Configuration;
 using System.Text.Json;
 
 namespace Logging
@@ -13,22 +14,6 @@ namespace Logging
             public string _event { get; set; } = string.Empty;
             public string content { get; set; } = string.Empty;
         }
-
-        public static bool Check_Debug_Mode()
-        {
-            try
-            {
-                if (File.Exists(Application_Paths.debug_txt_path))
-                    return true;
-                else
-                    return false;
-            }
-            catch
-            {
-                return true;
-            }
-        }
-
         private static void chck_dir()
         {
             if (Directory.Exists(Application_Paths.logs_dir) == false)
@@ -46,7 +31,7 @@ namespace Logging
         {
             try
             {
-                if (!Check_Debug_Mode())
+                if (!Server.loggingEnabled)
                     return;
 
                 chck_dir();
@@ -65,7 +50,7 @@ namespace Logging
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
 
-                File.AppendAllText(Application_Paths.logs_dir + @"\debug.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.logs_dir, "debug.txt"), log_json + Environment.NewLine);
             }
             catch
             { }
@@ -75,7 +60,7 @@ namespace Logging
         {
             try
             {
-                if (!Check_Debug_Mode())
+                if (!Server.loggingEnabled)
                     return;
 
                 chck_dir();
@@ -93,7 +78,7 @@ namespace Logging
                 };
 
                 string log_json = JsonSerializer.Serialize(json_object, options);
-                File.AppendAllText(Application_Paths.logs_dir + @"\error.txt", log_json + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Application_Paths.logs_dir, "error.txt"), log_json + Environment.NewLine);
             }
             catch
             { }

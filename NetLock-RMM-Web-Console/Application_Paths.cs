@@ -6,8 +6,7 @@ namespace NetLock_RMM_Web_Console
     {
         //public static string logs_dir = @"C:\ProgramData\0x101 Cyber Security\NetLock RMM\Web Console\Logs";
         public static string logs_dir = Path.Combine(GetBasePath(), "0x101 Cyber Security", "NetLock RMM", "Web Console", "Logs");
-        public static string debug_txt_path = Path.Combine(GetBasePath(), "0x101 Cyber Security", "NetLock RMM", "Web Console", "debug.txt");
-        //public static string _private_files_admin= Path.Combine(GetCurrentDirectory(), "www", "private", "files", "admin");
+
         public static string _private_files_devices = "devices";
 
         public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");

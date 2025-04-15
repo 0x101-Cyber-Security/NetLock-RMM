@@ -4,5 +4,6 @@
     {
         public static string language = "en-US";
         public static bool isDocker = false;
+        public static bool loggingEnabled = false;
     }
 }

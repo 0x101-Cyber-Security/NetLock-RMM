@@ -27,7 +27,7 @@ namespace NetLock_RMM_Server
         public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
         public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
-        //OSSCH_START 5491c648-b914-4490-8baf-6ce18ecee097 //OSSCH_END
+        //OSSCH_START ac5b0004-ac19-4370-a87a-0065d2104e25 //OSSCH_END
 
         public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
 
