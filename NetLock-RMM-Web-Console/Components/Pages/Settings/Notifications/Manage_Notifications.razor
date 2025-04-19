@@ -87,7 +87,7 @@
                                     <MudTh></MudTh>
                                 </HeaderContent>
                                 <RowTemplate Context="mail_row">
-                                    <MudTd DataLabel="ID" @onclick="() => Mail_Notifications_RowClickHandler(mail_row)" @ondblclick="() => Mail_Notifications_RowDblClickHandler(mail_row)" class="@Mail_Notifications_GetRowClass(mail_row)" style="display: none;">
+                                    <MudTd DataLabel="ID" @onclick="() => Mail_Notifications_RowClickHandler(mail_row)" @ondblclick="() => Mail_Notifications_RowDblClickHandler(mail_row)" class="@Mail_Notifications_GetRowClass(mail_row)" style="white-space: nowrap;">
                                         <span style="display: flex; align-items: center;">
                                             <MudIcon Icon="@Icons.Material.Filled.Numbers" Size="Size.Small" />&nbsp;@mail_row.id
                                         </span>

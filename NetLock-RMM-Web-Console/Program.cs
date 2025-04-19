@@ -37,10 +37,8 @@ var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled",
 var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
-var isRunningInDocker = builder.Configuration.GetValue<bool>("Environment:Docker", true);
 var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
 
-Web_Console.isDocker = isRunningInDocker;
 Web_Console.loggingEnabled = loggingEnabled;
 
 // Add Remote_Server to the services
@@ -153,10 +151,6 @@ Console.WriteLine($"Language: {language}");
 Console.WriteLine("[Logging]");
 Console.WriteLine($"Logging: {loggingEnabled}");
 Console.WriteLine(Environment.NewLine);
-
-// Environment
-Console.WriteLine("[Environment]");
-Console.WriteLine($"Running under Docker: {isRunningInDocker}");
 
 // Output firewall status
 Console.WriteLine(Environment.NewLine);
@@ -360,7 +354,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START d3125b86-c51d-4e12-a0ca-12fe64d5859f //OSSCH_END
+//OSSCH_START 587cece2-b6f5-47c9-915f-ad67128c981c //OSSCH_END
 
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Server started.");

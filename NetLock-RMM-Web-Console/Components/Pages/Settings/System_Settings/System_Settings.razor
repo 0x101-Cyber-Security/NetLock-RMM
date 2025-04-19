@@ -219,11 +219,6 @@
                 </MudGrid>
             </MudPaper>
 
-            @if (Configuration.Web_Console.isDocker)
-            {
-                <MudAlert Class="mt-3" Severity="Severity.Warning">@Localizer["is_docker_info"]</MudAlert>
-            }
-
             @foreach (var server in servers)
             {
                 DateTime lastHeartbeat;
@@ -352,9 +347,13 @@
                         </MudCard>
                     </MudItem>
                 </MudGrid>
+                
+                @if (!_dnsWarning)
+                {
+                    <MudAlert Class="mt-2 ml-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Dns">PTR record mismatch detected! Your provided hostname resolves to: @_dnsWarningText but it should resolve to: @Configuration.Remote_Server.Hostname instead, according to your provided configuration. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch</MudAlert>
+                }
 
                 <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.NetworkCheck" OnClick="Test_Remote_File_Server_Connection">@Localizer["Check again"]</MudButton>
-                <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Dns" OnClick="Check_DNS">@Localizer["Check DNS"]</MudButton>
 
             </MudPaper>
 
@@ -562,6 +561,8 @@
     private bool loading_overlay = false;
 
     private bool _isDarkMode = false;
+    private bool _dnsWarning = false;
+    private string _dnsWarningText = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -614,6 +615,8 @@
         fileServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.File_Server.Connection_String + "/test");
 
         remoteServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.Remote_Server.Connection_String + "/test");
+
+        await Check_DNS();
 
         loading_overlay = false;
 
@@ -829,13 +832,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START bd2daafd-66c5-4c12-a335-e52ffdee6814 //OSSCH_END
+    //OSSCH_START 6925e716-0a7a-47a7-9005-003ef878d9e8 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 4854d01f-5582-42c9-a883-3ff66451bb44 //OSSCH_END
+    //OSSCH_START 7400063f-09b1-4e65-bc08-2cf1ef02457f //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START b740c490-1c4f-4611-97f4-c59a894137ff //OSSCH_END
+    //OSSCH_START 3df8c314-a94e-46e1-8fa8-738265d369e1 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
@@ -872,26 +875,7 @@
     // Check the dns ptr record
     private async Task Check_DNS()
     {
-        loading_overlay = true;
-
-        var dnsResult = await Classes.Setup.DNS.Check_Dns_Forward_Reverse(Configuration.Remote_Server.Hostname);
-
-        var options = new DialogOptions
-            {
-                CloseButton = true,
-                FullWidth = true,
-                MaxWidth = MaxWidth.Medium,
-                BackgroundClass = "dialog-blurring",
-            };
-
-        if (dnsResult.Item1)
-            Snackbar.Add("Looks good!", Severity.Error);
-        else
-        {
-            bool? dialog_result = await DialogService.ShowMessageBox("Warning", "PTR record mismatch detected! Your provided hostname resolves to: " + dnsResult.Item2 + " but it should resolve to: " + Configuration.Remote_Server.Hostname + " instead. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch", yesText: Localizer["confirm"], options: options);
-        }
-
-        loading_overlay = false;
+        (_dnsWarning, _dnsWarningText) = await Classes.Setup.DNS.Check_Dns_Forward_Reverse(Configuration.Remote_Server.Hostname);
     }
 
     // Check connection
@@ -903,7 +887,10 @@
         loading_overlay = true;
         fileServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.File_Server.Connection_String + "/test");
 
-        remoteServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.Remote_Server.Connection_String + "/test");    
+        remoteServerConnectionStatus = await Classes.Helper.Networking.Test_Connection(Configuration.Remote_Server.Connection_String + "/test");
+
+        await Check_DNS();
+
         loading_overlay = false;
 
         StateHasChanged();

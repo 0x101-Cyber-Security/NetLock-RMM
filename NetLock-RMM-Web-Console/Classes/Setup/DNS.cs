@@ -16,7 +16,7 @@ namespace NetLock_RMM_Web_Console.Classes.Setup
 
                     if (!reverse.HostName.Equals(host, StringComparison.OrdinalIgnoreCase))
                     {
-                        return (false, reverse.HostName);
+                        return (false, reverse.HostName); // Hostnames do not match
                     }
                     else
                     {

@@ -261,7 +261,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START ede7f362-450b-41e2-92a9-9214ed489385 //OSSCH_END
+        //OSSCH_START 17cde092-3eda-460b-b2ce-3125bda6498e //OSSCH_END
 
         Console.WriteLine("----------------------------------------");
     }
@@ -309,6 +309,8 @@ void Events_TimerCallback(object state)
 }
 
 Timer events_timer = new Timer(Events_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+
+await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
 
 // Add timer to update server information regulary
 async Task Server_Information_Task()
@@ -1423,7 +1425,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START c2cfe14e-2364-4c02-a5b5-4aedd27dd709 //OSSCH_END
+    //OSSCH_START dfad542f-f58f-460d-8343-66bfe24a57f7 //OSSCH_END
 }
 
 /*

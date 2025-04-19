@@ -192,7 +192,15 @@ namespace Windows.Microsoft_Defender_Antivirus
                 }
 
                 // Create notifications_json
-                string notifications_json = "{\"mail\":" + notifications_netlock_mail.ToString().ToLower() + ",\"microsoft_teams\":" + notifications_netlock_microsoft_teams.ToString().ToLower() + ",\"telegram\":" + notifications_netlock_telegram.ToString().ToLower() + ",\"ntfy_sh\":" + notifications_netlock_ntfy_sh.ToString().ToLower() + "}";
+                var notifications = new
+                {
+                    mail = notifications_netlock_mail,
+                    microsoft_teams = notifications_netlock_microsoft_teams,
+                    telegram = notifications_netlock_telegram,
+                    ntfy_sh = notifications_netlock_ntfy_sh
+                };
+
+                string notifications_json = JsonSerializer.Serialize(notifications);
 
                 Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "Notifications Json", notifications_json);
 
