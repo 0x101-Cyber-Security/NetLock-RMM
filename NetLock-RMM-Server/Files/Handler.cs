@@ -13,6 +13,7 @@ using System.Security.Principal;
 using System.IO.Compression;
 using NetLock_RMM_Server.Files.Compiler;
 using System.Diagnostics.Eventing.Reader;
+using NetLock_RMM_Server.Configuration;
 
 namespace NetLock_RMM_Server.Files
 {
@@ -657,6 +658,8 @@ namespace NetLock_RMM_Server.Files
                 string installer_packed_dir = Path.Combine(Application_Paths.internal_temp_dir, Guid.NewGuid().ToString());
                 string installer_executable = String.Empty;
 
+                byte[] installer_package_bytes = null;
+
                 // Deserialize JSON
                 using (JsonDocument document = JsonDocument.Parse(json))
                 {
@@ -666,24 +669,33 @@ namespace NetLock_RMM_Server.Files
 
                 // Check the architecture
                 if (architecture == "win-x64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.win-x64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_win_x64_zip_bytestream;
                 else if (architecture == "win-arm64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.win-arm64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_win_arm64_zip_bytestream;
                 else if (architecture == "linux-x64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.linux-x64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_linux_x64_zip_bytestream;
                 else if (architecture == "linux-arm64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.linux-arm64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_linux_arm64_zip_bytestream;
                 else if (architecture == "osx-x64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.osx-x64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_osx_x64_zip_bytestream;
                 else if (architecture == "osx-arm64")
-                    installer_archive = Path.Combine(Application_Paths._private_files_netlock, "installer.package.osx-arm64.zip");
+                    installer_package_bytes = Configuration.Members_Portal.installer_package_osx_arm64_zip_bytestream;
                 else
                     return string.Empty;
 
                 // Extract installer.package to temp folder 
-                ZipFile.ExtractToDirectory(installer_archive, installer_extracted_dir);
+                if (installer_package_bytes == null)
+                    return string.Empty;
 
-                Thread.Sleep(20000);
+                // Entpacken aus MemoryStream
+                Directory.CreateDirectory(installer_extracted_dir);
+                using (MemoryStream zipStream = new MemoryStream(installer_package_bytes))
+                using (ZipArchive archive = new ZipArchive(zipStream))
+                {
+                    archive.ExtractToDirectory(installer_extracted_dir);
+                }
+                
+                //Thread.Sleep(20000);
 
                 // Check the architecture
                 if (architecture == "win-x64" || architecture == "win-arm64")

@@ -1,4 +1,4 @@
-﻿@using MySqlConnector;
+@using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
 
@@ -673,76 +673,7 @@
             await Get_Configurations();
     }
 
-    private bool creating_installer = false;
-    private string installer_url = String.Empty;
-
-    private async Task Download_Installer()
-    {
-        try
-        {
-            loading_overlay = true;
-            creating_installer = true;
-
-            await Get_Guids();
-
-            // Create the JSON object
-            var jsonObject = new
-            {
-                ssl = ssl,
-                package_guid = package_guid,
-                communication_servers = communication_servers,
-                remote_servers = remote_servers,
-                update_servers = update_servers,
-                trust_servers = trust_servers,
-                file_servers = file_servers,
-                tenant_guid = tenant_guid,
-                location_guid = location_guid,
-                language = language,
-                access_key = String.Empty,
-                authorized = false,
-                architecture = architecture,
-            };
-
-            // Convert the object into a JSON string
-            string server_config_json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
-            Logging.Handler.Debug("Online_Mode.Handler.Update_Device_Information", "json", server_config_json);
-
-            // Create the JSON object (command, path)
-            string installerjsonObject = JsonSerializer.Serialize(new { name = name, server_config = server_config_json });
-
-            // Do post request
-            string result = await Classes.Helper.Networking.HTTP_Post_Request_Json(NetLock_RMM_Web_Console.Configuration.File_Server.Connection_String + "/admin/create_installer", installerjsonObject, true);
-
-            if (result == "unauthorized" || result == "error")
-            {
-                Snackbar.Add("A error occurred. Please check logs.", Severity.Error, config => { config.ShowCloseIcon = true; config.SnackbarTypeClass = Defaults.Classes.Position.BottomRight; });
-            }
-
-            // Extract result
-            var json = JsonDocument.Parse(result);
-
-            // Get guid
-            string guid = json.RootElement.GetProperty("guid").GetString();
-
-            // Get password for file from guid
-            string password = await Classes.File_Server.Handler.Get_File_Password_By_Guid(guid);
-
-            loading_overlay = false;
-
-            installer_url = Configuration.File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
-
-            await Download_Installer_Popup();
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/MainLayout -> Download_Installer", "Result", ex.ToString());
-        }
-        finally
-        {
-            creating_installer = false;
-            loading_overlay = false;
-        }
-    }
+    //OSSCH_START bc333dfb-8300-4b7c-8934-94ea1c869b05 //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {

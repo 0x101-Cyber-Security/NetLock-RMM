@@ -32,6 +32,9 @@ using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PatternContexts;
 using System.Reflection;
 
+// Check directories
+NetLock_RMM_Server.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Load configuration from appsettings.json
@@ -261,7 +264,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 17cde092-3eda-460b-b2ce-3125bda6498e //OSSCH_END
+        //OSSCH_START de60b4bb-61db-4e4d-9740-1c2ec5722c95 //OSSCH_END
 
         Console.WriteLine("----------------------------------------");
     }
@@ -1425,7 +1428,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START dfad542f-f58f-460d-8343-66bfe24a57f7 //OSSCH_END
+    //OSSCH_START 82b84f06-2d1f-4c0a-a7a5-38f266020c4c //OSSCH_END
 }
 
 /*
