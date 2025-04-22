@@ -212,7 +212,7 @@ namespace Global.Initialization
                     installer.StartInfo.ArgumentList.Add(Application_Paths.program_data_server_config_json);
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                     installer.Start();
-                    installer.WaitForExit();
+                    //installer.WaitForExit();
                 }
                 else if (OperatingSystem.IsLinux())
                 {
@@ -220,19 +220,18 @@ namespace Global.Initialization
                     Logging.Debug("Main", "Run installer", "Linux");
 
                     // Set permissions
-                    Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
-                    Bash.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    Logging.Debug("Main", "Argument", $"sudo chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    Bash.Execute_Script("Installer Permissions", false, $"sudo chmod +x \"{Application_Paths.c_temp_installer_path}\"");
 
                     Process installer = new Process();
                     installer.StartInfo.FileName = "/bin/bash";
                     installer.StartInfo.ArgumentList.Add("-c");
-                    installer.StartInfo.ArgumentList.Add($"sudo \"{Application_Paths.c_temp_installer_path}\" fix \"{Application_Paths.program_data_server_config_json}\"");
-                    installer.StartInfo.UseShellExecute = false;
+                    installer.StartInfo.ArgumentList.Add($"nohup sudo \"{Application_Paths.c_temp_installer_path}\" fix \"{Application_Paths.program_data_server_config_json}\"");
                     installer.StartInfo.RedirectStandardOutput = true;
                     installer.StartInfo.RedirectStandardError = true;
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     installer.Start();
-                    installer.WaitForExit();
+                    //await installer.WaitForExitAsync();
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
@@ -247,11 +246,10 @@ namespace Global.Initialization
                     installer.StartInfo.FileName = "zsh";
                     installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-                    installer.StartInfo.UseShellExecute = false;
                     installer.StartInfo.RedirectStandardOutput = true;
                     installer.StartInfo.RedirectStandardError = true;
                     installer.Start();
-                    installer.WaitForExit();
+                    //installer.WaitForExit();
                 }
             }
             catch (Exception ex)

@@ -16,6 +16,7 @@ using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
 using LettuceEncrypt.Acme;
+using MudBlazor;
 using static NetLock_RMM_Web_Console.Components.Pages.Settings.System_Settings.System_Settings;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
@@ -354,7 +355,9 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 9650b10a-6569-4987-bcd2-5e62b0390653 //OSSCH_END
+//OSSCH_START a6b39602-c8cf-4a9b-9bfb-44dbe13f058d //OSSCH_END
+
+Console.WriteLine("---------Loader_End----------");
 
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Server started.");

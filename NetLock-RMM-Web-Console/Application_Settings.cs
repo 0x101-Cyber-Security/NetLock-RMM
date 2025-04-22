@@ -7,7 +7,7 @@
         public static string Local_Encryption_Key = "01234567890123456789012345678901";
 
         //OSSCH_START
-        public static bool IsLiveEnvironment = false;
+        public static bool IsLiveEnvironment = true;
         public static string Members_Portal_Api_Url_Live = "https://api.members.netlockrmm.com";
         public static string Members_Portal_Api_Url_Test = "http://localhost:80";
 
