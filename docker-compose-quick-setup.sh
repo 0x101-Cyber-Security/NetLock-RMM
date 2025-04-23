@@ -1,5 +1,17 @@
 #!/bin/bash
 set -e
+echo "[Requirements]"
+echo "[Ubuntu 24.04 or simliar]"
+echo "[Docker installed]"
+echo "[4 GB of free working memory (RAM)]"
+
+read -p "Please confirm that you meet the requirements (Y/n): " requirements_ok
+requirements_ok=${requirements_ok:-Y}
+
+if [[ ! "$requirements_ok" =~ ^[Yy]$ ]]; then
+    echo "Aborted. Please ensure your system meets the requirements."
+    exit 1
+fi
 
 echo "Create directories..."
 
