@@ -3,6 +3,8 @@ NetLock RMM is an Remote Monitoring & Management (RMM) software built for Manage
 
 NetLock RMM can be deployed in various environments, including cloud setups or isolated/offline configurations. It supports multiple operating systems, including Windows and Linux, and can also run within Docker & Kubernetes, providing flexibility for different deployment preferences.
 
+
+
 ![Web Console Preview](https://netlockrmm.com/assets/images/remote-features.gif)
 
 ## [Website](https://netlockrmm.com/)
@@ -17,7 +19,6 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 The Web Console and server software come as a standalone server based on Kestrel, eliminating the need to configure and maintain complex server software such as Apache. Do you like Let's Encrypt? The Let's Encrypt integration by LettuceEncrypt offers an easy way to protect your connection with SSL. Our security concept offers high flexibility with server roles, meaning you could run all server components on one machine or split them into different roles. You can also define fallback servers for each role.
 
 - Multi platform. The agent supports windows, linux & macos. (x64 & arm64) 
-
 - Multi-tenancy, including locations and group management
 - One-click agent installer for all platforms
 - Real-time remote shell, file browser, task manager & service manager
@@ -49,3 +50,30 @@ The Web Console and server software come as a standalone server based on Kestrel
 
 Note: Why are the unsigned packages not on GitHub?
 https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-github/
+
+# Setup NetLock RMM using Docker in 10 minutes
+[See in our documentation](https://docs.netlockrmm.com/en/server-installation-docker)
+
+Do you wish to get started as fast as possible? Our docker compose script ensures a easy and smooth setup. The script expects docker compose to be installed, on a linux disctribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM componments as well as a MySQL 8.0 server.
+ 
+## Video Tutorial
+[Watch the video on YouTube](https://youtu.be/-VMoL6wnSKs)
+ 
+1. Download the script with wget.
+```plaintext
+sudo wget -P /home https://raw.githubusercontent.com/0x101-Cyber-Security/NetLock-RMM/main/docker-compose-quick-setup.sh
+```
+
+2. Make it executable:
+```plaintext
+sudo chmod +x /home/docker-compose-quick-setup.sh
+```
+
+3. Execute it:
+```plaintext
+sudo ./home/docker-compose-quick-setup.sh
+```
+
+4. Follow the instructions.
+
+Happy monitoring! 🥳
