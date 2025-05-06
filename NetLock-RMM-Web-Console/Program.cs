@@ -153,10 +153,34 @@ Console.WriteLine("[Logging]");
 Console.WriteLine($"Logging: {loggingEnabled}");
 Console.WriteLine(Environment.NewLine);
 
+// Output firewall status
+Console.WriteLine(Environment.NewLine);
+Console.WriteLine("[Firewall Status]");
+bool microsoft_defender_firewall_status = Microsoft_Defender_Firewall.Status();
+
+if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("Microsoft Defender Firewall is enabled.");
+}
+else if (!microsoft_defender_firewall_status && OperatingSystem.IsWindows())
+{
+    Console.ForegroundColor = ConsoleColor.Red;
+    Console.WriteLine("Microsoft Defender Firewall is disabled. You should enable it for your own safety. NetLock adds firewall rules automatically according to your configuration.");
+}
+
 Console.ResetColor();
+
+// Add firewall rule for HTTP
+Microsoft_Defender_Firewall.Rule_Inbound(http_port.ToString());
+Microsoft_Defender_Firewall.Rule_Outbound(http_port.ToString());
 
 if (https)
 {
+    // Add firewall rule for HTTPS
+    Microsoft_Defender_Firewall.Rule_Inbound(https_port.ToString());
+    Microsoft_Defender_Firewall.Rule_Outbound(https_port.ToString());
+
     if (letsencrypt)
         builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo(Application_Paths.lettuceencrypt_persistent_data_dir), letsencrypt_password);
 }
@@ -331,7 +355,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e85aa7c2-4a6d-48ad-b0b8-ce72004f3f57 //OSSCH_END
+//OSSCH_START 95c13499-8cbc-4e72-b0b4-edce6f2f4c35 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
