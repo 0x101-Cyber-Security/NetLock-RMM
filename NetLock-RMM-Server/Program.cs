@@ -264,7 +264,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 3503ea49-78ab-4d51-849c-128692f0de89 //OSSCH_END
+        //OSSCH_START d8b572d2-a886-4878-acfc-a8645c8d295a //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1427,7 +1427,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START b7d7e640-36a6-4e41-8238-255a644322d3 //OSSCH_END
+    //OSSCH_START 3d99f674-cfd1-42be-8b00-a56e1b90401a //OSSCH_END
 }
 
 /*
@@ -1654,6 +1654,16 @@ if (role_file)
         }
     });
 }
+
+// Add a middleware to handle exceptions globally and return a 500 status code with a message to the client in case of an unexpected error
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = 500;
+        await context.Response.WriteAsync("An unexpected error occurred.");
+    });
+});
 
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Server started.");
