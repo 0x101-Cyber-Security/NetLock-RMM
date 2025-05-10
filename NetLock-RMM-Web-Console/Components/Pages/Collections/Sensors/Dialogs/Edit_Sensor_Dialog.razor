@@ -20,7 +20,7 @@
 
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@sensor_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
-        
+
         <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(false); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
             <MudSelectItem T="string" Value="@Localizer["Windows"]" />
             <MudSelectItem T="string" Value="@Localizer["Linux"]" />
@@ -865,7 +865,7 @@
         public bool notifications_mail { get; set; }
         public bool notifications_microsoft_teams { get; set; }
         public bool notifications_telegram { get; set; }
-        public bool notifications_ntfy_sh    { get; set; }
+        public bool notifications_ntfy_sh { get; set; }
     }
 
     public class Script
@@ -968,16 +968,16 @@
                         Logging.Handler.Debug("/manage_jobs Add_Sensor_Dialog) -> Get_Scripts", "MySQL_Result (id)", reader["id"].ToString() ?? String.Empty); //Output the JSON
 
                         Script script = new Script
-                        {
-                            id = Convert.ToInt32(reader["id"].ToString()),
-                            name = reader["name"].ToString() ?? String.Empty,
-                            date = reader["date"].ToString() ?? String.Empty,
-                            author = reader["author"].ToString() ?? String.Empty,
-                            description = reader["description"].ToString() ?? String.Empty,
-                            platform = reader["platform"].ToString() ?? String.Empty,
-                            shell = reader["shell"].ToString() ?? String.Empty,
-                            script = reader["script"].ToString() ?? String.Empty,
-                        };
+                            {
+                                id = Convert.ToInt32(reader["id"].ToString()),
+                                name = reader["name"].ToString() ?? String.Empty,
+                                date = reader["date"].ToString() ?? String.Empty,
+                                author = reader["author"].ToString() ?? String.Empty,
+                                description = reader["description"].ToString() ?? String.Empty,
+                                platform = reader["platform"].ToString() ?? String.Empty,
+                                shell = reader["shell"].ToString() ?? String.Empty,
+                                script = reader["script"].ToString() ?? String.Empty,
+                            };
 
                         scripts_list.Add(script);
                     }
@@ -1370,17 +1370,17 @@
                     eventlog_event_id = eventlog_event_id,
                     expected_result = expected_result,
 
-                    //service sensor
+                //service sensor
                     service_name = service_name,
                     service_condition = service_condition_converted,
                     service_action = service_action_converted,
 
-                    //ping sensor
+                //ping sensor
                     ping_address = ping_address,
                     ping_timeout = ping_timeout,
                     ping_condition = ping_condition_converted,
 
-                    //time schedule
+                //time schedule
                     time_scheduler_type = time_scheduler_type,
                     time_scheduler_seconds = time_scheduler_seconds,
                     time_scheduler_minutes = time_scheduler_minutes,
@@ -1395,7 +1395,7 @@
                     time_scheduler_saturday = time_scheduler_saturday,
                     time_scheduler_sunday = time_scheduler_sunday,
 
-                    // NetLock notifications
+                // NetLock notifications
                     notifications_mail = notifications_mail,
                     notifications_microsoft_teams = notifications_microsoft_teams,
                     notifications_telegram = notifications_telegram,

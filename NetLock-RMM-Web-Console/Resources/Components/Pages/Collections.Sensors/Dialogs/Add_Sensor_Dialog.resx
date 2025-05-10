@@ -441,10 +441,16 @@
   <data name="type" xml:space="preserve">
     <value />
   </data>
+  <data name="device_offline_description" xml:space="preserve">
+    <value />
+  </data>
   <data name="utilization" xml:space="preserve">
     <value />
   </data>
   <data name="wednesday" xml:space="preserve">
+    <value />
+  </data>
+  <data name="device_offline" xml:space="preserve">
     <value />
   </data>
 </root>

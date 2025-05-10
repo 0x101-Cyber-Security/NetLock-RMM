@@ -687,6 +687,9 @@
   <data name="unknown" xml:space="preserve">
     <value />
   </data>
+  <data name="uptime_monitoring" xml:space="preserve">
+    <value />
+  </data>
   <data name="user" xml:space="preserve">
     <value />
   </data>

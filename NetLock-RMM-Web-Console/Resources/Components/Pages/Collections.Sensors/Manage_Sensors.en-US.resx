@@ -138,6 +138,9 @@
   <data name="description" xml:space="preserve">
     <value>Description</value>
   </data>
+  <data name="device_offline" xml:space="preserve">
+    <value>Device offline</value>
+  </data>
   <data name="drive" xml:space="preserve">
     <value>Drive</value>
   </data>

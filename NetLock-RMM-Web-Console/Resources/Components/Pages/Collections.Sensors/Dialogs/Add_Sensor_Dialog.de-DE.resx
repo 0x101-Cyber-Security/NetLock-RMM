@@ -441,10 +441,16 @@
   <data name="type" xml:space="preserve">
     <value>Typ</value>
   </data>
+  <data name="device_offline_description" xml:space="preserve">
+    <value>Protokolliert sobald das Gerät länger als zehn Minuten keine Verbindung zu dem NetLock RMM Server hergestellt hat.</value>
+  </data>
   <data name="utilization" xml:space="preserve">
     <value>Auslastung</value>
   </data>
   <data name="wednesday" xml:space="preserve">
     <value>Mittwoch</value>
+  </data>
+  <data name="device_offline" xml:space="preserve">
+    <value>Gerät offline</value>
   </data>
 </root>

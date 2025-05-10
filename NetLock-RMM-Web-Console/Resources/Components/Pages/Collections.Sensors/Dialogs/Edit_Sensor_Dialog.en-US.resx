@@ -168,6 +168,12 @@
   <data name="description" xml:space="preserve">
     <value>Description</value>
   </data>
+  <data name="device_offline" xml:space="preserve">
+    <value>Device offline</value>
+  </data>
+  <data name="device_offline_description" xml:space="preserve">
+    <value>Logs as soon as the device no longer establishes a connection to the NetLock RMM server.</value>
+  </data>
   <data name="disk_minimum_capacity" xml:space="preserve">
     <value>Only check drives with a capacity of X gigabytes or more.</value>
   </data>

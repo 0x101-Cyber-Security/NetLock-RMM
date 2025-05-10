@@ -68,36 +68,40 @@
                 <MudText Typo="Typo.h6">@group_name_displayed</MudText>
             
                 if (group_name != Localizer["all_devices"] && permissions_devices_move)
-                {
-                                                <MudButton Class="mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.MoveDown" OnClick="Move_Devices_Dialog">@Localizer["move_devices"]</MudButton>
+                {                            
+                    <MudButton Class="mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.MoveDown" OnClick="Move_Devices_Dialog">@Localizer["move_devices"]</MudButton>
                 }   
 
-                                    <MudTooltip Text="@Localizer["refresh"]">
-                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="async () => { await AfterInitializedAsync(); }"></MudIconButton>
-                                    </MudTooltip>
+                    <MudTooltip Text="@Localizer["refresh"]">
+                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="async () => { await AfterInitializedAsync(); }"></MudIconButton>
+                    </MudTooltip>
 
-                                    <MudTooltip Text="@Localizer["export_data"]">
-                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
-                                    </MudTooltip>
+                    <MudTooltip Text="@Localizer["export_data"]">
+                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
+                    </MudTooltip>
 
-                                    <MudTable Class="mt-5" Height="@(devices_table_view_port)" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Devices_Table_Filter_Func)">
-                                        <ToolBarContent>
-                                            <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                        </ToolBarContent>
-                                        <HeaderContent>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
-                                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
-                                        </HeaderContent>
-                                        <RowTemplate Context="row">
+                    <MudTable Class="mt-5" Height="@(devices_table_view_port)" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Devices_Table_Filter_Func)">
+                        <ToolBarContent>
+                            <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;">
+                                <MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.uptime_monitoring_enabled)">
+                                    @Localizer["uptime_monitoring"]
+                                </MudTableSortLabel>
+                            </MudTh>                        </HeaderContent>
+                    <RowTemplate Context="row">
 
                         @{
                             DateTime lastAccess;
@@ -218,6 +222,12 @@
                                                     <MudIcon Icon="@Icons.Material.Filled.Coronavirus" Size="Size.Small" class="desktop-icon" />&nbsp;@row.antivirus_solution
                                                 </span>
                                             </MudTd>
+
+                                        <MudTd DataLabel="@Localizer["uptime_monitoring"]" style="white-space: nowrap;">
+                                            <span style="display: flex; justify-content: center; align-items: center; height: 100%;">
+                                                <MudCheckBox T="bool" @bind-Value="row.uptime_monitoring_enabled" @bind-Value:after="() => Devices_Uptime_Monitoring_RowClickHandler(row)" Color="Color.Primary" />
+                                            </span>
+                                        </MudTd>
 
                                         </RowTemplate>
                                             <PagerContent>
@@ -3961,6 +3971,47 @@
         StateHasChanged();
     }
 
+    private async void Devices_Uptime_Monitoring_RowClickHandler(MySQL_Entity row)
+    {
+        Console.WriteLine("Uptime Monitoring Row Clicked: " + row.device_id);
+		Console.WriteLine("Uptime Monitoring Enabled: " + row.uptime_monitoring_enabled);
+
+		await Devices_Update_Uptime_Monitorung_Enabled(row.device_id, row.uptime_monitoring_enabled);
+    }
+
+    private async Task Devices_Update_Uptime_Monitorung_Enabled(string device_id, bool enabled)
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        int enabled_converted = 0;
+
+        if (enabled)
+            enabled_converted = 1;
+        else
+            enabled_converted = 0;
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE devices SET uptime_monitoring_enabled = @enabled_converted WHERE id = @device_id;";
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@device_id", device_id);
+
+            cmd.Parameters.AddWithValue("@enabled_converted", enabled_converted);
+
+            cmd.ExecuteNonQuery();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Devices_Update_Uptime_Monitorung_Enabled", "Result", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
     private string Devices_GetRowClass(MySQL_Entity row)
     {
         return row.device_id == devices_selectedRowContent ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
@@ -6565,6 +6616,7 @@
         public string antivirus_solution { get; set; } = "Empty";
         public string firewall_status { get; set; } = "Empty";
         public string platform { get; set; } = "Empty";
+        public bool uptime_monitoring_enabled { get; set; } = false;
     }
 
     public List<MySQL_Entity> mysql_data;
@@ -6642,6 +6694,7 @@
                                 antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty,
                                 firewall_status = reader["firewall_status"].ToString() ?? String.Empty,
                                 platform = reader["platform"].ToString() ?? String.Empty,
+                                uptime_monitoring_enabled = (reader["uptime_monitoring_enabled"]?.ToString() == "1"),
                             };
 
                         mysql_data.Add(entity);
@@ -6651,7 +6704,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/devices -> Get_Clients_OverviewAsync", "MySQL_Query", ex.Message);
+            Logging.Handler.Error("/devices -> Get_Clients_OverviewAsync", "MySQL_Query", ex.ToString());
         }
         finally
         {

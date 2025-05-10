@@ -20,7 +20,7 @@
 
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@sensor_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
-        
+
         <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
             <MudSelectItem T="string" Value="@Localizer["Windows"]" />
             <MudSelectItem T="string" Value="@Localizer["Linux"]" />
@@ -155,13 +155,13 @@
             }
             else if (platform == "Linux")
             {
-                <MudSelectItem T="string" Value="@("Bash")" />          
+                <MudSelectItem T="string" Value="@("Bash")" />
             }
             else if (platform == "MacOS")
             {
                 <MudSelectItem T="string" Value="@("Zsh")" />
             }
-   
+
             <MudSelectItem T="string" Value="@Localizer["service"]" />
             <MudSelectItem T="string" Value="@("Ping")" />
         </MudSelect>
@@ -617,7 +617,7 @@
 
                 <MudTextField Class="mt-3" Label="@Localizer["ip_address/hostname"]" T="string" @bind-Value="@ping_address" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
                 <MudNumericField Class="mt-3" Label="@Localizer["timeout_milliseconds"]" @bind-Value="ping_timeout" Variant="Variant.Text" Min="1" Max="120" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
-                
+
                 <MudSelect Class="mt-2" T="string" @bind-Value="ping_condition" Label="@Localizer["ping_status"]" AnchorOrigin="Origin.BottomCenter">
                     <MudSelectItem T="string" Value="@Localizer["successful"]" />
                     <MudSelectItem T="string" Value="@Localizer["failed"]" />
@@ -654,7 +654,7 @@
         }
 
         <div style="display: flex; align-items: center;">
-        <MudCheckBox Class="mt-3" T="bool" @bind-Value="auto_reset" Label="@Localizer["auto_reset"]" Color="Color.Primary" />
+            <MudCheckBox Class="mt-3" T="bool" @bind-Value="auto_reset" Label="@Localizer["auto_reset"]" Color="Color.Primary" />
 
             <MudTooltip Text="@Localizer["auto_reset_tooltip"]">
                 <MudIconButton Class="ml-2 mt-3" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
@@ -895,10 +895,10 @@
             time_scheduler_type = 8;
 
             if (!time_scheduler_monday && !time_scheduler_tuesday && !time_scheduler_wednesday && !time_scheduler_thursday && !time_scheduler_friday && !time_scheduler_saturday && !time_scheduler_sunday)
-                return true;            
+                return true;
         }
         else if (time_scheduler_type_display == Localizer["schedule_days_x_seconds"])
-        {   
+        {
             time_scheduler_type = 9;
 
             if (!time_scheduler_monday && !time_scheduler_tuesday && !time_scheduler_wednesday && !time_scheduler_thursday && !time_scheduler_friday && !time_scheduler_saturday && !time_scheduler_sunday)
@@ -955,16 +955,16 @@
                         Logging.Handler.Debug("/manage_jobs Add_Sensor_Dialog) -> Get_Scripts", "MySQL_Result (id)", reader["id"].ToString() ?? String.Empty); //Output the JSON
 
                         Script script = new Script
-                        {
-                            id = Convert.ToInt32(reader["id"].ToString()),
-                            name = reader["name"].ToString() ?? String.Empty,
-                            date = reader["date"].ToString() ?? String.Empty,
-                            author = reader["author"].ToString() ?? String.Empty,
-                            description = reader["description"].ToString() ?? String.Empty,
-                            platform = reader["platform"].ToString() ?? String.Empty,
-                            shell = reader["shell"].ToString() ?? String.Empty,
-                            script = reader["script"].ToString() ?? String.Empty,
-                        };
+                            {
+                                id = Convert.ToInt32(reader["id"].ToString()),
+                                name = reader["name"].ToString() ?? String.Empty,
+                                date = reader["date"].ToString() ?? String.Empty,
+                                author = reader["author"].ToString() ?? String.Empty,
+                                description = reader["description"].ToString() ?? String.Empty,
+                                platform = reader["platform"].ToString() ?? String.Empty,
+                                shell = reader["shell"].ToString() ?? String.Empty,
+                                script = reader["script"].ToString() ?? String.Empty,
+                            };
 
                         scripts_list.Add(script);
                     }
@@ -1043,11 +1043,11 @@
 
             //Human readable to computable: severity
             if (severity == Localizer["critical"])
-                severity_converted = 3  ;
+                severity_converted = 3;
             else if (severity == Localizer["high"])
-                severity_converted = 2;    
+                severity_converted = 2;
             else if (severity == Localizer["moderate"])
-                severity_converted = 1;    
+                severity_converted = 1;
             else if (severity == Localizer["low"])
                 severity_converted = 0;
 
@@ -1124,68 +1124,68 @@
                 ping_condition_converted = 1;
 
             Sensor sensor_json = new Sensor
-            {
-                id = Randomizer.Handler.Standard(6),
-                name = sensor_name,
-                date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                author = author.Value,
-                description = description,
-                platform = platform,
-                severity = severity_converted,
-                category = category_converted,
-                sub_category = sub_category_converted,
-                notification_treshold_max = notification_treshold_max,
-                action_treshold_max = action_treshold_max,
-                auto_reset = auto_reset,
-                script_id = script_id,
-                script = await Base64.Handler.Encode(await Get_Script_Code(script_id)),
-                script_action_id = script_action_id,
-                script_action = await Base64.Handler.Encode(await Get_Script_Code(script_action_id)),
-                cpu_usage = cpu_usage,
-                process_name = process_name,
-                ram_usage = ram_usage,
-                disk_usage = disk_usage,
-                disk_minimum_capacity = disk_minimum_capacity,
-                disk_category = disk_category_converted,
-                disk_letters = disk_letters,
-                disk_include_network_disks = disk_include_network_disks,
-                disk_include_removable_disks = disk_include_removable_disks,
-                eventlog = eventlog,
-                eventlog_custom = eventlog_custom,
-                eventlog_event_id = eventlog_event_id,
-                expected_result = expected_result,
-                    
+                {
+                    id = Randomizer.Handler.Standard(6),
+                    name = sensor_name,
+                    date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    author = author.Value,
+                    description = description,
+                    platform = platform,
+                    severity = severity_converted,
+                    category = category_converted,
+                    sub_category = sub_category_converted,
+                    notification_treshold_max = notification_treshold_max,
+                    action_treshold_max = action_treshold_max,
+                    auto_reset = auto_reset,
+                    script_id = script_id,
+                    script = await Base64.Handler.Encode(await Get_Script_Code(script_id)),
+                    script_action_id = script_action_id,
+                    script_action = await Base64.Handler.Encode(await Get_Script_Code(script_action_id)),
+                    cpu_usage = cpu_usage,
+                    process_name = process_name,
+                    ram_usage = ram_usage,
+                    disk_usage = disk_usage,
+                    disk_minimum_capacity = disk_minimum_capacity,
+                    disk_category = disk_category_converted,
+                    disk_letters = disk_letters,
+                    disk_include_network_disks = disk_include_network_disks,
+                    disk_include_removable_disks = disk_include_removable_disks,
+                    eventlog = eventlog,
+                    eventlog_custom = eventlog_custom,
+                    eventlog_event_id = eventlog_event_id,
+                    expected_result = expected_result,
+
                 //service sensor
-                service_name = service_name,
-                service_condition = service_condition_converted,
-                service_action = service_action_converted,
+                    service_name = service_name,
+                    service_condition = service_condition_converted,
+                    service_action = service_action_converted,
 
                 //ping sensor
-                ping_address = ping_address,
-                ping_timeout = ping_timeout,
-                ping_condition = ping_condition_converted,
+                    ping_address = ping_address,
+                    ping_timeout = ping_timeout,
+                    ping_condition = ping_condition_converted,
 
                 //time schedule
-                time_scheduler_type = time_scheduler_type,
-                time_scheduler_seconds = time_scheduler_seconds,
-                time_scheduler_minutes = time_scheduler_minutes,
-                time_scheduler_hours = time_scheduler_hours,
-                time_scheduler_time = time_scheduler_time.ToString(),
-                time_scheduler_date = time_scheduler_date.ToString(),
-                time_scheduler_monday = time_scheduler_monday,
-                time_scheduler_tuesday = time_scheduler_tuesday,
-                time_scheduler_wednesday = time_scheduler_wednesday,
-                time_scheduler_thursday = time_scheduler_thursday,
-                time_scheduler_friday = time_scheduler_friday,
-                time_scheduler_saturday = time_scheduler_saturday,
-                time_scheduler_sunday = time_scheduler_sunday,
+                    time_scheduler_type = time_scheduler_type,
+                    time_scheduler_seconds = time_scheduler_seconds,
+                    time_scheduler_minutes = time_scheduler_minutes,
+                    time_scheduler_hours = time_scheduler_hours,
+                    time_scheduler_time = time_scheduler_time.ToString(),
+                    time_scheduler_date = time_scheduler_date.ToString(),
+                    time_scheduler_monday = time_scheduler_monday,
+                    time_scheduler_tuesday = time_scheduler_tuesday,
+                    time_scheduler_wednesday = time_scheduler_wednesday,
+                    time_scheduler_thursday = time_scheduler_thursday,
+                    time_scheduler_friday = time_scheduler_friday,
+                    time_scheduler_saturday = time_scheduler_saturday,
+                    time_scheduler_sunday = time_scheduler_sunday,
 
                 // notifications
-                notifications_mail = notifications_mail,
-                notifications_microsoft_teams = notifications_microsoft_teams,
-                notifications_telegram = notifications_telegram,
-                notifications_ntfy_sh = notifications_ntfy_sh,
-            };
+                    notifications_mail = notifications_mail,
+                    notifications_microsoft_teams = notifications_microsoft_teams,
+                    notifications_telegram = notifications_telegram,
+                    notifications_ntfy_sh = notifications_ntfy_sh,
+                };
 
             string sensors_json_string = JsonSerializer.Serialize(sensor_json, new JsonSerializerOptions { WriteIndented = true });
 

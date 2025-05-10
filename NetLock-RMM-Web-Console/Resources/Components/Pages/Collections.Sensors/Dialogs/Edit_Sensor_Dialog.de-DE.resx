@@ -168,6 +168,12 @@
   <data name="description" xml:space="preserve">
     <value>Beschreibung</value>
   </data>
+  <data name="device_offline" xml:space="preserve">
+    <value>Gerät offline</value>
+  </data>
+  <data name="device_offline_description" xml:space="preserve">
+    <value>Protokolliert sobald das Gerät keine Verbindung mehr zum NetLock RMM-Server herstellt.</value>
+  </data>
   <data name="disk_minimum_capacity" xml:space="preserve">
     <value>Nur Laufwerke ab einer Kapazität von X Gigabyte prüfen.</value>
   </data>

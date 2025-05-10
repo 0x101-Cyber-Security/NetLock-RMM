@@ -441,10 +441,16 @@
   <data name="type" xml:space="preserve">
     <value>Type</value>
   </data>
+  <data name="device_offline_description" xml:space="preserve">
+    <value>Logged as soon as the device has not established a connection to the NetLock RMM server for more than ten minutes.</value>
+  </data>
   <data name="utilization" xml:space="preserve">
     <value>Utilization</value>
   </data>
   <data name="wednesday" xml:space="preserve">
     <value>Wednesday</value>
+  </data>
+  <data name="device_offline" xml:space="preserve">
+    <value>Device offline</value>
   </data>
 </root>

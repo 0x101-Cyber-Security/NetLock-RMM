@@ -355,7 +355,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START c512036c-bc25-464c-b734-285ee9a41912 //OSSCH_END
+//OSSCH_START c24ce05f-f811-4973-8602-1c078e07f1e1 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

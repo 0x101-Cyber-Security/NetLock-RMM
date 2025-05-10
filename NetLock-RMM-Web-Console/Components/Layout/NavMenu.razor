@@ -57,7 +57,7 @@
                         if (!processedTenants.Contains(tenant.guid))
                         {
                             <!-- Tenants -->
-                            <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.Person" @onclick="@(async () => await Update_Selected_Tenant(tenant.guid, tenant.name, false, "/tenant_settings"))" Title="@(tenant.name)" Expanded="true">
+                            <MudNavGroup HideExpandIcon="false" Icon="@Icons.Material.Filled.Person" @onclick="@(async () => await Update_Selected_Tenant(tenant.guid, tenant.name, false, "/tenant_settings"))" Title="@(tenant.name)" Expanded="false">
 
                                 <!-- Locations -->
                                 @foreach (var location in locations_list.Where(loc => loc.tenant_name == tenant.name).DistinctBy(loc => loc.guid))
@@ -164,6 +164,16 @@
                         }
 
                     </MudNavGroup>
+                }
+            }
+
+            <MudNavLink Disabled="true"></MudNavLink>
+            <MudNavLink Disabled="true"></MudNavLink>
+
+            @{
+                if (permissions_events_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.ElectricMeter" Href="/uptime_monitoring/manage">@Localizer["uptime_monitoring"]</MudNavLink>
                 }
             }
 
