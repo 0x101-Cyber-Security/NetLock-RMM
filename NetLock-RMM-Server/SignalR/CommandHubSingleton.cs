@@ -31,18 +31,18 @@ namespace NetLock_RMM_Server.SignalR
             _clientConnections.TryAdd(clientId, identity);
         }
 
-        public bool RemoveClientConnection(string clientId)
+        public void RemoveClientConnection(string clientId)
         {
-            return _clientConnections.TryRemove(clientId, out _);
+            _clientConnections.TryRemove(clientId, out _);
         }
 
-        // Add admin command
+        // Add admin command to dictionary
         public void AddAdminCommand(string responseId, string command)
         {
             _adminCommands.TryAdd(responseId, command);
         }
 
-        // Remove admin command
+        // Remove admin command from dictionary
         public bool RemoveAdminCommand(string responseId)
         {
             return _adminCommands.TryRemove(responseId, out _);

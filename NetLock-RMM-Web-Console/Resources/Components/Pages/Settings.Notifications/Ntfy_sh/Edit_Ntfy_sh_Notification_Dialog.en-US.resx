@@ -183,4 +183,10 @@
   <data name="title" xml:space="preserve">
     <value>Edit</value>
   </data>
+  <data name="uptime_monitoring" xml:space="preserve">
+    <value>Uptime Monitoring</value>
+  </data>
+  <data name="uptime_monitoring_tooltip" xml:space="preserve">
+    <value>If "Disconnection Alert" is enabled in the device overview, the event is forwarded.</value>
+  </data>
 </root>

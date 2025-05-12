@@ -169,5 +169,42 @@ namespace NetLock_RMM_Server.Agent.Windows
             }
         }
 
+        // Get uptime_monitoring_enabled from database
+        public static async Task<bool> Get_Uptime_Monitoring_Status(int device_id)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                string query = "SELECT * FROM devices WHERE id = @device_id;";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+
+                bool uptime_monitoring_enabled = false;
+
+                using (MySqlDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows && await reader.ReadAsync())
+                    {
+                        uptime_monitoring_enabled = reader.GetBoolean("uptime_monitoring_enabled");
+                    }
+                }
+
+                return uptime_monitoring_enabled;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("NetLock_RMM_Server.Modules.Helper.Get_Uptime_Monitoring_Status", "General error", ex.ToString());
+                return false;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
+
     }
 }

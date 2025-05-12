@@ -228,4 +228,10 @@
   <data name="topic_url" xml:space="preserve">
     <value>Thema URL</value>
   </data>
+  <data name="uptime_monitoring" xml:space="preserve">
+    <value>Uptime Monitoring</value>
+  </data>
+  <data name="uptime_monitoring_tooltip" xml:space="preserve">
+    <value>Sofern in der Geräte Übersicht "Verbindungsabbruch-Warnung" aktiviert ist, wird das Event weitergeleitet.</value>
+  </data>
 </root>

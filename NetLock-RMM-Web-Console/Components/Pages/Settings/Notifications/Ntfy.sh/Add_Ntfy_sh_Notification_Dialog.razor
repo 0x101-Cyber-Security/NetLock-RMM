@@ -31,6 +31,14 @@
             <MudSelectItem T="string" Value="@Localizer["low"]" />
         </MudSelect>
 
+        <div style="display: flex; align-items: center;">
+            <MudCheckBox @bind-Value="uptime_monitoring_enabled" Color="Color.Primary">@Localizer["uptime_monitoring"]</MudCheckBox>
+
+            <MudTooltip Text="@Localizer["uptime_monitoring_tooltip"]">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+            </MudTooltip>
+        </div>
+
         <MudDropContainer T="DropItem" Items="tenants" ItemsSelector="@((item,dropzone) => item.identifier  == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
             <ChildContent>
                 <MudDropZone T="DropItem" identifier="drop_zone_one" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
@@ -67,6 +75,7 @@
     private string access_token = String.Empty;
     private string description = String.Empty;
     private string severity = String.Empty;
+    private bool uptime_monitoring_enabled = false;
     private string tenants_json = String.Empty;
 
     private List<DropItem> tenants = new();
@@ -190,9 +199,17 @@
                 else if (severity == Localizer["any"])
                     sevirity_converted = "4";
 
+                // convert uptime_monitoring_enabled
+                int uptime_monitoring_enabled = 0;
+
+                if (this.uptime_monitoring_enabled)
+                    uptime_monitoring_enabled = 1;
+                else
+                    uptime_monitoring_enabled = 0;
+
                 await conn.OpenAsync();
 
-                string execute_query = "INSERT INTO `ntfy_sh_notifications` (`topic_name`, `topic_url`, `access_token`, `date`, `author`, `description`, `severity`, `tenants`) VALUES (@topic_name, @topic_url, @access_token, @date, @author, @description, @severity, @tenants);";
+                string execute_query = "INSERT INTO `ntfy_sh_notifications` (`topic_name`, `topic_url`, `access_token`, `date`, `author`, `description`, `severity`, `tenants`, `uptime_monitoring_enabled`) VALUES (@topic_name, @topic_url, @access_token, @date, @author, @description, @severity, @tenants, @uptime_monitoring_enabled);";
 
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
                 cmd.Parameters.AddWithValue("@topic_name", topic_name);
@@ -203,6 +220,7 @@
                 cmd.Parameters.AddWithValue("@description", description);
                 cmd.Parameters.AddWithValue("@severity", sevirity_converted);
                 cmd.Parameters.AddWithValue("@tenants", tenants_json);
+                cmd.Parameters.AddWithValue("@uptime_monitoring_enabled", uptime_monitoring_enabled);
 
                 cmd.ExecuteNonQuery();
 

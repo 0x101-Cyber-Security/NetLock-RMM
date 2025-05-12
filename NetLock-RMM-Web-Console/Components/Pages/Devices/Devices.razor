@@ -3973,9 +3973,6 @@
 
     private async void Devices_Uptime_Monitoring_RowClickHandler(MySQL_Entity row)
     {
-        Console.WriteLine("Uptime Monitoring Row Clicked: " + row.device_id);
-		Console.WriteLine("Uptime Monitoring Enabled: " + row.uptime_monitoring_enabled);
-
 		await Devices_Update_Uptime_Monitorung_Enabled(row.device_id, row.uptime_monitoring_enabled);
     }
 

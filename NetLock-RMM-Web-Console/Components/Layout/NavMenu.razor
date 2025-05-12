@@ -173,16 +173,6 @@
             @{
                 if (permissions_events_enabled)
                 {
-                    <MudNavLink Icon="@Icons.Material.Filled.ElectricMeter" Href="/uptime_monitoring/manage">@Localizer["uptime_monitoring"]</MudNavLink>
-                }
-            }
-
-            <MudNavLink Disabled="true"></MudNavLink>
-            <MudNavLink Disabled="true"></MudNavLink>
-
-            @{
-                if (permissions_events_enabled)
-                {
                     <MudNavLink Icon="@Icons.Material.Filled.TextSnippet" Href="/events">@Localizer["events"]</MudNavLink>
                 }
             }

@@ -264,7 +264,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 75de5d5e-2e83-4bcf-a26b-aaf9b817bf9f //OSSCH_END
+        //OSSCH_START a0f73655-bbe8-435b-a73c-5a1bfdc8135a //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -333,23 +333,23 @@ void Server_Information_TimerCallback(object state)
 Timer server_information_timer = new Timer(Server_Information_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
 // Add timer to run server sided sensors
-async Task Server_Sensors_Task()
+async Task Uptime_Monitoring_Task()
 {
 
     await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
 }
 
 // Wrapper for Timer
-void Server_Sensors_TimerCallback(object state)
+void Uptime_Monitoring_TimerCallback(object state)
 {
     if (role_notification)
     {
         // Call the asynchronous method and do not block it
-        _ = Server_Sensors_Task();
+        _ = Uptime_Monitoring_Task();
     }
 }
 
-Timer server_sensors_timer = new Timer(Server_Sensors_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+Timer uptime_monitoring_timer = new Timer(Uptime_Monitoring_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
 // Add timer to sync members portal license information regulary
 async Task Members_Portal_Task()
@@ -1446,7 +1446,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 580c48d9-aa64-4df3-b655-19f5049a917e //OSSCH_END
+    //OSSCH_START e165f280-3087-4f5d-920e-ea3310b62ae5 //OSSCH_END
 }
 
 /*

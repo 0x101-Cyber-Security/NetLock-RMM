@@ -41,7 +41,7 @@ namespace NetLock_RMM_Server.Events
                                 // Check if type is job, if so, skip it
                                 if (reader["type"].ToString() == "1")
                                     continue;
-
+                                
                                 string notification_json = reader["notification_json"].ToString() ?? String.Empty;
 
                                 if (string.IsNullOrEmpty(notification_json)) // If the notification_json is empty, continue to the next event
@@ -52,19 +52,19 @@ namespace NetLock_RMM_Server.Events
 
                                 if (type == "mail_status" && notifications.mail && reader["mail_status"].ToString() == "0")
                                 {
-                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, type, "mail_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, reader["description"].ToString() ?? String.Empty);
+                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "mail_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, "Device name: " + reader["device_name"].ToString() + Environment.NewLine + "Location name: " + reader["location_name_snapshot"].ToString() + Environment.NewLine + "Tenant name: " + reader["tenant_name_snapshot"].ToString() + Environment.NewLine + Environment.NewLine + "Details:" + Environment.NewLine + reader["description"].ToString() ?? String.Empty);
                                 }
                                 else if (type == "ms_teams_status" && notifications.microsoft_teams && reader["ms_teams_status"].ToString() == "0")
                                 {
-                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, type, "microsoft_teams_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, reader["description"].ToString() ?? String.Empty);
+                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "microsoft_teams_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, "Device name: " + reader["device_name"].ToString() + Environment.NewLine + "Location name: " + reader["location_name_snapshot"].ToString() + Environment.NewLine + "Tenant name: " + reader["tenant_name_snapshot"].ToString() + Environment.NewLine + Environment.NewLine + "Details:" + Environment.NewLine + reader["description"].ToString() ?? String.Empty);
                                 }
                                 else if (type == "telegram_status" && notifications.telegram && reader["telegram_status"].ToString() == "0")
                                 {
-                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, type, "telegram_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, reader["description"].ToString() ?? String.Empty);
+                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "telegram_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, "Device name: " + reader["device_name"].ToString() + Environment.NewLine + "Location name: " + reader["location_name_snapshot"].ToString() + Environment.NewLine + "Tenant name: " + reader["tenant_name_snapshot"].ToString() + Environment.NewLine + Environment.NewLine + "Details:" + Environment.NewLine + reader["description"].ToString() ?? String.Empty);
                                 }
                                 else if (type == "ntfy_sh_status" && notifications.ntfy_sh && reader["ntfy_sh_status"].ToString() == "0" )
                                 {
-                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty,  type, "ntfy_sh_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, reader["description"].ToString() ?? String.Empty);
+                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "ntfy_sh_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, "Device name: " + reader["device_name"].ToString() + Environment.NewLine + "Location name: " + reader["location_name_snapshot"].ToString() + Environment.NewLine + "Tenant name: " + reader["tenant_name_snapshot"].ToString() + Environment.NewLine + Environment.NewLine + "Details:" + Environment.NewLine + reader["description"].ToString() ?? String.Empty);
                                 }
                             }
                             catch (Exception ex)
@@ -87,7 +87,7 @@ namespace NetLock_RMM_Server.Events
             }
         }
 
-        private static async Task Check_Notification(string id, string device_id, string type, string table, string severity, string reported_by, string _event, string description)
+        private static async Task Check_Notification(string id, string device_id, string notification_type, string type, string table, string severity, string reported_by, string _event, string description)
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -112,7 +112,6 @@ namespace NetLock_RMM_Server.Events
                         {
                             bool success = false;
 
-                            // Check if events tenantid matches the notification tenantid
                             // Check if the event's tenant ID matches the notification's tenant ID
                             string tenantsJson = reader["tenants"].ToString() ?? string.Empty;
 
@@ -124,6 +123,10 @@ namespace NetLock_RMM_Server.Events
 
                                 // Continue only if the specified tenant_id is in the list, otherwise continue to the next notification
                                 if (!tenantIds.Contains(tenant_id))
+                                    continue;
+
+                                // Check if the type is uptime monitoring and if not enabled, continue to the next notification
+                                if (notification_type == "4" && reader["uptime_monitoring_enabled"].ToString() == "0")
                                     continue;
                             }
                             else // If the tenant ID is not specified, continue to the next notification

@@ -83,7 +83,7 @@ namespace NetLock_RMM_Server.SignalR
             public Command? command { get; set; }
         }
 
-        public override Task OnConnectedAsync()
+        public override async Task OnConnectedAsync()
         {
             try
             {
@@ -99,7 +99,7 @@ namespace NetLock_RMM_Server.SignalR
                 {
                     Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", "Neither Device-Identity nor Admin-Identity was provided.");
                     Context.Abort();
-                    return Task.CompletedTask;
+                    await Task.CompletedTask;
                 }
 
                 string decodedIdentityJson = string.Empty;
@@ -123,16 +123,22 @@ namespace NetLock_RMM_Server.SignalR
                 Logging.Handler.Error("SignalR CommandHub", "OnConnectedAsync", ex.ToString());
             }
 
-            return base.OnConnectedAsync();
+            await base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override async Task OnDisconnectedAsync(Exception exception)
         {
             try
             {
                 Logging.Handler.Debug("SignalR CommandHub", "OnDisconnectedAsync", "Client disconnected");
 
                 var clientId = Context.ConnectionId;
+
+                // Get the identity JSON
+                CommandHubSingleton.Instance._clientConnections.TryGetValue(clientId, out string identityJson);
+
+                // Check uptime monitoring
+                await Uptime_Monitoring.Handler.Do(identityJson);
 
                 // Remove the client from the data structure when it logs out
                 CommandHubSingleton.Instance._clientConnections.TryRemove(clientId, out _);
@@ -142,18 +148,9 @@ namespace NetLock_RMM_Server.SignalR
                 {
                     if (adminCommand.Value == clientId)
                     {
-                        CommandHubSingleton.Instance.RemoveClientConnection(adminCommand.Key);
+                        CommandHubSingleton.Instance.RemoveAdminCommand(adminCommand.Key);
                     }
                 }
-
-                // Remove the client from the response tasks dictionary
-                /*foreach (var responseTask in _responseTasks)
-                {
-                    if (responseTask.Value.Task.IsCompleted)
-                    {
-                        _responseTasks.TryRemove(responseTask.Key, out _);
-                    }
-                }*/
 
                 // List all connected clients
                 foreach (var client in CommandHubSingleton.Instance._clientConnections)
@@ -166,7 +163,7 @@ namespace NetLock_RMM_Server.SignalR
                 Logging.Handler.Error("SignalR CommandHub", "OnDisconnectedAsync", ex.ToString());
             }
 
-            return base.OnDisconnectedAsync(exception);
+            await base.OnDisconnectedAsync(exception);
         }
 
         public async Task<string> Get_Device_ClientId(string device_name, string location_guid, string tenant_guid)
