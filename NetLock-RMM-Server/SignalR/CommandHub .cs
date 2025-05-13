@@ -117,6 +117,9 @@ namespace NetLock_RMM_Server.SignalR
 
                 // Save clientId and any other relevant data in the Singleton's data structure
                 CommandHubSingleton.Instance.AddClientConnection(clientId, decodedIdentityJson);
+
+                // Check uptime monitoring
+                await Uptime_Monitoring.Handler.Do(decodedIdentityJson, true);
             }
             catch (Exception ex)
             {
@@ -138,7 +141,7 @@ namespace NetLock_RMM_Server.SignalR
                 CommandHubSingleton.Instance._clientConnections.TryGetValue(clientId, out string identityJson);
 
                 // Check uptime monitoring
-                await Uptime_Monitoring.Handler.Do(identityJson);
+                await Uptime_Monitoring.Handler.Do(identityJson, false);
 
                 // Remove the client from the data structure when it logs out
                 CommandHubSingleton.Instance._clientConnections.TryRemove(clientId, out _);

@@ -14,39 +14,55 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
 ## [Discord](https://discord.gg/HqUpZgtX4U)
 
-## Features? We have plenty of them. Here is a small preview
+## **NetLock RMM – Feature Overview**
 
-The Web Console and server software come as a standalone server based on Kestrel, eliminating the need to configure and maintain complex server software such as Apache. Do you like Let's Encrypt? The Let's Encrypt integration by LettuceEncrypt offers an easy way to protect your connection with SSL. Our security concept offers high flexibility with server roles, meaning you could run all server components on one machine or split them into different roles. You can also define fallback servers for each role.
+### 🚀 **Streamlined Server Setup**
+- The **Web Console** and **server software** are delivered as a standalone server built on **Kestrel**, eliminating the need for complex configurations with traditional servers like Apache.
+- **SSL Made Simple**: Love Let's Encrypt? Our integration with **LettuceEncrypt** makes it effortless to secure your connection with SSL certificates.
 
-- Multi platform. The agent supports windows, linux & macos. (x64 & arm64) 
-- Multi-tenancy, including locations and group management
-- One-click agent installer for all platforms
-- Real-time remote shell, file browser, task manager & service manager
-- Remote control & support your users. It's as easy to use as TeamViewer. ;)
-- File server. Host your favourite tools directly with NetLock RMM and embed them directly into your scripting.
-- Event notifications (email, Microsoft Teams, ntfy.sh, and Telegram)
-- Software & hardware inventory
-- Microsoft Defender Antivirus Management
-- Policy Management (define policies that will be applied to your devices. Example: Microsoft Defender Antivirus settings and notifications, sensors, and jobs)
-- Dashboard (statistics and unread events)
-- Events (browsing through events, filtered by severity and more)
-- Jobs (run PowerShell, Bash & Zsh scripts on a regular basis)
-- Sensors (like cpu, drive, ram utilization, windows event logs, services, ping, custom via powershell, bash, zsh & regex)
-- Users (add/edit/remove)
-  - Two-factor authentication
-  - Permissions system
-    - Assigned tenants
-    - Access to panels (e.g., authorizing devices, accessing remote shell, and more)
+### 🛡️ **Flexible & Scalable Architecture**
+- **Modular Server Roles**: Run all components on a single machine or distribute them across multiple roles for scalability.
+- **Fallback Servers**: Define backup servers for each role to ensure high availability.
 
-### Jobs
+### 🖥️ **Cross-Platform Agent Support**
+- Compatible with **Windows, Linux, and macOS** (x64 & ARM64).
+- **One-click installer** available for all platforms.
 
-- All kind of sensors, take a look on the documentation for more details.
+### 🧩 **Multi-Tenancy & Management**
+- Full support for **multi-tenancy**, including **location** and **group management**.
+- **User & Permission Management** with role-based access control and two-factor authentication.
 
-### Sensors
+### 🛠️ **Powerful Remote Tools**
+- **Real-time remote shell**, file browser, task manager, and service manager.
+- **Remote control** and support that’s as intuitive as TeamViewer.
 
-- All kind of sensors, take a look on the documentation for more details.
+### 📁 **Integrated File Server**
+- Host your favorite tools directly within NetLock RMM and embed them into your scripts.
 
-& a lot more...
+### 🔔 **Event Notifications**
+- Get alerts via **Email**, **Microsoft Teams**, **ntfy.sh**, and **Telegram**.
+
+### 🧾 **Inventory & Monitoring**
+- **Software & hardware inventory** tracking.
+- **Microsoft Defender Antivirus** management.
+- **Policy Management**: Define and enforce policies (e.g., antivirus settings, notifications, sensors, jobs).
+
+### 📊 **Dashboards & Event Logs**
+- Centralized **dashboard** with statistics and unread events.
+- **Event viewer** with filtering by severity and more.
+
+### ⚙️ **Automation & Monitoring**
+- **Jobs**: Schedule and run PowerShell, Bash, or Zsh scripts.
+- **Sensors**: Monitor CPU, RAM, disk usage, Windows event logs, services, ping, and more—including custom sensors via PowerShell, Bash, Zsh, and RegEx.
+
+### 👥 **User & Access Control**
+- Add, edit, or remove users.
+- Assign tenants and control access to specific panels (e.g., remote shell, device authorization).
+
+---
+
+### ➕ **And Much More...**
+Explore the full capabilities in our documentation to see everything NetLock RMM has to offer.
 
 Note: Why are the unsigned packages not on GitHub?
 https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-github/

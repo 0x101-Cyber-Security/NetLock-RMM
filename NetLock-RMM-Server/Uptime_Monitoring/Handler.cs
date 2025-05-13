@@ -7,7 +7,7 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
 {
     public class Handler
     {
-        public static async Task Do(string identityJson)
+        public static async Task Do(string identityJson, bool connected)
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -62,6 +62,16 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
                 // Get tenant_name & location_name
                 (string tenant_name, string location_name) = await Agent.Windows.Helper.Get_Tenant_Location_Name(tenant_id, location_id);
 
+                string _event = connected ? "Device connected." : "Device disconnected.";
+                string description = connected ? "Connection to NetLock RMM server restored." : "The device lost connection to the NetLock RMM server.";
+
+                string severity = "3";
+
+                if (connected)
+                    severity = "0";
+                else
+                    severity = "3";
+
                 // Insert event into the database
                 string execute_query = "INSERT INTO `events` ( `device_id`, `tenant_name_snapshot`, `location_name_snapshot`, `device_name`, `date`, `severity`, `reported_by`, `_event`, `description`, `notification_json`, `type`, `language`) VALUES (@device_id, @tenant_name, @location_name, @device_name, @date, @severity, @reported_by, @event, @description, @notification_json, @type, @language)";
 
@@ -74,10 +84,10 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
                 cmd.Parameters.AddWithValue("@location_name", location_name);
                 cmd.Parameters.AddWithValue("@device_name", device_name);
                 cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@severity", "3");
+                cmd.Parameters.AddWithValue("@severity", severity);
                 cmd.Parameters.AddWithValue("@reported_by", "Uptime monitoring");
-                cmd.Parameters.AddWithValue("@event", "Device disconnected.");
-                cmd.Parameters.AddWithValue("@description", "The device lost connection to the NetLock RMM server.");
+                cmd.Parameters.AddWithValue("@event", _event);
+                cmd.Parameters.AddWithValue("@description", description);
                 cmd.Parameters.AddWithValue("@notification_json", notification_json);
                 cmd.Parameters.AddWithValue("@type", "4"); // Uptime monitoring
                 cmd.Parameters.AddWithValue("@language", "0");
