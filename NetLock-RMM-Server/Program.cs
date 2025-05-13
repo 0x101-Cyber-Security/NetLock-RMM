@@ -264,7 +264,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START cc3f0613-04b3-4ad1-912e-dce8b52bbb37 //OSSCH_END
+        //OSSCH_START 86dad78c-4c24-42c3-866e-d0db8a60cf20 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -283,94 +283,10 @@ builder.Services.AddSignalR(options =>
 // Add the LLaMa model service as a singleton. Currently disabled because in testings using ANY llm was just to CPU intensive. As most servers dont have a GPU, implementation needs to be postboned to a unknown time. Might find a solution in future
 //builder.Services.AddSingleton<LLaMaService>();
 
-// Add timer to process events for notifications
-async Task Events_Task()
-{
-    string started_time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-
-    //Console.WriteLine("Periodic task executed at: " + started_time);
-    await NetLock_RMM_Server.Events.Sender.Smtp("mail_status", "mail_notifications");
-    await NetLock_RMM_Server.Events.Sender.Smtp("ms_teams_status", "microsoft_teams_notifications");
-    await NetLock_RMM_Server.Events.Sender.Smtp("telegram_status", "telegram_notifications");
-    await NetLock_RMM_Server.Events.Sender.Smtp("ntfy_sh_status", "ntfy_sh_notifications");
-
-    string finished_time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-    //Console.WriteLine("Periodic task finished at: " + finished_time);
-
-    await NetLock_RMM_Server.Events.Sender.Mark_Old_Read(started_time, finished_time);
-}
-
-// Wrapper for Timer
-void Events_TimerCallback(object state)
-{
-    if (role_notification)
-    {
-        // Call the asynchronous method and do not block it
-        _ = Events_Task();
-    }
-}
-
-Timer events_timer = new Timer(Events_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
-await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
-
-// Add timer to update server information regulary
-async Task Server_Information_Task()
-{
-    await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
-}
-
-// Wrapper for Timer
-void Server_Information_TimerCallback(object state)
-{
-    if (role_notification)
-    {
-        // Call the asynchronous method and do not block it
-        _ = Server_Information_Task();
-    }
-}
-
-Timer server_information_timer = new Timer(Server_Information_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
-// Add timer to run server sided sensors
-async Task Uptime_Monitoring_Task()
-{
-
-    await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
-}
-
-// Wrapper for Timer
-void Uptime_Monitoring_TimerCallback(object state)
-{
-    if (role_notification)
-    {
-        // Call the asynchronous method and do not block it
-        _ = Uptime_Monitoring_Task();
-    }
-}
-
-Timer uptime_monitoring_timer = new Timer(Uptime_Monitoring_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
-// Add timer to sync members portal license information regulary
-async Task Members_Portal_Task()
-{
-    if (Members_Portal.api_enabled)
-    {
-        await NetLock_RMM_Server.Members_Portal.Handler.Update_License_Information();
-    }
-}
-
-// Wrapper for Timer
-void Members_Portal_TimerCallback(object state)
-{
-    if (Members_Portal.api_enabled)
-    {
-        // Call the asynchronous method and do not block it
-        _ = Members_Portal_Task();
-    }
-}
-
-Timer members_portal_timer = new Timer(Members_Portal_TimerCallback, null, TimeSpan.Zero, TimeSpan.FromHours(6));
+// Register background service
+builder.Services.AddHostedService<Events_Notification_Service>();
+builder.Services.AddHostedService<Server_Information_Service>();
+builder.Services.AddHostedService<Members_Portal_License_Service>();
 
 var app = builder.Build();
 
@@ -1446,7 +1362,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START a41dab54-48fd-4631-9cd3-159a922c22dc //OSSCH_END
+    //OSSCH_START b44b974b-7aec-4f55-a536-34593cb4f0d7 //OSSCH_END
 }
 
 /*
