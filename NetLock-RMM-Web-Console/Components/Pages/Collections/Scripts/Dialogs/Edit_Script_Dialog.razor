@@ -15,9 +15,9 @@
 <style>
 
     .monaco-editor {
-        flex-grow: 1;
-        height: 100vh;
-        width: 100%; /* Each editor takes half of the screen width */
+    flex-grow: 1;
+    height: 100vh;
+    width: 100%; /* Each editor takes half of the screen width */
     }
 
 </style>
@@ -122,8 +122,8 @@
 
     </DialogContent>
     <DialogActions>
+        <MudButton Color="Color.Info" Variant="Variant.Filled" Size="@Size.Small" OnClick="Publish_To_Members_Portal">Publish to Community</MudButton>
         <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
-
         <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
     </DialogActions>
 </MudDialog>
@@ -247,7 +247,7 @@
             MySqlCommand cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@platform", platform);
             cmd.Parameters.AddWithValue("@shell", shell);
-            
+
             using (DbDataReader reader = await cmd.ExecuteReaderAsync())
             {
                 while (await reader.ReadAsync())
@@ -740,6 +740,66 @@
             this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
             this.MudDialog.Close(DialogResult.Ok("error"));
         }
+    }
+
+    private async Task Publish_To_Members_Portal()
+    {
+        try
+        {
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+            };
+
+            var parameters = new DialogParameters();
+            var dialog = DialogService.Show<Pages.Collections.Scripts.Community_Scripts.Publish_Dialog>("Publish script", parameters, options);
+
+            var messageResult = await dialog.Result;
+			string contact = String.Empty;
+
+            if (!messageResult.Canceled)
+                contact = messageResult.Data.ToString();
+            else
+				return;
+
+            string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
+            url = url + "/api/community/scripts/publish";
+
+            // build the JSON object
+            var jsonObject = new
+            {
+                name = script_name,
+                description = description,
+                contact = contact,
+                platform = platform,
+                shell = shell,
+                script = await Base64.Handler.Encode(script),
+            };
+
+            // Convert the object into a JSON string
+            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+
+            Logging.Handler.Debug("Community_Scripts.Import", "json", json);
+
+            // Send the JSON to the API
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+
+            // Check the result
+            if (result == "0")
+                this.Snackbar.Add("Script published successfully!", Severity.Success);
+            else
+                this.Snackbar.Add("Error publishing script: " + result, Severity.Error);
+        }
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> Publish_To_Members_Portal", "Result", ex.ToString());
+		}
     }
 
     private void Cancel() => MudDialog.Cancel();

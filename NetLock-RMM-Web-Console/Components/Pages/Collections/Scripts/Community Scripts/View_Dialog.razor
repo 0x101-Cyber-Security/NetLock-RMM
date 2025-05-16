@@ -1,0 +1,238 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Collections.Scripts.Dialogs.Add_Script_Dialog> Localizer
+
+<style>
+    .monaco-editor {
+    flex-grow: 1;
+    height: 50vh;
+    width: 100%; /* Each editor takes full screen width */
+    }
+
+    /* For mobile devices (max width 600px) */
+    @@media (max-width: 600px) {
+    .monaco-editor {
+    height: 300px; /* Reduced height for mobile */
+    width: 100%; /* Full width on mobile */
+    }
+    }
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">View</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        @if (Convert.ToBoolean(is_admin))
+        {
+            <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Info">The script has been published and is maintained by NetLocks script scout. Review and use at your own risk! 😊</MudAlert>
+        }
+
+        <MudTextField Class="mt-3" Label="Name" T="string" @bind-Value="@name" Required="true" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Description" T="string" @bind-Value="@description" Required="false" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Platform" T="string" @bind-Value="@platform" Required="false" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Shell" T="string" @bind-Value="@shell" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Created" T="string" @bind-Value="@created" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Last edited" T="string" @bind-Value="@last_edited" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Maintainer" T="string" @bind-Value="@maintainer" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Contact" T="string" @bind-Value="@contact" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+
+        @{
+            if (platform == "Windows")
+            {
+                if (shell == "PowerShell")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "System")
+            {
+                if (shell == "MySQL")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="MySQL_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "Linux")
+            {
+                if (shell == "Bash")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Shell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "MacOS")
+            {
+                if (shell == "Zsh")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Shell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+        }
+
+    </DialogContent>
+    <DialogActions>
+		<MudButton OnClick="Import" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info">Import</MudButton>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    [CascadingParameter]
+    private MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string created { get; set; }
+    [Parameter] public string last_edited { get; set; }
+    [Parameter] public string maintainer { get; set; }
+    [Parameter] public string contact { get; set; }
+    [Parameter] public string is_admin { get; set; }
+    [Parameter] public string name { get; set; }
+    [Parameter] public string description { get; set; }
+    [Parameter] public string platform { get; set; }
+    [Parameter] public string shell { get; set; }
+    [Parameter] public string script { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        script_editor.SetValue(await Base64.Handler.Decode(script));
+
+        StateHasChanged();
+    } 
+
+    public class Script
+    {
+        public string name { get; set; }
+        public string date { get; set; }
+        public string author { get; set; }
+        public string description { get; set; }
+        public string platform { get; set; }
+        public string shell { get; set; }
+        public string script { get; set; }
+    }
+
+    private StandaloneCodeEditor script_editor = null!;
+
+    private StandaloneEditorConstructionOptions PowerShell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+	    {
+		    AutomaticLayout = true,
+            Theme = "vs-dark",
+		    Language = "powershell",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+	    };
+    }
+
+    private StandaloneEditorConstructionOptions MySQL_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "mysql",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            };
+    }
+
+    private StandaloneEditorConstructionOptions Shell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+	    {
+		    AutomaticLayout = true,
+            Theme = "vs-dark",
+		    Language = "shell",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+	    };
+    }
+
+    private async Task Editor_Handle_Input(ModelContentChangedEvent e)
+    {
+        script = await script_editor.GetValue();
+    }
+
+    private async Task Import()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        //  Create the JSON object
+        var jsonObject = new
+        {
+            name = name,
+            date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            author = maintainer + " (" + contact + ")",
+            description = description,
+            platform = platform,
+            shell = shell,
+            script = await Base64.Handler.Decode(this.script),
+        };
+
+        // Convert the object into a JSON string
+        string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Logging.Handler.Debug("Community_Scripts.Import", "json", json);
+
+        string query = "INSERT INTO `scripts` (`name`, `description`, `author`, `platform`, `shell`, `script`, `json`) VALUES (@name, @description, @author, @platform, @shell, @script, @json);";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@description", description);
+            cmd.Parameters.AddWithValue("@author", maintainer + " (" + contact + ")");
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
+            cmd.Parameters.AddWithValue("@script", await Base64.Handler.Decode(this.script));
+            cmd.Parameters.AddWithValue("@json", json);
+
+            Logging.Handler.Debug("Community_Scripts.Import", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+
+			this.Snackbar.Add("Script imported successfully!", Severity.Success);
+			
+            Logging.Handler.Debug("Community_Scripts.Import", "MySQL_Query", "Script imported successfully!");
+			
+            // Close the dialog
+			MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Community_Scripts.Import", "MySQL_Query", ex.ToString());
+			this.Snackbar.Add("Error importing script: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+
+    private void Cancel() => MudDialog.Cancel();
+}

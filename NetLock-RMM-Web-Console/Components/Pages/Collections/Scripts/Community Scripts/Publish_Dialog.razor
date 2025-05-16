@@ -1,0 +1,28 @@
+﻿@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="FirstInput" Label="Contact" Variant="Variant.Filled" />
+
+        <MudText Class="mt-2">If you'd like community members to be able to contact you with feedback, you may include your contact details.</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Submit" Color="Color.Primary">Submit</MudButton>
+        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    public string FirstInput { get; set; } = string.Empty;
+
+    void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(FirstInput));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
