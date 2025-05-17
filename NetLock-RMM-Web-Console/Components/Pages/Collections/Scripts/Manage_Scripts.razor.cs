@@ -228,8 +228,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Collections.Scripts
             StateHasChanged();
         }
 
-
-
         private async Task Scripts_Load()
         {
             scripts_mysql_data = new List<Scripts_Entity>();

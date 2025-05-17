@@ -15,9 +15,9 @@
 <style>
 
     .monaco-editor {
-        flex-grow: 1;
-        height: 100vh;
-        width: 100%; /* Each editor takes half of the screen width */
+    flex-grow: 1;
+    height: 100vh;
+    width: 100%; /* Each editor takes half of the screen width */
     }
 
 </style>
@@ -118,11 +118,13 @@
                     <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
                 }
             }
-            
+
         }
 
     </DialogContent>
     <DialogActions>
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Code" OnClick="@Community_Scripts_Dialog">Community Scripts</MudButton>
+
         <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
 
         <MudButton Disabled="@Form_Valid()" OnClick="@this.OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
@@ -190,10 +192,10 @@
 		    AutomaticLayout = true,
             Theme = "vs-dark",
 		    Language = "powershell",
-		    //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
 	    };
     }
-    
+
     private StandaloneEditorConstructionOptions MySQL_Editor_Construction_Options(StandaloneCodeEditor editor)
     {
         return new StandaloneEditorConstructionOptions
@@ -201,7 +203,7 @@
                 AutomaticLayout = true,
                 Theme = "vs-dark",
                 Language = "mysql",
-                //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
             };
     }
 
@@ -212,7 +214,7 @@
 		    AutomaticLayout = true,
             Theme = "vs-dark",
 		    Language = "shell",
-		    //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
 	    };
     }
 
@@ -369,6 +371,60 @@
             this.MudDialog.Close(DialogResult.Ok("error"));
         }
     }
+
+
+    private bool community_scripts_dialog_open = false;
+
+    private async Task Community_Scripts_Dialog()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+		this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        try
+        {
+            if (community_scripts_dialog_open)
+                return;
+
+            var options = new DialogOptions
+                {
+                    CloseButton = true,
+                    FullWidth = true,
+                    MaxWidth = MaxWidth.ExtraLarge,
+                    BackgroundClass = "dialog-blurring",
+                };
+
+            DialogParameters parameters = new DialogParameters();
+            parameters.Add("editor", "true");
+
+            community_scripts_dialog_open = true;
+
+            var result = await this.DialogService.Show<Pages.Collections.Scripts.Community_Scripts.Community_Scripts_Dialog>(string.Empty, parameters, options).Result;
+
+            // Handle the result if needed
+            if (!result.Canceled)
+            {
+                var resultData = result.Data;
+                Console.WriteLine(resultData);
+
+                if (resultData != null)
+                {
+                    string script = await script_editor.GetValue();
+                    script += await Base64.Handler.Decode(resultData.ToString());
+
+                    await script_editor.SetValue(script);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_scripts -> Community_Scripts_Dialog", "Community_Scripts_Dialog", ex.ToString());
+        }
+        finally
+        {
+            community_scripts_dialog_open = false;
+        }
+    }
+
 
     private void Cancel() => MudDialog.Cancel();
 }

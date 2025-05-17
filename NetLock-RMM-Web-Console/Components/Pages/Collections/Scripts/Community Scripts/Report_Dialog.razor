@@ -2,13 +2,16 @@
 
 <MudDialog>
     <DialogContent>
-        <MudTextField @bind-Value="FirstInput" Label="Contact" Variant="Variant.Filled" />
+        <MudTextField @bind-Value="FirstInput" Label="Report reason" Variant="Variant.Filled" Immediate="true"/>
 
-        <MudText Class="mt-2">If you'd like community members to be able to contact you with feedback, you may include your contact details.</MudText>
+        @if (String.IsNullOrEmpty(FirstInput))
+        {        
+            <MudText Class="mt-2">Please provide a reason for reporting this content. This will help us take appropriate action.</MudText>
+        }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
-        <MudButton OnClick="@Submit" Color="Color.Success" Variant="Variant.Filled">Publish</MudButton>
+        <MudButton OnClick="@Submit" Color="Color.Error" Variant="Variant.Filled" Disabled="@(String.IsNullOrEmpty(FirstInput))">Report</MudButton>
     </DialogActions>
 </MudDialog>
 

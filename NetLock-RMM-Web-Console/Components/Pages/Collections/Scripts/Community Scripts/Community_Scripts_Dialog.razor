@@ -25,19 +25,21 @@
     </TitleContent>
     <DialogContent>
 
+        <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning">Here you will find a list of scripts created by the community. The scripts are not maintained by us, we recommend you to read them before using them to prevent problems. :-)</MudAlert>
+
         <MudTable Class="mt-5" Height="60vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@scripts_mysql_data" Filter="new Func<Scripts_Entity, bool>(Scripts_Table_Filter_Func)">
             <ToolBarContent>
                 <MudTextField Class="mt-0" @bind-Value="scripts_table_search_string" Placeholder="Suche" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.description))" style="white-space: nowrap;">Description</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.maintainer))" style="white-space: nowrap;">Maintainer</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.contact))" style="white-space: nowrap;">Contact</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.created))" style="white-space: nowrap;">Created</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.last_edited))" style="white-space: nowrap;">Last edited</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.platform))" style="white-space: nowrap;">Platform</MudTh>
                 <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.shell))" style="white-space: nowrap;">Shell</MudTh>
+                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.description))" style="white-space: nowrap;">Description</MudTh>
             </HeaderContent>
 
             <RowTemplate Context="scripts_row">
@@ -45,12 +47,6 @@
                 <MudTd DataLabel="Name" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
                     <span style="display: flex; align-items: center;">
                         &nbsp;@scripts_row.name
-                    </span>
-                </MudTd>
-
-                <MudTd DataLabel="Description" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
-                    <span style="display: flex; align-items: center;">
-                        &nbsp;@scripts_row.description
                     </span>
                 </MudTd>
 
@@ -90,6 +86,12 @@
                     </span>
                 </MudTd>
 
+                <MudTd DataLabel="Description" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                    <span style="display: flex; align-items: center;">
+                        &nbsp;@scripts_row.description
+                    </span>
+                </MudTd>
+
             </RowTemplate>
             <PagerContent>
                 <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="Rows per page" />
@@ -115,8 +117,8 @@
 
     [CascadingParameter]
     private MudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string editor { get; set; } = string.Empty;
 
-    private string api_key = String.Empty;
     private bool loading_overlay = false;
 
     protected override async Task OnInitializedAsync()
@@ -134,9 +136,6 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get API Key
-        api_key = await Classes.MySQL.Handler.Get_Api_Key();
-
         await Get_Community_Scripts();
 
         StateHasChanged();
@@ -172,18 +171,32 @@
     private string scripts_table_sorted_column;
     private string scripts_table_search_string = String.Empty;
     private string scripts_selectedRowContent_guid = String.Empty; // Saving content of selected row
+    private string scripts_selectedRowContent_script = String.Empty; // Saving content of selected row
 
     // Executes on row click
     private void Scripts_RowClickHandler(Scripts_Entity row)
     {
         scripts_selectedRowContent_guid = row.guid;
+        scripts_selectedRowContent_script = row.script;
+
+        Console.WriteLine($"Row clicked script: {row.script}");
     }
 
-    private async void Scripts_RowDblClickHandler(Scripts_Entity row)
+    private async Task Scripts_RowDblClickHandler(Scripts_Entity row)
     {
-        scripts_selectedRowContent_guid = row.guid;
+        if (editor == "true")
+        {
 
-        await View_Script_Dialog(row.created, row.last_edited, row.maintainer, row.contact, row.is_admin.ToString(), row.name, row.description, row.platform, row.shell, row.script);
+            Console.WriteLine($"Row double clicked script: {row.script}");
+
+            MudDialog.Close(DialogResult.Ok(row.script));
+        }
+        else
+        {
+            scripts_selectedRowContent_guid = row.guid;
+
+            await View_Script_Dialog(row.created, row.last_edited, row.maintainer, row.contact, row.is_admin.ToString(), row.name, row.description, row.platform, row.shell, row.script, row.guid);
+        }
     }
 
     private string Scripts_GetRowClass(Scripts_Entity row)
@@ -193,6 +206,8 @@
 
     private async Task Get_Community_Scripts()
     {
+        scripts_mysql_data.Clear();
+
         loading_overlay = true;
 
         StateHasChanged();
@@ -221,7 +236,7 @@
 
     private bool view_script_dialog_open = false;
 
-    private async Task View_Script_Dialog(string created, string last_edited, string maintainer, string contact, string is_admin, string name, string description, string platform, string shell, string script)
+    private async Task View_Script_Dialog(string created, string last_edited, string maintainer, string contact, string is_admin, string name, string description, string platform, string shell, string script, string guid)
     {
         try
         {
@@ -247,22 +262,35 @@
             parameters.Add("platform", platform);
             parameters.Add("shell", shell);
             parameters.Add("script", script);
+            parameters.Add("guid", guid);
 
             view_script_dialog_open = true;
 
             var result = await this.DialogService.Show<Pages.Collections.Scripts.Community_Scripts.View_Dialog>(string.Empty, parameters, options).Result;
 
-            view_script_dialog_open = false;
-
             if (result.Canceled)
                 return;
+
+            // if editor = "true" then we need to reply the script
+            if (editor == "true")
+            {
+                MudDialog.Close(DialogResult.Ok(result.Data.ToString()));
+            }
+            else if (result.Data.ToString() == "revoked")
+            {
+				await Get_Community_Scripts();
+            }
 
             Logging.Handler.Debug("/community/scripts -> View_Script_Dialog", "Result", result.Data.ToString());
         }
 		catch (Exception ex)
 		{
 			Logging.Handler.Error("/community/scripts -> View_Script_Dialog", "Result", ex.ToString());
-		}
+        }
+        finally
+        {
+            view_script_dialog_open = false;
+        }
     }
 
     private void Cancel() => MudDialog.Cancel();

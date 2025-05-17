@@ -28,6 +28,13 @@
     </TitleContent>
     <DialogContent>
 
+        <MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+                <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+                <MudText Typo="Typo.h6" Class="mt-2">Please wait...</MudText>
+            </div>
+        </MudOverlay>
+
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@script_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
@@ -129,6 +136,8 @@
 </MudDialog>
 
 @code {
+    
+    private bool loading_overlay = false;
 
     [CascadingParameter] MudDialogInstance MudDialog { get; set; }
     [Parameter] public string json { get; set; }
@@ -767,6 +776,9 @@
                 contact = messageResult.Data.ToString();
             else
 				return;
+            
+            loading_overlay = true;
+			StateHasChanged();
 
             string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
             url = url + "/api/community/scripts/publish";
@@ -800,6 +812,9 @@
 		{
 			Logging.Handler.Error("/manage_scripts (Add_Script_Dialog) -> Publish_To_Members_Portal", "Result", ex.ToString());
 		}
+
+		loading_overlay = false;
+		StateHasChanged();
     }
 
     private void Cancel() => MudDialog.Cancel();
