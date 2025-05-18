@@ -19,6 +19,13 @@
     }
 </style>
 
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+        <MudText Typo="Typo.body1" Class="mt-2">Please wait...</MudText>
+    </div>
+</MudOverlay>
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">Community Scripts</MudText>
@@ -27,19 +34,22 @@
 
         <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning">Here you will find a list of scripts created by the community. The scripts are not maintained by us, we recommend you to read them before using them to prevent problems. :-)</MudAlert>
 
-        <MudTable Class="mt-5" Height="60vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@scripts_mysql_data" Filter="new Func<Scripts_Entity, bool>(Scripts_Table_Filter_Func)">
+		<MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Get_Community_Scripts">Reload</MudButton>
+        <MudButton Class="mt-5 ml-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Custom.Brands.GitHub" OnClick="@ImportFromGitHub">Import from GitHub</MudButton>
+
+        <MudTable Class="mt-5" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@scripts_mysql_data" Filter="new Func<Scripts_Entity, bool>(Scripts_Table_Filter_Func)">
             <ToolBarContent>
                 <MudTextField Class="mt-0" @bind-Value="scripts_table_search_string" Placeholder="Suche" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
             </ToolBarContent>
             <HeaderContent>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.name))" style="white-space: nowrap;">Name</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.maintainer))" style="white-space: nowrap;">Maintainer</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.contact))" style="white-space: nowrap;">Contact</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.created))" style="white-space: nowrap;">Created</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.last_edited))" style="white-space: nowrap;">Last edited</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.platform))" style="white-space: nowrap;">Platform</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.shell))" style="white-space: nowrap;">Shell</MudTh>
-                <MudTh @onclick="() => scripts_table_sorted_column = (nameof(Scripts_Entity.description))" style="white-space: nowrap;">Description</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.name)" Style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.maintainer)" Style="white-space: nowrap;">Maintainer</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.contact)" Style="white-space: nowrap;">Contact</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.created)" Style="white-space: nowrap;">Created</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.last_edited)" Style="white-space: nowrap;">Last edited</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.platform)" Style="white-space: nowrap;">Platform</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.shell)" Style="white-space: nowrap;">Shell</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.description)" Style="white-space: nowrap;">Description</MudTableSortLabel></MudTh>
             </HeaderContent>
 
             <RowTemplate Context="scripts_row">
@@ -98,15 +108,6 @@
             </PagerContent>
         </MudTable>
 
-        @{
-            if (loading_overlay)
-            {
-                <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
-                    <MudText Typo="Typo.body1">Please wait.</MudText>
-                </MudProgressLinear>
-            }
-        }
-
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Close</MudButton>
@@ -136,8 +137,12 @@
 
     private async Task AfterInitializedAsync()
     {
+        loading_overlay = true;
+        StateHasChanged();
+
         await Get_Community_Scripts();
 
+		loading_overlay = false;
         StateHasChanged();
     }
 
@@ -156,6 +161,7 @@
         public string? platform { get; set; }
         public string? shell { get; set; }
         public string? script { get; set; }
+        public string? github_url { get; set; }
     }
 
     private bool Scripts_Table_Filter_Func(Scripts_Entity row)
@@ -178,24 +184,19 @@
     {
         scripts_selectedRowContent_guid = row.guid;
         scripts_selectedRowContent_script = row.script;
-
-        Console.WriteLine($"Row clicked script: {row.script}");
     }
 
     private async Task Scripts_RowDblClickHandler(Scripts_Entity row)
     {
         if (editor == "true")
         {
-
-            Console.WriteLine($"Row double clicked script: {row.script}");
-
             MudDialog.Close(DialogResult.Ok(row.script));
         }
         else
         {
             scripts_selectedRowContent_guid = row.guid;
 
-            await View_Script_Dialog(row.created, row.last_edited, row.maintainer, row.contact, row.is_admin.ToString(), row.name, row.description, row.platform, row.shell, row.script, row.guid);
+            await View_Script_Dialog(row.created, row.last_edited, row.maintainer, row.contact, row.is_admin.ToString(), row.name, row.description, row.platform, row.shell, row.script, row.guid, row.github_url);
         }
     }
 
@@ -236,7 +237,7 @@
 
     private bool view_script_dialog_open = false;
 
-    private async Task View_Script_Dialog(string created, string last_edited, string maintainer, string contact, string is_admin, string name, string description, string platform, string shell, string script, string guid)
+    private async Task View_Script_Dialog(string created, string last_edited, string maintainer, string contact, string is_admin, string name, string description, string platform, string shell, string script, string guid, string github_url)
     {
         try
         {
@@ -263,6 +264,7 @@
             parameters.Add("shell", shell);
             parameters.Add("script", script);
             parameters.Add("guid", guid);
+            parameters.Add("github_url", github_url);
 
             view_script_dialog_open = true;
 
@@ -278,18 +280,94 @@
             }
             else if (result.Data.ToString() == "revoked")
             {
-				await Get_Community_Scripts();
+                await Get_Community_Scripts();
             }
-
+            else if (result.Data.ToString() == "updated")
+			{
+				await Get_Community_Scripts();
+			}
+			
             Logging.Handler.Debug("/community/scripts -> View_Script_Dialog", "Result", result.Data.ToString());
         }
-		catch (Exception ex)
-		{
-			Logging.Handler.Error("/community/scripts -> View_Script_Dialog", "Result", ex.ToString());
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/community/scripts -> View_Script_Dialog", "Result", ex.ToString());
         }
         finally
         {
             view_script_dialog_open = false;
+        }
+    }
+
+    private async Task ImportFromGitHub()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        loading_overlay = true;
+        StateHasChanged();
+
+        try
+        {
+            var options = new DialogOptions
+                {
+                    CloseButton = true,
+                    FullWidth = true,
+                    MaxWidth = MaxWidth.Medium,
+                    BackgroundClass = "dialog-blurring",
+                };
+
+            var parameters = new DialogParameters();
+            var dialog = DialogService.Show<Pages.Collections.Scripts.Community_Scripts.Import_From_GitHub_Dialog>("Import from GitHub", parameters, options);
+
+            var messageResult = await dialog.Result;
+            string script_url = String.Empty;
+
+            if (!messageResult.Canceled)
+                script_url = messageResult.Data.ToString();
+            else
+                return;
+
+            // Build json object (url)
+            var json = new
+            {
+                url = script_url
+            };
+
+            // Convert to json string
+            string json_string = JsonSerializer.Serialize(json);
+
+            string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
+            url = url + "/api/community/scripts/request_script";
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json_string);
+
+            // 0 = imported, 1 = updated, 2 = script not found, 3 = error
+            if (result == "0")
+            {
+                await Get_Community_Scripts();
+                Snackbar.Add("Script imported successfully.", Severity.Success);
+            }
+            else if (result == "1")
+            {
+                Snackbar.Add("Script already exists. Script synced successfully.", Severity.Info);
+            }
+            else if (result == "2")
+            {
+                Snackbar.Add("Script not found. Make sure your URL is valid.", Severity.Error);
+            }
+            else if (result == "3")
+            {
+                Snackbar.Add("Error while importing script. Make sure your URL is valid.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Online_Mode.Handler.ImportFromGitHub", "General error", ex.ToString());
+        }
+        finally
+        {
+			loading_overlay = false;
+			StateHasChanged();
         }
     }
 

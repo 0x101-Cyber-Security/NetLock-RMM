@@ -1,4 +1,5 @@
-﻿using MySqlConnector;
+﻿using Helper;
+using MySqlConnector;
 using System.Data.Common;
 using System.Diagnostics;
 using System.Text.Json;
@@ -186,6 +187,14 @@ namespace NetLock_RMM_Server.Agent.Windows
                 int device_id = await Helper.Get_Device_Id(device_identity.device_name, tenant_id, location_id);
 
                 //Insert applications_installed_history
+                // Check if the data is new
+                string applications_installed_json_string_hashed = await IO.Get_SHA512_From_String(applications_installed_json_string);
+
+                string applications_installed_json_string_hashed_db = String.Empty;
+
+
+
+
                 string applications_installed_history_execute_query = "INSERT INTO `applications_installed_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
                 MySqlCommand applications_installed_history_cmd = new MySqlCommand(applications_installed_history_execute_query, conn);

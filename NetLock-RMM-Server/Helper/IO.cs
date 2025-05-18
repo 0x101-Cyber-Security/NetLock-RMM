@@ -2,6 +2,7 @@
 using NetLock_RMM_Server;
 using System.Data.Common;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Helper
@@ -201,6 +202,25 @@ namespace Helper
             catch (Exception ex)
             {
                 Logging.Handler.Error("Helper.IO.Get_SHA512", "General error", ex.ToString());
+                return ex.ToString();
+            }
+        }
+
+        public static async Task<string> Get_SHA512_From_String(string input)
+        {
+            try
+            {
+                using (SHA512 sha512 = SHA512.Create())
+                {
+                    byte[] checksum_sha512 = sha512.ComputeHash(Encoding.UTF8.GetBytes(input));
+                    string hash = BitConverter.ToString(checksum_sha512).Replace("-", string.Empty);
+                    Logging.Handler.Debug("Helper.IO.Get_SHA512_From_String", "hash", hash);
+                    return hash;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Helper.IO.Get_SHA512_From_String", "General error", ex.ToString());
                 return ex.ToString();
             }
         }

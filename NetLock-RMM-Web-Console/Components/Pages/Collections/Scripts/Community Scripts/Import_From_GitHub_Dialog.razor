@@ -1,0 +1,64 @@
+﻿@using System.Text.RegularExpressions
+
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="FirstInput" Label="GitHub URL Example: https://github.com/netlock-rmm/scripts/blob/main/scripts/example.ps1" Variant="Variant.Filled" Immediate="true" />
+
+        @if (String.IsNullOrEmpty(FirstInput))
+        {
+            <MudText Class="mt-2">If the script is present in our collection, it will be updated. Otherwise it will be imported.</MudText>
+        }
+
+        @{
+			if (isValidUrl)
+			{
+			    <MudText Class="mt-2" Color="Color.Success">Valid URL</MudText>
+			}
+			else if (!String.IsNullOrEmpty(FirstInput))
+			{
+			    <MudText Class="mt-2" Color="Color.Error">Invalid URL</MudText>
+			}
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+        <MudButton OnClick="@Submit" Color="Color.Success" Variant="Variant.Filled" Disabled="@(String.IsNullOrEmpty(FirstInput) || Check_Valid_Url())">Import</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    public string FirstInput { get; set; } = string.Empty;
+
+    private bool isValidUrl = false;
+
+    private bool Check_Valid_Url()
+    {
+        // Check if the URL is a valid GitHub repository url using regex
+        string pattern = @"^https:\/\/github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/blob\/[a-zA-Z0-9._-]+\/[\w\-\.\/]+$";
+
+        if (Regex.IsMatch(FirstInput, pattern))
+        {
+            isValidUrl = true;
+            return false;
+		}
+        else
+		{
+			isValidUrl = false;
+			return true;
+		}
+    }
+
+    void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(FirstInput));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}
