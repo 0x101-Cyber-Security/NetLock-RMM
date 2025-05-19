@@ -321,6 +321,8 @@ catch (Exception ex)
 ///increase size of textarea accepted value value
 builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessageSize = 102400000);
 
+// Add background services
+builder.Services.AddHostedService<Auto_Cleanup_Service>();
 
 var app = builder.Build();
 
@@ -355,7 +357,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e3548ccb-4daf-4c97-b178-bc51eb9c2a6e //OSSCH_END
+//OSSCH_START e89d8217-034a-4fa9-b79f-479253071b9e //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

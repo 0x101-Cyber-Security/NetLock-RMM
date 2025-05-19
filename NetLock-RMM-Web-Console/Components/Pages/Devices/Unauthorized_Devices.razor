@@ -47,10 +47,75 @@
     display: none;
     }
     }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animated-text {
+        animation: pulse 2s infinite ease-in-out;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .wave-emoji {
+        display: inline-block;
+        animation: wave 2s infinite;
+        transform-origin: 70% 70%;
+    }
+
+    @@keyframes wave {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        15% {
+            transform: rotate(15deg);
+        }
+
+        30% {
+            transform: rotate(-10deg);
+        }
+
+        45% {
+            transform: rotate(15deg);
+        }
+
+        60% {
+            transform: rotate(-10deg);
+        }
+
+        75% {
+            transform: rotate(15deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
 </style>
 
 <MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
-<MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" />
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
 </MudOverlay>
 
 <AuthorizeView>
@@ -703,8 +768,10 @@
         {
             members_portal_license_limit_reached = await Classes.Members_Portal.Handler.Check_License_Limit_Reached();
 
+            var licenseInfo = await Classes.Members_Portal.Handler.Get_License_Info();
+
             members_portal_license_count = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT COUNT(*) FROM devices WHERE authorized = '1';", "COUNT(*)"));
-            members_portal_license_limit = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_max FROM settings;", "members_portal_licenses_max"));
+			members_portal_license_limit = licenseInfo.licensesMax;
         }
         catch (Exception ex)
         {

@@ -144,6 +144,9 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Get the tenant id & location id with tenant_guid & location_guid
                 (int tenant_id, int location_id) = await Helper.Get_Tenant_Location_Id(device_identity.tenant_guid, device_identity.location_guid);
 
+                // Get device id with device name, tenant id & location id
+                int device_id = await Helper.Get_Device_Id(device_identity.device_name, tenant_id, location_id);
+
                 //Insert into database
                 await conn.OpenAsync();
 
@@ -161,13 +164,11 @@ namespace NetLock_RMM_Server.Agent.Windows
                        "`antivirus_products` = @antivirus_products, " +
                        "`antivirus_information` = @antivirus_information, " +
                        "`cronjobs` = @cronjobs " +
-                       "WHERE device_name = @device_name AND location_id = @location_id AND tenant_id = @tenant_id";
+                       "WHERE id = @device_id;";
 
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
 
-                cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
-                cmd.Parameters.AddWithValue("@location_id", location_id);
-                cmd.Parameters.AddWithValue("@device_name", device_identity.device_name);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
                 cmd.Parameters.AddWithValue("@ram_information", ram_information_json_string);
                 cmd.Parameters.AddWithValue("@cpu_information", cpu_information_json_string);
                 cmd.Parameters.AddWithValue("@network_adapters", network_adapters_json_string);
@@ -183,77 +184,114 @@ namespace NetLock_RMM_Server.Agent.Windows
                 cmd.Parameters.AddWithValue("@cronjobs", cronjobs_json_string);
                 cmd.ExecuteNonQuery();
 
-                // Get device id with device name, tenant id & location id
-                int device_id = await Helper.Get_Device_Id(device_identity.device_name, tenant_id, location_id);
-
                 //Insert applications_installed_history
                 // Check if the data is new
                 string applications_installed_json_string_hashed = await IO.Get_SHA512_From_String(applications_installed_json_string);
 
-                string applications_installed_json_string_hashed_db = String.Empty;
+                string applications_installed_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_installed");
+                applications_installed_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_installed_json_string_hashed_db);
 
+                if (applications_installed_json_string_hashed != applications_installed_json_string_hashed_db)
+                {
+                    string applications_installed_history_execute_query = "INSERT INTO `applications_installed_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
+                    MySqlCommand applications_installed_history_cmd = new MySqlCommand(applications_installed_history_execute_query, conn);
 
-
-                string applications_installed_history_execute_query = "INSERT INTO `applications_installed_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
-
-                MySqlCommand applications_installed_history_cmd = new MySqlCommand(applications_installed_history_execute_query, conn);
-
-                applications_installed_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                applications_installed_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                applications_installed_history_cmd.Parameters.AddWithValue("@json", applications_installed_json_string);
-                applications_installed_history_cmd.ExecuteNonQuery();
+                    applications_installed_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    applications_installed_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    applications_installed_history_cmd.Parameters.AddWithValue("@json", applications_installed_json_string);
+                    applications_installed_history_cmd.ExecuteNonQuery();
+                }
 
                 // Insert cronjobs_history
-                string cronjobs_history_execute_query = "INSERT INTO `device_information_cronjobs_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string cronjobs_json_string_hashed = await IO.Get_SHA512_From_String(cronjobs_json_string);
+                string cronjobs_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "cronjobs");
+                cronjobs_json_string_hashed_db = await IO.Get_SHA512_From_String(cronjobs_json_string_hashed_db);
 
-                MySqlCommand cronjobs_history_cmd = new MySqlCommand(cronjobs_history_execute_query, conn);
+                if (cronjobs_json_string_hashed != cronjobs_json_string_hashed_db)
+                {
+                    string cronjobs_history_execute_query = "INSERT INTO `device_information_cronjobs_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                cronjobs_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                cronjobs_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                cronjobs_history_cmd.Parameters.AddWithValue("@json", cronjobs_json_string);
-                cronjobs_history_cmd.ExecuteNonQuery();
+                    MySqlCommand cronjobs_history_cmd = new MySqlCommand(cronjobs_history_execute_query, conn);
 
+                    cronjobs_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    cronjobs_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cronjobs_history_cmd.Parameters.AddWithValue("@json", cronjobs_json_string);
+                    cronjobs_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert applications_logon_history
-                string applications_logon_history_execute_query = "INSERT INTO `applications_logon_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string applications_logon_json_string_hashed = await IO.Get_SHA512_From_String(applications_logon_json_string);
+                string applications_logon_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_logon");
+                applications_logon_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_logon_json_string_hashed_db);
 
-                MySqlCommand applications_logon_history_cmd = new MySqlCommand(applications_logon_history_execute_query, conn);
+                if (applications_logon_json_string_hashed != applications_logon_json_string_hashed_db)
+                {
+                    string applications_logon_history_execute_query = "INSERT INTO `applications_logon_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                applications_logon_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                applications_logon_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                applications_logon_history_cmd.Parameters.AddWithValue("@json", applications_logon_json_string);
-                applications_logon_history_cmd.ExecuteNonQuery();
+                    MySqlCommand applications_logon_history_cmd = new MySqlCommand(applications_logon_history_execute_query, conn);
+
+                    applications_logon_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    applications_logon_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    applications_logon_history_cmd.Parameters.AddWithValue("@json", applications_logon_json_string);
+                    applications_logon_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert applications_scheduled_tasks_history
-                string applications_scheduled_tasks_history_execute_query = "INSERT INTO `applications_scheduled_tasks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string applications_scheduled_tasks_json_string_hashed = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string);
+                string applications_scheduled_tasks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_scheduled_tasks");
+                applications_scheduled_tasks_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string_hashed_db);
 
-                MySqlCommand applications_scheduled_tasks_history_cmd = new MySqlCommand(applications_scheduled_tasks_history_execute_query, conn);
+                if (applications_scheduled_tasks_json_string_hashed != applications_scheduled_tasks_json_string_hashed_db)
+                {
+                    string applications_scheduled_tasks_history_execute_query = "INSERT INTO `applications_scheduled_tasks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@json", applications_scheduled_tasks_json_string);
-                applications_scheduled_tasks_history_cmd.ExecuteNonQuery();
+                    MySqlCommand applications_scheduled_tasks_history_cmd = new MySqlCommand(applications_scheduled_tasks_history_execute_query, conn);
+
+                    applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    applications_scheduled_tasks_history_cmd.Parameters.AddWithValue("@json", applications_scheduled_tasks_json_string);
+                    applications_scheduled_tasks_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert applications_services_history
-                string applications_services_history_execute_query = "INSERT INTO `applications_services_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string applications_services_json_string_hashed = await IO.Get_SHA512_From_String(applications_services_json_string);
+                string applications_services_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_services");
+                applications_services_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_services_json_string_hashed_db);
 
-                MySqlCommand applications_services_history_cmd = new MySqlCommand(applications_services_history_execute_query, conn);
+                if (applications_services_json_string_hashed != applications_services_json_string_hashed_db)
+                {
+                    string applications_services_history_execute_query = "INSERT INTO `applications_services_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                applications_services_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                applications_services_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                applications_services_history_cmd.Parameters.AddWithValue("@json", applications_services_json_string);
-                applications_services_history_cmd.ExecuteNonQuery();
+                    MySqlCommand applications_services_history_cmd = new MySqlCommand(applications_services_history_execute_query, conn);
+
+                    applications_services_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    applications_services_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    applications_services_history_cmd.Parameters.AddWithValue("@json", applications_services_json_string);
+                    applications_services_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert applications_drivers_history
-                string applications_drivers_history_execute_query = "INSERT INTO `applications_drivers_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string applications_drivers_json_string_hashed = await IO.Get_SHA512_From_String(applications_drivers_json_string);
+                string applications_drivers_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_drivers");
+                applications_drivers_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_drivers_json_string_hashed_db);
 
-                MySqlCommand applications_drivers_history_cmd = new MySqlCommand(applications_drivers_history_execute_query, conn);
+                if (applications_drivers_json_string_hashed != applications_drivers_json_string_hashed_db)
+                {
+                    string applications_drivers_history_execute_query = "INSERT INTO `applications_drivers_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                applications_drivers_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                applications_drivers_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                applications_drivers_history_cmd.Parameters.AddWithValue("@json", applications_drivers_json_string);
-                applications_drivers_history_cmd.ExecuteNonQuery();
+                    MySqlCommand applications_drivers_history_cmd = new MySqlCommand(applications_drivers_history_execute_query, conn);
+
+                    applications_drivers_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    applications_drivers_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    applications_drivers_history_cmd.Parameters.AddWithValue("@json", applications_drivers_json_string);
+                    applications_drivers_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_general_history
 
@@ -303,64 +341,112 @@ namespace NetLock_RMM_Server.Agent.Windows
                 device_information_general_history_cmd.ExecuteNonQuery();
 
                 //Insert device_information_disks_history
-                string device_information_disks_history_execute_query = "INSERT INTO `device_information_disks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string disks_json_string_hashed = await IO.Get_SHA512_From_String(disks_json_string);
+                string disks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "disks");
+                disks_json_string_hashed_db = await IO.Get_SHA512_From_String(disks_json_string_hashed_db);
 
-                MySqlCommand device_information_disks_history_cmd = new MySqlCommand(device_information_disks_history_execute_query, conn);
+                if (disks_json_string_hashed != disks_json_string_hashed_db)
+                {
+                    string device_information_disks_history_execute_query = "INSERT INTO `device_information_disks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                device_information_disks_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_disks_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_disks_history_cmd.Parameters.AddWithValue("@json", disks_json_string);
-                device_information_disks_history_cmd.ExecuteNonQuery();
+                    MySqlCommand device_information_disks_history_cmd = new MySqlCommand(device_information_disks_history_execute_query, conn);
+
+                    device_information_disks_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_disks_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_disks_history_cmd.Parameters.AddWithValue("@json", disks_json_string);
+                    device_information_disks_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_cpu_history
-                string device_information_cpu_history_execute_query = "INSERT INTO `device_information_cpu_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string cpu_json_string_hashed = await IO.Get_SHA512_From_String(cpu_json_string);
+                string cpu_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "cpu_information");
+                cpu_json_string_hashed_db = await IO.Get_SHA512_From_String(cpu_json_string_hashed_db);
 
-                MySqlCommand device_information_cpu_history_cmd = new MySqlCommand(device_information_cpu_history_execute_query, conn);
+                if (cpu_json_string_hashed != cpu_json_string_hashed_db)
+                {
+                    string device_information_cpu_history_execute_query = "INSERT INTO `device_information_cpu_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                device_information_cpu_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_cpu_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_cpu_history_cmd.Parameters.AddWithValue("@json", cpu_json_string);
-                device_information_cpu_history_cmd.ExecuteNonQuery();
+                    MySqlCommand device_information_cpu_history_cmd = new MySqlCommand(device_information_cpu_history_execute_query, conn);
+
+                    device_information_cpu_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_cpu_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_cpu_history_cmd.Parameters.AddWithValue("@json", cpu_json_string);
+                    device_information_cpu_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_ram_history
-                string device_information_ram_history_execute_query = "INSERT INTO `device_information_ram_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string ram_json_string_hashed = await IO.Get_SHA512_From_String(ram_json_string);
+                string ram_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "ram_information");
+                ram_json_string_hashed_db = await IO.Get_SHA512_From_String(ram_json_string_hashed_db);
 
-                MySqlCommand device_information_ram_history_cmd = new MySqlCommand(device_information_ram_history_execute_query, conn);
+                if (ram_json_string_hashed != ram_json_string_hashed_db)
+                {
+                    string device_information_ram_history_execute_query = "INSERT INTO `device_information_ram_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                device_information_ram_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_ram_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_ram_history_cmd.Parameters.AddWithValue("@json", ram_json_string);
-                device_information_ram_history_cmd.ExecuteNonQuery();
+                    MySqlCommand device_information_ram_history_cmd = new MySqlCommand(device_information_ram_history_execute_query, conn);
+
+                    device_information_ram_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_ram_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_ram_history_cmd.Parameters.AddWithValue("@json", ram_json_string);
+                    device_information_ram_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_network_adapters_history
-                string device_information_network_adapters_history_execute_query = "INSERT INTO `device_information_network_adapters_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string network_adapters_json_string_hashed = await IO.Get_SHA512_From_String(network_adapters_json_string);
+                string network_adapters_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "network_adapters");
+                network_adapters_json_string_hashed_db = await IO.Get_SHA512_From_String(network_adapters_json_string_hashed_db);
 
-                MySqlCommand device_information_network_adapters_history_cmd = new MySqlCommand(device_information_network_adapters_history_execute_query, conn);
+                if (network_adapters_json_string_hashed != network_adapters_json_string_hashed_db)
+                {
+                    string device_information_network_adapters_history_execute_query = "INSERT INTO `device_information_network_adapters_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                device_information_network_adapters_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_network_adapters_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_network_adapters_history_cmd.Parameters.AddWithValue("@json", network_adapters_json_string);
-                device_information_network_adapters_history_cmd.ExecuteNonQuery();
+                    MySqlCommand device_information_network_adapters_history_cmd = new MySqlCommand(device_information_network_adapters_history_execute_query, conn);
+
+                    device_information_network_adapters_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_network_adapters_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_network_adapters_history_cmd.Parameters.AddWithValue("@json", network_adapters_json_string);
+                    device_information_network_adapters_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_task_manager_history
-                string device_information_task_manager_history_execute_query = "INSERT INTO `device_information_task_manager_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string processes_json_string_hashed = await IO.Get_SHA512_From_String(processes_json_string);
+                string processes_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "processes");
+                processes_json_string_hashed_db = await IO.Get_SHA512_From_String(processes_json_string_hashed_db);
+                
+                if (processes_json_string_hashed != processes_json_string_hashed_db)
+                {
+                    string device_information_task_manager_history_execute_query = "INSERT INTO `device_information_task_manager_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                MySqlCommand device_information_task_manager_history_cmd = new MySqlCommand(device_information_task_manager_history_execute_query, conn);
+                    MySqlCommand device_information_task_manager_history_cmd = new MySqlCommand(device_information_task_manager_history_execute_query, conn);
 
-                device_information_task_manager_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_task_manager_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_task_manager_history_cmd.Parameters.AddWithValue("@json", processes_json_string);
-                device_information_task_manager_history_cmd.ExecuteNonQuery();
+                    device_information_task_manager_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_task_manager_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_task_manager_history_cmd.Parameters.AddWithValue("@json", processes_json_string);
+                    device_information_task_manager_history_cmd.ExecuteNonQuery();
+                }
 
                 //Insert device_information_antivirus_history
-                string device_information_antivirus_products_history_execute_query = "INSERT INTO `device_information_antivirus_products_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
+                // Check if the data is new
+                string antivirus_information_json_string_hashed = await IO.Get_SHA512_From_String(antivirus_information_json_string);
+                string antivirus_information_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "antivirus_information");
+                antivirus_information_json_string_hashed_db = await IO.Get_SHA512_From_String(antivirus_information_json_string_hashed_db);
 
-                MySqlCommand device_information_antivirus_products_history_cmd = new MySqlCommand(device_information_antivirus_products_history_execute_query, conn);
+                if (antivirus_information_json_string_hashed != antivirus_information_json_string_hashed_db)
+                {
+                    string device_information_antivirus_products_history_execute_query = "INSERT INTO `device_information_antivirus_products_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
-                device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@device_id", device_id);
-                device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@json", antivirus_products_json_string);
-                device_information_antivirus_products_history_cmd.ExecuteNonQuery();
+                    MySqlCommand device_information_antivirus_products_history_cmd = new MySqlCommand(device_information_antivirus_products_history_execute_query, conn);
+
+                    device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@device_id", device_id);
+                    device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    device_information_antivirus_products_history_cmd.Parameters.AddWithValue("@json", antivirus_products_json_string);
+                    device_information_antivirus_products_history_cmd.ExecuteNonQuery();
+                }
 
                 await conn.CloseAsync();
 

@@ -24,8 +24,8 @@
 
     </DialogContent>
     <DialogActions>
-        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
-        <MudButton OnClick="@Submit" Color="Color.Success" Variant="Variant.Filled" Disabled="@(String.IsNullOrEmpty(FirstInput) || Check_Valid_Url())">Import</MudButton>
+        <MudButton OnClick="@Cancel" Color="Color.Default" Size="Size.Small">Cancel</MudButton>
+        <MudButton OnClick="@Submit" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Disabled="@(String.IsNullOrEmpty(FirstInput) || Check_Valid_Url())">Import</MudButton>
     </DialogActions>
 </MudDialog>
 
