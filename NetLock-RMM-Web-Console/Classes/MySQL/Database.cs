@@ -718,5 +718,36 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 }
             }
         }
+
+        public static async Task Fix_Settings()
+        {
+            try
+            {
+                // smtp
+                string smtp = String.Empty;
+                smtp = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "smtp");
+
+                // files api key
+                string files_api_key = String.Empty;
+                files_api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+                if (String.IsNullOrEmpty(files_api_key))
+                {
+                    // Generate random files api key if empty
+                    if (String.IsNullOrEmpty(files_api_key))
+                        files_api_key = Guid.NewGuid().ToString() + "-" + Guid.NewGuid().ToString();
+
+                    // Delete old settings
+                    await Classes.MySQL.Handler.Execute_Command("DELETE FROM settings;");
+
+                    // Add new settings
+                    await Classes.MySQL.Handler.Execute_Command("INSERT INTO settings (db_version, files_api_key, smtp) VALUES ('" + Application_Settings.db_version + "', '" + files_api_key + "', '" + smtp + "');");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Database", "MySQL_Query", ex.ToString());
+            }
+        }
     }
 }

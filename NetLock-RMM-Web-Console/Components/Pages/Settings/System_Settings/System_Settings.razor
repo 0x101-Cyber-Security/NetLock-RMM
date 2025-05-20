@@ -53,33 +53,33 @@
     }
 
     @@keyframes fadeIn {
-        from {opacity: 0;}
-        to {opacity: 1;}
+    from {opacity: 0;}
+    to {opacity: 1;}
     }
 
     .animated-text {
-        animation: pulse 2s infinite ease-in-out;
+    animation: pulse 2s infinite ease-in-out;
     }
 
     @@keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.6; }
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
     }
 
     .wave-emoji {
-        display: inline-block;
-        animation: wave 2s infinite;
-        transform-origin: 70% 70%;
+    display: inline-block;
+    animation: wave 2s infinite;
+    transform-origin: 70% 70%;
     }
 
     @@keyframes wave {
-        0% { transform: rotate(0deg); }
-        15% { transform: rotate(15deg); }
-        30% { transform: rotate(-10deg); }
-        45% { transform: rotate(15deg); }
-        60% { transform: rotate(-10deg); }
-        75% { transform: rotate(15deg); }
-        100% { transform: rotate(0deg); }
+    0% { transform: rotate(0deg); }
+    15% { transform: rotate(15deg); }
+    30% { transform: rotate(-10deg); }
+    45% { transform: rotate(15deg); }
+    60% { transform: rotate(-10deg); }
+    75% { transform: rotate(15deg); }
+    100% { transform: rotate(0deg); }
     }
 
 </style>
@@ -589,7 +589,7 @@
                 </MudGrid>
 
                 <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
-                    <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
+                <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
 
             </MudPaper>
         }
@@ -782,6 +782,7 @@
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
         await MySQL_Status();
+        await Fix_Settings(); // this is a hotfix code to verify if a bug is present in the database
         await Get_Servers();
         await Get_Agent_Updates();
 
@@ -1019,13 +1020,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START 041711a0-7eef-4e31-9106-b0d16eb549c6 //OSSCH_END
+    //OSSCH_START 779ceaac-94af-4bc3-ba0c-e573fd38dc68 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START d38333c6-7b9e-4dd3-b379-0145c7da3c8f //OSSCH_END
+    //OSSCH_START 45b4c20a-8f57-4297-9296-73d2f7708276 //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 057193a8-8055-46a7-9ada-95cc14b9ac66 //OSSCH_END
+    //OSSCH_START 4ce31230-fb67-42cc-994c-f0d95d7c46ef //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
@@ -1316,7 +1317,7 @@ cleanup_events_history_days = @cleanup_events_history_days;";
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
         loading_overlay = true;
-		StateHasChanged();
+        StateHasChanged();
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -1365,7 +1366,7 @@ OPTIMIZE TABLE tenants;";
             await conn.OpenAsync();
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
-            
+
             Logging.Handler.Debug("Settings -> Optimize_Database", "MySQL_Prepared_Query", query);
 
             await cmd.ExecuteNonQueryAsync();
@@ -1380,8 +1381,39 @@ OPTIMIZE TABLE tenants;";
         }
 
         loading_overlay = false;
-		StateHasChanged();
+        StateHasChanged();
 
         Snackbar.Add("Database optimized!", Severity.Success);
+    }
+
+    private async Task Fix_Settings()
+    {
+        try
+        {
+            // smtp
+            string smtp = String.Empty; 
+            smtp = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "smtp");
+
+            // files api key
+            string files_api_key = String.Empty;
+            files_api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+            if (String.IsNullOrEmpty(files_api_key))
+            {
+                // Generate random files api key if empty
+                if (String.IsNullOrEmpty(files_api_key))
+                    files_api_key = Guid.NewGuid().ToString() + "-" + Guid.NewGuid().ToString();
+
+                // Delete old settings
+                await Classes.MySQL.Handler.Execute_Command("DELETE FROM settings;");
+
+                // Add new settings
+                await Classes.MySQL.Handler.Execute_Command("INSERT INTO settings (db_version, files_api_key, smtp) VALUES ('" + Application_Settings.db_version + "', '" + files_api_key + "', '" + smtp + "');");
+            }
+        }
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("Settings -> Fix_Settings", "MySQL_Query", ex.ToString());
+		}   
     }
 }

@@ -17,7 +17,6 @@ using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
 using LettuceEncrypt.Acme;
 using MudBlazor;
-using static NetLock_RMM_Web_Console.Components.Pages.Settings.System_Settings.System_Settings;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
 
@@ -275,6 +274,8 @@ else
 
             await Database.Update_DB_Version();
 
+            await Database.Fix_Settings();
+
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Database structure okay.");
             Console.ResetColor();
@@ -357,7 +358,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e89d8217-034a-4fa9-b79f-479253071b9e //OSSCH_END
+//OSSCH_START 5fe8808f-4e07-4cdd-8ac2-7c1346493648 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
