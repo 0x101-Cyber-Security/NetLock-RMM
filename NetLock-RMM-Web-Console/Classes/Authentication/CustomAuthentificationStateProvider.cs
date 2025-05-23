@@ -1,58 +1,97 @@
-﻿using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Logging;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace NetLock_RMM_Web_Console.Classes.Authentication
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
+        private static readonly ClaimsIdentity _anonymousIdentity = new();
+        private readonly ClaimsPrincipal _anonymous = new(_anonymousIdentity);
         private readonly ProtectedSessionStorage _sessionStorage;
-        private static readonly ClaimsIdentity identity = new ClaimsIdentity();
-        private ClaimsPrincipal _anonymous = new ClaimsPrincipal(identity);
+        private readonly TokenService _tokenService;
+        private readonly TokenValidationParameters _validationParameters;
 
-        public CustomAuthenticationStateProvider(ProtectedSessionStorage sessionStorage)
+        public const string Issuer = "NetLockRMMWebConsole";
+        public const string Audience = "NetLockRMMUser";
+
+        public CustomAuthenticationStateProvider(ProtectedSessionStorage sessionStorage, TokenService tokenService)
         {
-            _sessionStorage = sessionStorage;
+            try
+            {
+                _sessionStorage = sessionStorage;
+                _tokenService = tokenService;
+
+                // TokenValidationParameters must have the same settings as during generation:
+                _validationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = Issuer,
+
+                    ValidateAudience = true,
+                    ValidAudience = Audience,
+
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration.Web_Console.token_service_secret_key)),
+
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero
+                };
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.Authentification.CustomAuthenticationStateProvider", "General error", ex.ToString());
+            }
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            // Initial Dummy State
             try
             {
-                var userSession = await GetUserSessionAsync();
+                // Verhindert JS-Interop während des Prerenderings
+                var result = await _sessionStorage.GetAsync<string>("SessionToken");
+                var jwt = result.Success ? result.Value : null;
 
-                if (userSession == null)
+                if (string.IsNullOrEmpty(jwt))
                     return new AuthenticationState(_anonymous);
 
-                var claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
-                {
-                    new Claim(ClaimTypes.Name, userSession.UserName),
-                    new Claim(ClaimTypes.Role, userSession.Role)
-                }, "CustomAuth"));
-
-                return new AuthenticationState(claimsPrincipal);
+                var principal = ValidateToken(jwt);
+                return new AuthenticationState(principal);
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("JavaScript interop calls cannot be issued"))
+            {
+                // This typically occurs during prerendering
+                Logging.Handler.Error("Classes.Authentification.CustomAuthenticationStateProvider", "GetAuthenticationStateAsync: Error while getting authentication state", ex.ToString());
+                return new AuthenticationState(_anonymous);
             }
             catch (Exception ex)
             {
-                //Logging.Handler.Error("CustomAuthentificationStateProvider", "GetAuthenticationStateAsync", ex.ToString());
+                Logging.Handler.Error("Classes.Authentification.CustomAuthenticationStateProvider", "GetAuthenticationStateAsync: Error while getting authentication state", ex.ToString());
                 return new AuthenticationState(_anonymous);
             }
-            
         }
 
-        private async Task<UserSession> GetUserSessionAsync()
+        private ClaimsPrincipal ValidateToken(string jwt)
         {
             try
             {
-                var userSessionStorageResult = await _sessionStorage.GetAsync<UserSession>("UserSession");
-                return userSessionStorageResult.Success ? userSessionStorageResult.Value : null;
+                var handler = new JwtSecurityTokenHandler();
+
+                // Checks signature and expiry
+                var principal = handler.ValidateToken(jwt, _validationParameters, out var validatedToken);
+
+                // This ensures that ClaimTypes.Email and ClaimTypes.Role are included
+                return principal;
             }
             catch (Exception ex)
             {
-                // Log the exception if needed
-                Logging.Handler.Error("CustomAuthentificationStateProvider", "GetUserSessionAsync", ex.ToString());
-                return null;
+                Logging.Handler.Error("Classes.Authentification.CustomAuthenticationStateProvider", "ValidateToken: Error while validating token", ex.ToString());
+                return _anonymous;
             }
         }
 
@@ -60,36 +99,34 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
         {
             try
             {
-                ClaimsPrincipal claimsPrincipal;
+                ClaimsPrincipal principal;
 
-                if (userSession != null && delete == false)
+                if (userSession != null && !delete)
                 {
-                    await _sessionStorage.SetAsync("UserSession", userSession);
+                    // 1) Create new JWT
+                    var jwt = _tokenService.GenerateToken(userSession);
+                    await _sessionStorage.SetAsync("SessionToken", jwt);
 
-                    claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new List<Claim>
-                    {
-                        new Claim(ClaimTypes.Name, userSession.UserName),
-                        new Claim(ClaimTypes.Role, userSession.Role)
-                    }));
-                }
-                else if (userSession != null && delete)
+                    // 2) ClaimsPrincipal für NotifyAuthenticationStateChanged erzeugen
+                    var claims = new List<Claim>
                 {
-                    await _sessionStorage.DeleteAsync("UserSession");
-                    claimsPrincipal = _anonymous;
+                    new Claim(ClaimTypes.Email, userSession.UserName),
+                    new Claim(ClaimTypes.Role,  userSession.Role)
+                };
+                    principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "CustomAuth"));
                 }
                 else
                 {
-                    await _sessionStorage.DeleteAsync("UserSession");
-                    claimsPrincipal = _anonymous;
+                    // Logout case
+                    await _sessionStorage.DeleteAsync("SessionToken");
+                    principal = _anonymous;
                 }
 
-                NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(claimsPrincipal)));
+                NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
             }
             catch (Exception ex)
             {
-                await _sessionStorage.DeleteAsync("UserSession");
-                NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
-                Logging.Handler.Error("CustomAuthentificationStateProvider", "UpdateAuthentificationState", ex.ToString());
+                Logging.Handler.Error("Classes.Authentification.CustomAuthenticationStateProvider", "UpdateAuthentificationState", ex.ToString());
             }
         }
     }

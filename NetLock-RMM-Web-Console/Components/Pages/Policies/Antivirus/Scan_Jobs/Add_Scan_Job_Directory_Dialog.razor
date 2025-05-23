@@ -1,12 +1,14 @@
 ﻿@using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IStringLocalizer<Pages.Policies.Antivirus.Scan_Jobs.Add_Scan_Job_Directory_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -27,12 +29,22 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string scan_directories_json { get; set; }
 
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         Logging.Handler.Debug("/Policy_Settings (Add_Scan_Job_Directory_Dialog) -> OnInitializedAsync", "scan_directories_json", scan_directories_json);
     }
 

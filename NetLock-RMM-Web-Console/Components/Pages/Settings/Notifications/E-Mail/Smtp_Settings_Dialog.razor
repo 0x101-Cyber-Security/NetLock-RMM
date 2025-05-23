@@ -1,12 +1,14 @@
 ﻿@using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IStringLocalizer<Pages.Settings.Notifications.E_Mail.Smtp_Settings_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <AuthorizeView>
     <NotAuthorized>
@@ -44,7 +46,7 @@
 @code {
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     bool smtp_invalid = true;
 
@@ -61,6 +63,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Smtp_Settings();
     }
 

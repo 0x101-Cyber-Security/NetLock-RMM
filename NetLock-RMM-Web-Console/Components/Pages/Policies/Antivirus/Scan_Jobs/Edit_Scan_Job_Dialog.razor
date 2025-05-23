@@ -4,6 +4,7 @@
 @using System.Text.Json.Nodes;
 @using System.Text;
 @using OfficeOpenXml;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Pages.Policies.Antivirus.Scan_Jobs.Edit_Scan_Job_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .selected-row-light {
@@ -61,7 +63,7 @@
 
                     <MudTextField Class="ml-2 mr-2" Label="@Localizer["description"]" T="string" @bind-Value="description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-                    <MudSelect Class="ml-2 mt-2 mb-3 mr-2" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="ml-2 mt-2 mb-3 mr-2" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["schedule_system_boot"]" />
                         <MudSelectItem T="string" Value="@Localizer["schedule_date_time"]" />
                         <MudSelectItem T="string" Value="@Localizer["schedule_x_seconds"]" />
@@ -172,7 +174,7 @@
 
                     }
 
-                    <MudSelect Class="ml-2 mt-2 mb-3 mr-2" T="string" @bind-Value=scan_type_display Label="@Localizer["scan_mode"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="ml-2 mt-2 mb-3 mr-2" T="string" @bind-Value=scan_type_display Label="@Localizer["scan_mode"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["quick_scan"]" />
                         <MudSelectItem T="string" Value="@Localizer["full_scan"]" />
                         <MudSelectItem T="string" Value="@Localizer["custom"]" />
@@ -265,7 +267,7 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string id { get; set; }
     [Parameter] public string antivirus_scan_jobs_json { get; set; }
 
@@ -273,6 +275,16 @@
 
     protected override async Task OnInitializedAsync()
     { 
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         time_scheduler_type_display = Localizer["schedule_system_boot"];
         scan_type_display = Localizer["quick_scan"];
 

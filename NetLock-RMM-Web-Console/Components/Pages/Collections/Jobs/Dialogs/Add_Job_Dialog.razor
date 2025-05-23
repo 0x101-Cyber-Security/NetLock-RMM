@@ -3,6 +3,7 @@
 @using System.Text.Json
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Jobs.Dialogs.Add_Job_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -21,7 +23,7 @@
             <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@job_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
             <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-            <MudSelect Class="mt-3" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter">
+            <MudSelect Class="mt-3" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                 <MudSelectItem T="string" Value="@Localizer["schedule_system_boot"]" />
                 <MudSelectItem T="string" Value="@Localizer["schedule_date_time"]" />
                 <MudSelectItem T="string" Value="@Localizer["schedule_x_seconds"]" />
@@ -131,14 +133,14 @@
                     <MudCheckBox T="bool" @bind-Value="time_scheduler_sunday" Label="@Localizer["sunday"].ToString()" Color="Color.Primary" />
                 }
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+            <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true TransformOrigin="Origin.TopCenter">
                     <MudSelectItem Value="@("Windows")" />
                     <MudSelectItem Value="@("Linux")" />
                     <MudSelectItem Value="@("MacOS")" />
                     <MudSelectItem Value="@("System")" />
                 </MudSelect>
 
-            <MudSelect Class="mt-3" T="string" @bind-Value="type_display" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+            <MudSelect Class="mt-3" T="string" @bind-Value="type_display" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["type"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true TransformOrigin="Origin.TopCenter">
                     @if (platform == "Windows")
                     {
                         type_display = "PowerShell";
@@ -161,7 +163,7 @@
                     }
                 </MudSelect>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true TransformOrigin="Origin.TopCenter">
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -183,6 +185,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         time_scheduler_type_display = Localizer["schedule_system_boot"];
         await Get_Scripts();
     }
@@ -252,7 +264,7 @@
     }
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private bool Form_Valid()
     {

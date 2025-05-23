@@ -14,6 +14,7 @@
 @using System.Net.Http.Headers;
 @using NetLock_RMM_Web_Console.Configuration;
 @using System.Net;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -22,6 +23,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Devices.Dialogs.Remote_Control.Remote_Control_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
 
@@ -72,7 +74,7 @@
 
                         <div style="display: flex; align-items: center;">
 
-                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
                                 @{
                                     foreach (string user in users)
@@ -83,7 +85,7 @@
 
                             </MudSelect>
 
-                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="screen_index" Label="@Localizer["screen_selection"]" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="screen_index" Label="@Localizer["screen_selection"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
                                 @{
                                     foreach (int screen in screens)
@@ -94,7 +96,7 @@
 
                             </MudSelect>
 
-                            <MudSelect Class="ml-2 mt-2" T="int" @bind-Value="remote_screen_refresh_ms" @bind-Value:after="Remote_Screen_Refresh_Timer_Restart" Label="@Localizer["resfresh_rate_ms"]" AnchorOrigin="Origin.BottomCenter">
+                            <MudSelect Class="ml-2 mt-2" T="int" @bind-Value="remote_screen_refresh_ms" @bind-Value:after="Remote_Screen_Refresh_Timer_Restart" Label="@Localizer["resfresh_rate_ms"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
                                 <MudSelectItem T="int" Value="250">250</MudSelectItem>
                                 <MudSelectItem T="int" Value="500">500</MudSelectItem>
@@ -152,7 +154,7 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string device_id { get; set; }
     [Parameter] public string device_name { get; set; }
     [Parameter] public string tenant_guid { get; set; }
@@ -183,6 +185,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Remote_Authentificate_Dialog();
 
         // Get session info

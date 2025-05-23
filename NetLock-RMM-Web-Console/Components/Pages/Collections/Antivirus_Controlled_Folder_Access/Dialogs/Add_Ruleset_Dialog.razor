@@ -41,7 +41,7 @@
     private string description = String.Empty;
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private bool Form_Valid()
     {

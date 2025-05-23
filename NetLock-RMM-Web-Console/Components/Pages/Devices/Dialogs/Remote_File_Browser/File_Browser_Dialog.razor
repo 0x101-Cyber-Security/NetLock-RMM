@@ -14,6 +14,7 @@
 @using System.Net.Http.Headers;
 @using NetLock_RMM_Web_Console.Configuration;
 @using System.Net;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -22,7 +23,8 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Devices.Dialogs.Remote_File_Browser.File_Browser_Dialog> Localizer
-
+@inject AuthenticationStateProvider AuthenticationStateProvider
+ 
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">@Localizer["title"] (@device_name)</MudText>
@@ -37,7 +39,7 @@
                     <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CheckCircle">@Localizer["authorized"]</MudAlert>
 
                     <div style="display: flex; align-items: flex-start;">
-                        <MudSelect Class="mt-2" T="string" @bind-Value="remote_file_browser_drive_string" @bind-Value:after="async () => { await Remote_File_Browser_Get_Index(remote_file_browser_drive_string, false); }" Label="@Localizer["drives"]" AnchorOrigin="Origin.BottomCenter" Disabled="@(!remote_server_client_setup)">
+                        <MudSelect Class="mt-2" T="string" @bind-Value="remote_file_browser_drive_string" @bind-Value:after="async () => { await Remote_File_Browser_Get_Index(remote_file_browser_drive_string, false); }" Label="@Localizer["drives"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(!remote_server_client_setup)">
                             @{
                                 foreach (var drive in remote_file_browser_drives_list)
                                 {
@@ -167,7 +169,7 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string device_id { get; set; }
     [Parameter] public string device_name { get; set; }
     [Parameter] public string tenant_guid { get; set; }
@@ -197,6 +199,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Remote_Authentificate_Dialog();
 
         // Get session info

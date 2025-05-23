@@ -14,6 +14,7 @@
 @using System.Net.Http.Headers;
 @using NetLock_RMM_Web_Console.Configuration;
 @using System.Text.RegularExpressions;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -22,6 +23,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Files.Manage_Files> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .custom-expansion-panel {
@@ -427,6 +429,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Permissions();
         //Check permissions
         if (!permissions_collections_enabled || !permissions_collections_files_enabled)

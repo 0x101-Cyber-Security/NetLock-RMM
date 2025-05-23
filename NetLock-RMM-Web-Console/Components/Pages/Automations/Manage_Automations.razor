@@ -8,6 +8,7 @@
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 @using Microsoft.AspNetCore.DataProtection;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -16,6 +17,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Automations.Manage_Automations> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     
@@ -65,12 +67,12 @@
 
             @if (permissions_automation_edit)
             {
-                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Edit_Automation_Dialog(automations_selectedRowContent_name, automations_selectedRowContent_json))" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit" Disabled="Automation_Get_Row_Selected()">@Localizer["edit"]</MudButton>
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Edit_Automation_Dialog(automations_selectedRowContent_id, automations_selectedRowContent_name, automations_selectedRowContent_json))" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit" Disabled="Automation_Get_Row_Selected()">@Localizer["edit"]</MudButton>
             }
 
             @if (permissions_automation_delete)
             {
-                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Delete_Automation_Dialog(automations_selectedRowContent_name))" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="Automation_Get_Row_Selected()">@Localizer["delete"]</MudButton>
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Delete_Automation_Dialog(automations_selectedRowContent_id))" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="Automation_Get_Row_Selected()">@Localizer["delete"]</MudButton>
             }
             
             <MudPaper Class="mt-5">
@@ -332,6 +334,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Permissions();
 
         //Check permissions
@@ -387,6 +399,7 @@
 
                         Automation_Entity entity = new Automation_Entity //Create entity
                             {
+                                id = reader["id"].ToString(),
                                 name = reader["name"].ToString(),
                                 description = reader["description"].ToString(),
                                 author = reader["author"].ToString(),
@@ -416,6 +429,7 @@
 
     public class Automation_Entity
     {
+        public string id { get; set; } = String.Empty;
         public string name { get; set; } = String.Empty;
         public string description { get; set; } = String.Empty;
         public string author { get; set; } = String.Empty;
@@ -443,27 +457,30 @@
             row.json.Contains(automations_table_search_string, StringComparison.OrdinalIgnoreCase);
     }
 
+    private string automations_selectedRowContent_id = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
     private string automations_selectedRowContent_name = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
     private string automations_selectedRowContent_json = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
 
     // Der Handler für den TableRowClick-Event
     private async void Automation_RowClickHandler(Automation_Entity row)
     {
+        automations_selectedRowContent_id = row.id;
         automations_selectedRowContent_name = row.name;
         automations_selectedRowContent_json = row.json;
     }
 
     private async void Automation_RowDblClickHandler(Automation_Entity row)
     {
+        automations_selectedRowContent_id = row.id;
         automations_selectedRowContent_name = row.name;
         automations_selectedRowContent_json = row.json;
 
-        await Edit_Automation_Dialog(row.name, row.json);
+        await Edit_Automation_Dialog(row.id, row.name, row.json);
     }
 
     private string Automation_GetRowClass(Automation_Entity row)
     {
-        return row.name == automations_selectedRowContent_name ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+        return row.id == automations_selectedRowContent_id ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
     }
 
     private bool Automation_Get_Row_Selected()
@@ -510,7 +527,7 @@
 
     private bool edit_automations_dialog_open = false;
 
-    private async Task Edit_Automation_Dialog(string name, string json)
+    private async Task Edit_Automation_Dialog(string id, string name, string json)
     {
         if (edit_automations_dialog_open)
             return;
@@ -524,6 +541,7 @@
             };
 
         DialogParameters parameters = new DialogParameters();
+        parameters.Add("id", id);
         parameters.Add("name", name);
         parameters.Add("json", json);
 
@@ -542,6 +560,7 @@
         {
             automations_json = result.Data.ToString();
 
+            automations_selectedRowContent_id = String.Empty;
             automations_selectedRowContent_name = String.Empty;
             automations_selectedRowContent_json = String.Empty;
 
@@ -551,7 +570,7 @@
 
     private bool delete_automations_dialog_open = false;
 
-    private async Task Delete_Automation_Dialog(string name)
+    private async Task Delete_Automation_Dialog(string id)
     {
         if (delete_automations_dialog_open)
             return;
@@ -565,7 +584,7 @@
             };
 
         DialogParameters parameters = new DialogParameters();
-        parameters.Add("name", name);
+        parameters.Add("id", id);
 
         delete_automations_dialog_open = true;
 
@@ -582,6 +601,7 @@
         {
             automations_json = result.Data.ToString();
 
+            automations_selectedRowContent_id = String.Empty;
             automations_selectedRowContent_name = String.Empty;
             automations_selectedRowContent_json = String.Empty;
 

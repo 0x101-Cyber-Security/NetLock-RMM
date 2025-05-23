@@ -125,7 +125,7 @@
 @code {
     private bool loading_overlay = false;
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
     public static List<string> agent_package_configurations_list = new List<string> { };
     public static List<string> tenants_list = new List<string> { };
@@ -673,7 +673,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START b1b73ac7-6e32-4c95-bacf-1087927bbb52 //OSSCH_END
+    //OSSCH_START 8152edbc-1e2e-4b2b-82fb-5ec8fb3f7c9b //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {

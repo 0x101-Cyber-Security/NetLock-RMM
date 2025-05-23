@@ -49,7 +49,7 @@ namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
                 var botClient = new TelegramBotClient(bot_token);
                 var messageText = message;
 
-                await botClient.SendTextMessageAsync(chat_id, messageText);
+                await botClient.SendMessage(chat_id, messageText);
 
                 return "success";
             }

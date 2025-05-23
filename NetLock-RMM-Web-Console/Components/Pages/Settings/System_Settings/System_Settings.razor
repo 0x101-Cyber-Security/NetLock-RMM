@@ -11,6 +11,7 @@
 @using System.Net.Http;
 @using System.Net.Http.Headers;
 @using System.Net;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -19,6 +20,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Settings.System_Settings.System_Settings> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .selected-row-light {
@@ -770,6 +772,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Permissions();
 
         //Check permissions
@@ -1020,13 +1032,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START 779ceaac-94af-4bc3-ba0c-e573fd38dc68 //OSSCH_END
+    //OSSCH_START faf3c6dc-0d5a-41fa-8e83-0724e4887a29 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 45b4c20a-8f57-4297-9296-73d2f7708276 //OSSCH_END
+    //OSSCH_START c4a2de9a-9b8c-4581-8db0-1cb2e40ca087 //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 4ce31230-fb67-42cc-994c-f0d95d7c46ef //OSSCH_END
+    //OSSCH_START bdb3e723-9992-4b7a-8b81-7ca0c4474d52 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()

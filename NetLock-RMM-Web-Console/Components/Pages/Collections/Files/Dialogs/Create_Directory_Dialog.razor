@@ -4,6 +4,7 @@
 @using System.Net;
 @using System.Text;
 @using System.Text.RegularExpressions;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Pages.Collections.Files.Dialogs.Create_Directory_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -29,13 +31,22 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string files_selected_path { get; set; }
 
     private string directory_name = String.Empty;
 
     protected override async Task OnInitializedAsync()
-    {
+    {        
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
     }
 
 

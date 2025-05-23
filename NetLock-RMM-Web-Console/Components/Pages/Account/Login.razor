@@ -27,7 +27,6 @@
 @using Microsoft.Extensions.Localization
 @using Microsoft.JSInterop
 
-@inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
 @inject IDialogService DialogService
@@ -36,38 +35,39 @@
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Components.Pages.Account.Login> Localizer
 @inject IHttpContextAccessor _httpContextAccessor
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
 
     body {
-        /*background-image: url('media/images/NetLock-RMM- Wallpaper.jpg');*/
-        background-position: center center;
-        height: 80%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+    /*background-image: url('media/images/NetLock-RMM- Wallpaper.jpg');*/
+    background-position: center center;
+    height: 80%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     }
 
     .login-container {
-        background-color: rgba(255, 255, 255, 0.8);
-        padding: 20px;
-        border-radius: 8px;
-        text-align: center;
-        max-width: 500px;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    max-width: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     }
 
     .background-video {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        z-index: -1; /* Video bleibt hinter anderen Inhalten */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: -1; /* Video bleibt hinter anderen Inhalten */
     }
 </style>
 
@@ -176,15 +176,37 @@
         </MudLayout>
 
     </NotAuthorized>
-
-    <Authorized>
-        @{
-            NavigationManager.NavigateTo("/dashboard", true);
-        }
-    </Authorized>
 </AuthorizeView>
 
 @code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/dashboard", true);
+            return;
+        }
+
+        StateHasChanged();
+    }
 
     private string username = String.Empty;
     private string password = String.Empty;
@@ -339,16 +361,8 @@
     {
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            await sessionStorage.SetAsync("username", username);
-            await sessionStorage.SetAsync("password", password);
-
-            Guid guid = Guid.NewGuid();
-            await sessionStorage.SetAsync("session_guid", guid.ToString());
-
             // Get the user's IP addresses
             string ip_address = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
-
 
             // Update latest login session
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
@@ -357,13 +371,12 @@
             {
                 await conn.OpenAsync();
 
-                string execute_query = "UPDATE accounts SET last_login = @last_login, ip_address = @ip_address, session_guid = @guid WHERE username = @username;";
+                string execute_query = "UPDATE accounts SET last_login = @last_login, ip_address = @ip_address WHERE username = @username;";
 
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
                 cmd.Parameters.AddWithValue("@username", username);
                 cmd.Parameters.AddWithValue("@last_login", DateTime.Now);
                 cmd.Parameters.AddWithValue("@ip_address", ip_address);
-                cmd.Parameters.AddWithValue("@guid", guid.ToString());
                 cmd.ExecuteNonQuery();
 
                 success = true;
@@ -379,7 +392,9 @@
 
             Logging.Handler.Debug("/login -> Login_User", "perform user login", "username: " + username + " role: " + role);
 
-            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            Console.WriteLine("sec key: " + NetLock_RMM_Web_Console.Configuration.Web_Console.token_service_secret_key);
+            
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
             await customAuthStateProvider.UpdateAuthentificationState(new UserSession
                 {
                     UserName = username,

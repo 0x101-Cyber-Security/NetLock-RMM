@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Settings.Notifications.Ntfy_sh.Edit_Ntfy_sh_Notification_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -22,7 +24,7 @@
         <MudTextField Label="@Localizer["access_token"]" InputType="@PasswordInput" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="Show_Password" AdornmentAriaLabel="@Localizer["display_password"]" @bind-Value="@access_token" Adornment="Adornment.End" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
 
-        <MudSelect T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["any"]" />
             <MudSelectItem T="string" Value="@Localizer["critical"]" />
             <MudSelectItem T="string" Value="@Localizer["high"]" />
@@ -62,7 +64,7 @@
 
     @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string id { get; set; }
     [Parameter] public string topic_name { get; set; }
     [Parameter] public string topic_url { get; set; }
@@ -74,6 +76,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Tenants();
 
         // convert severity

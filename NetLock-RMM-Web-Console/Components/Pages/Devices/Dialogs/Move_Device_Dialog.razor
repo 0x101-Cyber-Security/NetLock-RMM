@@ -1,5 +1,6 @@
 ﻿@using MySqlConnector;
 @using System.Data.Common;
+@using System.Security.Claims
 
 
 @inject NavigationManager NavigationManager
@@ -7,6 +8,7 @@
 @inject IDialogService DialogService
 @inject ISnackbar Snackbar
 @inject IStringLocalizer<Pages.Devices.Dialogs.Move_Device_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <AuthorizeView>
     <NotAuthorized>
@@ -25,7 +27,7 @@
                
                     <MudText Class="pa-0 ma-0">@Localizer["text"]</MudText>
 
-                    <MudSelect T="string" @bind-Value=target_group_name Label="@Localizer["target_group"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect T="string" @bind-Value=target_group_name Label="@Localizer["target_group"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @foreach (var group in groups_list)
                         {
                             <MudSelectItem Value="@group" />
@@ -50,13 +52,23 @@
 
     private List<string> groups_list = new List<string> { };
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string tenant_id { get; set; }
     [Parameter] public string location_id { get; set; }
     [Parameter] public string device_id { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         Logging.Handler.Debug("Move_Devices_Dialog", "tenant_id", tenant_id);
         Logging.Handler.Debug("Move_Devices_Dialog", "location_id", location_id);
 

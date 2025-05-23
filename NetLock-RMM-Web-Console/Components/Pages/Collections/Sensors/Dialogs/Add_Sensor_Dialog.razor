@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Sensors.Dialogs.Add_Sensor_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -21,20 +23,20 @@
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@sensor_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" Immediate="true">
+        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after="async () => { await Get_Scripts(); }" Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate="true">
             <MudSelectItem T="string" Value="@Localizer["Windows"]" />
             <MudSelectItem T="string" Value="@Localizer["Linux"]" />
             <MudSelectItem T="string" Value="@Localizer["MacOS"]" />
         </MudSelect>
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["critical"]" />
             <MudSelectItem T="string" Value="@Localizer["high"]" />
             <MudSelectItem T="string" Value="@Localizer["moderate"]" />
             <MudSelectItem T="string" Value="@Localizer["low"]" />
         </MudSelect>
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="time_scheduler_type_display" Label="@Localizer["schedule"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["schedule_system_boot"]" />
             <MudSelectItem T="string" Value="@Localizer["schedule_date_time"]" />
             <MudSelectItem T="string" Value="@Localizer["schedule_x_seconds"]" />
@@ -145,7 +147,7 @@
 
         }
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["utilization"]" />
 
             @if (platform == "Windows")
@@ -169,7 +171,7 @@
         @{
             if (category == @Localizer["utilization"])
             {
-                <MudSelect Class="mt-3" T="string" @bind-Value="sub_category" Label="@Localizer["sub_category"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-3" T="string" @bind-Value="sub_category" Label="@Localizer["sub_category"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["processor"]" />
                     <MudSelectItem T="string" Value="@Localizer["ram"]" />
                     <MudSelectItem T="string" Value="@Localizer["drive"]" />
@@ -276,7 +278,7 @@
 
                     <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                         @{
                             foreach (var script in scripts_list)
                             {
@@ -317,7 +319,7 @@
 
                     <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                         @{
                             foreach (var script in scripts_list)
                             {
@@ -350,7 +352,7 @@
 
                     <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                    <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                         @{
                             foreach (var script in scripts_list)
                             {
@@ -369,7 +371,7 @@
                 }
                 else if (sub_category == Localizer["drive"])
                 {
-                    <MudSelect Class="mt-3" T="string" @bind-Value="disk_category" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3" T="string" @bind-Value="disk_category" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["drive_used_more_than_x_gb"]" />
                         <MudSelectItem T="string" Value="@Localizer["drive_used_less_than_x_gb"]" />
                         <MudSelectItem T="string" Value="@Localizer["drive_used_more_than_x_%"]" />
@@ -439,7 +441,7 @@
 
                         <MudText Class="mt-2" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                        <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                        <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                             @{
                                 foreach (var script in scripts_list)
                                 {
@@ -462,7 +464,7 @@
             {
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["rule"]</MudText>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -489,7 +491,7 @@
 
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -512,7 +514,7 @@
 
                 @if (!eventlog_custom)
                 {
-                    <MudSelect Class="mt-3" T="string" @bind-Value="eventlog" Label="Eventlog" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3" T="string" @bind-Value="eventlog" Label="Eventlog" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["eventlog_application"]" />
                         <MudSelectItem T="string" Value="@Localizer["eventlog_security"]" />
                         <MudSelectItem T="string" Value="@Localizer["eventlog_setup"]" />
@@ -549,7 +551,7 @@
 
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -572,7 +574,7 @@
 
                 <MudTextField Class="mt-0" Label="@Localizer["service_name"]" T="string" @bind-Value="@service_name" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-                <MudSelect Class="mt-2" T="string" @bind-Value="service_condition" Label="@Localizer["service_status"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-2" T="string" @bind-Value="service_condition" Label="@Localizer["service_status"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["service_status_running"]" />
                     <MudSelectItem T="string" Value="@Localizer["service_status_paused"]" />
                     <MudSelectItem T="string" Value="@Localizer["service_status_stopped"]" />
@@ -588,13 +590,13 @@
 
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                <MudSelect Class="mt-0" T="string" @bind-Value="service_action" Label="@Localizer["service_action"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-0" T="string" @bind-Value="service_action" Label="@Localizer["service_action"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["service_action_start"]" />
                     <MudSelectItem T="string" Value="@Localizer["service_action_stop"]" />
                     <MudSelectItem T="string" Value="@Localizer["service_action_restart"]" />
                 </MudSelect>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -618,7 +620,7 @@
                 <MudTextField Class="mt-3" Label="@Localizer["ip_address/hostname"]" T="string" @bind-Value="@ping_address" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
                 <MudNumericField Class="mt-3" Label="@Localizer["timeout_milliseconds"]" @bind-Value="ping_timeout" Variant="Variant.Text" Min="1" Max="120" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-                <MudSelect Class="mt-2" T="string" @bind-Value="ping_condition" Label="@Localizer["ping_status"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-2" T="string" @bind-Value="ping_condition" Label="@Localizer["ping_status"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["successful"]" />
                     <MudSelectItem T="string" Value="@Localizer["failed"]" />
                 </MudSelect>
@@ -633,7 +635,7 @@
 
                 <MudText Class="mt-5" Typo="Typo.h6">@Localizer["action"]</MudText>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" Immediate=@true>
+                <MudSelect Class="mt-3" T="string" @bind-Value="script_action" Label="@Localizer["script"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
                     @{
                         foreach (var script in scripts_list)
                         {
@@ -707,6 +709,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         category = Localizer["utilization"];
         severity = Localizer["moderate"];
         eventlog = Localizer["eventlog_application"];
@@ -869,7 +881,7 @@
     }
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private bool Form_Valid()
     {

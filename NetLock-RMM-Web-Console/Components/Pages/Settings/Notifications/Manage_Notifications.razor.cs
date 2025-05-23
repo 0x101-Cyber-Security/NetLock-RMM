@@ -430,6 +430,16 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
 
         private async Task AfterInitializedAsync()
         {
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+            {
+                NavigationManager.NavigateTo("/login", true);
+                return;
+            }
+
             await Get_Permissions();
             //Check permissions
             if (!permissions_settings_enabled || !permissions_settings_notifications_enabled)

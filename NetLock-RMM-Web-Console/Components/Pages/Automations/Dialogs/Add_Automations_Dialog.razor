@@ -4,6 +4,7 @@
 @using System.Resources;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -12,6 +13,7 @@
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Pages.Automations.Dialogs.Add_Automations_Dialog> Localizer
 @inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -22,14 +24,14 @@
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["policy"]" />
         </MudSelect>
 
         @{
             if (category == @Localizer["policy"])
             {
-                <MudSelect Class="mt-3" T="string" @bind-Value="condition" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-3" T="string" @bind-Value="condition" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["condition_device_name"]" />
                     <MudSelectItem T="string" Value="@Localizer["condition_tenant"]" />
                     <MudSelectItem T="string" Value="@Localizer["condition_location"]" />
@@ -47,7 +49,7 @@
                     </MudTooltip>
                 </div>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="trigger" Label="@Localizer["policy"]" Required="true" RequiredError="@Localizer["required"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-3" T="string" @bind-Value="trigger" Label="@Localizer["policy"]" Required="true" RequiredError="@Localizer["required"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     @foreach (var policy in policies_list)
                     {
                         <MudSelectItem Value="@policy" />
@@ -66,8 +68,23 @@
 
 @code {
 
+	private string netlock_username = String.Empty;
+
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+		// Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
         category = Localizer["policy"];
         condition = Localizer["condition_tenant"];
 
@@ -102,7 +119,7 @@
     }
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private async Task Get_Policies()
     {
@@ -141,9 +158,6 @@
 
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var username = await sessionStorage.GetAsync<string>("username");
-
             int category_converted = 0;
             int sub_category_converted = 0;
             int condition_converted = 0;
@@ -175,7 +189,7 @@
                 {
                     name = name,
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    author = username.Value,
+                    author = netlock_username,
                     description = description,
                     category = category_converted,
                     sub_category = sub_category_converted,
@@ -195,7 +209,7 @@
 
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@author", username.Value);
+            cmd.Parameters.AddWithValue("@author", netlock_username);
             cmd.Parameters.AddWithValue("@description", description);
             cmd.Parameters.AddWithValue("@category", category_converted);
             cmd.Parameters.AddWithValue("@sub_category", sub_category_converted);

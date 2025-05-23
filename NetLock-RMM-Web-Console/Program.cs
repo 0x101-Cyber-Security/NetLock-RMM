@@ -295,8 +295,9 @@ builder.Services.AddAuthenticationCore();
 builder.Services.AddBlazoredLocalStorage();
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<ProtectedSessionStorage>();
+builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<ProtectedSessionStorage>();
 builder.Services.AddMudServices();
 builder.Services.AddOptions();
 builder.Services.AddLocalization();
@@ -324,6 +325,9 @@ builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessag
 
 // Add background services
 builder.Services.AddHostedService<Auto_Cleanup_Service>();
+
+// Generate tokenservice secretkey
+Web_Console.token_service_secret_key = Randomizer.Handler.Token(true, 32);
 
 var app = builder.Build();
 
@@ -358,7 +362,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 5fe8808f-4e07-4cdd-8ac2-7c1346493648 //OSSCH_END
+//OSSCH_START 42bf5841-2d5b-4032-8e6f-3c881504fe96 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

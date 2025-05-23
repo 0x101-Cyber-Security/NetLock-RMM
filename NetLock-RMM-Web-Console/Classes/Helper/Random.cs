@@ -42,15 +42,23 @@ namespace Randomizer
 
         public static string Token(bool special, int length)
         {
-            string chars = null;
+            const string normalChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            const string specialChars = "!§$%&/()=?*[]#-";
 
-            System.Random random = new System.Random();
-            if (special)
-                chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!§$%&/()=?*[]#-";
-            else
-                chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            string chars = special ? normalChars + specialChars : normalChars;
 
-            return new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+            var data = new byte[length];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(data);
+
+            var tokenChars = new char[length];
+            for (int i = 0; i < length; i++)
+            {
+                // % chars.Length ensures we pick a valid index
+                tokenChars[i] = chars[data[i] % chars.Length];
+            }
+
+            return new string(tokenChars);
         }
 
         public static string Windows_Credentials(int length)

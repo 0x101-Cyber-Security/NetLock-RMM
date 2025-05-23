@@ -36,12 +36,13 @@
         try
         {
             var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider); // not required if injecting it
-            await sessionStorage.DeleteAsync("username");
-            await sessionStorage.DeleteAsync("password");
+            await sessionStorage.DeleteAsync("SessionToken");
 
+            // Log out and reset claims
             var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
-            await customAuthStateProvider.UpdateAuthentificationState(new UserSession(), true);
+            await customAuthStateProvider.UpdateAuthentificationState(null, true);
 
+            // Weiterleiten zur Login-Seite
             NavigationManager.NavigateTo("/login", true);
         }
         catch (Exception ex)

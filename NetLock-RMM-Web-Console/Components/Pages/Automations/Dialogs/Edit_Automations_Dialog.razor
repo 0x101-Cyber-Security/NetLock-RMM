@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Pages.Automations.Dialogs.Edit_Automations_Dialog> Localizer
 @inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -21,14 +23,14 @@
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="category" Label="@Localizer["category"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem T="string" Value="@Localizer["policy"]" />
         </MudSelect>
 
         @{
             if (category == @Localizer["policy"])
             {
-                <MudSelect Class="mt-3" T="string" @bind-Value="condition" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-3" T="string" @bind-Value="condition" Label="@Localizer["if..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     <MudSelectItem T="string" Value="@Localizer["condition_device_name"]" />
                     <MudSelectItem T="string" Value="@Localizer["condition_tenant"]" />
                     <MudSelectItem T="string" Value="@Localizer["condition_location"]" />
@@ -46,7 +48,7 @@
                     </MudTooltip>
                 </div>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="trigger" Label="@Localizer["policy"]" Required="true" RequiredError="@Localizer["required"]" AnchorOrigin="Origin.BottomCenter">
+                <MudSelect Class="mt-3" T="string" @bind-Value="trigger" Label="@Localizer["policy"]" Required="true" RequiredError="@Localizer["required"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                     @foreach (var policy in policies_list)
                     {
                         <MudSelectItem Value="@policy" />
@@ -65,12 +67,23 @@
 
 @code {
     
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
     [Parameter] public string name { get; set; }
     [Parameter] public string json { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         category = Localizer["policy"];
         condition = Localizer["condition_tenant"];
 

@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Scripts.Dialogs.Edit_Script_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
 
@@ -99,14 +101,14 @@
         <MudTextField Label="@Localizer["name"]" T="string" @bind-Value="@script_name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
         <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Required="false" RequiredError="@Localizer["required"]" Immediate="@true" />
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after=@StateHasChanged Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="platform" @bind-Value:after=@StateHasChanged Label="@Localizer["platform"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem Value="@("Windows")" />
             <MudSelectItem Value="@("Linux")" />
             <MudSelectItem Value="@("MacOS")" />
             <MudSelectItem Value="@("System")" />
         </MudSelect>
 
-        <MudSelect Class="mt-3" T="string" @bind-Value="shell" Label="Shell" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect Class="mt-3" T="string" @bind-Value="shell" Label="Shell" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             @if (platform == "Windows")
             {
                 shell = "PowerShell";
@@ -134,7 +136,7 @@
             {
                 if (shell == "PowerShell")
                 {
-                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @foreach (var s in scripts)
                         {
                             <MudSelectItem Value="@s" />
@@ -148,7 +150,7 @@
             {
                 if (shell == "MySQL")
                 {
-                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @foreach (var s in scripts)
                         {
                             <MudSelectItem Value="@s" />
@@ -162,7 +164,7 @@
             {
                 if (shell == "Bash")
                 {
-                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @foreach (var s in scripts)
                         {
                             <MudSelectItem Value="@s" />
@@ -176,7 +178,7 @@
             {
                 if (shell == "Zsh")
                 {
-                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="mt-3 mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name, platform, shell)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @foreach (var s in scripts)
                         {
                             <MudSelectItem Value="@s" />
@@ -200,7 +202,7 @@
     
     private bool loading_overlay = false;
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string json { get; set; }
 
     protected override async Task OnInitializedAsync()
@@ -217,7 +219,17 @@
     }
 
     private async Task AfterInitializedAsync()
-    {
+    {        
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Scripts(true);
         await Extract_Script();
         await Get_Scripts(false);

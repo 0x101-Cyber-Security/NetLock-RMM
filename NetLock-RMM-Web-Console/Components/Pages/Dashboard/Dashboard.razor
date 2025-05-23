@@ -9,6 +9,7 @@
 @using System.Text.Json.Nodes
 @using System.Text
 @using OfficeOpenXml
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -17,6 +18,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Components.Pages.Dashboard.Dashboard> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
 
@@ -137,9 +139,9 @@
         @{
             if (permissions_dashboard_enabled)
             {
-                <MudGrid Spacing="3">
+                <MudGrid Justify="Justify.Center" Spacing="3">
 
-                    <MudItem xs="12" sm="6" md="4">
+                    <MudItem  xs="12" sm="6" md="4">
                         <MudPaper Height="400px" Width="100%">
                             <MudText Typo="Typo.h5" Align="Align.Center">@Localizer["devices"]</MudText>
                             <MudText Typo="Typo.body1" Align="Align.Center">(@Localizer["current"])</MudText>
@@ -150,19 +152,26 @@
                                     double[] chart_data = { devices_authorized, devices_unauthorized, devices_online, devices_offline };
                                     string[] chart_labels = { Localizer["authorized"] + $": {devices_authorized}", Localizer["unauthorized"] + $": {devices_unauthorized}", $"Online: {devices_online}", $"Offline: {devices_offline}" };
 
-                                    <div class="ml-2">
-                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="250px" Height="250px" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="device_status_chart_options">
-                                            <CustomGraphics>
-                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="5">@devices_total</text>
-                                            </CustomGraphics>
-                                        </MudChart>
-                                    </div>
+                                    <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%"  InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="device_status_chart_options">
+                                        <CustomGraphics>
+                                            <text x="50%" y="50%"
+                                                    dominant-baseline="middle"
+                                                    text-anchor="middle"
+                                                    fill="@(_isDarkMode ? "white" : "black")"
+                                                    font-family="Helvetica, Arial, sans-serif"
+                                                    font-size="30"
+                                                    font-weight="bold">
+                                                @devices_total
+                                            </text>
+                                        </CustomGraphics>
+                                    </MudChart>
                                 }
                                 catch (Exception ex)
                                 {
                                     Logging.Handler.Error("/dashboard", "Devices", ex.ToString());
                                 }
                             }
+
                         </MudPaper>
                     </MudItem>
 
@@ -177,19 +186,26 @@
                                     double[] chart_data = { events_severity_low, events_severity_moderate, events_severity_high, events_severity_critical };
                                     string[] chart_labels = { Localizer["low"] + $": {events_severity_low}", Localizer["moderate"] + $": {events_severity_moderate}", Localizer["high"] + $": {events_severity_high}", Localizer["critical"] + $": {events_severity_critical}" };
 
-                                    <div class="ml-2">
-                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="250px" Height="250px" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_severity_chart_options">
+                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_severity_chart_options">
                                             <CustomGraphics>
-                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="5">@events_total</text>
-                                            </CustomGraphics>
+                                                <text x="50%" y="50%"
+                                                        dominant-baseline="middle"
+                                                        text-anchor="middle"
+                                                        fill="@(_isDarkMode ? "white" : "black")"
+                                                        font-family="Helvetica, Arial, sans-serif"
+                                                        font-size="30"
+                                                        font-weight="bold">
+                                                    @events_total
+                                                </text>
+                                            </CustomGraphics>    
                                         </MudChart>
-                                    </div>
                                 }
                                 catch (Exception ex)
                                 {
                                     Logging.Handler.Error("/devices -> Table", "Display disks", ex.ToString());
                                 }
                             }
+
                         </MudPaper>
                     </MudItem>
 
@@ -204,13 +220,20 @@
                                     double[] chart_data = { events_antivirus, events_jobs, events_sensors };
                                     string[] chart_labels = { $"Antivirus: {events_antivirus}", $"Jobs: {events_jobs}", Localizer["sensors"] + $": {events_sensors}" };
 
-                                    <div class="ml-2">
-                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="250px" Height="250px" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_type_chart_options">
+
+                                    <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_type_chart_options">
                                             <CustomGraphics>
-                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="5">@events_total</text>
-                                            </CustomGraphics>
+                                                <text x="50%" y="50%"
+                                                        dominant-baseline="middle"
+                                                        text-anchor="middle"
+                                                        fill="@(_isDarkMode ? "white" : "black")"
+                                                        font-family="Helvetica, Arial, sans-serif"
+                                                        font-size="30"
+                                                        font-weight="bold">
+                                                @events_total
+                                                </text>
+                                            </CustomGraphics>    
                                         </MudChart>
-                                    </div>
                                 }
                                 catch (Exception ex)
                                 {
@@ -235,7 +258,7 @@
                         </MudDateRangePicker>
 
                         <!-- Severity Select -->
-                        <MudSelect Class="ml-2 mr-2" T="string" @bind-Value="device_information_events_severity_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter">
+                        <MudSelect Class="ml-2 mr-2" T="string" @bind-Value="device_information_events_severity_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                             <MudSelectItem T="string" Value="@Localizer["any"]" />
                             <MudSelectItem T="string" Value="@Localizer["critical"]" />
                             <MudSelectItem T="string" Value="@Localizer["high"]" />
@@ -509,6 +532,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         loading_overlay = true;
 		StateHasChanged();
 
@@ -517,7 +550,6 @@
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
         device_information_events_severity_string = Localizer["any"];
-
         
         //Check permissions
         if (!permissions_dashboard_enabled)

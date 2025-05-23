@@ -1,4 +1,8 @@
-﻿@inject IDialogService DialogService
+﻿@using System.Security.Claims
+
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
 
 <MudDialog>
     <DialogContent>
@@ -16,8 +20,21 @@
 </MudDialog>
 
 @code {
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     public string FirstInput { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+    }
 
     void Submit()
     {

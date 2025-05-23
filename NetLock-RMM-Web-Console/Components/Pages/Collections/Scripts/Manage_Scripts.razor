@@ -8,6 +8,7 @@
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 @using Microsoft.AspNetCore.DataProtection;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -16,6 +17,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Scripts.Manage_Scripts> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .selected-row-light {

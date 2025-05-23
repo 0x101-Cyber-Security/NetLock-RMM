@@ -15,7 +15,7 @@
     </TitleContent>
     <DialogContent>
         <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
-        <MudSelect T="string" @bind-Value=this.type Label="@Localizer["file_format"]" AnchorOrigin="Origin.BottomCenter">
+        <MudSelect T="string" @bind-Value=this.type Label="@Localizer["file_format"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem Value="@("JSON")" />
             <MudSelectItem Value="@("Spreadsheet (.xlsx)")" />
             <MudSelectItem Value="@("HTML")" />
@@ -34,7 +34,7 @@
     private string type = "Spreadsheet (.xlsx)";
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
 
     private bool Form_Valid()
     {

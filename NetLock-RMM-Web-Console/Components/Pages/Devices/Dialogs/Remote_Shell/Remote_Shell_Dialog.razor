@@ -11,6 +11,7 @@
 @using System.Globalization
 @using Microsoft.AspNetCore.SignalR.Client
 @using System.Net.Http
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -19,6 +20,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Devices.Dialogs.Remote_Shell.Remote_Shell_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
 
@@ -56,7 +58,7 @@
 
         <MudText Class="mt-3" Typo="Typo.h6">@Localizer["input"]</MudText>
 
-        <MudSelect Class="mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name)" Label="Templates" AnchorOrigin="Origin.BottomCenter" Disabled="@(!remote_server_client_setup || loading_overlay)">
+        <MudSelect Class="mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(!remote_server_client_setup || loading_overlay)">
             @foreach (var s in scripts)
             {
                 <MudSelectItem Value="@s" />
@@ -92,7 +94,7 @@
 
 @code {
 
-    [CascadingParameter] MudDialogInstance MudDialog { get; set; }
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string device_id { get; set; }
     [Parameter] public string device_name { get; set; }
     [Parameter] public string tenant_guid { get; set; }
@@ -102,6 +104,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Remote_Authentificate_Dialog();
         await Get_Scripts();
     }

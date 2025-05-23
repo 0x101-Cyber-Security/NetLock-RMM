@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -10,6 +11,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <style>
     .monaco-editor {
@@ -156,9 +158,9 @@
             <MudButton OnClick="Update" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Sync with GitHub</MudButton>
         }
 
-        <MudButton OnClick="Report" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning">Report</MudButton>
-        <MudButton OnClick="Revoke" Variant="Variant.Filled" Size="Size.Small" Color="Color.Error">Revoke</MudButton>
-        <MudButton OnClick="Import" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info">Import to collection</MudButton>
+        <MudButton OnClick="Report" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Report</MudButton>
+        <MudButton OnClick="Revoke" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Revoke</MudButton>
+        <MudButton OnClick="Import" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Import to collection</MudButton>
         <MudButton OnClick="Cancel">Close</MudButton>
     </DialogActions>
 </MudDialog>
@@ -168,7 +170,7 @@
     private bool loading_overlay = false;
 
     [CascadingParameter]
-    private MudDialogInstance MudDialog { get; set; } = default!;
+    private IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public string created { get; set; }
     [Parameter] public string last_edited { get; set; }
     [Parameter] public string maintainer { get; set; }
@@ -197,6 +199,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await script_editor.SetValue(await Base64.Handler.Decode(script));
 
         StateHasChanged();

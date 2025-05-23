@@ -8,6 +8,7 @@
 @using System.Text.Json;
 @using System.Text;
 @using OfficeOpenXml;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -16,6 +17,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Events.Manage_Events> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
     <style>
     @@keyframes fadeIn {
@@ -119,7 +121,7 @@
 
                 <div style="display: flex; align-items: center;">
 
-                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="device_information_events_severity_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="device_information_events_severity_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["any"]" />
                         <MudSelectItem T="string" Value="@Localizer["critical"]" />
                         <MudSelectItem T="string " Value="@Localizer["high"]" />
@@ -127,18 +129,19 @@
                         <MudSelectItem T="string" Value="@Localizer["low"]" />
                     </MudSelect>
 
-                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="events_type_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["type"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="events_type_string" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["type"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         <MudSelectItem T="string" Value="@Localizer["any"]" />
                         <MudSelectItem T="string" Value="@Localizer["antivirus"]" />
                         <MudSelectItem T="string " Value="@Localizer["job"]" />
                         <MudSelectItem T="string" Value="@Localizer["sensor"]" />
+                        <MudSelectItem T="string" Value="@("Uptime Monitoring")" />
                     </MudSelect>
 
                 </div>
 
                 <div style="display: flex; align-items: center;">
 
-                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Locations(); }" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter">
+                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Locations(); }" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                         @{
                             <MudSelectItem T="string" Value="@Localizer["any"]" />
                             foreach (var tenant in tenant_names)
@@ -148,7 +151,7 @@
                         }
                     </MudSelect>
 
-                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="location_name" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" Disabled="@(tenant_name == Localizer["any"])">
+                    <MudSelect Class="ml-2 mt-3 mr-2" T="string" @bind-Value="location_name" @bind-Value:after="async () => { events_mysql_data = await Events_Load(true); }" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(tenant_name == Localizer["any"])">
                         @{
                             <MudSelectItem T="string" Value="@Localizer["any"]" />
                             foreach (var location in location_names)
@@ -402,6 +405,16 @@
 
     private async Task AfterInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         device_information_events_severity_string = Localizer["any"];
         events_type_string = Localizer["any"];
         tenant_name = Localizer["any"];
@@ -550,6 +563,8 @@
             type_condition = "AND type = 1";
         else if (events_type_string == Localizer["sensor"])
             type_condition = "AND type = 2";
+		else if (events_type_string == "Uptime Monitoring")
+			type_condition = "AND type = 4";
 
         if (!events_show_read)
             read_condition = $"AND `read` = {Convert.ToInt32(events_show_read)}";
