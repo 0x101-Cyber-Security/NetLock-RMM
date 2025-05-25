@@ -187,6 +187,8 @@
     [Parameter] public string id { get; set; }
     [Parameter] public string json { get; set; }
 
+    private string netlock_username = String.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         // Get the current user from the authentication state
@@ -198,6 +200,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         time_scheduler_type_display = Localizer["schedule_system_boot"];
 
@@ -520,9 +525,6 @@
 
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var username = await sessionStorage.GetAsync<string>("username");
-
             string type_converted = String.Empty;
 
             if (type_display == Localizer["script"])
@@ -537,7 +539,7 @@
                 id = Randomizer.Handler.Standard(6),
                 name = job_name,
                 date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                author = username.Value,
+                author = netlock_username,
                 description = description,
                 platform = platform,
                 type = type_display,
@@ -588,7 +590,7 @@
             cmd.Parameters.AddWithValue("@name", job_name);
             cmd.Parameters.AddWithValue("@old_name", old_job_name);
             cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@author", username.Value);
+            cmd.Parameters.AddWithValue("@author", netlock_username);
             cmd.Parameters.AddWithValue("@description", description);
             cmd.Parameters.AddWithValue("@platform", platform);
             cmd.Parameters.AddWithValue("@type", type_converted);

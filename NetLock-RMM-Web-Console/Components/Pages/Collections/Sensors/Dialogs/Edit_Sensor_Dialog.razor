@@ -710,7 +710,8 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string id { get; set; }
     [Parameter] public string json { get; set; }
-
+    
+    private string netlock_username = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -723,6 +724,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         category = Localizer["utilization"];
         severity = Localizer["moderate"];

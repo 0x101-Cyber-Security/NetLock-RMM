@@ -257,133 +257,44 @@
     #region Permissions System
 
     private string permissions_json = String.Empty;
-    private string permissions_tenants_json = String.Empty;
-    public static List<string> permissions_tenants_list = new List<string> { };
 
     private bool permissions_events_enabled = false;
+    public static List<string> permissions_tenants_list = new List<string> { };
 
-    public class Permissions_Tenants_Activation_State
+    private async Task<bool> Permissions()
     {
-        public string id { get; set; } = String.Empty;
-    }
-
-    private async Task Get_Permissions()
-    {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("NavMenu -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
         try
         {
-            await conn.OpenAsync();
+            bool logout = false;
 
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "query", query);
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
 
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_events_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "events_enabled");
+			permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+
+            if (!permissions_events_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
             {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", permissions_json);
-
-            //Extract permissions
-            if (!String.IsNullOrEmpty(permissions_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                {
-                    //events_enabled
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("events_enabled");
-                        permissions_events_enabled = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (events_enabled)", ex.Message);
-                    }
-                }
-            }
-            else if (permissions_json == "[]")
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
                 NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
+                return false;
             }
 
-            //Extract tenants from json
-            permissions_tenants_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_tenants_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
-
-                    foreach (var tenant in tenants_activation_state_list)
-                    {
-                        Logging.Handler.Debug("NavMenu -> Permissions_Load", "foreach tenant", tenant.id);
-
-                        permissions_tenants_list.Add(tenant.id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-            }
+            // All fine? Nice.
+            return true;
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("NavMenu -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
         }
     }
     #endregion
@@ -405,15 +316,8 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
+        if (!await Permissions())
             return;
-        }
 
         device_information_events_severity_string = Localizer["any"];
         events_type_string = Localizer["any"];
@@ -421,7 +325,6 @@
         location_name = Localizer["any"];
 
         loading_overlay = true;
-        await Get_Permissions();
 
         //Check permissions
         if (!permissions_events_enabled)
@@ -621,6 +524,13 @@
                     {
                         //Logging.Handler.Debug("Events", "MySQL_Result", reader["id"].ToString()); //Output the JSON
 
+                        string device_id = reader["device_id"].ToString() ?? String.Empty;
+                        string device_tenant_id = await Classes.MySQL.Handler.Get_TenantID_From_DeviceID(device_id);
+
+						// Check if the device's tenant ID is in the permissions list
+                        if (!permissions_tenants_list.Contains(device_tenant_id))
+							continue; // Skip this event if the tenant is not in the permissions list
+
                         Events_Table entity = new Events_Table //Create the entity
                             {
                                 id = reader["id"].ToString() ?? String.Empty,
@@ -673,7 +583,8 @@
                 {
                     while (await reader.ReadAsync())
                     {
-                        tenant_names.Add(reader["name"].ToString());
+                        if (permissions_tenants_list.Contains(reader["id"].ToString()))
+                            tenant_names.Add(reader["name"].ToString());
                     }
                 }
             }
@@ -684,7 +595,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
     }
 
@@ -721,7 +632,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
 
         events_mysql_data = await Events_Load(true);

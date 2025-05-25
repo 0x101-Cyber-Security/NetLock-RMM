@@ -21,12 +21,12 @@
     <DialogContent>
 
         <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
-        <MudTextField Class="mt-2" Label="@Localizer["username"]" T="string" Lines="1" @bind-Value="@username" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+        <MudTextField Class="mt-2" Label="@Localizer["username"]" T="string" Lines="1" @bind-Value="@netlock_username_display" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="true" />
         <MudTextField Label="@Localizer["password"]" T="string" Lines="1" @bind-Value="@password" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" InputType="@InputType.Password" ReadOnly="false" />
-       
+
     </DialogContent>
     <DialogActions>
-        
+
         <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
         <MudButton OnClick="@Cancel" Variant="Variant.Text" Size="@Size.Small" Color="@Color.Default">@Localizer["cancel"]</MudButton>
     </DialogActions>
@@ -34,9 +34,9 @@
 
 @code {
 
-    private string username = String.Empty;
+    private string netlock_username_display = String.Empty;
+    private string netlock_username = String.Empty;
     private string password = String.Empty;
-    private string session_guid_local = String.Empty;
 
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
 
@@ -52,23 +52,9 @@
             return;
         }
 
-        try
-        {
-            // Get session_guid local
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
-            session_guid_local = session_guid_result.Value;
-
-            // Get username from session
-            var session_username = await sessionStorage.GetAsync<string>("username");
-            username = session_username.Value;
-
-            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "session_guid_local", session_guid_local);
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/devices (Remote_Authentificate_Dialog) -> OnInitializedAsync", "Result", ex.Message);
-        }
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+		netlock_username_display = netlock_username;
     }
 
     private async Task OK()
@@ -76,40 +62,14 @@
         this.Snackbar.Configuration.ShowCloseIcon = true;
         this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
-        bool session_guid_valid = false;
-        string session_guid_database = String.Empty;
-
-        bool user_verified = await Classes.Authentication.User.Verify_User(username, password);
+        bool user_verified = await Classes.Authentication.User.Verify_User(netlock_username, password);
 
         if (user_verified) // Check custom session guid
         {
-            // Get session_guid from database
-            session_guid_database = await Classes.MySQL.Handler.Get_Session_Guid_By_Username(username);
-
-            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "session_guid_database", session_guid_database);
-
-            // Check if database session_guid is equal to the local session_guid
-            if (session_guid_local == session_guid_database)
-                session_guid_valid = true;
-            else
-                session_guid_valid = false;
-
-            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "sessions_guid_equal", session_guid_valid.ToString());
-
-            // Check if session_guid is valid
-            if (session_guid_valid)
-            {
-                this.MudDialog.Close(DialogResult.Ok("authentificated"));
-            }
-            else
-            {
-                this.Snackbar.Add(Localizer["invalid_session_guid"], Severity.Error);
-                this.MudDialog.Close(DialogResult.Ok("error"));
-            }
+            this.MudDialog.Close(DialogResult.Ok("authentificated"));
         }
         else
         {
-            Logging.Handler.Debug("/devices (Remote_Authentificate_Dialog) -> OK", "success", session_guid_valid.ToString());
             this.Snackbar.Add(Localizer["auth_failed_check_credentials"], Severity.Error);
         }
     }

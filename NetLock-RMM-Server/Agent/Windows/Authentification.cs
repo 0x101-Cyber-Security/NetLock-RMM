@@ -42,9 +42,7 @@ namespace NetLock_RMM_Server.Agent.Windows
 
         public class Admin_Identity
         {
-            public string? admin_username { get; set; }
-            public string? admin_password { get; set; } // hashed
-            public string? session_guid { get; set; }
+            public string? token { get; set; }
         }
 
         public class Root_Entity
@@ -565,68 +563,19 @@ namespace NetLock_RMM_Server.Agent.Windows
                         admin_identity = rootData.admin_identity;
 
                         // Verarbeiten Sie die Admin-Identity
-                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "admin_identity", $"Admin identity: {admin_identity.admin_username}");
-                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "admin_identity", $"Admin identity: {admin_identity.admin_password}");
-                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "admin_identity", $"Admin identity: {admin_identity.session_guid}");
-
-                        bool isPasswordCorrect = false;
-
-                        string admin_password_decrypted = Encryption.String_Encryption.Decrypt(admin_identity.admin_password, Application_Settings.Local_Encryption_Key);
-                        string password_db = String.Empty;
-                        string session_guid_db = String.Empty;
-
-                        await conn.OpenAsync();
-
-                        string reader_query = "SELECT * FROM `accounts` WHERE username = @username;";
-                        Logging.Handler.Debug("Modules.Authentification.InvokeAsync", "MySQL_Query", reader_query);
-
-                        // Get the password and session_guid from the database
-                        MySqlCommand command = new MySqlCommand(reader_query, conn);
-                        command.Parameters.AddWithValue("@username", admin_identity.admin_username);
+                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "admin_identity", $"Admin token: {admin_identity.token}");
                         
-                        DbDataReader reader = await command.ExecuteReaderAsync();
-
-                        if (reader.HasRows)
-                        {
-                            while (await reader.ReadAsync())
-                            {
-                                password_db = reader["password"].ToString() ?? String.Empty;
-                                session_guid_db = reader["session_guid"].ToString() ?? String.Empty;
-                                isPasswordCorrect = BCrypt.Net.BCrypt.Verify(admin_password_decrypted, reader["password"].ToString());
-
-                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "password_db", password_db);
-                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", session_guid_db);
-                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", isPasswordCorrect.ToString());
-                            }
-
-                            await reader.CloseAsync();
-                        }
-                        else
-                        {
-                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "Invalid JSON", "Admin identity provided, but no admin found.");
-                            authentification_result = "unauthorized";
-                        }
+                        bool isTokenCorrect = await SignalR.Webconsole.Handler.Verify_Remote_Session_Token(admin_identity.token);
 
                         // Check if the password is correct
-                        if (isPasswordCorrect)
+                        if (isTokenCorrect)
                         {
-                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", "Password is correct.");
-
-                            // Check if the session_guid is correct
-                            if (session_guid_db == admin_identity.session_guid)
-                            {
-                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", "Session GUID is correct.");
-                                authentification_result = "authorized";
-                            }
-                            else
-                            {
-                                Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "session_guid_db", "Session GUID is incorrect.");
-                                authentification_result = "unauthorized";
-                            }
+                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isTokenCorrect", "Token is correct.");
+                            authentification_result = "authorized";
                         }
                         else
                         {
-                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", "Password is incorrect.");
+                            Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "isPasswordCorrect", "Token is incorrect.");
                             authentification_result = "unauthorized";
                         }
                     }

@@ -201,6 +201,7 @@
 @code {
     
     private bool loading_overlay = false;
+    private string netlock_username = String.Empty;
 
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string json { get; set; }
@@ -229,6 +230,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         await Get_Scripts(true);
         await Extract_Script();
@@ -742,15 +746,11 @@
 
         try
         {
-            // Get author from session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             Script script_json = new Script
                 {
                     name = script_name,
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    author = author.Value,
+                    author = netlock_username,
                     description = description,
                     platform = platform,
                     shell = shell,
@@ -792,7 +792,7 @@
             cmd.Parameters.AddWithValue("@name", script_name);
             cmd.Parameters.AddWithValue("@old_name", old_script_name);
             cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@author", author.Value);
+            cmd.Parameters.AddWithValue("@author", netlock_username);
             cmd.Parameters.AddWithValue("@description", description);
             cmd.Parameters.AddWithValue("@platform", platform);
             cmd.Parameters.AddWithValue("@shell", shell);

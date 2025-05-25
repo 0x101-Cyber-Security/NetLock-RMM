@@ -107,13 +107,16 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
                     var jwt = _tokenService.GenerateToken(userSession);
                     await _sessionStorage.SetAsync("SessionToken", jwt);
 
-                    // 2) ClaimsPrincipal für NotifyAuthenticationStateChanged erzeugen
+                    // 2) ClaimsPrincipal for NotifyAuthenticationStateChanged creation
                     var claims = new List<Claim>
-                {
+                    {
                     new Claim(ClaimTypes.Email, userSession.UserName),
                     new Claim(ClaimTypes.Role,  userSession.Role)
-                };
+                    };
                     principal = new ClaimsPrincipal(new ClaimsIdentity(claims, "CustomAuth"));
+
+                    // Update remote_session_token
+                    await Classes.Authentication.User.Update_Remote_Session_Token(userSession.UserName);
                 }
                 else
                 {

@@ -42,10 +42,8 @@ namespace NetLock_RMM_Server.SignalR
 
         public class Admin_Identity
         {
-            public string admin_username { get; set; }
-            public string admin_password { get; set; } // encrypted
-            public string api_key { get; set; }
-            public string session_id { get; set; }
+            public string token { get; set; }
+            //public string api_key { get; set; }
 
         }
 
@@ -305,7 +303,7 @@ namespace NetLock_RMM_Server.SignalR
                 }
 
                 string admin_client_id = String.Empty;
-                string admin_username = String.Empty;
+                string admin_token = String.Empty;
                 string device_id = String.Empty;
                 int type = 0;
                 string command = String.Empty;
@@ -320,8 +318,8 @@ namespace NetLock_RMM_Server.SignalR
                     admin_client_id = admin_client_id_element.ToString();
 
                     // Get the admin username
-                    JsonElement admin_username_element = document.RootElement.GetProperty("admin_username");
-                    admin_username = admin_username_element.ToString();
+                    JsonElement admin_token_element = document.RootElement.GetProperty("admin_token");
+                    admin_token = admin_token_element.ToString();
 
                     // Get the device ID from the JSON
                     JsonElement device_id_element = document.RootElement.GetProperty("device_id");
@@ -360,7 +358,7 @@ namespace NetLock_RMM_Server.SignalR
                         MySqlCommand cmd = new MySqlCommand(execute_query, conn);
                         cmd.Parameters.AddWithValue("@device_id", device_id);
                         cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                        cmd.Parameters.AddWithValue("@author", admin_username);
+                        cmd.Parameters.AddWithValue("@author", await MySQL.Handler.Get_Admin_Username_By_Remote_Session_Token(admin_token));
                         cmd.Parameters.AddWithValue("@command", powershell_code);
                         cmd.Parameters.AddWithValue("@result", response);
 
@@ -540,7 +538,7 @@ namespace NetLock_RMM_Server.SignalR
                 var jsonObject = new
                 {
                     admin_client_id = admin_client_id, // admin client id
-                    admin_username = admin_identity.admin_username, // admin_username
+                    admin_token = admin_identity.token, // admin_token
                     device_id = target_device.device_id, // device_id
                     command = command.command, // device_id
                     powershell_code = command.powershell_code, // device_id

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
+using MySqlConnector;
 using System.Text.Json;
 
 namespace NetLock_RMM_Server.SignalR.Webconsole
@@ -79,6 +80,44 @@ namespace NetLock_RMM_Server.SignalR.Webconsole
             {
                 Logging.Handler.Error("SignalR.Webconsole.Get_Command", "general_error", ex.ToString());
                 return String.Empty;
+            }
+        }
+
+        // Verify remote session token
+        // Get the remote session token for a user
+        public static async Task<bool> Verify_Remote_Session_Token(string token)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand cmd = new MySqlCommand("SELECT remote_session_token FROM accounts WHERE remote_session_token = @remote_session_token LIMIT 1;", conn);
+                cmd.Parameters.AddWithValue("@remote_session_token", token);
+
+                MySqlDataReader reader = await cmd.ExecuteReaderAsync();
+
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        // If the token matches, return true
+                        if (reader["remote_session_token"].ToString() == token)
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("class", "Get_Remote_Session_Token", ex.ToString());
+                return false;
+            }
+            finally
+            {
+                await conn.CloseAsync();
             }
         }
     }

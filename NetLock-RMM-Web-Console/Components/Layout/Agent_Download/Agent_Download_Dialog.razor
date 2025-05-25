@@ -1,6 +1,7 @@
 @using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -8,6 +9,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JSRuntime
 @inject IStringLocalizer<Layout.Agent_Download.Agent_Download_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -27,7 +29,7 @@
             {
                 <MudButton Class="ml-2 mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
 
-                <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
+                <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomLeft" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
                     @{
                         foreach (var name in agent_package_configurations_list)
                         {
@@ -55,7 +57,7 @@
                 <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
                 <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
 
-                <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomLeft" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
                     @{
                         foreach (var name in tenants_list)
                         {
@@ -64,7 +66,7 @@
                     }
                 </MudSelect>
 
-                <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomLeft" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
                     @{
                         foreach (var name in locations_list)
                         {
@@ -73,7 +75,7 @@
                     }
                 </MudSelect>
 
-                <MudSelect Class="mt-2" T="string" Label="@Localizer["language"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="language" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["language"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomLeft" @bind-Value="language" Required="true" RequiredError="@Localizer["required"]">
                     <MudSelectItem Value="@("en-US")" />
                     <MudSelectItem Value="@("de-DE")" />
                 </MudSelect>
@@ -82,7 +84,7 @@
                     <MudText Typo="Typo.h6">@Localizer["download_installer"]</MudText>
                     <MudText Typo="Typo.body2">@Localizer["architecture_text"]</MudText>
 
-                    <MudSelect Class="mt-2" T="string" Label="@Localizer["architecture selection"]" AnchorOrigin="Origin.BottomCenter" @bind-Value="architecture" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
+                    <MudSelect Class="mt-2" T="string" Label="@Localizer["architecture selection"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.BottomLeft" @bind-Value="architecture" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
                         <MudSelectItem Value="@("win-x64")" />
                         <MudSelectItem Value="@("win-arm64")" />
                         <MudSelectItem Value="@("linux-x64")" />
@@ -150,6 +152,16 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
         await Get_Tenants();
         await Get_Locations("1"); // Default tenant
 
@@ -673,7 +685,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START 8152edbc-1e2e-4b2b-82fb-5ec8fb3f7c9b //OSSCH_END
+    //OSSCH_START fca1fc3e-4f1c-4b6b-ad46-15f164418a42 //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {

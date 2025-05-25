@@ -392,8 +392,6 @@
 
             Logging.Handler.Debug("/login -> Login_User", "perform user login", "username: " + username + " role: " + role);
 
-            Console.WriteLine("sec key: " + NetLock_RMM_Web_Console.Configuration.Web_Console.token_service_secret_key);
-            
             var customAuthStateProvider = (CustomAuthenticationStateProvider)AuthenticationStateProvider;
             await customAuthStateProvider.UpdateAuthentificationState(new UserSession
                 {

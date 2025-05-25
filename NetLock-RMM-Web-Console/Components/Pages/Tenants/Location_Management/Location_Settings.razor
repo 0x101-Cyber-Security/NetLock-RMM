@@ -145,10 +145,6 @@
 
     #region Permissions System
 
-    private string permissions_json = String.Empty;
-    private string permissions_groups_json = String.Empty;
-    public static List<string> permissions_groups_list = new List<string> { };
-
     private bool permissions_tenants_locations_manage = false;
     private bool permissions_tenants_locations_edit = false;
     private bool permissions_tenants_locations_delete = false;
@@ -157,184 +153,45 @@
     private bool permissions_tenants_groups_edit = false;
     private bool permissions_tenants_groups_delete = false;
         
-    public class Permissions_Tenants_Activation_State
+    private async Task<bool> Permissions()
     {
-        public string id { get; set; } = String.Empty;
-        public string guid { get; set; } = String.Empty;
-    }
-
-    private async Task Get_Permissions()
-    {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("/location_settings -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("/location_settings -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("/location_settings -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
         try
         {
-            await conn.OpenAsync();
+            bool logout = false;
 
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-            Logging.Handler.Debug("/location_settings -> Permissions_Load", "query", query);
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
 
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_tenants_locations_manage = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_locations_manage");
+            permissions_tenants_locations_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_locations_edit");
+            permissions_tenants_locations_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_locations_delete");
+
+            permissions_tenants_groups_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_groups_add");
+            permissions_tenants_groups_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_groups_edit");
+			permissions_tenants_groups_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_groups_delete");
+
+            if (!permissions_tenants_locations_manage || !permissions_tenants_locations_edit || !permissions_tenants_locations_delete)
+                logout = true;
+
+            if (logout) // Redirect to the login page
             {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_groups_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("/location_settings -> Permissions_Load", "permissions_json", permissions_json);
-
-            //Extract permissions
-            if (!String.IsNullOrEmpty(permissions_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                {
-                    //tenants_locations_manage
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_locations_manage");
-                        permissions_tenants_locations_manage = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_locations_manage)", ex.Message);
-                    }
-
-                    //tenants_locations_edit
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_locations_edit");
-                        permissions_tenants_locations_edit = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_locations_edit)", ex.Message);
-                    }
-
-                    //tenants_locations_delete
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_locations_delete");
-                        permissions_tenants_locations_delete = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_locations_delete)", ex.Message);
-                    }
-
-                    //tenants_groups_add
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_groups_add");
-                        permissions_tenants_groups_add = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_groups_add)", ex.Message);
-                    }
-
-                    //tenants_groups_edit
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_groups_edit");
-                        permissions_tenants_groups_edit = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_groups_edit)", ex.Message);
-                    }
-
-                    //tenants_groups_delete
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("tenants_groups_delete");
-                        permissions_tenants_groups_delete = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/location_settings -> Permissions_Load", "permissions_json (tenants_groups_delete)", ex.Message);
-                    }
-                }
-            }
-            else if (permissions_json == "[]")
-            {
-                Logging.Handler.Debug("/location_settings -> Permissions_Load", "permissions_json", "Empty, logout user");
                 NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("/location_settings -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
+                return false;
             }
 
-            //Extract tenants from json
-            permissions_groups_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_groups_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> groups_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_groups_json);
-
-                    foreach (var tenant in groups_activation_state_list)
-                    {
-                        Logging.Handler.Debug("/location_settings -> Permissions_Load", "foreach tenant", tenant.guid);
-
-                        permissions_groups_list.Add(tenant.guid);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("/location_settings -> Permissions_Load (permissions_groups_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("/location_settings -> Permissions_Load (permissions_groups_json deserialize)", "Result", "Empty");
-            }
+            // All fine? Nice.
+            return true;
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/location_settings -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
         }
     }
 
@@ -357,27 +214,11 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
-            return;
-        }
-
         tenant_guid = await localStorage.GetItemAsync<string>("tenant_guid");
         location_name = await localStorage.GetItemAsync<string>("location_name");
 
-        await Get_Permissions();
-
-        //Check permissions
-        if (!permissions_tenants_locations_manage || !permissions_groups_list.Contains(tenant_guid))
-        {
-            NavigationManager.NavigateTo("/logout", true);
+        if (!await Permissions())
             return;
-        }
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 

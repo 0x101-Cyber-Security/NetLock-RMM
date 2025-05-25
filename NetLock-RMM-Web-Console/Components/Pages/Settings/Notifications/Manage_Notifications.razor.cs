@@ -1,4 +1,5 @@
 using System.Data.Common;
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -13,8 +14,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
         #region Permissions System
 
         private string permissions_json = String.Empty;
-        private string permissions_tenants_json = String.Empty;
-        public static List<string> permissions_tenants_list = new List<string> { };
 
         private bool permissions_settings_enabled = false;
         private bool permissions_settings_notifications_enabled = false;
@@ -44,370 +43,61 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
         private bool permissions_settings_notifications_ntfysh_edit = false;
         private bool permissions_settings_notifications_ntfysh_delete = false;
 
-        public class Permissions_Tenants_Activation_State
+        private async Task<bool> Permissions()
         {
-            public string id { get; set; } = String.Empty;
-        }
-
-        private async Task Get_Permissions()
-        {
-            //Extract user info from users session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var username = await sessionStorage.GetAsync<string>("username");
-            var password = await sessionStorage.GetAsync<string>("password");
-
-            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-            //if user info empty, force logout
-            if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-            {
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
-
-            //Check if user info is valid, if not, force logout
-            if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-            {
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
-
-            //Get permissions
-            string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
             try
             {
-                await conn.OpenAsync();
+                bool logout = false;
 
-                MySqlCommand command = new MySqlCommand(query, conn);
-                command.Parameters.AddWithValue("@username", username.Value);
+                // Get the current user from the authentication state
+                var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "query", query);
+                // Check if user is authenticated
+                if (user?.Identity is not { IsAuthenticated: true })
+                    logout = true;
 
-                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+                permissions_settings_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_enabled");
+                permissions_settings_notifications_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_enabled");
+                permissions_settings_notifications_mail_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_enabled");
+                permissions_settings_notifications_mail_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_add");
+                permissions_settings_notifications_mail_smtp = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_smtp");
+                permissions_settings_notifications_mail_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_test");
+                permissions_settings_notifications_mail_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_edit");
+                permissions_settings_notifications_mail_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_mail_delete");
+                permissions_settings_notifications_microsoft_teams_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_microsoft_teams_enabled");
+                permissions_settings_notifications_microsoft_teams_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_microsoft_teams_add");
+                permissions_settings_notifications_microsoft_teams_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_microsoft_teams_test");
+                permissions_settings_notifications_microsoft_teams_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_microsoft_teams_edit");
+                permissions_settings_notifications_microsoft_teams_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_microsoft_teams_delete");
+                permissions_settings_notifications_telegram_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_telegram_enabled");
+                permissions_settings_notifications_telegram_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_telegram_add");
+                permissions_settings_notifications_telegram_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_telegram_test");
+                permissions_settings_notifications_telegram_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_telegram_edit");
+                permissions_settings_notifications_telegram_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_telegram_delete");
+                permissions_settings_notifications_ntfysh_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_enabled");
+                permissions_settings_notifications_ntfysh_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_add");
+                permissions_settings_notifications_ntfysh_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_test");
+                permissions_settings_notifications_ntfysh_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_edit");
+                permissions_settings_notifications_ntfysh_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_delete");
+
+                if (!permissions_settings_enabled || !permissions_settings_notifications_enabled)
+                    logout = true;
+
+                if (logout) // Redirect to the login page
                 {
-                    if (reader.HasRows)
-                    {
-                        while (await reader.ReadAsync())
-                        {
-                            permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                            permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                        }
-                    }
-                }
-
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", permissions_json);
-
-                //Extract permissions
-                if (!String.IsNullOrEmpty(permissions_json))
-                {
-                    using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                    {
-                        //settings_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_enabled");
-                            permissions_settings_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (permissions_settings_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_enabled");
-                            permissions_settings_notifications_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (permissions_settings_notifications_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_enabled");
-                            permissions_settings_notifications_mail_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_add
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_add");
-                            permissions_settings_notifications_mail_add = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_add)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_smtp
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_smtp");
-                            permissions_settings_notifications_mail_smtp = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_smtp)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_test
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_test");
-                            permissions_settings_notifications_mail_test = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_test)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_edit
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_edit");
-                            permissions_settings_notifications_mail_edit = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_edit)", ex.Message);
-                        }
-
-                        //settings_notifications_mail_delete
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_mail_delete");
-                            permissions_settings_notifications_mail_delete = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_mail_delete)", ex.Message);
-                        }
-
-                        //settings_notifications_microsoft_teams_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_microsoft_teams_enabled");
-                            permissions_settings_notifications_microsoft_teams_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_microsoft_teams_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_microsoft_teams_add
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_microsoft_teams_add");
-                            permissions_settings_notifications_microsoft_teams_add = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_microsoft_teams_add)", ex.Message);
-                        }
-
-                        //settings_notifications_microsoft_teams_test
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_microsoft_teams_test");
-                            permissions_settings_notifications_microsoft_teams_test = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_microsoft_teams_test)", ex.Message);
-                        }
-
-                        //settings_notifications_microsoft_teams_edit
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_microsoft_teams_edit");
-                            permissions_settings_notifications_microsoft_teams_edit = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_microsoft_teams_edit)", ex.Message);
-                        }
-
-                        //settings_notifications_microsoft_teams_delete
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_microsoft_teams_delete");
-                            permissions_settings_notifications_microsoft_teams_delete = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_microsoft_teams_delete)", ex.Message);
-                        }
-
-                        //settings_notifications_telegram_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_telegram_enabled");
-                            permissions_settings_notifications_telegram_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_telegram_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_telegram_add
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_telegram_add");
-                            permissions_settings_notifications_telegram_add = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_telegram_add)", ex.Message);
-                        }
-
-                        //settings_notifications_telegram_test
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_telegram_test");
-                            permissions_settings_notifications_telegram_test = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_telegram_test)", ex.Message);
-                        }
-
-                        //settings_notifications_telegram_edit
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_telegram_edit");
-                            permissions_settings_notifications_telegram_edit = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_telegram_edit)", ex.Message);
-                        }
-
-                        //settings_notifications_telegram_delete
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_telegram_delete");
-                            permissions_settings_notifications_telegram_delete = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_telegram_delete)", ex.Message);
-                        }
-
-                        //settings_notifications_ntfysh_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_ntfysh_enabled");
-                            permissions_settings_notifications_ntfysh_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_ntfysh_enabled)", ex.Message);
-                        }
-
-                        //settings_notifications_ntfysh_add
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_ntfysh_add");
-                            permissions_settings_notifications_ntfysh_add = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_ntfysh_add)", ex.Message);
-                        }
-
-                        //settings_notifications_ntfysh_test
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_ntfysh_test");
-                            permissions_settings_notifications_ntfysh_test = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_ntfysh_test)", ex.Message);
-                        }
-
-                        //settings_notifications_ntfysh_edit
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_ntfysh_edit");
-                            permissions_settings_notifications_ntfysh_edit = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_ntfysh_edit)", ex.Message);
-                        }
-
-                        //settings_notifications_ntfysh_delete
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("settings_notifications_ntfysh_delete");
-                            permissions_settings_notifications_ntfysh_delete = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_notifications_ntfysh_delete)", ex.Message);
-                        }
-                    }
-                }
-                else if (permissions_json == "[]")
-                {
-                    Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", "Empty, logout user");
                     NavigationManager.NavigateTo("/logout", true);
-                }
-                else
-                {
-                    Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", "Empty, logout user");
-                    NavigationManager.NavigateTo("/logout", true);
+                    return false;
                 }
 
-                //Extract tenants from json
-                permissions_tenants_list.Clear();
-                if (!String.IsNullOrEmpty(permissions_tenants_json))
-                {
-                    //Set the activation state for the tenants
-                    try
-                    {
-                        List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
-
-                        foreach (var tenant in tenants_activation_state_list)
-                        {
-                            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "foreach tenant", tenant.id);
-
-                            permissions_tenants_list.Add(tenant.id);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/manage_notifications -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                    }
-                }
-                else
-                {
-                    Logging.Handler.Debug("/manage_notifications -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-                }
+                // All fine? Nice.
+                return true;
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("/manage_notifications -> Permissions_Load", "general_error (force logout)", ex.Message);
-                NavigationManager.NavigateTo("/logout", true);
-            }
-            finally
-            {
-                conn.Close();
+                Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+                return false;
             }
         }
 
@@ -430,23 +120,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
 
         private async Task AfterInitializedAsync()
         {
-            // Get the current user from the authentication state
-            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-            // Check if user is authenticated
-            if (user?.Identity is not { IsAuthenticated: true })
-            {
-                NavigationManager.NavigateTo("/login", true);
+            if (!await Permissions())
                 return;
-            }
-
-            await Get_Permissions();
-            //Check permissions
-            if (!permissions_settings_enabled || !permissions_settings_notifications_enabled)
-            {
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
 
             _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 

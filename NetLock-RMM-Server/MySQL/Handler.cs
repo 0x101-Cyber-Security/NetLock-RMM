@@ -294,5 +294,36 @@ namespace NetLock_RMM_Server.MySQL
         {
             return await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "members_portal_api_key");
         }
+
+        // Get admin username by remote_session_token
+        public static async Task<string> Get_Admin_Username_By_Remote_Session_Token(string remote_session_token)
+        {
+            string query = "SELECT username FROM accounts WHERE remote_session_token = @remote_session_token;";
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+            
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@remote_session_token", remote_session_token);
+                
+                string username = cmd.ExecuteScalar()?.ToString() ?? String.Empty;
+                
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_Admin_Username_By_Remote_Session_Token", "Query", query);
+                
+                return username;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_Admin_Username_By_Remote_Session_Token", "Query: " + query, ex.ToString());
+                return String.Empty;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
     }
 }

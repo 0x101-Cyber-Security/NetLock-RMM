@@ -359,156 +359,42 @@
         public string guid { get; set; } = String.Empty;
     }
 
-    private async Task Get_Permissions_System()
+    private async Task<bool> Permissions()
     {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("/user_settings -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("/user_settings -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("/user_settings -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions_system
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
         try
         {
-            await conn.OpenAsync();
+            bool logout = false;
 
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-            Logging.Handler.Debug("/user_settings -> Permissions_Load", "query", query);
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
 
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_system_users_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "users_enabled");
+            permissions_system_users_manage = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "users_manage");
+            permissions_system_users_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "users_edit");
+			permissions_system_users_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "users_delete");
+
+            if (!permissions_system_users_enabled || !permissions_system_users_manage)
+                logout = true;
+
+            if (logout) // Redirect to the login page
             {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_system_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_system_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", permissions_system_json);
-
-            //Extract permissions_system
-            if (!String.IsNullOrEmpty(permissions_system_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_system_json))
-                {
-                    //users_enabled
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("users_enabled");
-                        permissions_system_users_enabled = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_enabled)", ex.Message);
-                    }
-
-                    //users_manage
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("users_manage");
-                        permissions_system_users_manage = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_manage)", ex.Message);
-                    }
-
-                    //users_edit
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("users_edit");
-                        permissions_system_users_edit = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_edit)", ex.Message);
-                    }
-
-                    //users_delete
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("users_delete");
-                        permissions_system_users_delete = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/user_settings -> Permissions_Load", "permissions_system_json (users_delete)", ex.Message);
-                    }
-                }
-            }
-            else if (permissions_system_json == "[]")
-            {
-                Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", "Empty, logout user");
                 NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("/user_settings -> Permissions_Load", "permissions_system_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
+                return false;
             }
 
-            //Extract tenants from json
-            permissions_system_tenants_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_system_tenants_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_system_tenants_json);
-
-                    foreach (var tenant in tenants_activation_state_list)
-                    {
-                        Logging.Handler.Debug("/user_settings -> Permissions_Load", "foreach tenant", tenant.id);
-
-                        permissions_system_tenants_list.Add(tenant.id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("/user_settings -> Permissions_Load (permissions_system_tenants_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("/user_settings -> Permissions_Load (permissions_system_tenants_json deserialize)", "Result", "Empty");
-            }
+            // All fine? Nice.
+            return true;
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/user_settings -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
         }
     }
 
@@ -531,27 +417,8 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-		// Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
+        if (!await Permissions())
             return;
-        }
-
-        await Get_Permissions_System();
-
-        //Check permissions
-        if (!permissions_system_users_enabled || !permissions_system_users_manage)
-        {
-            Logging.Handler.Error("/user_settings -> Get_Permissions_System", "permissions_system_users_enabled", permissions_system_users_enabled.ToString());
-            Logging.Handler.Error("/user_settings -> Get_Permissions_System", "permissions_system_users_manage", permissions_system_users_manage.ToString());
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
@@ -708,7 +575,7 @@
     private bool settings_system_enabled = false;
     private bool settings_protocols_enabled = false;
 
-    public class Permissions
+    public class User_Permissions
     {       
         //permissions: dashboard
         public bool dashboard_enabled { get; set; }
@@ -900,7 +767,7 @@
         this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
         //Create permissions json
-        Permissions permissions = new Permissions
+        User_Permissions permissions = new User_Permissions
             {
                 //dashboard
                 dashboard_enabled = dashboard_enabled,

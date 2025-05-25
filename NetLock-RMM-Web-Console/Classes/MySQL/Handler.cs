@@ -91,10 +91,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         public static async Task<string> Quick_Reader(string query, string item)
         {
             Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "query", query);
-            Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "item", query);
+            Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "item", item); // war vorher ein Fehler, `query` statt `item`
 
-            string result = String.Empty;
-
+            List<string> results = new List<string>();
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
             try
@@ -102,7 +101,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 await conn.OpenAsync();
 
                 MySqlCommand command = new MySqlCommand(query, conn);
-                Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "MySQL_Prepared_Query", query); //Output prepared query
+                Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "MySQL_Prepared_Query", query);
 
                 using (DbDataReader reader = await command.ExecuteReaderAsync())
                 {
@@ -110,14 +109,16 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                     {
                         while (await reader.ReadAsync())
                         {
-                            result = reader[item].ToString() ?? String.Empty;
+                            var value = reader[item]?.ToString();
+                            if (!string.IsNullOrWhiteSpace(value))
+                                results.Add(value);
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Classes.MySQL.Handler.Quick_Reader", "query: " + query + " item: " + item, ex.Message);
+                Logging.Handler.Error("Classes.MySQL.Handler.Quick_Reader", $"query: {query} item: {item}", ex.Message);
                 conn.Close();
             }
             finally
@@ -125,7 +126,37 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 conn.Close();
             }
 
-            return result;
+            return string.Join(",", results);
+        }
+
+        public static async Task<string> Get_TenantID_From_DeviceID(string device_id)
+        {
+            string query = "SELECT tenant_id FROM devices WHERE id = @device_id;";
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+
+                string tenant_id = cmd.ExecuteScalar().ToString();
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_TenantID_From_DeviceID", "Query", query);
+
+                return tenant_id;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_TenantID_From_DeviceID", "Query: " + query, ex.ToString());
+                return String.Empty;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
         }
 
         public static async Task<bool> Reset_Device_Sync(bool global, string device_id)

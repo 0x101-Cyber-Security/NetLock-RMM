@@ -72,6 +72,8 @@
     [Parameter] public string name { get; set; }
     [Parameter] public string json { get; set; }
 
+    private string netlock_username = String.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         // Get the current user from the authentication state
@@ -83,6 +85,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         category = Localizer["policy"];
         condition = Localizer["condition_tenant"];
@@ -198,9 +203,6 @@
 
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var username = await sessionStorage.GetAsync<string>("username");
-
             int category_converted = 0;
             int sub_category_converted = 0;
             int condition_converted = 0;
@@ -232,7 +234,7 @@
             {
                 name = name,
                 date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                author = username.Value,
+                author = netlock_username,
                 description = description,
                 category = category_converted,
                 sub_category = sub_category_converted,
@@ -253,7 +255,7 @@
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@old_name", old_name);
             cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@author", username.Value);
+            cmd.Parameters.AddWithValue("@author", netlock_username);
             cmd.Parameters.AddWithValue("@description", description);
             cmd.Parameters.AddWithValue("@category", category_converted);
             cmd.Parameters.AddWithValue("@sub_category", sub_category_converted);
@@ -282,7 +284,7 @@
         }
         else
         {
-            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+            this.Snackbar.Add("A error occured.", Severity.Error);
             this.MudDialog.Close(DialogResult.Ok("error"));
         }
     }

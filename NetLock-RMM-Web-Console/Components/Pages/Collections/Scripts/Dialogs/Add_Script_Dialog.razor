@@ -138,6 +138,8 @@
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
 
+    private string netlock_username = String.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -162,6 +164,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         await Get_Scripts();
 
@@ -314,15 +319,11 @@
 
         try
         {  
-            // Get author from session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             Script script_json = new Script
             {
                 name = script_name,
                 date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                author = "",
+                author = netlock_username,
                 description = description,
                 platform = platform,
                 shell = shell,

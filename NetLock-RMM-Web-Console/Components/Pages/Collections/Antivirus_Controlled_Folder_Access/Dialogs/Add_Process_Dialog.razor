@@ -3,6 +3,7 @@
 @using System.Text.Json;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -11,6 +12,7 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Collections.Antivirus_Controlled_Folder_Access.Dialogs.Add_Process_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <MudDialog>
     <TitleContent>
@@ -35,9 +37,23 @@
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string json { get; set; }
 
+    private string netlock_username = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
         processes_json = json;
         Logging.Handler.Debug("/Policy_Settings (Add_Controlled_Folder_Access_Processes_Dialog) -> OnInitializedAsync", "processes_json", processes_json);
     }
@@ -94,10 +110,6 @@
 
         try
         {
-            // Get author from session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             List<Processes> processs = JsonSerializer.Deserialize<List<Processes>>(processes_json);
 
             // Check if process path already exists
@@ -120,7 +132,7 @@
                     name = name,
                     date = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss"),
                     description = description,
-                    author = author.Value,
+                    author = netlock_username,
                     process_path = process_path,
                     company = "-",
                     product = "-",

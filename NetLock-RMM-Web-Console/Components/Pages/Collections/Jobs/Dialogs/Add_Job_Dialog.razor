@@ -183,6 +183,8 @@
 
 @code {
 
+	private string netlock_username = String.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         // Get the current user from the authentication state
@@ -194,6 +196,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         time_scheduler_type_display = Localizer["schedule_system_boot"];
         await Get_Scripts();
@@ -420,10 +425,6 @@
 
         try
         {
-            // Get author from session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             string type_converted = String.Empty;
 
             if (type_display == Localizer["script"])
@@ -438,7 +439,7 @@
                     id = Randomizer.Handler.Standard(6),
                     name = job_name,
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    author = author.Value,
+                    author = netlock_username,
                     description = description,
                     platform = platform,
                     type = type_converted,

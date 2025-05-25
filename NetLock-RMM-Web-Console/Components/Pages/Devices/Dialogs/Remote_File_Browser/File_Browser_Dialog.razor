@@ -24,7 +24,7 @@
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Devices.Dialogs.Remote_File_Browser.File_Browser_Dialog> Localizer
 @inject AuthenticationStateProvider AuthenticationStateProvider
- 
+
 <MudDialog>
     <TitleContent>
         <MudText Typo="Typo.h5">@Localizer["title"] (@device_name)</MudText>
@@ -36,8 +36,6 @@
             @{
                 if (remote_server_client_setup)
                 {
-                    <MudAlert Severity="Severity.Success" Icon="@Icons.Material.Filled.CheckCircle">@Localizer["authorized"]</MudAlert>
-
                     <div style="display: flex; align-items: flex-start;">
                         <MudSelect Class="mt-2" T="string" @bind-Value="remote_file_browser_drive_string" @bind-Value:after="async () => { await Remote_File_Browser_Get_Index(remote_file_browser_drive_string, false); }" Label="@Localizer["drives"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(!remote_server_client_setup)">
                             @{
@@ -137,7 +135,7 @@
                             <MudText Typo="Typo.body1">@_uploadProgressDisplayString</MudText>
                         </MudProgressLinear>
                     }
-                    
+
                     if (uploading_indeterminate)
                     {
                         <MudProgressLinear Size="Size.Medium" Class="mt-2" Color="Color.Info" Indeterminate="true">
@@ -152,14 +150,14 @@
                 }
                 else
                 {
-                    <MudAlert Class="mb-2" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["not_authorized"]</MudAlert>
+                    <MudAlert Class="mb-2" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">Not connected to the NetLock RMM server backend.</MudAlert>
 
-                    <MudButton Class="mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ConnectWithoutContact" FullWidth="true" OnClick="Remote_Authentificate_Dialog">@Localizer["authorize"]</MudButton>
+                    <MudButton Class="mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ConnectWithoutContact" FullWidth="true" OnClick="Remote_Setup_SignalR">Reconnect.</MudButton>
                 }
             }
 
         </MudPaper>
-       
+
     </DialogContent>
     <DialogActions>
 
@@ -176,13 +174,12 @@
     [Parameter] public string location_guid { get; set; }
     [Parameter] public string platform { get; set; }
 
+    private string netlock_username = String.Empty;
+    private string token = String.Empty;
+
     private bool loading_overlay = false;
     private bool error_occurred = false;
     private string error_occurred_display = String.Empty;
-
-    private string username = String.Empty;
-    private string password = String.Empty;
-    private string session_guid = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -209,26 +206,19 @@
             return;
         }
 
-        await Remote_Authentificate_Dialog();
+        // Retrieve username from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
-        // Get session info
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var session_username_result = await sessionStorage.GetAsync<string>("username");
-        var session_password_result = await sessionStorage.GetAsync<string>("password");
-        var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
+        token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
 
-        username = session_username_result.Value;
-        password = session_password_result.Value;
-        session_guid = session_guid_result.Value;
+		await Remote_Setup_SignalR();
     }
 
     #region Remote
 
     public class Remote_Admin_Identity
     {
-        public string admin_username { get; set; }
-        public string admin_password { get; set; } // encrypted
-        public string session_guid { get; set; }
+        public string token { get; set; }
     }
 
     public class Remote_Target_Device
@@ -271,22 +261,9 @@
     {
         try
         {
-            // Get session info
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var session_username_result = await sessionStorage.GetAsync<string>("username");
-            var session_password_result = await sessionStorage.GetAsync<string>("password");
-            var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
-
-            string username = session_username_result.Value;
-            string password = session_password_result.Value;
-            string password_encrypted = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
-            string session_guid = session_guid_result.Value;
-
             Remote_Admin_Identity identity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    admin_password = password_encrypted,
-                    session_guid = session_guid
+                    token = token
                 };
 
             // Create the object that contains the device_identity object
@@ -580,39 +557,6 @@
         }
     }
 
-    private bool remote_authentification_dialog_open = false;
-
-    private async Task Remote_Authentificate_Dialog()
-    {
-        if (remote_authentification_dialog_open)
-            return;
-
-        var options = new DialogOptions
-            {
-                CloseButton = true,
-                FullWidth = true,
-                MaxWidth = MaxWidth.Medium,
-                BackgroundClass = "dialog-blurring",
-            };
-
-        remote_authentification_dialog_open = true;
-
-        var result = await this.DialogService.Show<Pages.Devices.Dialogs.Remote_Authentificate_Dialog>(string.Empty, options).Result;
-
-        remote_authentification_dialog_open = false;
-
-        if (result.Canceled)
-            return;
-
-        Logging.Handler.Debug("/devices -> Event_Details_Dialog", "Result", result.Data.ToString());
-
-        // Check if the user is authentificated
-        if (result.Data.ToString() == "authentificated")
-        {
-            await Remote_Setup_SignalR();
-        }
-    }
-
     #endregion
 
     #region Remote File Browser
@@ -683,8 +627,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -731,7 +674,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
         }
         catch (Exception ex)
@@ -770,8 +713,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -824,7 +766,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
         }
         catch (Exception ex)
@@ -845,10 +787,9 @@
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    admin_username = username,
-                    session_guid = session_guid
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
                 {
@@ -902,7 +843,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -935,8 +876,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -990,7 +930,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1014,8 +954,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1071,7 +1010,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1091,8 +1030,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1148,7 +1086,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_Directory", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1172,8 +1110,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1224,7 +1161,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Create_File", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1257,8 +1194,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1307,7 +1243,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Delete_File", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1331,8 +1267,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1382,7 +1317,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Move_File", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1406,8 +1341,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1457,7 +1391,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Rename_File", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1481,8 +1415,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1531,7 +1464,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Upload_File_To_Device", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1558,8 +1491,7 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    session_guid = session_guid
+                    token = token
                 };
 
             var targetDevice = new Remote_Target_Device
@@ -1607,7 +1539,7 @@
             else
             {
                 Logging.Handler.Error("/dashboard -> Remote_File_Browser_Upload_File_To_Device", "Remote server not setup.", "");
-                await Remote_Authentificate_Dialog();
+                await Remote_Setup_SignalR();
             }
 
             StateHasChanged();
@@ -1651,7 +1583,7 @@
             return;
 
         if (!remote_server_client_setup)
-            await Remote_Authentificate_Dialog();
+            await Remote_Setup_SignalR();
 
         var options = new DialogOptions
             {
@@ -1788,7 +1720,7 @@
             return;
 
         if (!remote_server_client_setup)
-            await Remote_Authentificate_Dialog();
+            await Remote_Setup_SignalR();
 
         var options = new DialogOptions
             {

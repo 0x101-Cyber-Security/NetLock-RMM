@@ -180,6 +180,60 @@
 
 @code {
 
+    #region Permissions
+
+    private string permissions_json = String.Empty;
+
+    private bool permissions_collections_enabled = false;
+    private bool permissions_collections_scripts_enabled = false;
+    private bool permissions_collections_scripts_add = false;
+    private bool permissions_collections_scripts_edit = false;
+    private bool permissions_collections_scripts_delete = false;
+
+    // Auth:
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_enabled");
+            permissions_collections_scripts_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_scripts_enabled");
+            permissions_collections_scripts_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_scripts_add");
+            permissions_collections_scripts_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_scripts_edit");
+            permissions_collections_scripts_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_scripts_delete");
+
+            if (!permissions_collections_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+
+    #endregion
+
     [CascadingParameter]
     private IMudDialogInstance MudDialog { get; set; } = default!;
     [Parameter] public string editor { get; set; } = string.Empty;
@@ -201,15 +255,8 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
+        if (!await Permissions())
             return;
-        }
 
         loading_overlay = true;
         StateHasChanged();

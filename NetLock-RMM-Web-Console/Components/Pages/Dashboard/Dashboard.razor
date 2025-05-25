@@ -23,104 +23,104 @@
 <style>
 
     .selected-row-light {
-        background-color: lightgray;
+    background-color: lightgray;
     }
 
     .selected-row-dark {
-        background-color: #141414;
+    background-color: #141414;
     }
 
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 600px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 
     @@media (max-width: 600px) {
-        .d-flex {
-            flex-direction: column;
-        }
+    .d-flex {
+    flex-direction: column;
+    }
     }
 
     .d-flex.flex-row {
-        flex-direction: row; 
+    flex-direction: row; 
     }
 
     @@keyframes fadeIn {
-        from {
-            opacity: 0;
-        }
+    from {
+    opacity: 0;
+    }
 
-        to {
-            opacity: 1;
-        }
+    to {
+    opacity: 1;
+    }
     }
 
     .animated-text {
-        animation: pulse 2s infinite ease-in-out;
+    animation: pulse 2s infinite ease-in-out;
     }
 
     @@keyframes pulse {
-        0%, 100% {
-            opacity: 1;
-        }
+    0%, 100% {
+    opacity: 1;
+    }
 
-        50% {
-            opacity: 0.6;
-        }
+    50% {
+    opacity: 0.6;
+    }
     }
 
     .wave-emoji {
-        display: inline-block;
-        animation: wave 2s infinite;
-        transform-origin: 70% 70%;
+    display: inline-block;
+    animation: wave 2s infinite;
+    transform-origin: 70% 70%;
     }
 
     @@keyframes wave {
-        0% {
-            transform: rotate(0deg);
-        }
+    0% {
+    transform: rotate(0deg);
+    }
 
-        15% {
-            transform: rotate(15deg);
-        }
+    15% {
+    transform: rotate(15deg);
+    }
 
-        30% {
-            transform: rotate(-10deg);
-        }
+    30% {
+    transform: rotate(-10deg);
+    }
 
-        45% {
-            transform: rotate(15deg);
-        }
+    45% {
+    transform: rotate(15deg);
+    }
 
-        60% {
-            transform: rotate(-10deg);
-        }
+    60% {
+    transform: rotate(-10deg);
+    }
 
-        75% {
-            transform: rotate(15deg);
-        }
+    75% {
+    transform: rotate(15deg);
+    }
 
-        100% {
-            transform: rotate(0deg);
-        }
+    100% {
+    transform: rotate(0deg);
+    }
     }
 </style>
 
@@ -155,12 +155,12 @@
                                     <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%"  InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="device_status_chart_options">
                                         <CustomGraphics>
                                             <text x="50%" y="50%"
-                                                    dominant-baseline="middle"
-                                                    text-anchor="middle"
-                                                    fill="@(_isDarkMode ? "white" : "black")"
-                                                    font-family="Helvetica, Arial, sans-serif"
-                                                    font-size="30"
-                                                    font-weight="bold">
+                                            dominant-baseline="middle"
+                                            text-anchor="middle"
+                                            fill="@(_isDarkMode ? "white" : "black")"
+                                            font-family="Helvetica, Arial, sans-serif"
+                                            font-size="30"
+                                            font-weight="bold">
                                                 @devices_total
                                             </text>
                                         </CustomGraphics>
@@ -186,19 +186,19 @@
                                     double[] chart_data = { events_severity_low, events_severity_moderate, events_severity_high, events_severity_critical };
                                     string[] chart_labels = { Localizer["low"] + $": {events_severity_low}", Localizer["moderate"] + $": {events_severity_moderate}", Localizer["high"] + $": {events_severity_high}", Localizer["critical"] + $": {events_severity_critical}" };
 
-                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_severity_chart_options">
-                                            <CustomGraphics>
-                                                <text x="50%" y="50%"
-                                                        dominant-baseline="middle"
-                                                        text-anchor="middle"
-                                                        fill="@(_isDarkMode ? "white" : "black")"
-                                                        font-family="Helvetica, Arial, sans-serif"
-                                                        font-size="30"
-                                                        font-weight="bold">
-                                                    @events_total
-                                                </text>
-                                            </CustomGraphics>    
-                                        </MudChart>
+                                    <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_severity_chart_options">
+                                        <CustomGraphics>
+                                            <text x="50%" y="50%"
+                                            dominant-baseline="middle"
+                                            text-anchor="middle"
+                                            fill="@(_isDarkMode ? "white" : "black")"
+                                            font-family="Helvetica, Arial, sans-serif"
+                                            font-size="30"
+                                            font-weight="bold">
+                                                @events_total
+                                            </text>
+                                        </CustomGraphics>    
+                                    </MudChart>
                                 }
                                 catch (Exception ex)
                                 {
@@ -222,18 +222,18 @@
 
 
                                     <MudChart ChartType="MudBlazor.ChartType.Donut" Width="100%" InputData="@chart_data" InputLabels="@chart_labels" ChartOptions="events_type_chart_options">
-                                            <CustomGraphics>
-                                                <text x="50%" y="50%"
-                                                        dominant-baseline="middle"
-                                                        text-anchor="middle"
-                                                        fill="@(_isDarkMode ? "white" : "black")"
-                                                        font-family="Helvetica, Arial, sans-serif"
-                                                        font-size="30"
-                                                        font-weight="bold">
+                                        <CustomGraphics>
+                                            <text x="50%" y="50%"
+                                            dominant-baseline="middle"
+                                            text-anchor="middle"
+                                            fill="@(_isDarkMode ? "white" : "black")"
+                                            font-family="Helvetica, Arial, sans-serif"
+                                            font-size="30"
+                                            font-weight="bold">
                                                 @events_total
-                                                </text>
-                                            </CustomGraphics>    
-                                        </MudChart>
+                                            </text>
+                                        </CustomGraphics>    
+                                    </MudChart>
                                 }
                                 catch (Exception ex)
                                 {
@@ -270,17 +270,17 @@
                         <div class="d-flex flex-row align-items-center">
                             <MudTooltip Text="@Localizer["refresh"]">
                                 <MudIconButton Class="ml-2 mt-5 mr-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small"
-                                               Color="Color.Default" @onclick="async () => { events_mysql_data = await Events_Load(true); }"></MudIconButton>
+                                Color="Color.Default" @onclick="async () => { events_mysql_data = await Events_Load(true); }"></MudIconButton>
                             </MudTooltip>
 
                             <MudTooltip Text="@Localizer["mark_as_read"]">
                                 <MudIconButton Class="ml-2 mt-5 mr-2" Icon="@Icons.Material.Filled.MarkChatRead" Variant="Variant.Filled" Size="Size.Small"
-                                               Color="Color.Default" @onclick="@(async () => { await Classes.MySQL.Handler.Execute_Command("UPDATE `events` SET `read` = 1;"); events_mysql_data = await Events_Load(true);})"></MudIconButton>
+                                Color="Color.Default" @onclick="@(async () => { await Classes.MySQL.Handler.Execute_Command("UPDATE `events` SET `read` = 1;"); events_mysql_data = await Events_Load(true);})"></MudIconButton>
                             </MudTooltip>
 
                             <MudTooltip Text="@Localizer["export_data"]">
                                 <MudIconButton Class="ml-2 mt-5 mr-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small"
-                                               Color="Color.Default" OnClick="@(async () => await Show_Export_Table_Dialog("events"))"></MudIconButton>
+                                Color="Color.Default" OnClick="@(async () => await Show_Export_Table_Dialog("events"))"></MudIconButton>
                             </MudTooltip>
                         </div>
                     </div>
@@ -510,12 +510,54 @@
 
     </Authorized>
 </AuthorizeView>
-    
+
 @code {
 
     private bool loading_overlay = false;
 
     private bool _isDarkMode;
+
+    private bool permissions_dashboard_enabled = false;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_dashboard_enabled = await Classes.Authentication.Permissions.Verify_Permission(user.FindFirst(ClaimTypes.Email)?.Value, "dashboard_enabled");
+            permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+
+            if (!permissions_dashboard_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+				return false;
+            }
+
+            // Load other permissions here
+
+            // All fine? Nice.
+			return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+			return false;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -532,31 +574,15 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
+        if (!await Permissions())
             return;
-        }
 
         loading_overlay = true;
 		StateHasChanged();
 
-        await Permissions_Load();
-
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
         device_information_events_severity_string = Localizer["any"];
-        
-        //Check permissions
-        if (!permissions_dashboard_enabled)
-        {
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
 
         await Chart_Options();
         await Get_Charts_Data();
@@ -618,141 +644,6 @@
 
         membership_reminder_dialog_open = false;
     }
-
-    #region Permissions
-
-    private string permissions_json = String.Empty;
-    private string permissions_tenants_json = String.Empty;
-    public static List<string> permissions_tenants_list = new List<string> { };
-
-    private bool permissions_dashboard_enabled = false;
-
-    public class Permissions_Tenants_Activation_State
-    {
-        public string id { get; set; } = String.Empty;
-    }
-
-    private async Task Permissions_Load()
-    {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("NavMenu -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
-        try
-        {
-            await conn.OpenAsync();
-
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
-
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "query", query);
-
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
-            {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", permissions_json);
-
-            //Extract permissions
-            if (!String.IsNullOrEmpty(permissions_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                {
-                    try
-                    {
-                        //dashboard_enabled
-                        JsonElement dashboard_enabled_element = document.RootElement.GetProperty("dashboard_enabled");
-                        permissions_dashboard_enabled = dashboard_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_dashboard_enabled)", ex.Message);
-                    }
-                }
-            }
-            else if (permissions_json == "[]")
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
-            }
-
-            //Extract tenants from json
-            permissions_tenants_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_tenants_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
-
-                    foreach (var tenant in tenants_activation_state_list)
-                    {
-                        Logging.Handler.Debug("NavMenu -> Permissions_Load", "foreach tenant", tenant.id);
-
-                        permissions_tenants_list.Add(tenant.id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("NavMenu -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
-        }
-    }
-
-    #endregion
 
     #region Charts
 
@@ -956,7 +847,14 @@
                     while (await reader.ReadAsync())
                     {
                         //Logging.Handler.Debug("Events", "MySQL_Result", reader["id"].ToString()); //Output the JSON
+                        string device_id = reader["device_id"].ToString() ?? String.Empty;
+                        string device_tenant_id = await Classes.MySQL.Handler.Get_TenantID_From_DeviceID(device_id);
 
+                        // Check if the device's tenant ID is in the permissions list
+                        if (!permissions_tenants_list.Contains(device_tenant_id))
+                            continue; // Skip this event if the tenant is not in the permissions list
+
+              
                         Events_Table entity = new Events_Table //Create the entity
                             {
                                 id = reader["id"].ToString() ?? String.Empty,
@@ -986,7 +884,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
             loading_overlay = false;
         }
     }

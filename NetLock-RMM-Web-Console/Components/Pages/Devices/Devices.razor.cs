@@ -14,6 +14,7 @@ using MudBlazor;
 using MySqlConnector;
 using OfficeOpenXml;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 
 namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 {
@@ -22,9 +23,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
         #region Permissions System
 
+        private string netlock_username = String.Empty;
+        private string token = String.Empty;
         private string permissions_json = String.Empty;
-        private string permissions_tenants_json = String.Empty;
-        public static List<string> permissions_tenants_list = new List<string> { };
 
         private bool permissions_devices_authorized_enabled = false;
         private bool permissions_devices_general = false;
@@ -37,242 +38,79 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         private bool permissions_devices_remote_control = false;
         private bool permissions_devices_deauthorize = false;
         private bool permissions_devices_move = false;
+        public static List<string> permissions_tenants_list = new List<string> { };
 
-        public class Permissions_Tenants_Activation_State
+        private async Task<bool> Permissions()
         {
-            public string id { get; set; } = String.Empty;
-            public string guid { get; set; } = String.Empty;
-        }
-
-        private async Task Get_Permissions()
-        {
-            //Extract user info from users session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var username = await sessionStorage.GetAsync<string>("username");
-            var password = await sessionStorage.GetAsync<string>("password");
-
-            Logging.Handler.Debug("/devices -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-            //if user info empty, force logout
-            if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-            {
-                Logging.Handler.Debug("/devices -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
-
-            //Check if user info is valid, if not, force logout
-            if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-            {
-                Logging.Handler.Debug("/devices -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
-
-            //Get permissions
-            string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
             try
             {
-                await conn.OpenAsync();
+                bool logout = false;
+                bool has_all_tenants_permission = false;
 
-                MySqlCommand command = new MySqlCommand(query, conn);
-                command.Parameters.AddWithValue("@username", username.Value);
+                // Get the current user from the authentication state
+                var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-                Logging.Handler.Debug("/devices -> Permissions_Load", "query", query);
+                // Check if user is authenticated
+                if (user?.Identity is not { IsAuthenticated: true })
+                    logout = true;
 
-                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+                token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
+
+                permissions_devices_authorized_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_authorized_enabled");
+                permissions_devices_general = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_general");
+                permissions_devices_software = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_software");
+                permissions_devices_task_manager = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_task_manager");
+                permissions_devices_antivirus = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_antivirus");
+                permissions_devices_events = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_events");
+                permissions_devices_remote_shell = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_remote_shell");
+                permissions_devices_remote_file_browser = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_remote_file_browser");
+                permissions_devices_remote_control = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_remote_control");
+                permissions_devices_deauthorize = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_deauthorize");
+                permissions_devices_move = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_move");
+                permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, true);
+
+                if (!permissions_devices_authorized_enabled)
+                    logout = true;
+
+                //Check tenant permissions
+                if (tenant_guid == "all")
                 {
-                    if (reader.HasRows)
+                    has_all_tenants_permission = await Classes.Authentication.Permissions.Verify_Tenants_Full_Access(netlock_username);
+                    Logging.Handler.Debug("/devices -> Permissions", "Tenant permission", "has_all_tenants_permission: " + has_all_tenants_permission);
+                    Logging.Handler.Debug("/devices -> Permissions", "Tenant permission", "user has permissions to all tenants");
+                }
+
+                if (!has_all_tenants_permission)
+                {
+                    if (!permissions_devices_authorized_enabled || !permissions_tenants_list.Contains(tenant_guid) || permissions_tenants_list.Count == 0)
                     {
-                        while (await reader.ReadAsync())
-                        {
-                            permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                            permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                        }
+                        Console.WriteLine("Tenant permission denied for user: " + netlock_username);
+                        Console.WriteLine("Tenant GUID: " + tenant_guid);
+                        Console.WriteLine("Tenant permissions list: " + string.Join(", ", permissions_tenants_list));
+
+                        // Optionally, you can log this information or handle it as needed
+
+                        //maybe add deleting the tenant name from the browsers storage here
+                        Logging.Handler.Debug("/devices -> OnInitializedAsync", "Tenant permission", "false");
+                        logout = true;
                     }
                 }
 
-                Logging.Handler.Debug("/devices -> Permissions_Load", "permissions_json", permissions_json);
-
-                //Extract permissions
-                if (!String.IsNullOrEmpty(permissions_json))
+                if (logout) // Redirect to the login page
                 {
-                    using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                    {
-                        //devices_authorized_enabled
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_authorized_enabled");
-                            permissions_devices_authorized_enabled = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_authorized_enabled)", ex.Message);
-                        }
-
-                        //devices_general
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_general");
-                            permissions_devices_general = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_general)", ex.Message);
-                        }
-
-                        //devices_software
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_software");
-                            permissions_devices_software = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_software)", ex.Message);
-                        }
-
-                        //devices_task_manager
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_task_manager");
-                            permissions_devices_task_manager = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_task_manager)", ex.Message);
-                        }
-
-                        //devices_antivirus
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_antivirus");
-                            permissions_devices_antivirus = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_antivirus)", ex.Message);
-                        }
-
-                        //devices_events
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_events");
-                            permissions_devices_events = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_events)", ex.Message);
-                        }
-
-                        //devices_remote_shell
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_remote_shell");
-                            permissions_devices_remote_shell = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_remote_shell)", ex.Message);
-                        }
-
-                        //devices_remote_file_browser
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_remote_file_browser");
-                            permissions_devices_remote_file_browser = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_remote_file_browser)", ex.Message);
-                        }
-
-                        //devices_remote_control
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_remote_control");
-                            permissions_devices_remote_control = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_remote_control)", ex.Message);
-                        }
-
-                        //devices_deauthorize
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_deauthorize");
-                            permissions_devices_deauthorize = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_deauthorize)", ex.Message);
-                        }
-
-                        //devices_move
-                        try
-                        {
-                            JsonElement element = document.RootElement.GetProperty("devices_move");
-                            permissions_devices_move = element.GetBoolean();
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Handler.Error("/devices -> Permissions_Load", "permissions_json (devices_move)", ex.Message);
-                        }
-                    }
-                }
-                else if (permissions_json == "[]")
-                {
-                    Logging.Handler.Debug("/devices -> Permissions_Load", "permissions_json", "Empty, logout user");
                     NavigationManager.NavigateTo("/logout", true);
-                }
-                else
-                {
-                    Logging.Handler.Debug("/devices -> Permissions_Load", "permissions_json", "Empty, logout user");
-                    NavigationManager.NavigateTo("/logout", true);
+                    return false;
                 }
 
-                //Extract tenants from json
-                permissions_tenants_list.Clear();
-                if (!String.IsNullOrEmpty(permissions_tenants_json))
-                {
-                    //Set the activation state for the tenants
-                    try
-                    {
-                        List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
-
-                        foreach (var tenant in tenants_activation_state_list)
-                        {
-                            Logging.Handler.Debug("/devices -> Permissions_Load", "foreach tenant", tenant.guid);
-
-                            permissions_tenants_list.Add(tenant.guid);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/devices -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                    }
-
-                    permissions_tenants_list.Add("all");
-                }
-                else
-                {
-                    Logging.Handler.Debug("/devices -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-                }
+                // All fine? Nice.
+                return true;
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("/devices -> Permissions_Load", "general_error (force logout)", ex.Message);
-                NavigationManager.NavigateTo("/logout", true);
-            }
-            finally
-            {
-                conn.Close();
+                Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+                return false;
             }
         }
 
@@ -295,37 +133,16 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
         private async Task AfterInitializedAsync()
         {
-            // Get the current user from the authentication state
-            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            tenant_guid = await localStorage.GetItemAsync<string>("tenant_guid");
 
-            // Check if user is authenticated
-            if (user?.Identity is not { IsAuthenticated: true })
-            {
-                NavigationManager.NavigateTo("/login", true);
+            if (!await Permissions())
                 return;
-            }
 
             loading_overlay = true;
 
             date = Localizer["date"];
             device_information_events_severity_string = Localizer["any"];
             events_type_string = Localizer["any"];
-
-            string tenant_guid = await localStorage.GetItemAsync<string>("tenant_guid");
-
-            await Get_Permissions();
-            //Check permissions
-            if (!permissions_devices_authorized_enabled || !permissions_tenants_list.Contains(tenant_guid))
-            {
-                //maybe add deleting the tenant name from the browsers storage here
-                Logging.Handler.Debug("/devices -> OnInitializedAsync", "Permissions", "false");
-                NavigationManager.NavigateTo("/logout", true);
-                return;
-            }
-            else
-            {
-                Logging.Handler.Debug("/devices -> OnInitializedAsync", "Permissions", "true");
-            }
 
             _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
@@ -4953,9 +4770,7 @@ WHERE device_id = @deviceId");
 
         public class Remote_Admin_Identity
         {
-            public string admin_username { get; set; }
-            public string admin_password { get; set; } // encrypted
-            public string session_guid { get; set; }
+            public string token { get; set; }
         }
 
         public class Remote_Target_Device
@@ -4990,22 +4805,9 @@ WHERE device_id = @deviceId");
         {
             try
             {
-                // Get session info
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var session_username_result = await sessionStorage.GetAsync<string>("username");
-                var session_password_result = await sessionStorage.GetAsync<string>("password");
-                var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
-
-                string username = session_username_result.Value;
-                string password = session_password_result.Value;
-                string password_hashed = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
-                string session_guid = session_guid_result.Value;
-
                 Remote_Admin_Identity identity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    admin_password = password_hashed,
-                    session_guid = session_guid
+                    token = token
                 };
 
                 // Create the object that contains the device_identity object
@@ -5063,39 +4865,6 @@ WHERE device_id = @deviceId");
             catch (Exception ex)
             {
                 Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
-            }
-        }
-
-        private bool remote_authentification_dialog_open = false;
-
-        private async Task Remote_Authentificate_Dialog()
-        {
-            if (remote_authentification_dialog_open)
-                return;
-
-            var options = new DialogOptions
-            {
-                CloseButton = true,
-                FullWidth = true,
-                MaxWidth = MaxWidth.Medium,
-                BackgroundClass = "dialog-blurring",
-            };
-
-            remote_authentification_dialog_open = true;
-
-            var result = await this.DialogService.Show<Pages.Devices.Dialogs.Remote_Authentificate_Dialog>(string.Empty, options).Result;
-
-            remote_authentification_dialog_open = false;
-
-            if (result.Canceled)
-                return;
-
-            Logging.Handler.Debug("/devices -> Event_Details_Dialog", "Result", result.Data.ToString());
-
-            // Check if the user is authentificated
-            if (result.Data.ToString() == "authentificated")
-            {
-                await Remote_Setup_SignalR();
             }
         }
 
@@ -5371,22 +5140,8 @@ WHERE device_id = @deviceId");
         {
             try
             {
-                if (remote_server_client_setup == false)
-                {
-                    await Remote_Authentificate_Dialog();
-                    return;
-                }
-
-                // Get session info
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var session_username_result = await sessionStorage.GetAsync<string>("username");
-                var session_password_result = await sessionStorage.GetAsync<string>("password");
-                var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
-
-                string username = session_username_result.Value;
-                string password = session_password_result.Value;
-                string password_hashed = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
-                string session_guid = session_guid_result.Value;
+                if (!remote_server_client_setup)
+                    await Remote_Setup_SignalR();
 
                 // Build the command json (action, name)
                 var commandObject = new
@@ -5401,9 +5156,7 @@ WHERE device_id = @deviceId");
                 // Create the object
                 var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    admin_password = password_hashed,
-                    session_guid = session_guid
+                    token = token
                 };
 
                 var targetDevice = new Remote_Target_Device
@@ -5449,29 +5202,13 @@ WHERE device_id = @deviceId");
         {
             try
             {
-                if (remote_server_client_setup == false)
-                {
-                    await Remote_Authentificate_Dialog();
-                    return;
-                }
-
-                // Get session info
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var session_username_result = await sessionStorage.GetAsync<string>("username");
-                var session_password_result = await sessionStorage.GetAsync<string>("password");
-                var session_guid_result = await sessionStorage.GetAsync<string>("session_guid");
-
-                string username = session_username_result.Value;
-                string password = session_password_result.Value;
-                string password_hashed = Encryption.String_Encryption.Encrypt(password, Application_Settings.Local_Encryption_Key);
-                string session_guid = session_guid_result.Value;
+                if (!remote_server_client_setup)
+                    await Remote_Setup_SignalR();
 
                 // Create the object
                 var adminIdentity = new Remote_Admin_Identity
                 {
-                    admin_username = username,
-                    admin_password = password_hashed,
-                    session_guid = session_guid
+                    token = token
                 };
 
                 var targetDevice = new Remote_Target_Device

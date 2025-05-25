@@ -605,145 +605,44 @@
     #region Permissions System
 
     private string permissions_json = String.Empty;
-    private string permissions_tenants_json = String.Empty;
-    public static List<string> permissions_tenants_list = new List<string> { };
 
     private bool permissions_settings_enabled = false;
     private bool permissions_settings_system_enabled = false;
 
-    public class Permissions_Tenants_Activation_State
+    private async Task<bool> Permissions()
     {
-        public string id { get; set; } = String.Empty;
-    }
-
-    private async Task Get_Permissions()
-    {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
         try
         {
-            await conn.OpenAsync();
+            bool logout = false;
 
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "query", query);
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
 
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_settings_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_enabled");
+			permissions_settings_system_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_system_enabled");
+            
+            if (!permissions_settings_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
             {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", permissions_json);
-
-            //Extract permissions
-            if (!String.IsNullOrEmpty(permissions_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                {
-                    //settings_enabled
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("settings_enabled");
-                        permissions_settings_enabled = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (permissions_settings_enabled)", ex.ToString());
-                    }
-
-                    //settings_system_enabled
-                    try
-                    {
-                        JsonElement element = document.RootElement.GetProperty("settings_system_enabled");
-                        permissions_settings_system_enabled = element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("/manage_notifications -> Permissions_Load", "permissions_json (settings_system_enabled)", ex.ToString());
-                    }
-                }
-            }
-            else if (permissions_json == "[]")
-            {
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", "Empty, logout user");
                 NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
+                return false;
             }
 
-            //Extract tenants from json
-            permissions_tenants_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_tenants_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
-
-                    foreach (var tenant in tenants_activation_state_list)
-                    {
-                        Logging.Handler.Debug("/manage_notifications -> Permissions_Load", "foreach tenant", tenant.id);
-
-                        permissions_tenants_list.Add(tenant.id);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("/manage_notifications -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("/manage_notifications -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-            }
+            // All fine? Nice.
+            return true;
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/manage_notifications -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
         }
     }
 
@@ -757,8 +656,6 @@
 
     protected override async Task OnInitializedAsync()
     {
-        loading_overlay = true;
-
         await base.OnInitializedAsync();
     }
 
@@ -772,24 +669,11 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
-        {
-            NavigationManager.NavigateTo("/login", true);
+        if (!await Permissions())
             return;
-        }
 
-        await Get_Permissions();
-
-        //Check permissions
-        if (!permissions_settings_enabled || !permissions_settings_system_enabled)
-        {
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
+        loading_overlay = true;
+		StateHasChanged();
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
@@ -1032,13 +916,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START faf3c6dc-0d5a-41fa-8e83-0724e4887a29 //OSSCH_END
+    //OSSCH_START 3f42aa5c-80b7-4b3e-a86f-bd85c0bab7ae //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START c4a2de9a-9b8c-4581-8db0-1cb2e40ca087 //OSSCH_END
+    //OSSCH_START 01e33ccd-39ca-4d06-aee0-fc11612fe512 //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START bdb3e723-9992-4b7a-8b81-7ca0c4474d52 //OSSCH_END
+    //OSSCH_START 199e318c-fcfa-4741-b84a-e27332519689 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()

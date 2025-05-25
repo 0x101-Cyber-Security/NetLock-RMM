@@ -4,12 +4,14 @@
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
 @using System.Text.Json
+@using System.Security.Claims
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Layout.NavMenu> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
 
 <AuthorizeView>
     <Authorized>
@@ -33,20 +35,26 @@
                     }
                 }
 
-                <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.Groups" Title="@Localizer["all_devices"]" Expanded="true">
-                    @{
-                        if (permissions_devices_authorized_enabled)
-                        {
-                            <MudNavLink Icon="@Icons.Material.Filled.DesktopWindows" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/devices"))">@Localizer["authorized"]</MudNavLink>
-                        }
 
-                        if (permissions_devices_unauthorized_enabled)
-                        {
-                            <MudNavLink Icon="@Icons.Material.Filled.DesktopAccessDisabled" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/unauthorized_devices"))">@Localizer["unauthorized"]</MudNavLink>
-                        }
+                @{
+					if (tenants_full_access)
+					{
+                        <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.Groups" Title="@Localizer["all_devices"]" Expanded="true">
+                            @{
+                                if (permissions_devices_authorized_enabled)
+                                {
+                                    <MudNavLink Icon="@Icons.Material.Filled.DesktopWindows" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/devices"))">@Localizer["authorized"]</MudNavLink>
+                                }
+
+                                if (permissions_devices_unauthorized_enabled)
+                                {
+                                    <MudNavLink Icon="@Icons.Material.Filled.DesktopAccessDisabled" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/unauthorized_devices"))">@Localizer["unauthorized"]</MudNavLink>
+                                }
+                            }
+
+                        </MudNavGroup>
                     }
-
-                </MudNavGroup>
+                }
 
                 @{
                     HashSet<string> processedTenants = new HashSet<string>();
@@ -247,6 +255,8 @@
     private bool permissions_settings_protocols_enabled = false;
     public static List<string> permissions_tenants_list = new List<string> { };
 
+	public bool tenants_full_access = false; // If the user has full access to all tenants, this will be true.
+
     public class Permissions_Tenants_Activation_State
     {
         public string id { get; set; } = String.Empty;
@@ -271,8 +281,8 @@
         public string guid { get; set; }
     }
 
-    List<Tenant> tenant_list = new List<Tenant> { };
-    List<Location> locations_list = new List<Location> { };
+    public static List<Tenant> tenant_list = new List<Tenant> { };
+    public static List<Location> locations_list = new List<Location> { };
 
     //private List<string> tenant_list = new List<string> { };
     public DataTable clients_table = new DataTable();
@@ -286,312 +296,56 @@
 
     private List<string> admin_list = new List<string> { };
 
-    private async Task Permissions_Load()
+    private async Task<bool> Permissions()
     {
-        //Extract user info from users session storage
-        var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-        var username = await sessionStorage.GetAsync<string>("username");
-        var password = await sessionStorage.GetAsync<string>("password");
-
-        Logging.Handler.Debug("NavMenu -> Permissions_Load", "username", username.Value ?? String.Empty);
-
-        //if user info empty, force logout
-        if (String.IsNullOrEmpty(username.Value) || String.IsNullOrEmpty(password.Value))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "sessions storage data", "empty, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Check if user info is valid, if not, force logout
-        if (!await Classes.Authentication.User.Verify_User(username.Value ?? String.Empty, password.Value ?? String.Empty))
-        {
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "verify user", "incorrect data, force logout");
-
-            NavigationManager.NavigateTo("/logout", true);
-            return;
-        }
-
-        //Get permissions
-        string query = "SELECT * FROM `accounts` WHERE username = @username;";
-
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
         try
         {
-            await conn.OpenAsync();
+            bool logout = false;
 
-            MySqlCommand command = new MySqlCommand(query, conn);
-            command.Parameters.AddWithValue("@username", username.Value);
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "query", query);
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
 
-            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            if (logout) // Redirect to the login page
             {
-                if (reader.HasRows)
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        permissions_json = reader["permissions"].ToString() ?? String.Empty;
-                        permissions_tenants_json = reader["tenants"].ToString() ?? String.Empty;
-                    }
-                }
-            }
-
-            Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", permissions_json);
-
-            //Extract permissions
-            if (!String.IsNullOrEmpty(permissions_json))
-            {
-                using (JsonDocument document = JsonDocument.Parse(permissions_json))
-                {
-                    try
-                    {
-                        //dashboard_enabled
-                        JsonElement dashboard_enabled_element = document.RootElement.GetProperty("dashboard_enabled");
-                        permissions_dashboard_enabled = dashboard_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_dashboard_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //devices_authorized_enabled
-                        JsonElement devices_authorized_enabled_element = document.RootElement.GetProperty("devices_authorized_enabled");
-                        permissions_devices_authorized_enabled = devices_authorized_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_devices_authorized_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //devices_unauthorized_enabled
-                        JsonElement devices_unauthorized_enabled_element = document.RootElement.GetProperty("devices_unauthorized_enabled");
-                        permissions_devices_unauthorized_enabled = devices_unauthorized_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_devices_unauthorized_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //tenants_enabled
-                        JsonElement tenants_enabled_element = document.RootElement.GetProperty("tenants_enabled");
-                        permissions_tenants_enabled = tenants_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_tenants_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //automation_enabled
-                        JsonElement automation_enabled_element = document.RootElement.GetProperty("automation_enabled");
-                        permissions_automation_enabled = automation_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_automation_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //policies_enabled
-                        JsonElement policies_enabled_element = document.RootElement.GetProperty("policies_enabled");
-                        permissions_policies_enabled = policies_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_policies_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_enabled
-                        JsonElement collections_enabled_element = document.RootElement.GetProperty("collections_enabled");
-                        permissions_collections_enabled = collections_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_collections_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_antivirus_controlled_folder_access_enabled
-                        JsonElement collections_antivirus_controlled_folder_access_enabled_element = document.RootElement.GetProperty("collections_antivirus_controlled_folder_access_enabled");
-                        collections_antivirus_controlled_folder_access_enabled = collections_antivirus_controlled_folder_access_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (collections_antivirus_controlled_folder_access_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_sensors_enabled
-                        JsonElement collections_sensors_enabled_element = document.RootElement.GetProperty("collections_sensors_enabled");
-                        collections_sensors_enabled = collections_sensors_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (collections_sensors_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_scripts_enabled
-                        JsonElement collections_scripts_enabled_element = document.RootElement.GetProperty("collections_scripts_enabled");
-                        collections_scripts_enabled = collections_scripts_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (collections_scripts_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_jobs_enabled
-                        JsonElement collections_jobs_enabled_element = document.RootElement.GetProperty("collections_jobs_enabled");
-                        collections_jobs_enabled = collections_jobs_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (collections_jobs_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //collections_jobs_enabled
-                        JsonElement collections_files_enabled_element = document.RootElement.GetProperty("collections_files_enabled");
-                        collections_files_enabled = collections_files_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (collections_jobs_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //events_enabled
-                        JsonElement events_enabled_element = document.RootElement.GetProperty("events_enabled");
-                        permissions_events_enabled = events_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_events_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //users_enabled
-                        JsonElement users_enabled_element = document.RootElement.GetProperty("users_enabled");
-                        permissions_users_enabled = users_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_users_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //settings_enabled
-                        JsonElement settings_enabled_element = document.RootElement.GetProperty("settings_enabled");
-                        permissions_settings_enabled = settings_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_settings_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //settings_notifications_enabled
-                        JsonElement settings_notifications_enabled_element = document.RootElement.GetProperty("settings_notifications_enabled");
-                        permissions_settings_notifications_enabled = settings_notifications_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_settings_notifications_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //settings_system_enabled
-                        JsonElement settings_system_enabled_element = document.RootElement.GetProperty("settings_system_enabled");
-                        permissions_settings_system_enabled = settings_system_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_settings_system_enabled)", ex.Message);
-                    }
-
-                    try
-                    {
-                        //settings_system_enabled
-                        JsonElement settings_protocols_enabled_element = document.RootElement.GetProperty("settings_protocols_enabled");
-                        permissions_settings_protocols_enabled = settings_protocols_enabled_element.GetBoolean();
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Handler.Error("NavMenu -> Permissions_Load", "permissions_json (permissions_settings_protocols_enabled)", ex.Message);
-                    }
-                }
-            }
-            else if (permissions_json == "[]")
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
                 NavigationManager.NavigateTo("/logout", true);
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_json", "Empty, logout user");
-                NavigationManager.NavigateTo("/logout", true);
+                return false;
             }
 
-            //Extract tenants from json
-            permissions_tenants_list.Clear();
-            if (!String.IsNullOrEmpty(permissions_tenants_json))
-            {
-                //Set the activation state for the tenants
-                try
-                {
-                    List<Permissions_Tenants_Activation_State> tenants_activation_state_list = JsonSerializer.Deserialize<List<Permissions_Tenants_Activation_State>>(permissions_tenants_json);
+            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
-                    foreach (var tenant in tenants_activation_state_list)
-                    {
-                        Logging.Handler.Debug("NavMenu -> Permissions_Load", "foreach tenant", tenant.id);
+            // Load other permissions here
+            permissions_dashboard_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "dashboard_enabled");
+            permissions_devices_authorized_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_authorized_enabled");
+            permissions_devices_unauthorized_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_tenants_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_automation_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_policies_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            collections_antivirus_controlled_folder_access_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            collections_sensors_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            collections_scripts_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            collections_jobs_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            collections_files_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_events_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_users_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_settings_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_settings_notifications_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_settings_system_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+            permissions_settings_protocols_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_unauthorized_enabled");
+			permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+            tenants_full_access = await Classes.Authentication.Permissions.Verify_Tenants_Full_Access(netlock_username);
 
-                        permissions_tenants_list.Add(tenant.id);
-                    }
-
-                    Logging.Handler.Debug("NavMenu -> Permissions_Load", "permissions_tenants_list", permissions_tenants_list.Count.ToString());
-                }
-                catch (Exception ex)
-                {
-                    Logging.Handler.Error("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", ex.Message);
-                }
-            }
-            else
-            {
-                Logging.Handler.Debug("NavMenu -> Permissions_Load (permissions_tenants_json deserialize)", "Result", "Empty");
-            }
+            // All fine? Nice.
+            return true;
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("NavMenu -> Permissions_Load", "general_error (force logout)", ex.Message);
-            NavigationManager.NavigateTo("/logout", true);
-        }
-        finally
-        {
-            conn.Close();
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
         }
     }
 
@@ -600,7 +354,6 @@
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        // Hier können andere Initialisierungen stattfinden, falls erforderlich
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -613,8 +366,6 @@
 
     private async Task AfterInitializedAsync()
     {
-        await Permissions_Load();
-
         //Create clients table
         clients_table.Columns.Clear();
         clients_table.Columns.Add("tenant_name");
@@ -639,6 +390,9 @@
         policy_table.Columns.Add("type");
 
         selected_tenant = await localStorage.GetItemAsync<string>("tenant_name");
+
+        if (!await Permissions())
+            return;
 
         await Get_Admins();
         await Get_Tenants();
@@ -762,17 +516,16 @@
                     }
                 }
             }
-            reader.Close();
 
-            conn.Close();
+            await reader.CloseAsync();
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("class", "Get_Tenants", ex.Message);
+            Logging.Handler.Error("class", "Get_Tenants", ex.ToString());
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
     }
 
