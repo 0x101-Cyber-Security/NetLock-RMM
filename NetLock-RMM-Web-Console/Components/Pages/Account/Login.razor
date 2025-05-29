@@ -359,6 +359,9 @@
 
     private async Task Login_User()
     {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
         try
         {
             // Get the user's IP addresses
@@ -398,6 +401,8 @@
                     UserName = username,
                     Role = role
                 }, false);
+
+			//Snackbar.Add("Welcome back! :)", Severity.Success);
 
             NavigationManager.NavigateTo("/dashboard", true);
         }

@@ -86,12 +86,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
                 {
                     if (!permissions_devices_authorized_enabled || !permissions_tenants_list.Contains(tenant_guid) || permissions_tenants_list.Count == 0)
                     {
-                        Console.WriteLine("Tenant permission denied for user: " + netlock_username);
-                        Console.WriteLine("Tenant GUID: " + tenant_guid);
-                        Console.WriteLine("Tenant permissions list: " + string.Join(", ", permissions_tenants_list));
-
-                        // Optionally, you can log this information or handle it as needed
-
                         //maybe add deleting the tenant name from the browsers storage here
                         Logging.Handler.Debug("/devices -> OnInitializedAsync", "Tenant permission", "false");
                         logout = true;
@@ -139,6 +133,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
                 return;
 
             loading_overlay = true;
+            StateHasChanged();
 
             date = Localizer["date"];
             device_information_events_severity_string = Localizer["any"];
@@ -147,6 +142,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
             disabled = true;
+
+            devices_table_view_port = "70vh";
 
             await Get_Clients_OverviewAsync();
 
@@ -161,8 +158,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             if (Configuration.Members_Portal.api_enabled)
                 await Get_Members_Portal_License_Limit();
 
-            loading_overlay = false;
+            await Remote_Setup_SignalR();
 
+            loading_overlay = false;
             StateHasChanged();
         }
 
@@ -4805,6 +4803,9 @@ WHERE device_id = @deviceId");
         {
             try
             {
+                if (remote_server_client_setup)
+                    return;
+
                 Remote_Admin_Identity identity = new Remote_Admin_Identity
                 {
                     token = token
@@ -4860,7 +4861,7 @@ WHERE device_id = @deviceId");
 
                 Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "Connected to the remote server.", remote_server_client_setup.ToString());
 
-                this.Snackbar.Add(Localizer["connected_with_netlock_remote_server"].ToString(), Severity.Info);
+                //this.Snackbar.Add(Localizer["connected_with_netlock_remote_server"].ToString(), Severity.Info);
             }
             catch (Exception ex)
             {
@@ -5265,6 +5266,7 @@ WHERE device_id = @deviceId");
                 BackgroundClass = "dialog-blurring",
                 BackdropClick = false,
                 CloseOnEscapeKey = false,
+                FullScreen = false,
             };
 
             DialogParameters parameters = new DialogParameters();

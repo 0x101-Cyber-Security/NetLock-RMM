@@ -1,4 +1,4 @@
-using Global.Helper;
+ï»¿using Global.Helper;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Net.Sockets;
 using System.Text.Json;
@@ -8,6 +8,8 @@ using System.Net.Http.Headers;
 using System.Net;
 using System.Security.AccessControl;
 using System.Runtime.CompilerServices;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace NetLock_RMM_Agent_Remote
 {
@@ -36,6 +38,9 @@ namespace NetLock_RMM_Agent_Remote
         private HubConnection remote_server_client;
         private Timer remote_server_clientCheckTimer;
         bool remote_server_client_setup = false;
+
+        // User process monitoring
+        private Timer user_process_monitoringCheckTimer;
 
         // File Server
         private string file_server_url = String.Empty;
@@ -108,11 +113,12 @@ namespace NetLock_RMM_Agent_Remote
                         // Start the timer to check the remote server status
                         local_server_clientCheckTimer = new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
                         remote_server_clientCheckTimer = new Timer(async (e) => await Remote_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
+                        user_process_monitoringCheckTimer = new Timer(async (e) => await CheckUserProcessStatus(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
                         _ = Task.Run(async () => await Local_Server_Start());
 
                         // Establishing a connection to the local server
-                        _ = Task.Run(async () => await Local_Server_Connect()); // Läuft im Hintergrund
+                        _ = Task.Run(async () => await Local_Server_Connect()); // LÃ¤uft im Hintergrund
                     }
                     catch (Exception ex)
                     {
@@ -473,6 +479,14 @@ namespace NetLock_RMM_Agent_Remote
                                 // Get the connected users from _clients, seperate by comma
                                 List<string> connected_users = _clients.Keys.ToList();
 
+                                // Move the device name user (if existing) to the first position
+                                if (connected_users.Contains(device_identity_object.device_name))
+                                {
+                                    connected_users.Remove(device_identity_object.device_name);
+                                    connected_users.Insert(0, device_identity_object.device_name);
+                                }
+
+                                // Convert the list to a comma separated string 
                                 result = string.Join(",", connected_users);
                             }
                             else // Forward the command to the users process
@@ -563,6 +577,46 @@ namespace NetLock_RMM_Agent_Remote
                 Logging.Error("Service.Remote_Connect", "Failed to connect to the server.", ex.ToString());
             }
         }
+
+        #region User agent process monitoring
+        private async Task CheckUserProcessStatus()
+        {
+            if (!OperatingSystem.IsWindows()) return;
+
+            try
+            {
+                bool processIsRunning = false;
+
+                var allProcesses = Process.GetProcessesByName("NetLock_RMM_User_Process");
+
+                // Check if the user process is running
+                foreach (var process in allProcesses)
+                {
+                    if (process != null && !process.HasExited)
+                    {
+                        processIsRunning = true;
+                        Logging.Debug("Service.CheckUserProcess", "User process is running.", $"PID: {process.Id}");
+                        break; // User process is running, no action needed
+                    }
+                }
+
+                if (!processIsRunning)
+                {
+                    bool success = Windows.Helper.ScreenControl.Win32Interop.CreateInteractiveSystemProcess(
+                       commandLine: Application_Paths.netlock_rmm_user_agent_path,
+                       targetSessionId: 0,
+                       hiddenWindow: false,
+                       out var procInfo
+                   );
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Service.CheckUserProcess", "Exception while checking or starting user processes.", ex.ToString());
+            }
+        }
+
+        #endregion
 
         #region Remote Agent Local Server
 
@@ -672,7 +726,7 @@ namespace NetLock_RMM_Agent_Remote
                         Logging.Error("Service.Remote_Agent_Server_ProcessMessage", "Error invoking client response.", ex.ToString());
                     }
 
-                    // Der code wird nicht ausgeführt
+                    // Der code wird nicht ausgefÃ¼hrt
                     /*_ = Task.Run(async () =>
                     {
                        

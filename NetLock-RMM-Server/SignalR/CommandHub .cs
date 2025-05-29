@@ -3,6 +3,7 @@ using MySqlConnector;
 using System;
 using System.Collections.Concurrent;
 using System.Data;
+using System.Globalization;
 using System.Security.Principal;
 using System.Text;
 using System.Text.Json;
@@ -516,12 +517,34 @@ namespace NetLock_RMM_Server.SignalR
 
                 Logging.Handler.Debug("SignalR CommandHub", "MessageReceivedFromWebconsole", $"Client ID: {client_id}");
 
+                // Do connection checks
                 if (String.IsNullOrEmpty(client_id) && command.type == 0) // if remote shell
                 {
                     Logging.Handler.Debug("SignalR CommandHub", "MessageReceivedFromWebconsole", "Client ID not found.");
                     await Clients.Caller.SendAsync("ReceiveClientResponseRemoteShell", "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.");
 
                     return;
+                }
+                else if (String.IsNullOrEmpty(client_id) && command.type == 4) // if remote control
+                {
+                    Logging.Handler.Debug("SignalR CommandHub", "MessageReceivedFromWebconsole", "Client ID not found.");
+                    await Clients.Caller.SendAsync("ReceiveClientResponseRemoteControl", "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.");
+                    return;
+                }
+                else if (command.type == 5) // check connection
+                {
+                    if (String.IsNullOrEmpty(client_id))
+                    {
+                        Logging.Handler.Debug("SignalR CommandHub", "MessageReceivedFromWebconsole", "Client ID not found.");
+                        await Clients.Caller.SendAsync("ReceiveClientResponseCheckConnection", "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.");
+
+                        return;
+                    }
+                    else
+                    {
+                        Logging.Handler.Debug("SignalR CommandHub", "MessageReceivedFromWebconsole", "Client ID found.");
+                        await Clients.Caller.SendAsync("ReceiveClientResponseCheckConnection", "Remote device is connected with the NetLock RMM backend.");
+                    }
                 }
                 else if (String.IsNullOrEmpty(client_id))
                 {

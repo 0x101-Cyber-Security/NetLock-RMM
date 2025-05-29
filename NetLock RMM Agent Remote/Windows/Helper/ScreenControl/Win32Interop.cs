@@ -4,18 +4,18 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Global.Helper;
 using static Windows.Helper.ScreenControl.ADVAPI32;
-using static Windows.Helper.ScreenControl.User.User32;
+using static Windows.Helper.ScreenControl.User32;
 
 namespace Windows.Helper.ScreenControl;
 
 // TODO: Use https://github.com/microsoft/CsWin32 for all p/invokes.
+// Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 public class Win32Interop
 {
     public static List<WindowsSession> GetActiveSessions()
     {
         try
         {
-            Console.WriteLine("GetActiveSessions");
             Logging.Debug("Win32Interop.cs", "GetActiveSessions", "GetActiveSessions");
 
             var sessions = new List<WindowsSession>();
@@ -70,49 +70,30 @@ public class Win32Interop
         }
     }
 
-    public static string GetCommandLine()
-    {
-        var commandLinePtr = Kernel32.GetCommandLine();
-        return Marshal.PtrToStringAuto(commandLinePtr) ?? string.Empty;
-    }
-
-    public static bool GetCurrentDesktop([NotNullWhen(true)] out string? desktopName)
-    {
-        desktopName = null;
-        var inputDesktop = OpenInputDesktop();
-        try
-        {
-            if (TryGetDesktopName(inputDesktop, out desktopName))
-            {
-                return true;
-            }
-
-            return false;
-        }
-        finally
-        {
-            CloseDesktop(inputDesktop);
-        }
-    }
-
-
-
     public static string GetUsernameFromSessionId(uint sessionId)
     {
-        var username = string.Empty;
-
-        if (WTSAPI32.WTSQuerySessionInformation(nint.Zero, sessionId, WTSAPI32.WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) && strLen > 1)
+        try
         {
-            username = Marshal.PtrToStringAnsi(buffer);
-            WTSAPI32.WTSFreeMemory(buffer);
-        }
+            var username = string.Empty;
 
-        return username ?? string.Empty;
+            if (WTSAPI32.WTSQuerySessionInformation(nint.Zero, sessionId, WTSAPI32.WTS_INFO_CLASS.WTSUserName, out var buffer, out var strLen) && strLen > 1)
+            {
+                username = Marshal.PtrToStringAnsi(buffer);
+                WTSAPI32.WTSFreeMemory(buffer);
+            }
+
+            return username ?? string.Empty;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Win32Interop.cs", "GetUsernameFromSessionId", $"Error: {ex.ToString()}");
+            return string.Empty;
+        }
     }
 
     public static nint OpenInputDesktop()
     {
-        return Windows.Helper.ScreenControl.User.User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
+        return Windows.Helper.ScreenControl.User32.OpenInputDesktop(0, true, ACCESS_MASK.GENERIC_ALL);
     }
 
     public static bool CreateInteractiveSystemProcess(
@@ -208,7 +189,7 @@ public class Win32Interop
         }
         catch (Exception ex)
         {
-            Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", $"Error: {ex.ToString()}");
+            Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", $"Error: {ex.ToString()}");
             procInfo = new PROCESS_INFORMATION();
             return false;
         }
@@ -216,62 +197,65 @@ public class Win32Interop
 
     public static string ResolveDesktopName(uint targetSessionId)
     {
-        var winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
-        var logonUiPath = Path.Combine(winDir, "System32", "LogonUI.exe");
-        var consentPath = Path.Combine(winDir, "System32", "consent.exe");
-
-        var isLogonScreenVisible = Process
-            .GetProcessesByName("LogonUI")
-            .Any(x => x.SessionId == targetSessionId && x.MainModule?.FileName.Equals(logonUiPath, StringComparison.OrdinalIgnoreCase) == true);
-
-        var isSecureDesktopVisible = Process
-            .GetProcessesByName("consent")
-            .Any(x => x.SessionId == targetSessionId && x.MainModule?.FileName.Equals(consentPath, StringComparison.OrdinalIgnoreCase) == true);
-
-        if (isLogonScreenVisible || isSecureDesktopVisible)
+        try
         {
-            return "Winlogon";
-        }
+            var winDir = Environment.GetFolderPath(Environment.SpecialFolder.Windows);
+            var logonUiPath = Path.Combine(winDir, "System32", "LogonUI.exe");
+            var consentPath = Path.Combine(winDir, "System32", "consent.exe");
 
-        return "Default";
+            var isLogonScreenVisible = Process
+                .GetProcessesByName("LogonUI")
+                .Any(x => x.SessionId == targetSessionId && x.MainModule?.FileName.Equals(logonUiPath, StringComparison.OrdinalIgnoreCase) == true);
+
+            var isSecureDesktopVisible = Process
+                .GetProcessesByName("consent")
+                .Any(x => x.SessionId == targetSessionId && x.MainModule?.FileName.Equals(consentPath, StringComparison.OrdinalIgnoreCase) == true);
+
+            if (isLogonScreenVisible || isSecureDesktopVisible)
+            {
+                return "Winlogon";
+            }
+
+            return "Default";
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Win32Interop.cs", "ResolveDesktopName", $"Error: {ex}");
+            return "Default";
+        }
     }
 
     public static uint ResolveWindowsSession(int targetSessionId)
     {
-        var activeSessions = GetActiveSessions();
-        if (activeSessions.Any(x => x.Id == targetSessionId))
+        try
         {
-            // If exact match is found, return that session.
-            return (uint)targetSessionId;
-        }
-        
-        if (Shlwapi.IsOS(OsType.OS_ANYSERVER))
-        {
-            // If Windows Server, default to console session.
+            var activeSessions = GetActiveSessions();
+            if (activeSessions.Any(x => x.Id == targetSessionId))
+            {
+                // If exact match is found, return that session.
+                return (uint)targetSessionId;
+            }
+
+            if (Shlwapi.IsOS(OsType.OS_ANYSERVER))
+            {
+                // If Windows Server, default to console session.
+                return Kernel32.WTSGetActiveConsoleSessionId();
+            }
+
+            // If consumer version and there's an RDP session active, return that.
+            if (activeSessions.Find(x => x.Type == WindowsSessionType.RDP) is { } rdSession)
+            {
+                return rdSession.Id;
+            }
+
+            // Otherwise, return the console session.
             return Kernel32.WTSGetActiveConsoleSessionId();
         }
-
-        // If consumer version and there's an RDP session active, return that.
-        if (activeSessions.Find(x => x.Type == WindowsSessionType.RDP) is { } rdSession)
+        catch (Exception ex)
         {
-            return rdSession.Id;
+            Logging.Error("Win32Interop.cs", "ResolveWindowsSession", $"Error: {ex}");
+            return Kernel32.WTSGetActiveConsoleSessionId();
         }
-
-        // Otherwise, return the console session.
-        return Kernel32.WTSGetActiveConsoleSessionId();
-    }
-
-    public static void SetMonitorState(MonitorState state)
-    {
-        SendMessage(0xFFFF, 0x112, 0xF170, (int)state);
-    }
-
-    public static MessageBoxResult ShowMessageBox(nint owner,
-        string message,
-        string caption,
-        MessageBoxType messageBoxType)
-    {
-        return (MessageBoxResult)MessageBox(owner, message, caption, (long)messageBoxType);
     }
 
     public static bool SwitchToInputDesktop()
@@ -302,33 +286,50 @@ public class Win32Interop
 
     public static void SetConsoleWindowVisibility(bool isVisible)
     {
-        var handle = Kernel32.GetConsoleWindow();
-
-        if (isVisible)
+        try
         {
-            ShowWindow(handle, (int)SW.SW_SHOW);
-        }
-        else
-        {
-            ShowWindow(handle, (int)SW.SW_HIDE);
-        }
+            var handle = Kernel32.GetConsoleWindow();
 
-        Kernel32.CloseHandle(handle);
+            if (isVisible)
+            {
+                ShowWindow(handle, (int)SW.SW_SHOW);
+            }
+            else
+            {
+                ShowWindow(handle, (int)SW.SW_HIDE);
+            }
+
+            Kernel32.CloseHandle(handle);
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Win32Interop.cs", "SetConsoleWindowVisibility", $"Error: {ex}");
+            return;
+        }
     }
 
     public static bool TryGetDesktopName(nint desktopHandle, [NotNullWhen(true)] out string? desktopName)
     {
-        var deskBytes = new byte[256];
-        if (!GetUserObjectInformationW(desktopHandle, UOI_NAME, deskBytes, 256, out uint lenNeeded))
+        try
         {
+            var deskBytes = new byte[256];
+            if (!GetUserObjectInformationW(desktopHandle, UOI_NAME, deskBytes, 256, out uint lenNeeded))
+            {
+                desktopName = string.Empty;
+                return false;
+            }
+
+            desktopName = Encoding.Unicode
+                .GetString(deskBytes.Take((int)lenNeeded).ToArray())
+                .Replace("\0", "");
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Win32Interop.cs", "TryGetDesktopName", $"Error: {ex}");
             desktopName = string.Empty;
             return false;
         }
-
-        desktopName = Encoding.Unicode
-            .GetString(deskBytes.Take((int)lenNeeded).ToArray())
-            .Replace("\0", "");
-
-        return true;
     }
 }

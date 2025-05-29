@@ -1,7 +1,8 @@
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 
-namespace Windows.Helper.ScreenControl.User;
+namespace Windows.Helper.ScreenControl;
+// Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class User32
 {

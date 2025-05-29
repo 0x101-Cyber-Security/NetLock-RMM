@@ -118,6 +118,19 @@
                         <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
                     </MudTooltip>
 
+                    if (remote_server_client_setup)
+                    {
+                        <MudTooltip Text="You are connected to the remote backend.">
+                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.PrivateConnectivity" Variant="Variant.Filled" Size="Size.Small" Color="Color.Success"></MudIconButton>
+                        </MudTooltip>
+                    }
+                    else
+                    {
+                        <MudTooltip Text="You are not connected to the remote backend. Remote tasks are not available. Check your configuration.">
+                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.CrisisAlert" Variant="Variant.Filled" Size="Size.Small" Color="Color.Error"></MudIconButton>
+                        </MudTooltip>
+                    } 
+
                     <MudTable Class="mt-5" Height="@(devices_table_view_port)" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Devices_Table_Filter_Func)">
                         <ToolBarContent>
                             <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>

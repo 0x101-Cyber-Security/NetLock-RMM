@@ -24,24 +24,33 @@
 @inject IDataProtectionProvider DataProtectionProvider
 @inject IStringLocalizer<Pages.Devices.Dialogs.Remote_Control.Remote_Control_Dialog> Localizer
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@implements IDisposable
 
 <style>
 
-    .image-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100vh; /* Viewport height to make sure it scales to the entire browser window */
-    overflow: hidden; /* Hide overflow if the image gets too big */
+    .image-wrapper {
+        display: flex;              
+        justify-content: center;
+        align-items: center;
+        outline: none;
+        border: 2px solid transparent;
+        padding: 12px;
+        border-radius: 12px;
+        box-sizing: border-box;
+        background-color: #1e1e1e;
+        overflow: auto;
+        width: 100%;
+        height: 80vh;
     }
 
-    .responsive-image {
-    max-width: 100%;  /* Ensure the image doesn’t exceed the container’s width */
-    max-height: 100%; /* Ensure the image doesn’t exceed the container’s height */
-    object-fit: contain; /* Keeps the aspect ratio intact while scaling */
+    .interactive-image {
+        max-width: 90vw;
+        max-height: 90vh;
+        height: auto;
+        border-radius: 12px;
+        user-select: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
-
 
 </style>
 
@@ -53,85 +62,118 @@
     <DialogContent>
 
         <MudPaper>
-            <MudText Typo="Typo.subtitle1">@Localizer["remote maintenance is automatically terminated at the following time"]: @auto_cancel_time_datetime.ToString("HH:mm:ss")</MudText>
-
             @{
                 if (remote_server_client_setup)
                 {
-                    @if (!connected)
+                    @if (!refresh_screen_timer_running)
                     {
-                        <MudButton Class="mt-2" Size="Size.Small" Color="Color.Default" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" @onclick="async () => { await Remote_Screen_Refresh_Timer_Setup(); }" Disabled="@(!remote_server_client_setup)">@Localizer["start_screen_sharing"]</MudButton>
+                        <MudButton Size="Size.Small" Color="Color.Default" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.PlayArrow" @onclick="async () => { await Remote_Screen_Refresh_Timer_Setup(); }" Disabled="@(!remote_server_client_setup)">@Localizer["start_screen_sharing"]</MudButton>
                     }
 
-                    if (users.Count() == 0)
+                    @if (!connected)
                     {
-                        <MudAlert Class="mt-2" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["no_users_logged_in"]</MudAlert>
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" @onclick="async () => { await Refresh_Remote_Information(); }">@Localizer["refresh"]</MudButton>
+                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
+                            <MudText Typo="Typo.body1">The device is not connected to the NetLock RMM backend. Waiting for it to come back.</MudText>
+                        </MudProgressLinear>
+                    } 
+                    else if (users.Count() == 0)
+                    {
+                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
+                            <MudText Typo="Typo.body1">Waiting for device.</MudText>
+                        </MudProgressLinear>
+                    }
+                    else if (String.IsNullOrEmpty(user))
+                    {
+                        <MudAlert Class="mt-2" Icon="@Icons.Material.Filled.PersonOff" Severity="Severity.Error">No user selected. Please select a user.</MudAlert>
+
+                        <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+
+                            @{
+                                foreach (string user in users)
+                                {
+                                    <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                }
+                            }
+
+                        </MudSelect>
+                    }
+                    else if (connected && !rendered)
+                    {
+                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
+                            <MudText Typo="Typo.body1">No screen output. Select another user session.</MudText>
+                        </MudProgressLinear>
+
+                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true"  OnClick="Remote_Get_Users" >Fetch users</MudButton>
+
+                        <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+
+                            @{
+                                foreach (string user in users)
+                                {
+                                    <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                }
+                            }
+
+                        </MudSelect>
                     }
                     else
                     {
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" @onclick="async () => { await Refresh_Remote_Information(); }">@Localizer["refresh"]</MudButton>
-
-                        <div style="display: flex; align-items: center;">
+                        <!-- UI-Bar mit MudSelects und Zoom -->
+                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem;">
 
                             <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-
-                                @{
-                                    foreach (string user in users)
-                                    {
-                                        <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
-                                    }
+                                @foreach (string user in users)
+                                {
+                                    <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
                                 }
-
                             </MudSelect>
 
                             <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="screen_index" Label="@Localizer["screen_selection"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-
-                                @{
-                                    foreach (int screen in screens)
-                                    {
-                                        <MudSelectItem T="string" Value="@screen.ToString()">@screen</MudSelectItem>
-                                    }
+                                @foreach (int screen in screens)
+                                {
+                                    <MudSelectItem T="string" Value="@screen.ToString()">@screen</MudSelectItem>
                                 }
-
                             </MudSelect>
 
                             <MudSelect Class="ml-2 mt-2" T="int" @bind-Value="remote_screen_refresh_ms" @bind-Value:after="Remote_Screen_Refresh_Timer_Restart" Label="@Localizer["resfresh_rate_ms"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-
                                 <MudSelectItem T="int" Value="250">250</MudSelectItem>
                                 <MudSelectItem T="int" Value="500">500</MudSelectItem>
                                 <MudSelectItem T="int" Value="750">750</MudSelectItem>
                                 <MudSelectItem T="int" Value="1000">1000</MudSelectItem>
-
                             </MudSelect>
+
+                            <MudSelect T="double" Label="Zoom" @bind-Value="zoomLevel" Class="ml-2 mt-2">
+                                @foreach (var preset in zoomPresets)
+                                {
+                                    <MudSelectItem T="double" Value="@preset">@($"{preset * 100:0}%")</MudSelectItem>
+                                }
+                            </MudSelect>
+
+                            <MudButton Class="ml-2 mt-2" Variant="Variant.Outlined" OnClick="ToggleFullScreen">
+                                Fullscreen
+                            </MudButton>
+
 
                         </div>
 
-                        @if (rendered)
-                        {
-                            <MudProgressLinear Size="Size.Medium" Class="mt-2" Color="Color.Info" Indeterminate="true">
-                                <MudText Typo="Typo.body1">@Localizer["waiting for screen output"]</MudText>
-                            </MudProgressLinear>
-                        }
-                        else
-                        {
-                            <div tabindex="0"
-                            style="outline: none;"
-                            @onkeydown="HandleKeyDown"
-                            @onblur="HandleBlur"
-                            @onfocus="HandleFocus"
-                            class="image-container">
+                        <!-- Bildbereich separat und scrollbar -->
+                        <div id="image-container"
+                             class="image-wrapper"
+                             tabindex="0"
+                             @onkeydown="HandleKeyDown"
+                             @onblur="HandleBlur"
+                             @onfocus="HandleFocus">
 
-                                <img src="@imageSrc"
-                                alt="test"
-                                class="rounded-lg responsive-image"
-                                @ref="imageRef"
-                                @onclick="GetClickCoordinates"
-                                @oncontextmenu="PreventAndHandleRightClick"
-                                @onwheel="HandleMouseScroll" />
-                            </div>
+                            <img src="@imageSrc"
+                                 alt="Bild"
+                                 class="interactive-image"
+                                 style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
+                                 @ref="imageRef"
+                                 @onclick="GetClickCoordinates"
+                                 @oncontextmenu="PreventAndHandleRightClick" />
+                        </div>
 
-                        }
+
                     }
                 }
                 else
@@ -258,12 +300,81 @@
 
             remote_admin_identity = json;
 
+            if (remote_server_client != null)
+            {
+                await remote_server_client.StopAsync();
+                await remote_server_client.DisposeAsync();
+                remote_server_client = null;
+            }
+
             remote_server_client = new HubConnectionBuilder()
                 .WithUrl(Configuration.Remote_Server.Connection_String + "/commandHub", options =>
                 {
                     options.Headers.Add("Admin-Identity", Uri.EscapeDataString(remote_admin_identity));
                 })
                 .Build();
+
+            // ReceiveClientResponseCheckConnection
+            remote_server_client.On<string>("ReceiveClientResponseCheckConnection", async (command) =>
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseCheckConnection", command);
+
+                // Use InvokeAsync to reflect changes on UI immediately
+                await InvokeAsync(() =>
+                {
+                    try
+                    {
+                        Console.WriteLine("ReceiveClientResponseCheckConnection: " + command);
+
+                        if (command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
+                        {
+                            connected = false;
+                            rendered = false;
+                            Remote_Check_Connection();
+                        }
+                        else if (command == "Remote device is connected with the NetLock RMM backend.")
+                        {
+                            connected = true;
+                            Reconnect();
+                        }
+
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR: ReceiveClientResponseCheckConnection", "General error", ex.ToString());
+                    }
+                });
+            });
+
+            // ReceiveClientResponseRemoteControl
+            remote_server_client.On<string>("ReceiveClientResponseRemoteControl", async (command) =>
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseRemoteControl", command);
+
+                // Use InvokeAsync to reflect changes on UI immediately
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        Console.WriteLine("ReceiveClientResponseRemoteControl: " + command);
+
+                        if (connected && command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
+                        {
+                            connected = false;
+                            rendered = false;
+                            StateHasChanged();
+                            await Remote_Check_Connection();
+                        }
+
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
+                    }
+                });
+            });
 
             // ReceiveClientResponseRemoteControlScreenCapture
             remote_server_client.On<string>("ReceiveClientResponseRemoteControlScreenCapture", async (command) =>
@@ -279,6 +390,19 @@
 
                         // Set the image source
                         this.imageSrc = imageSrc;
+
+                        Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
+
+                        // Check if the image is rendered correctly
+                        if (imageSrc.Length == 22) // 22 = empty image
+                        {
+                            rendered = false;
+                        }
+                        else
+                        {
+                            connected = true;
+                            rendered = true;
+                        }
 
                         StateHasChanged();
                     }
@@ -299,9 +423,32 @@
                 {
                     try
                     {
+                        users.Clear();
                         users.AddRange(command.Split(',').Select(user => user));
 
-                        user = users[0];
+                        if (users.Count() == 0)
+                        {
+                            user = String.Empty;
+                        }
+                        else if (users.Count() == 1)
+                        {
+                            user = users[0]; // no other users logged in, switch to session 0
+                        }
+                        else if (users.Count() > 1)
+                        {
+                            user = users[1]; // other users are present. Switch to first user session
+                        }
+
+                        if (users.Count() > 0)
+                        {
+                            connected = true;
+                        }
+                        else
+                        {
+                            connected = false;
+                        }
+
+                        // if more users are available do not select the device name
 
                         StateHasChanged();
 
@@ -324,6 +471,7 @@
                 {
                     try
                     {
+                        screens.Clear();
                         screens = new List<int>();
 
                         for (int i = 0; i < Convert.ToInt32(command); i++)
@@ -347,7 +495,7 @@
 
             Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "Connected to the remote server.", remote_server_client_setup.ToString());
 
-            this.Snackbar.Add(Localizer["connected_with_netlock_remote_server"].ToString(), Severity.Info);
+            //this.Snackbar.Add(Localizer["connected_with_netlock_remote_server"].ToString(), Severity.Info);
         }
         catch (Exception ex)
         {
@@ -367,16 +515,17 @@
 
         //await Remote_Get_Screen_Indexes();
 
-        await Auto_Terminate_Screen_Sharing_Timer_Setup();
+        //await Auto_Terminate_Screen_Sharing_Timer_Setup();
 
-        await Remote_Screen_Refresh_Timer_Setup();        
-}
+        await Remote_Screen_Refresh_Timer_Setup();
+    }
 
     #endregion
 
     #region Remote Control
 
-    private bool connected = false;
+    private bool connected = true;
+    private bool refresh_screen_timer_running = false;
     private bool rendered = false;
     private string screen_index = "0";
     private List<int> screens = new List<int>();
@@ -389,7 +538,7 @@
 
     private async Task Remote_Screen_Refresh_Timer_Setup()
     {
-        connected = true;
+        refresh_screen_timer_running = true;
 
         StateHasChanged();
 
@@ -403,40 +552,18 @@
     {
         try
         {
-            remote_screen_refresh_timer.Dispose();
+            remote_screen_refresh_timer?.Dispose();
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Remote_Screen_Refresh_Timer_Stop", "General error", ex.ToString());
         }
 
-        connected = false;
+        refresh_screen_timer_running = false;
 
         MudDialog.Close();
 
         StateHasChanged();
-    }
-
-    private System.Threading.Timer remote_screen_terminate_timer;
-    private DateTime auto_cancel_time_datetime;
-
-    private async Task Auto_Terminate_Screen_Sharing_Timer_Setup()
-    {
-        auto_cancel_time_datetime = DateTime.Now.AddMinutes(15);
-
-        StateHasChanged();
-
-        remote_screen_terminate_timer = new System.Threading.Timer(async (e) =>
-        {
-            // Use InvokeAsync to call up the UI thread
-            await InvokeAsync(() =>
-            {
-                remote_screen_refresh_timer.Dispose();
-                MudDialog.Close();
-
-                Snackbar.Add(Localizer["remote_session_auto_terminated"], Severity.Info);
-            });
-        }, null, 900000, Timeout.Infinite); // Timeout.Infinite for single execution
     }
 
     private async Task Remote_Screen_Refresh_Timer_Restart()
@@ -451,11 +578,75 @@
         await Remote_Get_Screen_Indexes();
     }
 
+    private async Task Remote_Check_Connection()
+    {
+        try
+        {
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+                {
+                    token = token
+                };
+
+            var targetDevice = new Remote_Target_Device
+                {
+                    device_id = device_id,
+                    device_name = device_name,
+                    tenant_guid = tenant_guid,
+                    location_guid = location_guid
+                };
+
+            var command = new Remote_Command
+                {
+                    type = 5, // remote control
+                    wait_response = true,
+                    command = "0", // Will be converted to type at client side | 5 = check connection on backend
+                    remote_control_username = user, // refresh screen
+                    remote_control_screen_index = screen_index, // refresh screen
+                    remote_control_mouse_xyz = "0, 0", // refresh screen
+                };
+
+            var rootObject = new Remote_Root_Object
+                {
+                    admin_identity = adminIdentity,
+                    target_device = targetDevice,
+                    command = command
+                };
+
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            Console.WriteLine(ex.Message);
+        }
+    }
+
     private async Task Remote_Get_Screen_Indexes()
     {
 
         // Check if connected & user is selected
-        if (!connected || String.IsNullOrEmpty(user))
+        if (!refresh_screen_timer_running || String.IsNullOrEmpty(user))
             return;
 
         try
@@ -520,9 +711,8 @@
         }
     }
 
-
     private async Task Remote_Get_Users()
-    {
+    {    
         try
         {
             // Create the object
@@ -588,7 +778,7 @@
     private async Task Remote_Refresh_Screen()
     {
         // Check if connected
-        if (!connected)
+        if (!refresh_screen_timer_running)
             return;
 
         try
@@ -657,7 +847,7 @@
     private async Task Remote_Mouse_Click_XYZ(string x, string y, bool isRightClick)
     {
         // Check if connected
-        if (!connected)
+        if (!refresh_screen_timer_running)
             return;
 
         try
@@ -732,7 +922,7 @@
     private async Task Remote_Keyboard_Input(string key_code)
     {   
         // Check if connected
-        if (!connected)
+        if (!refresh_screen_timer_running)
             return;
 
         try
@@ -798,6 +988,20 @@
             Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "General error", ex.ToString());
         }
     }
+
+    private async Task ToggleFullScreen()
+    {
+        await JSRuntime.InvokeVoidAsync("toggleFullScreen", "image-container");
+    }
+
+    private double zoomLevel = 1.0;
+
+    private void SetZoom(double zoom)
+    {
+        zoomLevel = zoom;
+    }
+
+    private readonly List<double> zoomPresets = new() { 0.5, 0.75, 1.0, 1.5, 2.0 };
 
     public class BoundingClientRect
     {
@@ -1129,4 +1333,24 @@
     }
 
     #endregion
+
+    public void Dispose()
+    {
+        try
+        {
+            remote_screen_refresh_timer?.Dispose();
+
+            if (remote_server_client is not null)
+            {
+                _ = remote_server_client.StopAsync();
+                _ = remote_server_client.DisposeAsync();
+            }
+
+            Logging.Handler.Debug("/dashboard -> Dispose", "Cleaned up SignalR and timers.", "");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Dispose", "Error during disposal", ex.ToString());
+        }
+    }
 }

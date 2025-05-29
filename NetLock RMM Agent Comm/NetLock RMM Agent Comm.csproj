@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Worker">
+﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -7,6 +7,7 @@
     <UserSecretsId>dotnet-NetLock_RMM_Agent_Comm-996a4a14-ff4d-462b-835a-8048ee189bfc</UserSecretsId>
     <RootNamespace>NetLock_RMM_Agent_Comm</RootNamespace>
     <AssemblyName>NetLock_RMM_Agent_Comm</AssemblyName>
+    <Platforms>AnyCPU;x64</Platforms>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,6 +1,7 @@
 ﻿using NetLock_RMM_Agent_Remote;
 using Global.Helper;
-using System.Collections.Generic; // Hinzugefügt für List<T>
+using System.Collections.Generic;
+using Windows.Helper.ScreenControl; // Hinzugefügt für List<T>
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -21,15 +22,17 @@ else
 // Thats dev stuff
 Global.Configuration.Agent.debug_mode = true;
 
-var test = Windows.Helper.ScreenControl.Win32Interop.GetActiveSessions(); // Typinferenz mit var, List<T> Problem gelöst
+//var test = Win32Interop.GetActiveSessions(); // Typinferenz mit var, List<T> Problem gelöst
 
+/*
 foreach (var session in test)
 {
     Console.WriteLine($"Session ID: {session.Id}, Name: {session.Name}, Type: {session.Type}, Username: {session.Username}");
     Logging.Debug("Program.cs", "Startup", $"Session ID: {session.Id}, Name: {session.Name}, Type: {session.Type}, Username: {session.Username}");
 }
+*/
 
-bool success = Windows.Helper.ScreenControl.Win32Interop.CreateInteractiveSystemProcess(
+/*bool success = Win32Interop.CreateInteractiveSystemProcess(
     commandLine: @"C:\Program Files\New folder (2)\NetLock RMM Windows Login Screen Test.exe",
     targetSessionId: 0, // oder z. B. Process.GetCurrentProcess().SessionId
     hiddenWindow: false,
@@ -45,6 +48,7 @@ else
     Console.WriteLine("Fehler beim Starten des Prozesses.");
     Logging.Debug("Program.cs", "Startup", "Fehler beim Starten des Prozesses.");
 }
+*/
 
 if (OperatingSystem.IsWindows())
 {

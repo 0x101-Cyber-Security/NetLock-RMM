@@ -78,9 +78,12 @@ namespace Windows.Initialization.Health
 
         public static void User_Process()
         {
+            // Delete old NetLock RMM User Agent from the registry, if it exists
+            Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Process");
+
             // Write the NetLock RMM User Process to the registry, if it does not exist
             Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM User Agent");
-            Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent", Application_Paths.netlock_user_process_exe);
+            Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent", Application_Paths.netlock_user_process_uac_exe);
         }
     }
 }

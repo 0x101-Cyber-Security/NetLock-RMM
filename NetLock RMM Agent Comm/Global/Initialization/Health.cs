@@ -132,12 +132,5 @@ namespace Global.Initialization
                 Logging.Error("Global.Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", ex.ToString());
             }
         }
-
-        public static void User_Process()
-        {
-            // Write the NetLock RMM User Process to the registry, if it does not exist
-            Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM User Process");
-            Windows.Helper.Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Process", Application_Paths.netlock_user_process_exe);
-        }
     }
 }

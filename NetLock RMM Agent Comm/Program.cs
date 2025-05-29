@@ -88,7 +88,6 @@ Global.Initialization.Health.Check_Directories();
 Global.Initialization.Health.Check_Firewall();
 Global.Initialization.Health.Check_Databases();
 Global.Offline_Mode.Handler.Policy();
-Global.Initialization.Health.User_Process();
 Global.Initialization.Health.Setup_Events_Virtual_Datatable();
 
 // Check if platform is Windows

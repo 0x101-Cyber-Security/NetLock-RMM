@@ -15,6 +15,8 @@ namespace NetLock_RMM_Agent_Remote
         public static string program_data_debug_txt = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent", "debug.txt");
         public static string program_data_scripts = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent", "Scripts");
 
+        public static string netlock_rmm_user_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock_RMM_User_Process.exe");
+
         private static string GetBasePath_CommonApplicationData()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))

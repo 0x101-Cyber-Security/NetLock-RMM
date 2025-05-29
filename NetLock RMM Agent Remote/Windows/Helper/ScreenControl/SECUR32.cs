@@ -1,8 +1,9 @@
-﻿using Windows.Helper.ScreenControl;
-using Microsoft.Win32.SafeHandles;
+﻿using Microsoft.Win32.SafeHandles;
 using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
+using Windows.Helper.ScreenControl;
+// Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class SECUR32
 {
