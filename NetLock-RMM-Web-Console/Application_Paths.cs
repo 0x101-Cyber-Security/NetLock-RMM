@@ -12,6 +12,8 @@ namespace NetLock_RMM_Web_Console
         public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
         public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
+        public static string internal_recordings_dir = Path.Combine(GetCurrentDirectory(), "internal", "recordings");
+
         //OSSCH_START
         public static string internal_license_info_json_path = Path.Combine(GetCurrentDirectory(), "internal", "license_info.json");
         //OSSCH_END

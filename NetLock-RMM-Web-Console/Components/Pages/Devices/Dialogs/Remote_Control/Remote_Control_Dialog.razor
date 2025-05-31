@@ -29,27 +29,27 @@
 <style>
 
     .image-wrapper {
-        display: flex;              
-        justify-content: center;
-        align-items: center;
-        outline: none;
-        border: 2px solid transparent;
-        padding: 12px;
-        border-radius: 12px;
-        box-sizing: border-box;
-        background-color: #1e1e1e;
-        overflow: auto;
-        width: 100%;
-        height: 80vh;
+    display: flex;              
+    justify-content: center;
+    align-items: center;
+    outline: none;
+    border: 2px solid transparent;
+    padding: 12px;
+    border-radius: 12px;
+    box-sizing: border-box;
+    background-color: #1e1e1e;
+    overflow: auto;
+    width: 100%;
+    height: 80vh;
     }
 
     .interactive-image {
-        max-width: 90vw;
-        max-height: 90vh;
-        height: auto;
-        border-radius: 12px;
-        user-select: none;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    max-width: 90vw;
+    max-height: 90vh;
+    height: auto;
+    border-radius: 12px;
+    user-select: none;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
 </style>
@@ -128,15 +128,10 @@
                                 }
                             </MudSelect>
 
-                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="screen_index" Label="@Localizer["screen_selection"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-                                @foreach (int screen in screens)
-                                {
-                                    <MudSelectItem T="string" Value="@screen.ToString()">@screen</MudSelectItem>
-                                }
-                            </MudSelect>
-
                             <MudSelect Class="ml-2 mt-2" T="int" @bind-Value="remote_screen_refresh_ms" @bind-Value:after="Remote_Screen_Refresh_Timer_Restart" Label="@Localizer["resfresh_rate_ms"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                                 <MudSelectItem T="int" Value="250">250</MudSelectItem>
+                                <MudSelectItem T="int" Value="250">300</MudSelectItem>
+                                <MudSelectItem T="int" Value="250">450</MudSelectItem>
                                 <MudSelectItem T="int" Value="500">500</MudSelectItem>
                                 <MudSelectItem T="int" Value="750">750</MudSelectItem>
                                 <MudSelectItem T="int" Value="1000">1000</MudSelectItem>
@@ -149,28 +144,49 @@
                                 }
                             </MudSelect>
 
+                            @{
+                                if (screens.Count() > 1)
+                                {
+                                    foreach (int screen in screens)
+                                    {
+                                        <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.ScreenshotMonitor" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" OnClick="() => { screen_index = screen.ToString(); Remote_Refresh_Screen(); }" Title="@(screen)" />
+                                    }                                    
+                                }
+                            }
+
                             <MudButton Class="ml-2 mt-2" Variant="Variant.Outlined" OnClick="ToggleFullScreen">
                                 Fullscreen
                             </MudButton>
 
+                            @if (!recordSessionForce)
+                            {
+                                @if (!recordSession)
+                                {
+                                    <MudButton Class="ml-2 mt-2" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.PlayCircle" OnClick="StartRecordingSession">Start recording</MudButton>
+                                }
+                                else
+                                {
+                                    <MudButton Class="ml-2 mt-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.StopCircle" OnClick="StopRecordingSession">Stop recording</MudButton>
+                                }
+                            }
 
                         </div>
 
                         <!-- Bildbereich separat und scrollbar -->
                         <div id="image-container"
-                             class="image-wrapper"
-                             tabindex="0"
-                             @onkeydown="HandleKeyDown"
-                             @onblur="HandleBlur"
-                             @onfocus="HandleFocus">
+                        class="image-wrapper"
+                        tabindex="0"
+                        @onkeydown="HandleKeyDown"
+                        @onblur="HandleBlur"
+                        @onfocus="HandleFocus">
 
                             <img src="@imageSrc"
-                                 alt="Bild"
-                                 class="interactive-image"
-                                 style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
-                                 @ref="imageRef"
-                                 @onclick="GetClickCoordinates"
-                                 @oncontextmenu="PreventAndHandleRightClick" />
+                            alt="Bild"
+                            class="interactive-image"
+                            style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
+                            @ref="imageRef"
+                            @onclick="GetClickCoordinates"
+                            @oncontextmenu="PreventAndHandleRightClick" />
                         </div>
 
 
@@ -211,6 +227,12 @@
 
     private string imageSrc = String.Empty;
 
+    private bool recordSession = false;
+    private bool recordSessionForce = false;
+    private string recordSessionId = String.Empty;
+    private string recordSessionIdDir = String.Empty;
+    private int recordSessionCounter = 0;
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -240,6 +262,17 @@
         netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
+
+        recordSessionId = Randomizer.Handler.Number(6);
+
+        string recordSessionDateTime = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");
+
+        recordSessionIdDir = Path.Combine(Application_Paths.internal_recordings_dir, tenant_guid, location_guid, device_name, recordSessionDateTime + "-id-" + recordSessionId);
+
+        string recordSessionForceString = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_forced_enabled");
+
+        // Convert to boolean
+        recordSessionForce = recordSessionForceString == "1";
 
         await Reconnect();
     }
@@ -393,6 +426,19 @@
 
                         Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
+                        if (recordSession || recordSessionForce)
+                        {
+                            // Create the directory if it does not exist
+                            if (!Directory.Exists(recordSessionIdDir))
+                                Directory.CreateDirectory(recordSessionIdDir);
+
+                            if (recordSessionCounter % 2 == 0) // Save only every second screenshot to reduce performance overheat on the disk
+                                File.WriteAllBytes(Path.Combine(recordSessionIdDir, $"{recordSessionCounter}.png"), Convert.FromBase64String(command));
+
+                            recordSessionCounter++;
+                        }
+
+
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 22) // 22 = empty image
                         {
@@ -534,7 +580,7 @@
 
     // Loop to refresh the screen
     private System.Threading.Timer remote_screen_refresh_timer;
-    private int remote_screen_refresh_ms = 500;
+    private int remote_screen_refresh_ms = 300;
 
     private async Task Remote_Screen_Refresh_Timer_Setup()
     {
@@ -949,7 +995,7 @@
                     remote_control_username = user, // Target user
                     remote_control_screen_index = "0", // Screen index
                     remote_control_mouse_action = "0", // 0 = left click, 1 = right click
-                    //remote_control_mouse_xyz = x + "," + y, // refresh screen
+                //remote_control_mouse_xyz = x + "," + y, // refresh screen
                     remote_control_keyboard_input = key_code, // refresh screen
                 };
 
@@ -994,6 +1040,7 @@
         await JSRuntime.InvokeVoidAsync("toggleFullScreen", "image-container");
     }
 
+    #region RemoteScreenZoom 
     private double zoomLevel = 1.0;
 
     private void SetZoom(double zoom)
@@ -1002,6 +1049,32 @@
     }
 
     private readonly List<double> zoomPresets = new() { 0.5, 0.75, 1.0, 1.5, 2.0 };
+    #endregion
+
+	#region RemoteScreenRecording
+    private async Task StartRecordingSession()
+    {
+        recordSessionId = Randomizer.Handler.Number(6);
+        recordSession = true;
+    }
+
+    private async Task StopRecordingSession()
+    {
+        loading_overlay = true;
+        StateHasChanged();
+
+
+        recordSession = false;
+
+        // Create the new gif
+        GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
+		
+        loading_overlay = false;
+		StateHasChanged();
+
+        this.Snackbar.Add("Saved gif", Severity.Success);
+    }
+    #endregion
 
     public class BoundingClientRect
     {
@@ -1338,6 +1411,9 @@
     {
         try
         {
+            loading_overlay = true;
+            StateHasChanged();
+
             remote_screen_refresh_timer?.Dispose();
 
             if (remote_server_client is not null)
@@ -1346,11 +1422,22 @@
                 _ = remote_server_client.DisposeAsync();
             }
 
+            if (recordSessionForce)
+            {
+                // Create the new gif
+                GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
+            }
+
             Logging.Handler.Debug("/dashboard -> Dispose", "Cleaned up SignalR and timers.", "");
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Dispose", "Error during disposal", ex.ToString());
         }
+        finally
+		{
+			loading_overlay = false;
+			StateHasChanged();
+		}
     }
 }

@@ -324,7 +324,8 @@ catch (Exception ex)
 builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessageSize = 102400000);
 
 // Add background services
-builder.Services.AddHostedService<Auto_Cleanup_Service>();
+builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.MySQL.AutoCleanupService>();
+builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.ScreenRecorder.AutoCleanupService>();
 
 // Generate tokenservice secretkey
 Web_Console.token_service_secret_key = Randomizer.Handler.Token(true, 32);
@@ -362,7 +363,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START ea981100-8305-4353-8d27-4aee269b5569 //OSSCH_END
+//OSSCH_START fc6e8f5e-5a9d-4082-8f66-31146d45eda0 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

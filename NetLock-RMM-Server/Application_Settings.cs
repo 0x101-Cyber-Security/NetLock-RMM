@@ -6,6 +6,6 @@ namespace NetLock_RMM_Server
         public static string agent_version = "2.5.0.7";
         public static string Local_Encryption_Key = "01234567890123456789012345678901";
 
-        //OSSCH_START a9efc4f0-c29d-4dc4-a04a-1db8f7701b23 //OSSCH_END
+        //OSSCH_START 7f9bcf03-c326-45ac-a3f2-d3d208d6b1be //OSSCH_END
     }
 }

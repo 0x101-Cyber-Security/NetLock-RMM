@@ -398,11 +398,6 @@
 
             </MudPaper>
 
-            <MudPaper Class="mt-3">
-                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Agent Updates"]</MudText>
-                <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary" />
-            </MudPaper>
-
             @if (!Configuration.Members_Portal.cloud_enabled)
             {
                 <MudPaper Class="mt-3">
@@ -445,6 +440,11 @@
 
                 </MudPaper>
             }
+
+            <MudPaper Class="mt-3">
+                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Agent Updates"]</MudText>
+                <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary" />
+            </MudPaper>
 
             <MudPaper Class="mt-3">
                 <MudText Class="ml-2" Typo="Typo.h6">Clean Up & Optimize Database</MudText>
@@ -592,7 +592,25 @@
 
                 <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
                 <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
+            </MudPaper>
 
+            <MudPaper Class="mt-3 mb-5">
+                <MudText Class="ml-2" Typo="Typo.h6">Remote Screen Control</MudText>
+                <MudText Class="ml-2 mt-2" Typo="Typo.body1">When enabled, all remote screen control sessions will be recorded.</MudText>
+                <MudSwitch Class="ml-2" Color="Color.Primary" @bind-Value="remoteScreenSessionRecordingForced" Label="Force session recording"></MudSwitch>
+
+                <MudCheckBox T="bool" @bind-Value="remoteScreenSessionRecordingAutoClean" Label="Auto purge" Color="Color.Primary" />
+
+                @if (Configuration.Members_Portal.cloud_enabled)
+                {
+                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">Your recordings will be kept for seven days.</MudText>
+                }
+                else
+                {
+                    <MudNumericField Class="ml-2 mt-2" @bind-Value="remoteScreenSessionRecordingForcedDays" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                }
+
+                <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveRemoteScreenSessionRecordingSettings">Save</MudButton>
             </MudPaper>
         }
 
@@ -625,8 +643,8 @@
             string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
             permissions_settings_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_enabled");
-			permissions_settings_system_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_system_enabled");
-            
+                        permissions_settings_system_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_system_enabled");
+
             if (!permissions_settings_enabled)
                 logout = true;
 
@@ -673,7 +691,7 @@
             return;
 
         loading_overlay = true;
-		StateHasChanged();
+        StateHasChanged();
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
@@ -738,6 +756,11 @@
     private bool members_portal_code_signed = false;
 
     private string package_url = String.Empty;
+
+    // Remote Screen Control
+    private bool remoteScreenSessionRecordingForced = false;
+    private bool remoteScreenSessionRecordingAutoClean = false;
+    private int remoteScreenSessionRecordingForcedDays = 0;
 
     public class MySQL_Active_Queries
     {
@@ -916,13 +939,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START 86c8fb3d-f7d2-4b16-9a95-0b0066718f91 //OSSCH_END
+    //OSSCH_START f055688b-42a2-4dfe-b34c-bb3a7ebce229 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 8445e966-ab44-4aa0-8ed6-ef5063056f6c //OSSCH_END
+    //OSSCH_START 360d1f0a-9d9f-4d72-ba52-91825ed3a24a //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 4727f116-ae20-43ac-98be-acdf46fcddd4 //OSSCH_END
+    //OSSCH_START 51c77e83-c1d4-4690-8d01-49209904bbd0 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
@@ -1100,6 +1123,10 @@
 
                         cleanup_events_history_enabled = reader.GetBoolean(reader.GetOrdinal("cleanup_events_history_enabled"));
                         cleanup_events_history_days = reader.GetInt32(reader.GetOrdinal("cleanup_events_history_days"));
+
+                        remoteScreenSessionRecordingForced = reader.GetBoolean(reader.GetOrdinal("remote_screen_session_recording_forced_enabled"));
+                        remoteScreenSessionRecordingAutoClean = reader.GetBoolean(reader.GetOrdinal("remote_screen_session_recording_auto_clean_enabled"));
+                        remoteScreenSessionRecordingForcedDays = reader.GetInt32(reader.GetOrdinal("remote_screen_session_recording_forced_days"));
                     }
                 }
             }
@@ -1307,9 +1334,49 @@ OPTIMIZE TABLE tenants;";
                 await Classes.MySQL.Handler.Execute_Command("INSERT INTO settings (db_version, files_api_key, smtp) VALUES ('" + Application_Settings.db_version + "', '" + files_api_key + "', '" + smtp + "');");
             }
         }
-		catch (Exception ex)
-		{
-			Logging.Handler.Error("Settings -> Fix_Settings", "MySQL_Query", ex.ToString());
-		}   
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Settings -> Fix_Settings", "MySQL_Query", ex.ToString());
+        }   
+    }
+
+    // Remote Screen Control
+
+    private async Task SaveRemoteScreenSessionRecordingSettings()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        int remoteScreenSessionRecordingForcedDaysValue = remoteScreenSessionRecordingForcedDays;
+
+
+        // Save cleanup settings to database
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        string query = @"UPDATE settings SET remote_screen_session_recording_forced_enabled = @remote_screen_session_recording_forced_enabled, remote_screen_session_recording_auto_clean_enabled = @remote_screen_session_recording_auto_clean_enabled, remote_screen_session_recording_forced_days = @remote_screen_session_recording_forced_days;";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@remote_screen_session_recording_forced_enabled", Convert.ToInt32(remoteScreenSessionRecordingForced));
+            cmd.Parameters.AddWithValue("@remote_screen_session_recording_auto_clean_enabled", Convert.ToInt32(remoteScreenSessionRecordingAutoClean));
+            cmd.Parameters.AddWithValue("@remote_screen_session_recording_forced_days", remoteScreenSessionRecordingForcedDays);
+
+            Logging.Handler.Debug("Settings -> SaveRemoteScreenSessionRecordingSettings", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+
+            Snackbar.Add("Remote screen control cleanup settings saved!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Settings -> SaveRemoteScreenSessionRecordingSettings", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
     }
 }
