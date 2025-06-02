@@ -45,8 +45,14 @@ options=(
   "America/Toronto"
   "Pacific/Auckland"
 )
-select timezone in "${options[@]}"; do
-    if [[ -n "$timezone" ]]; then
+
+# Set default if nothing is selected
+timezone=""
+
+echo "Please select your timezone:"
+select opt in "${options[@]}"; do
+    if [[ -n "$opt" ]]; then
+        timezone="$opt"
         echo "Setting timezone to $timezone..."
         sudo timedatectl set-timezone "$timezone"
         break
@@ -54,6 +60,14 @@ select timezone in "${options[@]}"; do
         echo "Invalid selection. Please try again."
     fi
 done
+
+# Fallback if empty for any reason
+if [[ -z "$timezone" ]]; then
+    timezone="Europe/Berlin"
+    echo "No timezone selected, defaulting to $timezone..."
+    sudo timedatectl set-timezone "$timezone"
+fi
+
 
 # Abfragen
 read -p "Please enter the domain you will use (example: demo.netlockrmm.com): " le_domain
@@ -252,6 +266,8 @@ services:
   netlock-web-console:
     image: nicomak101/netlock-rmm-web-console:latest
     container_name: netlock-web-console
+    environment:
+      - TZ=$timezone
     volumes:
       - "/home/netlock/web_console/appsettings.json:/app/appsettings.json"
       - "/home/netlock/web_console/internal:/app/internal"
@@ -268,6 +284,8 @@ services:
   netlock-rmm-server:
     image: nicomak101/netlock-rmm-server:latest
     container_name: netlock-rmm-server
+    environment:
+      - TZ=$timezone
     volumes:
       - "/home/netlock/server/appsettings.json:/app/appsettings.json"
       - "/home/netlock/server/internal:/app/internal"
