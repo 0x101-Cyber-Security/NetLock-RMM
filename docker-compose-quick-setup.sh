@@ -252,6 +252,8 @@ services:
   netlock-web-console:
     image: nicomak101/netlock-rmm-web-console:latest
     container_name: netlock-web-console
+    environment:
+      - TZ=$timezone
     volumes:
       - "/home/netlock/web_console/appsettings.json:/app/appsettings.json"
       - "/home/netlock/web_console/internal:/app/internal"
@@ -268,6 +270,8 @@ services:
   netlock-rmm-server:
     image: nicomak101/netlock-rmm-server:latest
     container_name: netlock-rmm-server
+    environment:
+      - TZ=$timezone
     volumes:
       - "/home/netlock/server/appsettings.json:/app/appsettings.json"
       - "/home/netlock/server/internal:/app/internal"
