@@ -161,6 +161,8 @@
 
     #region Permissions System
 
+    private string netlock_username = string.Empty;
+
     public static List<string> permissions_tenants_list = new List<string> { };
 
     private bool permissions_tenants_enabled = false;
@@ -183,7 +185,7 @@
             if (user?.Identity is not { IsAuthenticated: true })
                 logout = true;
 
-            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
             permissions_tenants_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_enabled");
             permissions_tenants_manage = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "tenants_manage");
@@ -478,10 +480,6 @@
 
         try
         {
-            // Get author from session storage
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             await conn.OpenAsync();
 
             string execute_query = @"UPDATE tenants SET name = @tenant_name, description = @description, author = @author, company = @company_name, contact_person_one = @contact_person_one, contact_person_two = @contact_person_two, contact_person_three = @contact_person_three, contact_person_four = @contact_person_four, contact_person_five = @contact_person_five WHERE id = @tenant_id;
@@ -492,7 +490,7 @@
             cmd.Parameters.AddWithValue("@tenant_name", name);
             cmd.Parameters.AddWithValue("@tenant_name_old", name_old);
             cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-            cmd.Parameters.AddWithValue("@author", author.Value);
+            cmd.Parameters.AddWithValue("@author", netlock_username);
             cmd.Parameters.AddWithValue("@description", description);
             cmd.Parameters.AddWithValue("@company_name", company);
             cmd.Parameters.AddWithValue("@contact_person_one", contact_person_one);

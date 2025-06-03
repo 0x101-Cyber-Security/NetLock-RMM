@@ -163,14 +163,15 @@
                     }
                 </MudSelect>
 
-                <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" Immediate=@true TransformOrigin="Origin.TopCenter">
-                    @{
-                        foreach (var script in scripts_list)
-                        {
-                            <MudSelectItem Value="@(script.name)" />
-                        }
+            <MudSelect Class="mt-3" T="string" @bind-Value="script" Label="@Localizer["script"].ToString()" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate=@true>
+                @{
+                    foreach (var script in scripts_list)
+                    {
+                        <MudSelectItem Value="@(script.name)" />
                     }
-                </MudSelect>
+                }
+            </MudSelect>
+          
             }
 
         </DialogContent>
@@ -204,7 +205,7 @@
         await Get_Scripts();
     }
 
-    public List<Script> scripts_list;
+    public List<Script> scripts_list = new List<Script>();
 
     private string job_name = String.Empty;
     private string description = String.Empty;

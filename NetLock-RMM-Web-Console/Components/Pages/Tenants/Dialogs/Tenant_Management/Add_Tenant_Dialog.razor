@@ -52,6 +52,8 @@
 
 @code {
 
+	private string netlock_username = string.Empty;
+
     private string tenant_name = string.Empty;
     private string description = string.Empty;
     private string company_name = string.Empty;
@@ -82,6 +84,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Get the username from the user claims
+		netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
     }
 
     private async Task OK()
@@ -131,10 +136,6 @@
 
                 try
                 {
-                    // Get author from session storage
-                    var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                    var author = await sessionStorage.GetAsync<string>("username");
-
                     string execute_query = "INSERT INTO `tenants` (`guid`, `name`, `date`, `author`, `description`, `company`, `contact_person_one`, `contact_person_two`, `contact_person_three`, `contact_person_four`, `contact_person_five`) VALUES (@guid, @tenant_name, @date, @author, @description, @company_name, @contact_person_one, @contact_person_two, @contact_person_three, @contact_person_four, @contact_person_five);";
 
                     MySqlCommand cmd = new MySqlCommand(execute_query, conn);
@@ -142,7 +143,7 @@
                     cmd.Parameters.AddWithValue("@guid", tenant_guid);
                     cmd.Parameters.AddWithValue("@tenant_name", tenant_name);
                     cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@author", author.Value);
+                    cmd.Parameters.AddWithValue("@author", netlock_username);
                     cmd.Parameters.AddWithValue("@description", description);
                     cmd.Parameters.AddWithValue("@company_name", company_name);
                     cmd.Parameters.AddWithValue("@contact_person_one", contact_person_one);
@@ -153,17 +154,23 @@
 
                     cmd.ExecuteNonQuery();
 
+					Console.WriteLine("Tenant added successfully.");
+
                     // Get tenant id
                     string tenant_id = await Classes.MySQL.Handler.Quick_Reader($"SELECT * FROM tenants WHERE guid = '{tenant_guid}';", "id");
 
+					Console.WriteLine($"Tenant ID: {tenant_id}");
                     // Add tenant to users permissions
-                    await Classes.MySQL.Tenants.Assign_Tenant_To_User(author.Value, tenant_id, tenant_guid);
+                    await Classes.MySQL.Tenants.Assign_Tenant_To_User(netlock_username, tenant_id, tenant_guid);
+
+					Console.WriteLine($"Tenant {tenant_name} assigned to user {netlock_username}.");
 
                     success = true;
                 }
                 catch (Exception ex)
                 {
-                    Logging.Handler.Error("/manage_jobs -> Add_Policy_Dialog.OK", "Result", ex.ToString());
+					Console.WriteLine(ex.Message);
+                    Logging.Handler.Error("/add_tenants -> Add_Tenant_Dialog.OK", "Result", ex.ToString());
                 }
                 finally
                 {

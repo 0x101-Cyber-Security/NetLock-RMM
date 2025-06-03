@@ -43,6 +43,8 @@
 
 @code {
 
+    private string netlock_username = string.Empty;
+
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string name { get; set; }
     [Parameter] public string description { get; set; }
@@ -62,6 +64,9 @@
             return;
         }
 
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
         StateHasChanged();
     }
 
@@ -79,10 +84,6 @@
 
             try
             {
-                // Get author from session storage
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var author = await sessionStorage.GetAsync<string>("username");
-
                 await conn.OpenAsync();
 
                 // Check if the name already exists for the same location_id and tenant_id
@@ -112,7 +113,7 @@
                     cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
                     cmd.Parameters.AddWithValue("@name", name);
                     cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@author", author.Value);
+                    cmd.Parameters.AddWithValue("@author", netlock_username);
                     cmd.Parameters.AddWithValue("@description", description);
 
                     await cmd.ExecuteNonQueryAsync();

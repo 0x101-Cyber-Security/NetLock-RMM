@@ -30,6 +30,8 @@
 </MudDialog>
 
 @code {
+	private string netlock_username = string.Empty;
+
     private string policy_name = string.Empty;
     private string description = string.Empty;
 
@@ -55,6 +57,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
     }
 
     private async Task OK()
@@ -96,9 +101,6 @@
             {
                 try
                 {
-                    // Get author from session storage
-                    var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                    var author = await sessionStorage.GetAsync<string>("username");
 
                     string execute_query = "INSERT INTO `policies` (`name`, `date`, `author`, `description`) VALUES (@name, @date, @author, @description);";
 
@@ -106,7 +108,7 @@
 
                     cmd.Parameters.AddWithValue("@name", policy_name);
                     cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@author", author.Value);
+                    cmd.Parameters.AddWithValue("@author", netlock_username);
                     cmd.Parameters.AddWithValue("@description", await Base64.Handler.Encode(description));
                     cmd.Parameters.AddWithValue("@content", null);
 

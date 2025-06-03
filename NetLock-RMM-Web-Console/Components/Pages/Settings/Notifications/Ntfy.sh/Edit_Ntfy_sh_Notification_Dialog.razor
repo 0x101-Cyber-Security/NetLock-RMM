@@ -64,6 +64,8 @@
 
     @code {
 
+    private string netlock_username = string.Empty;
+
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string id { get; set; }
     [Parameter] public string topic_name { get; set; }
@@ -85,6 +87,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         await Get_Tenants();
 
@@ -211,9 +216,6 @@
 
             try
             {
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var username = await sessionStorage.GetAsync<string>("username");
-
                 // convert severity
                 string sevirity_converted = String.Empty;
 
@@ -246,7 +248,7 @@
                 cmd.Parameters.AddWithValue("@topic_url", topic_url);
                 cmd.Parameters.AddWithValue("@access_token", access_token);
                 cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@author", username.Value);
+                cmd.Parameters.AddWithValue("@author", netlock_username);
                 cmd.Parameters.AddWithValue("@description", description);
                 cmd.Parameters.AddWithValue("@severity", sevirity_converted);
                 cmd.Parameters.AddWithValue("@tenants", tenants_json);

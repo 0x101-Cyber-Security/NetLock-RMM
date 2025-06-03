@@ -43,6 +43,8 @@
 
 @code {
 
+    private string netlock_username = string.Empty;
+
     private string location_name = string.Empty;
     private string description = string.Empty;
 
@@ -68,6 +70,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
     }
 
     private async Task OK()
@@ -114,10 +119,6 @@
 
                 try
                 {
-                    // Get author from session storage
-                    var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                    var author = await sessionStorage.GetAsync<string>("username");
-
                     string execute_query = "INSERT INTO `locations` (`tenant_id`, `guid`, `name`, `date`, `author`, `description`) VALUES (@tenant_id, @guid, @location_name, @date, @author, @description);";
 
                     MySqlCommand cmd = new MySqlCommand(execute_query, conn);
@@ -125,7 +126,7 @@
                     cmd.Parameters.AddWithValue("@guid", Guid.NewGuid());
                     cmd.Parameters.AddWithValue("@location_name", location_name);
                     cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                    cmd.Parameters.AddWithValue("@author", author.Value);
+                    cmd.Parameters.AddWithValue("@author", netlock_username);
                     cmd.Parameters.AddWithValue("@description", description);
                     
                     cmd.ExecuteNonQuery();

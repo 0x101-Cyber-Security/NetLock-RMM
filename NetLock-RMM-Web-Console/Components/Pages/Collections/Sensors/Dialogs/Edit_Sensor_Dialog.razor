@@ -707,12 +707,12 @@
 
 @code {
 
+    private string netlock_username = string.Empty;
+
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string id { get; set; }
     [Parameter] public string json { get; set; }
     
-    private string netlock_username = String.Empty;
-
     protected override async Task OnInitializedAsync()
     {
         // Get the current user from the authentication state
@@ -1260,9 +1260,6 @@
 
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-            var author = await sessionStorage.GetAsync<string>("username");
-
             int severity_converted = 0;
             int category_converted = 0;
             int sub_category_converted = 0;
@@ -1360,7 +1357,7 @@
                     id = Randomizer.Handler.Standard(6),
                     name = sensor_name,
                     date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
-                    author = author.Value,
+                    author = netlock_username,
                     description = description,
                     platform = platform,
                     severity = severity_converted,

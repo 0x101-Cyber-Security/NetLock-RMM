@@ -62,6 +62,8 @@
 
 @code {
 
+	private string netlock_username = string.Empty;
+
     protected override async Task OnInitializedAsync()
     {
         // Get the current user from the authentication state
@@ -73,6 +75,9 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
+        
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
         severity = Localizer["any"];
 
@@ -163,9 +168,6 @@
 
             try
             {
-                var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
-                var username = await sessionStorage.GetAsync<string>("username");
-
                 // convert severity
                 string sevirity_converted = String.Empty;
 
@@ -195,7 +197,7 @@
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
                 cmd.Parameters.AddWithValue("@mail_address", mail_address);
                 cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                cmd.Parameters.AddWithValue("@author", username.Value);
+                cmd.Parameters.AddWithValue("@author", netlock_username);
                 cmd.Parameters.AddWithValue("@description", description);
                 cmd.Parameters.AddWithValue("@severity", sevirity_converted);
                 cmd.Parameters.AddWithValue("@tenants", tenants_json);
