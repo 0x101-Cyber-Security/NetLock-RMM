@@ -42,7 +42,8 @@ namespace NetLock_RMM_Web_Console.Classes.ScreenRecorder
                 Logging.Handler.Debug("Classes.ScreenRecorder.AutoCleanupService", "Task started at:", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 Console.WriteLine("Classes.ScreenRecorder.AutoCleanupService -> Task started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                bool isEnabled = Convert.ToBoolean(await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_auto_clean_enabled"));
+                string isEnabledStr = await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_auto_clean_enabled");
+                bool isEnabled = isEnabledStr == "1";
                 int daysToKeep = Convert.ToInt32(await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_forced_days"));
 
                 Logging.Handler.Debug("Classes.ScreenRecorder.AutoCleanupService", "Auto cleanup enabled:", isEnabled.ToString());
