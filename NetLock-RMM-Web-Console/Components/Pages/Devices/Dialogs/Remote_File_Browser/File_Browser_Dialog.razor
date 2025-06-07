@@ -1969,16 +1969,24 @@
         Snackbar.Configuration.ShowCloseIcon = true;
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
+        string url = String.Empty;
+
         if (_private)
         {
-            string url = File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
-            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+            if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + $"/admin/files/download?guid={guid}&password={password}";
+			else
+                url = File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
         }
         else
         {
-            string url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
-            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+            if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
+            else
+			    url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
         }
+
+        await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
     }
 
     public class ProgressableStreamContent : HttpContent

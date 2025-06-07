@@ -27,39 +27,39 @@
 
 <style>
     .custom-expansion-panel {
-        background-color: transparent;
+    background-color: transparent;
     }
 
     .dialog-blurring {
-        backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     }
 
     .mud-table-cell-custom-group {
-        font-weight: 500;
+    font-weight: 500;
     }
 
     .mud-table-cell-custom-group-footer {
-        padding-bottom: 50px;
-        text-align: right;
+    padding-bottom: 50px;
+    text-align: right;
     }
 
     @@media only screen and (max-width: 768px) {
-        .desktop-icon {
-            display: none;
-        }
+    .desktop-icon {
+    display: none;
+    }
     }
 
     .mud-select-spacing {
-        min-width: 120px;
-        margin-left: 8px;
-        margin-right: 8px;
+    min-width: 120px;
+    margin-left: 8px;
+    margin-right: 8px;
     }
 </style>
 
 <AuthorizeView>
 
     <Authorized>
-        
+
         @if (permissions_collections_enabled && permissions_collections_files_enabled)
         {
             <MudText Class="mb-5" Typo="Typo.h5">@Localizer["title"]</MudText>
@@ -93,12 +93,12 @@
 
             <MudPaper Class="mt-5">
 
-            <MudTable Class="mt-2" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="false" Items="@files_mysql_data" Filter="new Func<Files_Entity, bool>(Files_Table_Filter_Func)">
-                <ToolBarContent>
+                <MudTable Class="mt-2" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="false" Items="@files_mysql_data" Filter="new Func<Files_Entity, bool>(Files_Table_Filter_Func)">
+                    <ToolBarContent>
                         <MudTextField Class="" Placeholder="@files_selected_directory_path" Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Link" @bind-Value="files_selected_directory_path" ReadOnly="true" Immediate="true"></MudTextField>
-                    <MudTextField Class="ml-2" @bind-Value="files_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
-                </ToolBarContent>
-                <HeaderContent>
+                        <MudTextField Class="ml-2" @bind-Value="files_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.size)">@Localizer["size"]</MudTableSortLabel></MudTh>
@@ -107,8 +107,8 @@
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.guid)">GUID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.password)">@Localizer["password"]</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.sha512)">SHA512</MudTableSortLabel></MudTh>
-                </HeaderContent>
-                <RowTemplate Context="files_row">
+                    </HeaderContent>
+                    <RowTemplate Context="files_row">
 
                         <MudTd DataLabel="Name" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
                             <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
@@ -153,67 +153,67 @@
                             </MudMenu>
                         </MudTd>
 
-                    <MudTd DataLabel="@Localizer["type"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.type
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="@Localizer["type"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.type
+                            </span>
+                        </MudTd>
 
-                    <MudTd DataLabel="@Localizer["size"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.size
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="@Localizer["size"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.size
+                            </span>
+                        </MudTd>
 
-                    <MudTd DataLabel="@Localizer["modification_date"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.last_modified
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="@Localizer["modification_date"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.last_modified
+                            </span>
+                        </MudTd>
 
-                     <MudTd DataLabel="@Localizer["access"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                        <MudTd DataLabel="@Localizer["access"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
                             <span style="display: flex; align-items: center; padding: 4px;">
                                 @{
-                                if (files_row.type != Localizer["directory"].ToString())
-                                {
-                                    <MudSelect T="string" Variant="Variant.Text" Dense="true" Class="compact-select" @bind-Value=files_row.access @bind-Value:after="@(() => Update_Access(files_row.guid, files_row.access))">
-                                        <MudSelectItem T="string" Value="@("Public")">@Localizer["public"]</MudSelectItem>
-                                        <MudSelectItem T="string" Value="@("Private")">@Localizer[Localizer["private"].ToString()]</MudSelectItem>
-                                    </MudSelect>
+                                    if (files_row.type != Localizer["directory"].ToString())
+                                    {
+                                        <MudSelect T="string" Variant="Variant.Text" Dense="true" Class="compact-select" @bind-Value=files_row.access @bind-Value:after="@(() => Update_Access(files_row.guid, files_row.access))">
+                                            <MudSelectItem T="string" Value="@("Public")">@Localizer["public"]</MudSelectItem>
+                                            <MudSelectItem T="string" Value="@("Private")">@Localizer[Localizer["private"].ToString()]</MudSelectItem>
+                                        </MudSelect>
+                                    }
                                 }
-                        }
-                        </span>
-                    </MudTd>
+                            </span>
+                        </MudTd>
 
-                    <MudTd DataLabel="GUID" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.guid
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="GUID" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.guid
+                            </span>
+                        </MudTd>
 
-                    <MudTd DataLabel="@Localizer["password"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.password
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="@Localizer["password"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.password
+                            </span>
+                        </MudTd>
 
-                    <MudTd DataLabel="SHA512" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
-                        <span style="display: flex; align-items: center;">
-                            &nbsp;@files_row.sha512
-                        </span>
-                    </MudTd>
+                        <MudTd DataLabel="SHA512" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.sha512
+                            </span>
+                        </MudTd>
 
-                </RowTemplate>
-                <PagerContent>
-                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                </PagerContent>
-            </MudTable>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                    </PagerContent>
+                </MudTable>
 
             </MudPaper>
         }
 
     </Authorized>
- </AuthorizeView>
+</AuthorizeView>
 
 @code {
 
@@ -244,11 +244,11 @@
             string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
             permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_enabled");
-			permissions_collections_files_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_enabled");
+            permissions_collections_files_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_enabled");
             permissions_collections_files_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_add");
             permissions_collections_files_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_edit");
             permissions_collections_files_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_delete");
-			permissions_collections_files_netlock = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_netlock");
+            permissions_collections_files_netlock = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "collections_files_netlock");
 
             if (!permissions_collections_enabled)
                 logout = true;
@@ -531,7 +531,7 @@
         /*else // download file | causes buggy navigation
         {
             await Download_File(row.guid, true, row.password);
-        }*/
+            }*/
     }
 
     private string Files_GetRowClass(Files_Entity row)
@@ -628,16 +628,24 @@
         Snackbar.Configuration.ShowCloseIcon = true;
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
+        string url = String.Empty;
+        
         if (_private)
         {
-            string url = File_Server.Connection_String + "/admin/files/download?guid=" + guid + "&password=" + password;
-            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid + "&password=" + password;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid + "&password=" + password;
         }
         else
         {
-            string url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
-            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
         }
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
 
         Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
     }
@@ -648,16 +656,24 @@
         Snackbar.Configuration.ShowCloseIcon = true;
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
+		string url = String.Empty;
+
         if (_private)
         {
-            string url = File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
-            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid + "&password=" + password;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid + "&password=" + password;
         }
         else
         {
-            string url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
-            await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+            if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
         }
+
+        await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
     }
 
     private async Task Files_Directories_Delete(string name, string path, string guid, bool directory)

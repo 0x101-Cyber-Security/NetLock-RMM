@@ -38,6 +38,7 @@ var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncryp
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
 var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
+var publicOverrideUrl = builder.Configuration.GetValue<string>("Webinterface:publicOverrideUrl", String.Empty);
 
 Web_Console.loggingEnabled = loggingEnabled;
 
@@ -66,6 +67,16 @@ else
 {
     File_Server.Connection_String = $"http://{fileServerConfig.Server}:{fileServerConfig.Port}";
 }
+
+// Public override URL
+if (!String.IsNullOrEmpty(publicOverrideUrl))
+    Web_Console.publicOverrideUrl = publicOverrideUrl;
+
+// Title
+Web_Console.title = builder.Configuration.GetValue<string>("Webinterface:Title", "NetLock RMM");
+
+if (Web_Console.title == "Your company name")
+    Web_Console.title = "NetLock RMM"; // Default title if not set
 
 var language = builder.Configuration["Webinterface:Language"];
 
@@ -143,9 +154,11 @@ Console.WriteLine("[Members Portal]");
 Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
 Console.WriteLine(Environment.NewLine);
 
-// Language
+// Webinterface
 Console.WriteLine("[Webinterface]");
 Console.WriteLine($"Language: {language}");
+Console.WriteLine($"Title: {Web_Console.title}");
+Console.WriteLine($"Public Override Domain: {Web_Console.publicOverrideUrl}");
 
 // Logging
 Console.WriteLine("[Logging]");
@@ -325,7 +338,7 @@ builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessag
 
 // Add background services
 builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.MySQL.AutoCleanupService>();
-builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.ScreenRecorder.AutoCleanupService>();
+//builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.ScreenRecorder.AutoCleanupService>(); disabled until remote screen control release
 
 // Generate tokenservice secretkey
 Web_Console.token_service_secret_key = Randomizer.Handler.Token(true, 32);
@@ -363,7 +376,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 121fced9-bd92-4623-8379-af0b7aa4ad28 //OSSCH_END
+//OSSCH_START 444cbb8a-db8f-4cc8-b4d7-267b5f5850ac //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
