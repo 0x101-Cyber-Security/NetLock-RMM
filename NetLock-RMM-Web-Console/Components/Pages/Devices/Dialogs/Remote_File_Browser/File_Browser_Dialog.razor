@@ -211,7 +211,7 @@
 
         token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
 
-		await Remote_Setup_SignalR();
+        await Remote_Setup_SignalR();
     }
 
     #region Remote
@@ -328,13 +328,13 @@
                         }
 
                         Remote_File_Browser_Entity entity = new Remote_File_Browser_Entity
-                        {
-                            name = _object["name"].ToString(),
-                            path = _object["path"].ToString(),
-                            type = _object["type"].ToString(),
-                            size = _object["size"].ToString(),
-                            last_modified = last_modified,
-                        };
+                            {
+                                name = _object["name"].ToString(),
+                                path = _object["path"].ToString(),
+                                type = _object["type"].ToString(),
+                                size = _object["size"].ToString(),
+                                last_modified = last_modified,
+                            };
 
                         // Check if type is directory
                         if (entity.type == "0")
@@ -787,9 +787,9 @@
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-            {
-                token = token
-            };
+                {
+                    token = token
+                };
 
             var targetDevice = new Remote_Target_Device
                 {
@@ -1641,7 +1641,7 @@
             return;
 
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Move_Directory_Dialog", "Result", result.Data.ToString());
-        
+
         string _remote_file_path_new = result.Data.ToString();
 
         // if linux or macos convert the path to linux/macos path
@@ -1650,7 +1650,7 @@
             _remote_file_path = _remote_file_path.Replace("\\", "/");
             _remote_file_path_new = _remote_file_path_new.Replace("\\", "/");
         }
-            
+
         await Remote_File_Browser_Move_Directory(_remote_file_path, _remote_file_path_new);
     }
 
@@ -1929,7 +1929,7 @@
 
                         using (JsonDocument doc = JsonDocument.Parse(result))
                         {
-                            // Read the values directly from the JSON                            
+                            // Read the values directly from the JSON
                             register_guid = doc.RootElement.GetProperty("guid").GetString();
                         }
 
@@ -1975,7 +1975,7 @@
         {
             if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
                 url = Configuration.Web_Console.publicOverrideUrl + $"/admin/files/download?guid={guid}&password={password}";
-			else
+            else
                 url = File_Server.Connection_String + $"/admin/files/download?guid={guid}&password={password}";
         }
         else
@@ -1983,7 +1983,7 @@
             if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
                 url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
             else
-			    url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
         }
 
         await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");

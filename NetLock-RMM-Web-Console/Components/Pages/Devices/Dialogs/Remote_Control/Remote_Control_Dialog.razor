@@ -174,21 +174,23 @@
 
                         <!-- Bildbereich separat und scrollbar -->
                         <div id="image-container"
-                        class="image-wrapper"
-                        tabindex="0"
-                        @onkeydown="HandleKeyDown"
-                        @onblur="HandleBlur"
-                        @onfocus="HandleFocus">
+                             class="image-wrapper"
+                             tabindex="0"
+                             @onkeydown="HandleKeyDown"
+                             @onblur="HandleBlur"
+                             @onfocus="HandleFocus">
 
                             <img src="@imageSrc"
-                            alt="Bild"
-                            class="interactive-image"
-                            style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
-                            @ref="imageRef"
-                            @onclick="GetClickCoordinates"
-                            @oncontextmenu="PreventAndHandleRightClick" />
+                                 alt="Bild"
+                                 draggable="false"
+                                 class="interactive-image"
+                                 style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
+                                 @ref="imageRef"
+                                 @oncontextmenu="PreventAndHandleRightClick"
+                                 @onmousedown="StartDrag"
+                                 @onmouseup="EndDrag"
+                                 @onmousemove="OnMouseMove" />
                         </div>
-
 
                     }
                 }
@@ -890,7 +892,7 @@
         }
     }
 
-    private async Task Remote_Mouse_Click_XYZ(string x, string y, bool isRightClick)
+    private async Task Remote_Mouse_Click_XYZ(string x, string y, string actionType)
     {
         // Check if connected
         if (!refresh_screen_timer_running)
@@ -898,16 +900,11 @@
 
         try
         {
-            string remote_control_mouse_action = "0"; // 0 = left click, 1 = right click
-
-            if (isRightClick)
-                remote_control_mouse_action = "1";
-
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-            {
+                {
                     token = token
-            };
+                };
 
             var targetDevice = new Remote_Target_Device
                 {
@@ -921,11 +918,11 @@
                 {
                     type = 4, // remote control
                     wait_response = true,
-                    command = "1", // Will be converted to type at client side | 1 = mouse click
-                    remote_control_username = user, // Target user
-                    remote_control_screen_index = screen_index, // Screen index
-                    remote_control_mouse_action = remote_control_mouse_action, // 0 = left click, 1 = right click
-                    remote_control_mouse_xyz = x + "," + y, // refresh screen
+                    command = "1", // Will be converted to type at client side | 1 = mouse action
+                    remote_control_username = user,
+                    remote_control_screen_index = screen_index,
+                    remote_control_mouse_action = actionType, // now fully dynamic
+                    remote_control_mouse_xyz = x + "," + y,
                 };
 
             var rootObject = new Remote_Root_Object
@@ -935,7 +932,7 @@
                     command = command
                 };
 
-            // Serialization of the object
+            // Serialize and send
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
 
             if (remote_server_client_setup)
@@ -963,6 +960,7 @@
             Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "General error", ex.ToString());
         }
     }
+
 
     // Keyboard input
     private async Task Remote_Keyboard_Input(string key_code)
@@ -1109,17 +1107,16 @@
         await JSRuntime.InvokeVoidAsync("preventContextMenu", e.ClientX, e.ClientY);
 
         // Process right-click coordinates
-        await HandleCoordinates(e, true); // true to indicate that it was a right click
+        await HandleCoordinates(e, "1"); // true to indicate that it was a right click
     }
 
-    private async Task HandleCoordinates(MouseEventArgs e, bool isRightClick = false)
+    private async Task HandleCoordinates(MouseEventArgs e, string mouseActionType = "0")
     {
         try
         {
-            // Retrieve image resolution from imageRef using JavaScript
+            // Get image resolution and bounding rectangle
             var resolution = await JSRuntime.InvokeAsync<Resolution>("getImageResolution", imageRef);
-
-            BoundingClientRect boundingRect = await JSRuntime.InvokeAsync<BoundingClientRect>("getBoundingClientRect", imageRef);
+            var boundingRect = await JSRuntime.InvokeAsync<BoundingClientRect>("getBoundingClientRect", imageRef);
 
             if (boundingRect != null)
             {
@@ -1127,178 +1124,320 @@
                 double relativeX = e.ClientX - boundingRect.Left;
                 double relativeY = e.ClientY - boundingRect.Top;
 
-                // Calculate scaling factors based on the current image size
+                // Scale to real resolution
                 double scaleFactorX = resolution.Width / boundingRect.Width;
                 double scaleFactorY = resolution.Height / boundingRect.Height;
 
-                // Calculation of the actual screen coordinates
                 double screenX = (relativeX * scaleFactorX);
                 double screenY = (relativeY * scaleFactorY);
 
-                // Runde Koordinaten
                 int roundedX = (int)Math.Round(screenX);
                 int roundedY = (int)Math.Round(screenY);
 
-                // Debugging
-                if (isRightClick)
-                {
-                    //Console.WriteLine($"Right-click on coordinates - X: {roundedX}, Y: {roundedY}");
-                    await Remote_Mouse_Click_XYZ(roundedX.ToString(), roundedY.ToString(), true);
-                }
-                else
-                {
-                    await Remote_Mouse_Click_XYZ(roundedX.ToString(), roundedY.ToString(), false);
-                }
+                // Send command with dynamic mouse action
+                await Remote_Mouse_Click_XYZ(roundedX.ToString(), roundedY.ToString(), mouseActionType);
             }
             else
             {
                 Logging.Handler.Error("/Remote_Control_Dialog -> HandleCoordinates", "Bounding client rect is null", "");
-                Console.WriteLine("Bounding client rect is null");
-            }            
+            }
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/Remote_Control_Dialog -> HandleCoordinates", "General error", ex.ToString());
-        } 
-    }
-
-    private bool isFocused = false;
-
-    private async Task HandleKeyDown(KeyboardEventArgs e)
-    {
-        if (isFocused)
-        {
-            // Debug: Show the pressed button
-            //Console.WriteLine($"Key pressed: {e.Key} (Code: {e.Code}), Ctrl: {e.CtrlKey}, Shift: {e.ShiftKey}, Alt: {e.AltKey}");
-            
-            // ctrl+a, convert to vk codes
-            if (e.CtrlKey && e.Key == "a")
-            {
-                await Remote_Keyboard_Input("Ctrl+A");
-            }
-            // ctrl+c, convert to vk codes
-            else if (e.CtrlKey && e.Key == "c")
-            {
-                await Remote_Keyboard_Input("Ctrl+C");
-            }
-            // ctrl+v, convert to vk codes
-            else if (e.CtrlKey && e.Key == "v")
-            {
-                await Remote_Keyboard_Input("Ctrl+V");
-            }
-            // ctrl+x, convert to vk codes
-            else if (e.CtrlKey && e.Key == "x")
-            {
-                await Remote_Keyboard_Input("Ctrl+X");
-            }
-            // ctrl+z, convert to vk codes
-            else if (e.CtrlKey && e.Key == "z")
-            {
-                await Remote_Keyboard_Input("Ctrl+Z");
-            }
-            // ctrl+y, convert to vk codes
-            else if (e.CtrlKey && e.Key == "y")
-            {
-                await Remote_Keyboard_Input("Ctrl+Y");
-            }
-            else
-            {
-                // Processing individual buttons
-                byte keyCode = GetKeyCode(e.Key);
-                if (keyCode != 0) // Check whether the button is valid
-                {
-                    await Remote_Keyboard_Input(keyCode.ToString());
-                }
-            }
         }
     }
 
-    // Method for assigning buttons to VK codes    
-    private byte GetKeyCode(string key)
+    private bool isDragging = false;
+    private bool hasMoved = false;
+
+    private async Task StartDrag(MouseEventArgs e)
     {
-        return key.ToLower() switch
-        {
-            "a" => KeyCodes.VK_A,
-            "b" => KeyCodes.VK_B,
-            "c" => KeyCodes.VK_C,
-            "d" => KeyCodes.VK_D,
-            "e" => KeyCodes.VK_E,
-            "f" => KeyCodes.VK_F,
-            "g" => KeyCodes.VK_G,
-            "h" => KeyCodes.VK_H,
-            "i" => KeyCodes.VK_I,
-            "j" => KeyCodes.VK_J,
-            "k" => KeyCodes.VK_K,
-            "l" => KeyCodes.VK_L,
-            "m" => KeyCodes.VK_M,
-            "n" => KeyCodes.VK_N,
-            "o" => KeyCodes.VK_O,
-            "p" => KeyCodes.VK_P,
-            "q" => KeyCodes.VK_Q,
-            "r" => KeyCodes.VK_R,
-            "s" => KeyCodes.VK_S,
-            "t" => KeyCodes.VK_T,
-            "u" => KeyCodes.VK_U,
-            "v" => KeyCodes.VK_V,
-            "w" => KeyCodes.VK_W,
-            "x" => KeyCodes.VK_X,
-            "y" => KeyCodes.VK_Y,
-            "z" => KeyCodes.VK_Z,
-            "0" => 0x30, // VK_0
-            "1" => 0x31, // VK_1
-            "2" => 0x32, // VK_2
-            "3" => 0x33, // VK_3
-            "4" => 0x34, // VK_4
-            "5" => 0x35, // VK_5
-            "6" => 0x36, // VK_6
-            "7" => 0x37, // VK_7
-            "8" => 0x38, // VK_8
-            "9" => 0x39, // VK_9
-            "enter" => 0x0D, // VK_RETURN
-            "esc" => 0x1B, // VK_ESCAPE
-            "space" => 0x20, // VK_SPACE
-            "tab" => 0x09, // VK_TAB
-            "-" => 0xBD, // VK_SUBTRACT (minus)
-            "=" => 0xBB, // VK_ADD (equals)
-            "[" => 0xDB, // VK_LBRACKET
-            "]" => 0xDD, // VK_RBRACKET
-            "\\" => 0xDC, // VK_BACKSLASH
-            ";" => 0xBA, // VK_SEMICOLON
-            "'" => 0xDE, // VK_APOSTROPHE
-            "," => 0xBC, // VK_COMMA
-            "." => 0xBE, // VK_PERIOD
-            "/" => 0xBF, // VK_SLASH
-            "`" => 0xC0, // VK_GRAVE
-            "f1" => 0x70, // VK_F1
-            "f2" => 0x71, // VK_F2
-            "f3" => 0x72, // VK_F3
-            "f4" => 0x73, // VK_F4
-            "f5" => 0x74, // VK_F5
-            "f6" => 0x75, // VK_F6
-            "f7" => 0x76, // VK_F7
-            "f8" => 0x77, // VK_F8
-            "f9" => 0x78, // VK_F9
-            "f10" => 0x79, // VK_F10
-            "f11" => 0x7A, // VK_F11
-            "f12" => 0x7B, // VK_F12
-            "ctrl" => 0x11, // VK_CONTROL
-            "shift" => 0x10, // VK_SHIFT
-            "alt" => 0x12, // VK_MENU (Alt)
-            "backspace" => 0x08, // VK_BACK
-            "insert" => 0x2D, // VK_INSERT
-            "delete" => 0x2E, // VK_DELETE
-            "home" => 0x24, // VK_HOME
-            "end" => 0x23, // VK_END
-            "pageup" => 0x21, // VK_PRIOR (Page Up)
-            "pagedown" => 0x22, // VK_NEXT (Page Down)
-            "arrowup" => 0x26, // VK_UP
-            "arrowdown" => 0x28, // VK_DOWN
-            "arrowleft" => 0x25, // VK_LEFT
-            "arrowright" => 0x27, // VK_RIGHT
-            _ => 0, // Ungültiger Key
-        };
+        isDragging = true;
+        hasMoved = false;
+
+        // MouseDown
+        await HandleCoordinates(e, "2");
     }
 
+    private async Task EndDrag(MouseEventArgs e)
+    {
+        // MouseUp
+        await HandleCoordinates(e, "3");
+
+        isDragging = false;
+    }
+
+    private async Task OnMouseMove(MouseEventArgs e)
+    {
+        if (isDragging)
+        {
+            hasMoved = true;
+            await HandleCoordinates(e, "4"); // MouseMove
+        }
+    }
+
+
+
+    private bool isFocused = false;
+
+    [JSInvokable("HandleKeyDown")]
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (!isFocused)
+            return;
+
+        // Collect modifiers in the correct order
+        var modifiers = new List<string>();
+        if (e.CtrlKey) modifiers.Add("Ctrl");
+        if (e.ShiftKey) modifiers.Add("Shift");
+        if (e.AltKey) modifiers.Add("Alt");
+        if (e.MetaKey) modifiers.Add("Meta");
+
+        // Main button: use code for unique button ID
+        string mainKey = GetNormalizedKeyCode(e.Code, e.Key);
+
+        // Build combination
+        string combo = modifiers.Count > 0
+            ? string.Join("+", modifiers) + "+" + mainKey
+            : mainKey;
+
+        Console.WriteLine($"Key pressed: {combo.ToLower()}");
+
+        await Remote_Keyboard_Input(combo.ToLower());
+    }
+
+    /// <summary>
+    /// Normalizes the code for unique key detection.
+    /// If code is empty or unknown, key is used as fallback.
+    /// </summary>
+    private string GetNormalizedKeyCode(string code, string key)
+    {
+        if (!string.IsNullOrEmpty(code))
+        {
+            // Example: KeyQ, Digit1, Numpad0, ArrowUp etc.
+            // Remove prefix 'Key', 'Digit' only if desired
+            // or leave the code as it is for uniqueness
+            return code;
+        }
+
+        // Fallback: use the key value for special characters or unclear codes
+        return NormalizeKey(key, false);
+    }
+
+    /// <summary>
+    /// Converts the key value from KeyboardEventArgs into a uniform string.
+    /// Note Shift for letters.
+    /// </summary>
+    private string NormalizeKey(string key, bool shiftPressed)
+    {
+        if (string.IsNullOrEmpty(key))
+            return "";
+
+        if (key.Length == 1)
+        {
+            if (char.IsLetter(key[0]))
+            {
+                return shiftPressed ? key.ToUpper() : key.ToLower();
+            }
+            else
+            {
+                return key;
+            }
+        }
+
+        switch (key)
+        {
+            case " ":
+                return "Space";
+            case "Esc":
+            case "Escape":
+                return "Escape";
+            case "Del":
+            case "Delete":
+                return "Delete";
+            case "Backspace":
+                return "Backspace";
+            case "Tab":
+                return "Tab";
+            case "Enter":
+            case "Return":
+                return "Enter";
+            case "Left":
+            case "ArrowLeft":
+                return "ArrowLeft";
+            case "Right":
+            case "ArrowRight":
+                return "ArrowRight";
+            case "Up":
+            case "ArrowUp":
+                return "ArrowUp";
+            case "Down":
+            case "ArrowDown":
+                return "ArrowDown";
+            case "Home":
+                return "Home";
+            case "End":
+                return "End";
+            case "PageUp":
+                return "PageUp";
+            case "PageDown":
+                return "PageDown";
+            case "Insert":
+            case "Ins":
+                return "Insert";
+            case "Pause":
+            case "PauseBreak":
+                return "Pause";
+            case "CapsLock":
+                return "CapsLock";
+            case "NumLock":
+                return "NumLock";
+            case "ScrollLock":
+                return "ScrollLock";
+            case "PrintScreen":
+            case "PrtScr":
+                return "PrintScreen";
+            case "ContextMenu":
+            case "Apps":
+                return "ContextMenu";
+
+            // Cover function keys F1-F24
+            default:
+                if (key.StartsWith("F") && key.Length <= 3 && int.TryParse(key.Substring(1), out var fn) && fn >= 1 && fn <= 24)
+                    return key;
+                break;
+        }
+
+        return key;
+    }
+
+    private byte GetKeyCodeByCode(string code)
+    {
+        return code switch
+        {
+            // Buchstaben
+            "KeyA" => KeyCodes.VK_A,
+            "KeyB" => KeyCodes.VK_B,
+            "KeyC" => KeyCodes.VK_C,
+            "KeyD" => KeyCodes.VK_D,
+            "KeyE" => KeyCodes.VK_E,
+            "KeyF" => KeyCodes.VK_F,
+            "KeyG" => KeyCodes.VK_G,
+            "KeyH" => KeyCodes.VK_H,
+            "KeyI" => KeyCodes.VK_I,
+            "KeyJ" => KeyCodes.VK_J,
+            "KeyK" => KeyCodes.VK_K,
+            "KeyL" => KeyCodes.VK_L,
+            "KeyM" => KeyCodes.VK_M,
+            "KeyN" => KeyCodes.VK_N,
+            "KeyO" => KeyCodes.VK_O,
+            "KeyP" => KeyCodes.VK_P,
+            "KeyQ" => KeyCodes.VK_Q,
+            "KeyR" => KeyCodes.VK_R,
+            "KeyS" => KeyCodes.VK_S,
+            "KeyT" => KeyCodes.VK_T,
+            "KeyU" => KeyCodes.VK_U,
+            "KeyV" => KeyCodes.VK_V,
+            "KeyW" => KeyCodes.VK_W,
+            "KeyX" => KeyCodes.VK_X,
+            "KeyY" => KeyCodes.VK_Y,
+            "KeyZ" => KeyCodes.VK_Z,
+
+            // Zahlen (Top Row)
+            "Digit0" => KeyCodes.VK_0,
+            "Digit1" => KeyCodes.VK_1,
+            "Digit2" => KeyCodes.VK_2,
+            "Digit3" => KeyCodes.VK_3,
+            "Digit4" => KeyCodes.VK_4,
+            "Digit5" => KeyCodes.VK_5,
+            "Digit6" => KeyCodes.VK_6,
+            "Digit7" => KeyCodes.VK_7,
+            "Digit8" => KeyCodes.VK_8,
+            "Digit9" => KeyCodes.VK_9,
+
+            // Steuerungstasten
+            "ControlLeft" => KeyCodes.VK_CONTROL,
+            "ControlRight" => KeyCodes.VK_CONTROL,
+            "ShiftLeft" => KeyCodes.VK_SHIFT,
+            "ShiftRight" => KeyCodes.VK_SHIFT,
+            "AltLeft" => KeyCodes.VK_ALT,
+            "AltRight" => KeyCodes.VK_ALT,
+            "MetaLeft" => KeyCodes.VK_META,
+            "MetaRight" => KeyCodes.VK_META,
+            "Enter" => KeyCodes.VK_ENTER,
+            "Escape" => KeyCodes.VK_ESCAPE,
+            "Space" => KeyCodes.VK_SPACE,
+            "Tab" => KeyCodes.VK_TAB,
+            "Backspace" => KeyCodes.VK_BACK,
+            "Insert" => KeyCodes.VK_INSERT,
+            "Delete" => KeyCodes.VK_DELETE,
+            "Home" => KeyCodes.VK_HOME,
+            "End" => KeyCodes.VK_END,
+            "PageUp" => KeyCodes.VK_PRIOR,
+            "PageDown" => KeyCodes.VK_NEXT,
+
+            // Pfeiltasten
+            "ArrowLeft" => KeyCodes.VK_LEFT,
+            "ArrowUp" => KeyCodes.VK_UP,
+            "ArrowRight" => KeyCodes.VK_RIGHT,
+            "ArrowDown" => KeyCodes.VK_DOWN,
+
+            // Sonderzeichen
+            "Minus" => KeyCodes.VK_MINUS,
+            "Equal" => KeyCodes.VK_EQUALS,
+            "BracketLeft" => KeyCodes.VK_LBRACKET,
+            "BracketRight" => KeyCodes.VK_RBRACKET,
+            "Backslash" => KeyCodes.VK_BACKSLASH,
+            "Semicolon" => KeyCodes.VK_SEMICOLON,
+            "Quote" => KeyCodes.VK_APOSTROPHE,
+            "Comma" => KeyCodes.VK_COMMA,
+            "Period" => KeyCodes.VK_PERIOD,
+            "Slash" => KeyCodes.VK_SLASH,
+            "Backquote" => KeyCodes.VK_GRAVE,
+
+            // Funktionstasten
+            "F1" => KeyCodes.VK_F1,
+            "F2" => KeyCodes.VK_F2,
+            "F3" => KeyCodes.VK_F3,
+            "F4" => KeyCodes.VK_F4,
+            "F5" => KeyCodes.VK_F5,
+            "F6" => KeyCodes.VK_F6,
+            "F7" => KeyCodes.VK_F7,
+            "F8" => KeyCodes.VK_F8,
+            "F9" => KeyCodes.VK_F9,
+            "F10" => KeyCodes.VK_F10,
+            "F11" => KeyCodes.VK_F11,
+            "F12" => KeyCodes.VK_F12,
+
+            // NumPad Tasten
+            "Numpad0" => KeyCodes.VK_NUMPAD0,
+            "Numpad1" => KeyCodes.VK_NUMPAD1,
+            "Numpad2" => KeyCodes.VK_NUMPAD2,
+            "Numpad3" => KeyCodes.VK_NUMPAD3,
+            "Numpad4" => KeyCodes.VK_NUMPAD4,
+            "Numpad5" => KeyCodes.VK_NUMPAD5,
+            "Numpad6" => KeyCodes.VK_NUMPAD6,
+            "Numpad7" => KeyCodes.VK_NUMPAD7,
+            "Numpad8" => KeyCodes.VK_NUMPAD8,
+            "Numpad9" => KeyCodes.VK_NUMPAD9,
+            "NumpadMultiply" => KeyCodes.VK_MULTIPLY,
+            "NumpadAdd" => KeyCodes.VK_ADD,
+            "NumpadSubtract" => KeyCodes.VK_SUBTRACT,
+            "NumpadDecimal" => KeyCodes.VK_DECIMAL,
+            "NumpadDivide" => KeyCodes.VK_DIVIDE,
+
+            // Zusätzliche Tasten
+            "CapsLock" => KeyCodes.VK_CAPITAL,
+            "ScrollLock" => KeyCodes.VK_SCROLL,
+            "NumLock" => KeyCodes.VK_NUMLOCK,
+            "Pause" => KeyCodes.VK_PAUSE,
+            "PrintScreen" => KeyCodes.VK_SNAPSHOT,
+            "ContextMenu" => KeyCodes.VK_APPS,
+
+            _ => 0,
+        };
+    }
 
     public static class KeyCodes
     {
@@ -1346,23 +1485,37 @@
         public const byte VK_CONTROL = 0x11;
         public const byte VK_SHIFT = 0x10;
         public const byte VK_ALT = 0x12;
+        public const byte VK_META = 0x5B; // Windows / Command-Taste
         public const byte VK_ENTER = 0x0D;
         public const byte VK_ESCAPE = 0x1B;
         public const byte VK_SPACE = 0x20;
         public const byte VK_TAB = 0x09;
+        public const byte VK_BACK = 0x08; // Backspace
+        public const byte VK_INSERT = 0x2D;
+        public const byte VK_DELETE = 0x2E;
+        public const byte VK_HOME = 0x24;
+        public const byte VK_END = 0x23;
+        public const byte VK_PRIOR = 0x21; // Page Up
+        public const byte VK_NEXT = 0x22;  // Page Down
+
+        // Pfeiltasten
+        public const byte VK_LEFT = 0x25;
+        public const byte VK_UP = 0x26;
+        public const byte VK_RIGHT = 0x27;
+        public const byte VK_DOWN = 0x28;
 
         // Sonderzeichen
-        public const byte VK_MINUS = 0xBD; // -
-        public const byte VK_EQUALS = 0xBB; // =
-        public const byte VK_LBRACKET = 0xDB; // [
-        public const byte VK_RBRACKET = 0xDD; // ]
-        public const byte VK_BACKSLASH = 0xDC; // \
-        public const byte VK_SEMICOLON = 0xBA; // ;
+        public const byte VK_MINUS = 0xBD;      // -
+        public const byte VK_EQUALS = 0xBB;     // =
+        public const byte VK_LBRACKET = 0xDB;   // [
+        public const byte VK_RBRACKET = 0xDD;   // ]
+        public const byte VK_BACKSLASH = 0xDC;  // \
+        public const byte VK_SEMICOLON = 0xBA;  // ;
         public const byte VK_APOSTROPHE = 0xDE; // '
-        public const byte VK_COMMA = 0xBC; // ,
-        public const byte VK_PERIOD = 0xBE; // .
-        public const byte VK_SLASH = 0xBF; // /
-        public const byte VK_GRAVE = 0xC0; // `
+        public const byte VK_COMMA = 0xBC;      // ,
+        public const byte VK_PERIOD = 0xBE;     // .
+        public const byte VK_SLASH = 0xBF;      // /
+        public const byte VK_GRAVE = 0xC0;      // `
 
         // Funktionstasten
         public const byte VK_F1 = 0x70;
@@ -1378,7 +1531,30 @@
         public const byte VK_F11 = 0x7A;
         public const byte VK_F12 = 0x7B;
 
-        // Additional buttons can be added here...
+        // NumPad Tasten
+        public const byte VK_NUMPAD0 = 0x60;
+        public const byte VK_NUMPAD1 = 0x61;
+        public const byte VK_NUMPAD2 = 0x62;
+        public const byte VK_NUMPAD3 = 0x63;
+        public const byte VK_NUMPAD4 = 0x64;
+        public const byte VK_NUMPAD5 = 0x65;
+        public const byte VK_NUMPAD6 = 0x66;
+        public const byte VK_NUMPAD7 = 0x67;
+        public const byte VK_NUMPAD8 = 0x68;
+        public const byte VK_NUMPAD9 = 0x69;
+        public const byte VK_MULTIPLY = 0x6A;
+        public const byte VK_ADD = 0x6B;
+        public const byte VK_SUBTRACT = 0x6D;
+        public const byte VK_DECIMAL = 0x6E;
+        public const byte VK_DIVIDE = 0x6F;
+
+        // Zusätzliche Tasten
+        public const byte VK_CAPITAL = 0x14; // Caps Lock
+        public const byte VK_SCROLL = 0x91;  // Scroll Lock
+        public const byte VK_NUMLOCK = 0x90; // Num Lock
+        public const byte VK_PAUSE = 0x13;   // Pause
+        public const byte VK_SNAPSHOT = 0x2C; // Print Screen
+        public const byte VK_APPS = 0x5D;    // Kontextmenü-Taste (Applications key)
     }
 
     private async Task HandleMouseScroll(WheelEventArgs e)

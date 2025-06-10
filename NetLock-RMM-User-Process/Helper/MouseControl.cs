@@ -123,6 +123,33 @@ namespace Helper
                 Console.WriteLine($"Failed to right click mouse: {ex.Message}");
             }
         }
+
+        public static async Task LeftMouseDown()
+        {
+            try
+            {
+                // Linke Maustaste drücken (halten)
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to left mouse down: {ex.Message}");
+            }
+        }
+
+        public static async Task LeftMouseUp()
+        {
+            try
+            {
+                // Linke Maustaste loslassen
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to left mouse up: {ex.Message}");
+            }
+        }
+
     }
 
 }
