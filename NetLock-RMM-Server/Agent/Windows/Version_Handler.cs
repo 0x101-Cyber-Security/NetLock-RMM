@@ -36,6 +36,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string? ram_usage { get; set; }
             public string? tpm { get; set; }
             public string? environment_variables { get; set; }
+            public string? last_active_user { get; set; }
         }
 
         public class Root_Entity
@@ -69,7 +70,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                 Logging.Handler.Debug("Agent.Windows.Version_Handler.Check_Version", "windowsAgentVersion", windowsAgentVersion);
 
                 // Check if the communicated agent version is equal to the version in the appsettings.json file
-                if (agent_version == windowsAgentVersion)
+                // Currently we only support windows auto updates. Linux & macOS will follow after I investigated why the update process results into dead clients
+                if (agent_version == windowsAgentVersion || device_identity.platform == "Linux" || device_identity.platform == "MacOS")
                 {
                     return "identical";
                 }

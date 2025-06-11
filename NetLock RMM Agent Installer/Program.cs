@@ -57,39 +57,54 @@ namespace NetLock_RMM_Agent_Installer
                 Console.WriteLine(title);
                 Console.ForegroundColor = ConsoleColor.White;
 
-                string arg1 = String.Empty;
-                string arg2 = String.Empty;
-
                 string server_config_json_new = String.Empty;
+                
+                string arg1 = null;
+                string arg2 = null;
                 bool arguments = true;
 
-                // Verify arguments
-                try
+                // Argumentprüfung ohne try/catch
+                if (args.Length > 0)
                 {
-                    arg1 = args[0]; // clean or fix
-                    Logging.Handler.Debug("Main", "Mode", arg1);
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Mode: " + arg1);
-                    arg2 = args[1]; // server_config.json path
-                    Logging.Handler.Debug("Main", "Server_Config_Path", arg2);
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Server_Config_Path: " + arg2);
-                }
-                catch
-                {
+                    arg1 = args[0]?.ToLowerInvariant();
+
                     if (arg1 == "uninstall")
                     {
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Uninstalling agent.");
+                        Console.WriteLine($"[{DateTime.Now}] - [Main] -> Uninstalling agent.");
                         Logging.Handler.Debug("Main", "Uninstall", "Uninstalling agent.");
                         Uninstall.Clean();
                         Logging.Handler.Debug("Main", "Uninstall", "Uninstall complete.");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Uninstall complete.");
+                        Console.WriteLine($"[{DateTime.Now}] - [Main] -> Uninstall complete.");
                         Thread.Sleep(5000);
                         Environment.Exit(0);
                     }
+                    else if (arg1 == "clean" || arg1 == "fix")
+                    {
+                        Logging.Handler.Debug("Main", "Mode", arg1);
+                        Console.WriteLine($"[{DateTime.Now}] - [Main] -> Mode: {arg1}");
+
+                        if (args.Length > 1)
+                        {
+                            arg2 = args[1];
+                            Logging.Handler.Debug("Main", "Server_Config_Path", arg2);
+                            Console.WriteLine($"[{DateTime.Now}] - [Main] -> Server_Config_Path: {arg2}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] - [Main] -> Error: Missing server_config.json path.");
+                            arguments = false;
+                        }
+                    }
                     else
                     {
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: Invalid or missing arguments. Falling back to embedded server config.");
+                        Console.WriteLine($"[{DateTime.Now}] - [Main] -> Error: Unknown argument '{arg1}'. Expected 'clean', 'fix', or 'uninstall'.");
                         arguments = false;
                     }
+                }
+                else
+                {
+                    Console.WriteLine($"[{DateTime.Now}] - [Main] -> Error: No valid arguments provided. Falling back to embedded server config.");
+                    arguments = false;
                 }
 
                 if (arguments)

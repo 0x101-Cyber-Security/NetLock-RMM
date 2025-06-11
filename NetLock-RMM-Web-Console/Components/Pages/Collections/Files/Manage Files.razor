@@ -850,7 +850,7 @@
                     try
                     {
                         // Open the file stream with size check
-                        var fileStream = file.OpenReadStream(maxAllowedSize); // If size exceeds, this will throw an exception
+                        var fileStream = file.OpenReadStream(maxAllowedSize); // Throws if file is too big
 
                         // Create stream content with progress handling
                         var fileContent = new ProgressableStreamContent(new StreamContent(fileStream), 4096, progress =>
@@ -859,16 +859,26 @@
                             InvokeAsync(StateHasChanged); // Update UI with progress
                         });
 
-                        // Set the content headers for the file (based on the file type)
-                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+                        // Use fallback if file.ContentType is null or empty
+                        var contentType = string.IsNullOrWhiteSpace(file.ContentType)
+                            ? "application/octet-stream"
+                            : file.ContentType;
+
+                        // Optional: log a warning if no content type is set
+                        if (string.IsNullOrWhiteSpace(file.ContentType))
+                        {
+                            Logging.Handler.Error("/manage_files -> Upload_File", $"Missing ContentType for file: {file.Name}", "");
+                        }
+
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
                         // Add the file content to the MultipartFormDataContent
                         content.Add(fileContent, "file", file.Name);
                     }
                     catch (IOException ex)
                     {
-                        Logging.Handler.Error("/manage_files -> Upload_File", $"File exceeds max size: {ex.ToString()}", "");
-                        Snackbar.Add($"{Localizer["The file exceeds the maximum allowed size of"].ToString()} {maxAllowedSize / (1024 * 1024)} MB.", Severity.Error);
+                        Logging.Handler.Error("/manage_files -> Upload_File", $"File exceeds max size: {ex}", "");
+                        Snackbar.Add($"{Localizer["The file exceeds the maximum allowed size of"]} {maxAllowedSize / (1024 * 1024)} MB.", Severity.Error);
                         return;
                     }
 

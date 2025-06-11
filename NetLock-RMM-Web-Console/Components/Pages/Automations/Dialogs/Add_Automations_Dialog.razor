@@ -42,7 +42,56 @@
                 </MudSelect>
 
                 <div style="display: flex; align-items: center;">
-                    <MudTextField Label="@Localizer["equal..."]" T="string" @bind-Value="@expected_result" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+                    @{
+                        if (condition == Localizer["condition_tenant"])
+                        {
+                            <MudSelect Class="mt-3" T="string" @bind-Value="expected_result" Label="@Localizer["equal..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                                @{
+                                    foreach (var tenant in tenants_list)
+                                    {
+                                        <MudSelectItem T="string" Value="@tenant">@tenant</MudSelectItem>
+                                    }
+                                }
+                            </MudSelect>
+                        }
+						else if (condition == Localizer["condition_location"])
+						{
+							<MudSelect Class="mt-3" T="string" @bind-Value="expected_result" Label="@Localizer["equal..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+								@{
+									foreach (var location in locations_list)
+									{
+										<MudSelectItem T="string" Value="@location">@location</MudSelectItem>
+									}
+								}
+							</MudSelect>
+						}
+						else if (condition == Localizer["condition_group"])
+						{
+							<MudSelect Class="mt-3" T="string" @bind-Value="expected_result" Label="@Localizer["equal..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+								@{
+									foreach (var group in groups_list)
+									{
+										<MudSelectItem T="string" Value="@group">@group</MudSelectItem>
+									}
+								}
+							</MudSelect>
+						}
+                        else if(condition == Localizer["condition_device_name"])
+						{
+							<MudSelect Class="mt-3" T="string" @bind-Value="expected_result" Label="@Localizer["equal..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+								@{
+									foreach (var device in devices_list)
+									{
+										<MudSelectItem T="string" Value="@device">@device</MudSelectItem>
+									}
+								}
+							</MudSelect>
+						}
+                        else
+                        {
+                            <MudTextField Label="@Localizer["equal..."]" T="string" @bind-Value="@expected_result" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+                        }
+                    }
 
                     <MudTooltip Text="@Localizer["regex_supported"]">
                         <MudIconButton Class="ml-2 mt-0" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
@@ -89,6 +138,10 @@
         condition = Localizer["condition_tenant"];
 
         await Get_Policies();
+		await Get_Tenants();
+        await Get_Locations();
+        await Get_Groups();
+		await Get_Devices();
     }
 
     private string updatedJson = String.Empty;
@@ -146,6 +199,123 @@
             await conn.CloseAsync();
         }
     }
+
+    // Load tenants
+	private List<string> tenants_list = new List<string> { };
+
+	private async Task Get_Tenants()
+	{
+		MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+		try
+		{
+			await conn.OpenAsync();
+			
+            MySqlCommand cmd = new MySqlCommand("SELECT * FROM `tenants`;", conn);
+			DbDataReader reader = await cmd.ExecuteReaderAsync();
+		
+            while (await reader.ReadAsync())
+			{
+				tenants_list.Add(reader["name"].ToString());
+			}
+		}
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> Get_Tenants", "Result", ex.ToString());
+		}
+		finally
+		{
+			await conn.CloseAsync();
+		}
+	}
+
+    // Load locations
+    private List<string> locations_list = new List<string> { };
+
+	private async Task Get_Locations()
+	{
+		MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+		try
+		{
+			await conn.OpenAsync();
+
+			MySqlCommand cmd = new MySqlCommand("SELECT * FROM `locations`;", conn);
+			DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+			while (await reader.ReadAsync())
+			{
+				locations_list.Add(reader["name"].ToString());
+			}
+		}
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> Get_Locations", "Result", ex.ToString());
+		}
+		finally
+		{
+			await conn.CloseAsync();
+		}
+	}
+
+    // Load groups
+    private List<string> groups_list = new List<string> { };
+
+    private async Task Get_Groups()
+	{
+		MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+		try
+		{
+			await conn.OpenAsync();
+
+			MySqlCommand cmd = new MySqlCommand("SELECT * FROM `groups`;", conn);
+			DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+			while (await reader.ReadAsync())
+			{
+				groups_list.Add(reader["name"].ToString());
+			}
+		}
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> Get_Groups", "Result", ex.ToString());
+		}
+		finally
+		{
+			await conn.CloseAsync();
+		}
+	}
+
+    // Load devices
+    private List<string> devices_list = new List<string> { };
+
+	private async Task Get_Devices()
+	{
+		MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+		try
+		{
+			await conn.OpenAsync();
+
+			MySqlCommand cmd = new MySqlCommand("SELECT * FROM `devices`;", conn);
+
+			DbDataReader reader = await cmd.ExecuteReaderAsync();
+
+			while (await reader.ReadAsync())
+			{
+                devices_list.Add(reader["device_name"].ToString());
+			}
+		}
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("/manage_automations (Add_Automation_Dialog) -> Get_Devices", "Result", ex.ToString());
+		}
+		finally
+		{
+			await conn.CloseAsync();
+		}
+	}
 
     private async Task OK()
     {

@@ -48,39 +48,69 @@ namespace Windows.Helper
             {
                 Health.Check_Directories();
 
-                Logging.PowerShell("Helper.Powershell.Execute_Script", "Trying to execute command", type + "script:" + Environment.NewLine + script);
+                Logging.PowerShell("Helper.Powershell.Execute_Script", "Trying to execute command", type + " script length: " + script.Length);
 
-                Random random = new Random();
-                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                string random_id = new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());
-                string path = Application_Paths.program_data_scripts + @"\" + Randomnizer.Standard(12) + ".ps1";
+                if (string.IsNullOrWhiteSpace(script))
+                {
+                    Logging.Error("Helper.Powershell.Execute_Script", "Script is empty", "");
+                    return "-";
+                }
 
-                //Decode script
+                // Decode script from Base64
                 byte[] script_data = Convert.FromBase64String(script);
                 string decoded_script = Encoding.UTF8.GetString(script_data);
 
-                File.WriteAllText(path, decoded_script);
+                // Normalize line endings to Windows style (optional)
+                decoded_script = decoded_script.Replace("\r\n", "\n").Replace("\n", "\r\n");
 
-                Process cmd_process = new Process();
-                cmd_process.StartInfo.UseShellExecute = false;
-                cmd_process.StartInfo.RedirectStandardOutput = true;
-                cmd_process.StartInfo.CreateNoWindow = true;
+                using Process cmd_process = new Process();
+
                 cmd_process.StartInfo.FileName = "powershell.exe";
-                cmd_process.StartInfo.Arguments = "-executionpolicy bypass -file \"" + path + "\"";
+                // -Command - reads the script from StandardInput
+                cmd_process.StartInfo.Arguments = "-ExecutionPolicy Bypass -Command -";
+
+                cmd_process.StartInfo.UseShellExecute = false;
+                cmd_process.StartInfo.RedirectStandardInput = true;
+                cmd_process.StartInfo.RedirectStandardOutput = true;
+                cmd_process.StartInfo.RedirectStandardError = true;
+                cmd_process.StartInfo.CreateNoWindow = true;
+
                 cmd_process.Start();
-                string result = cmd_process.StandardOutput.ReadToEnd();
-                cmd_process.WaitForExit(120000);
 
-                //Delete the script after execution
-                File.Delete(path);
+                // Skript per StandardInput an PowerShell senden
+                using (StreamWriter writer = cmd_process.StandardInput)
+                {
+                    writer.Write(decoded_script);
+                }
 
-                Logging.PowerShell("Helper.Powershell.Execute_Script", "Command execution successfully", Environment.NewLine + " Result:" + result);
-                return result;
+                // Read output and error (blocking until process ends)
+                string output = cmd_process.StandardOutput.ReadToEnd();
+                string error = cmd_process.StandardError.ReadToEnd();
+
+                // Wait for process end, max. 1 day (86400000 ms)
+                bool exited = cmd_process.WaitForExit(86400000);
+                if (!exited)
+                {
+                    try { cmd_process.Kill(); } catch { }
+                    throw new TimeoutException("The script took too long and was canceled.");
+                }
+
+                // Log the output and error
+                if (!string.IsNullOrEmpty(error))
+                {
+                    Logging.PowerShell("Helper.Powershell.Execute_Script", "Script error output", error);
+                    return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
+                }
+                else
+                {
+                    Logging.PowerShell("Helper.Powershell.Execute_Script", "Command executed successfully", Environment.NewLine + "Result:" + output);
+                    return output;
+                }
             }
             catch (Exception ex)
             {
-                Logging.Error("Helper.Powershell.Execute_Script", "Failed executing script. Type: " + type + " Script: " + script, ex.ToString());
-                return "Error: " + ex.ToString();
+                Logging.Error("Helper.Powershell.Execute_Script", "Failed executing script. Type: " + type + " Script length: " + (script?.Length ?? 0), ex.ToString());
+                return "Error: " + ex.Message;
             }
         }
     }

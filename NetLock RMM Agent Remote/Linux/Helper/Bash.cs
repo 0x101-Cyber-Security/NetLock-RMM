@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
 using Global.Helper;
+using Global.Initialization;
 
 namespace Linux.Helper
 {
@@ -14,6 +15,8 @@ namespace Linux.Helper
         {
             try
             {
+                Health.Check_Directories();
+
                 Logging.Debug("Linux.Helper.Bash.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
 
                 if (String.IsNullOrEmpty(script))
@@ -58,17 +61,23 @@ namespace Linux.Helper
                     string output = process.StandardOutput.ReadToEnd();
                     string error = process.StandardError.ReadToEnd();
 
-                    // Wait for the process to exit, with a timeout of 2 minutes
-                    process.WaitForExit(120000);
+                    // Wait for process end, max. 1 day (86400000 ms)
+                    bool exited = process.WaitForExit(86400000);
+                    if (!exited)
+                    {
+                        try { process.Kill(); } catch { }
+                        throw new TimeoutException("The script took too long and was canceled.");
+                    }
 
-                    // Check for errors
+                    // Log the output and error
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Logging.Error("Linux.Helper.Bash.Execute_Script", "Error executing script", error);
+                        Logging.PowerShell("Linux.Helper.Bash.Execute_Script", "Script error output", error);
                         return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
                     }
                     else
                     {
+                        Logging.PowerShell("Linux.Helper.Bash.Execute_Script", "Command executed successfully", Environment.NewLine + "Result:" + output);
                         return output;
                     }
                 }

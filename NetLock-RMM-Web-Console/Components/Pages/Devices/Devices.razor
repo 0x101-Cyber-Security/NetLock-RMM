@@ -86,7 +86,7 @@
     }
 </style>
 
-  <MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
         <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
         <MudText Typo="Typo.h5" Class="animated-text">
@@ -136,17 +136,18 @@
                             <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                         </ToolBarContent>
                         <HeaderContent>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
+                                    <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_active_user)">Last active user</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;">
                                 <MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.uptime_monitoring_enabled)">
                                     @Localizer["uptime_monitoring"]
@@ -218,7 +219,7 @@
                                                 </span>
                                             </MudTd>
 
-                                            <MudTd DataLabel="IP-Adresse" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                            <MudTd DataLabel="IP address" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                                 <span style="display: flex; align-items: center;">
                                                     <MudIcon Icon="@Icons.Material.Filled.NetworkWifi1Bar" Size="Size.Small" class="desktop-icon" />&nbsp;@row.ip_address
                                                 </span>
@@ -233,6 +234,12 @@
                                             <MudTd DataLabel="@Localizer["domain"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                                 <span style="display: flex; align-items: center;">
                                                     <MudIcon Icon="@Icons.Material.Filled.Domain" Size="Size.Small" class="desktop-icon" />&nbsp;@row.domain
+                                                </span>
+                                            </MudTd>
+
+                                            <MudTd DataLabel="Last active user" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                                <span style="display: flex; align-items: center;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_active_user
                                                 </span>
                                             </MudTd>
 
@@ -341,6 +348,7 @@
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Title="Status" Size="Size.Small" />&nbsp;Edition: @operating_system</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Domain" Title="Status" Size="Size.Small" />&nbsp;@Localizer["domain"]: @domain</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Pages" Title="Status" Size="Size.Small" />&nbsp;@Localizer["architecture"]: @architecture</MudText>
+                                            <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.People" Title="Status" Size="Size.Small" />&nbsp;Last active user: @last_active_user</MudText>
 
                                             <MudText Class="mt-5 ml-2" Typo="Typo.h6">@Localizer["security"]</MudText>
 

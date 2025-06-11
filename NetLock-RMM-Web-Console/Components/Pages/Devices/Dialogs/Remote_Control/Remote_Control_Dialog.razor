@@ -54,6 +54,14 @@
 
 </style>
 
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
+</MudOverlay>
 
 <MudDialog>
     <TitleContent>
@@ -63,6 +71,18 @@
 
         <MudPaper>
             @{
+                if (!Configuration.Members_Portal.isCodeSigned)
+                {
+                    <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Error">
+                        Your version of NetLock RMM is not digitally signed. This may cause limitations such as restricted access to privileged processes (UAC).
+                        <br />
+                        For more information, see:
+                        <MudLink Href="https://docs.netlockrmm.com/en/web-console/remote-screen-control" Target="_blank">
+                            https://docs.netlockrmm.com/en/web-console/remote-screen-control
+                        </MudLink>
+                    </MudAlert>
+                }
+
                 if (remote_server_client_setup)
                 {
                     @if (!refresh_screen_timer_running)
@@ -130,8 +150,8 @@
 
                             <MudSelect Class="ml-2 mt-2" T="int" @bind-Value="remote_screen_refresh_ms" @bind-Value:after="Remote_Screen_Refresh_Timer_Restart" Label="@Localizer["resfresh_rate_ms"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                                 <MudSelectItem T="int" Value="250">250</MudSelectItem>
-                                <MudSelectItem T="int" Value="250">300</MudSelectItem>
-                                <MudSelectItem T="int" Value="250">450</MudSelectItem>
+                                <MudSelectItem T="int" Value="300">300</MudSelectItem>
+                                <MudSelectItem T="int" Value="450">450</MudSelectItem>
                                 <MudSelectItem T="int" Value="500">500</MudSelectItem>
                                 <MudSelectItem T="int" Value="750">750</MudSelectItem>
                                 <MudSelectItem T="int" Value="1000">1000</MudSelectItem>
@@ -172,24 +192,24 @@
 
                         </div>
 
-                        <!-- Bildbereich separat und scrollbar -->
+                        <!-- Image area separate and scrollable -->
                         <div id="image-container"
-                             class="image-wrapper"
-                             tabindex="0"
-                             @onkeydown="HandleKeyDown"
-                             @onblur="HandleBlur"
-                             @onfocus="HandleFocus">
+                        class="image-wrapper"
+                        tabindex="0"
+                        @onkeydown="HandleKeyDown"
+                        @onblur="HandleBlur"
+                        @onfocus="HandleFocus">
 
                             <img src="@imageSrc"
-                                 alt="Bild"
-                                 draggable="false"
-                                 class="interactive-image"
-                                 style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
-                                 @ref="imageRef"
-                                 @oncontextmenu="PreventAndHandleRightClick"
-                                 @onmousedown="StartDrag"
-                                 @onmouseup="EndDrag"
-                                 @onmousemove="OnMouseMove" />
+                            alt="Bild"
+                            draggable="false"
+                            class="interactive-image"
+                            style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
+                            @ref="imageRef"
+                            @oncontextmenu="PreventAndHandleRightClick"
+                            @onmousedown="StartDrag"
+                            @onmouseup="EndDrag"
+                            @onmousemove="OnMouseMove" />
                         </div>
 
                     }
@@ -207,7 +227,7 @@
     </DialogContent>
     <DialogActions>
 
-        <MudButton Class="mt-2" Size="Size.Small" Color="Color.Warning" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.StopScreenShare" @onclick="async () => { await Remote_Screen_Refresh_Timer_Stop(); }" >@Localizer["stop_remote_session"]</MudButton>
+        <MudButton Class="mt-2" Size="Size.Small" Color="Color.Warning" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.StopScreenShare" OnClick="Dispose">@Localizer["stop_remote_session"]</MudButton>
 
     </DialogActions>
 </MudDialog>
@@ -359,8 +379,6 @@
                 {
                     try
                     {
-                        Console.WriteLine("ReceiveClientResponseCheckConnection: " + command);
-
                         if (command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
                         {
                             connected = false;
@@ -392,8 +410,6 @@
                 {
                     try
                     {
-                        Console.WriteLine("ReceiveClientResponseRemoteControl: " + command);
-
                         if (connected && command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
                         {
                             connected = false;
@@ -426,7 +442,7 @@
                         // Set the image source
                         this.imageSrc = imageSrc;
 
-                        Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
+                        //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         if (recordSession || recordSessionForce)
                         {
@@ -596,24 +612,6 @@
         }, null, 0, remote_screen_refresh_ms);
     }
 
-    private async Task Remote_Screen_Refresh_Timer_Stop()
-    {
-        try
-        {
-            remote_screen_refresh_timer?.Dispose();
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/dashboard -> Remote_Screen_Refresh_Timer_Stop", "General error", ex.ToString());
-        }
-
-        refresh_screen_timer_running = false;
-
-        MudDialog.Close();
-
-        StateHasChanged();
-    }
-
     private async Task Remote_Screen_Refresh_Timer_Restart()
     {
         remote_screen_refresh_timer.Dispose();
@@ -686,7 +684,7 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
-            Console.WriteLine(ex.Message);
+            //Console.WriteLine(ex.Message);
         }
     }
 
@@ -755,7 +753,7 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "General error", ex.ToString());
-            Console.WriteLine(ex.Message);
+            //Console.WriteLine(ex.Message);
         }
     }
 
@@ -819,7 +817,7 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "General error", ex.ToString());
-            Console.WriteLine(ex.Message);
+            //Console.WriteLine(ex.Message);
         }
     }
 
@@ -888,7 +886,7 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Remote_Shell_Send_Command", "General error", ex.ToString());
-            Console.WriteLine(ex.Message);
+            //Console.WriteLine(ex.Message);
         }
     }
 
@@ -1049,7 +1047,7 @@
     private readonly List<double> zoomPresets = new() { 0.5, 0.75, 1.0, 1.5, 2.0 };
     #endregion
 
-	#region RemoteScreenRecording
+    #region RemoteScreenRecording
     private async Task StartRecordingSession()
     {
         recordSessionId = Randomizer.Handler.Number(6);
@@ -1066,9 +1064,9 @@
 
         // Create the new gif
         GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
-		
+
         loading_overlay = false;
-		StateHasChanged();
+        StateHasChanged();
 
         this.Snackbar.Add("Saved gif", Severity.Success);
     }
@@ -1177,8 +1175,6 @@
         }
     }
 
-
-
     private bool isFocused = false;
 
     [JSInvokable("HandleKeyDown")]
@@ -1202,7 +1198,7 @@
             ? string.Join("+", modifiers) + "+" + mainKey
             : mainKey;
 
-        Console.WriteLine($"Key pressed: {combo.ToLower()}");
+        //Console.WriteLine($"Key pressed: {combo.ToLower()}");
 
         await Remote_Keyboard_Input(combo.ToLower());
     }
@@ -1559,13 +1555,13 @@
 
     private async Task HandleMouseScroll(WheelEventArgs e)
     {
-        // Erkenne die Scroll-Richtung und Intensität
+        // Recognize the scroll direction and intensity
         double scrollX = e.DeltaX;
         double scrollY = e.DeltaY;
 
         //Console.WriteLine($"Mouse scrolled - X: {scrollX}, Y: {scrollY}");
 
-        // Leite die Scroll-Informationen an das Remote-Gerät weiter
+        // Forward the scroll information to the remote device
         //await SendScrollToRemoteDevice(scrollX, scrollY);
     }
 
@@ -1583,7 +1579,7 @@
 
     #endregion
 
-    public void Dispose()
+    public async void Dispose()
     {
         try
         {
@@ -1591,6 +1587,7 @@
             StateHasChanged();
 
             remote_screen_refresh_timer?.Dispose();
+            refresh_screen_timer_running = false;
 
             if (remote_server_client is not null)
             {
@@ -1601,8 +1598,10 @@
             if (recordSessionForce)
             {
                 // Create the new gif
-                GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
+                //GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms); // Currently disabled because it can cause a huge gif that causes out of memory
             }
+
+            MudDialog.Close();
 
             Logging.Handler.Debug("/dashboard -> Dispose", "Cleaned up SignalR and timers.", "");
         }

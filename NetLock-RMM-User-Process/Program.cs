@@ -242,21 +242,31 @@ class UserClient
                         break;
 
                     var inputLower = input.ToLowerInvariant();
-                        
-                    if (inputLower == "ctrl+a")
-                        KeyboardControl.SendCtrlA();
-                    else if (inputLower == "ctrl+c")
-                        KeyboardControl.SendCtrlC();
-                    else if (inputLower == "ctrl+v")
-                        KeyboardControl.SendCtrlV();
-                    else if (inputLower == "ctrl+x")
-                        KeyboardControl.SendCtrlX();
-                    else if (inputLower == "ctrl+z")
-                        KeyboardControl.SendCtrlZ();
-                    else if (inputLower == "ctrl+y")
-                        KeyboardControl.SendCtrlY();
-                    else
-                    {
+
+                        if (inputLower == "ctrl+keya")
+                            KeyboardControl.SendCtrlA();
+                        else if (inputLower == "ctrl+keyc")
+                            KeyboardControl.SendCtrlC();
+                        else if (inputLower == "ctrl+keyv")
+                            KeyboardControl.SendCtrlV();
+                        else if (inputLower == "ctrl+keyx")
+                            KeyboardControl.SendCtrlX();
+                        else if (inputLower == "ctrl+keyz")
+                            KeyboardControl.SendCtrlZ();
+                        else if (inputLower == "ctrl+keyy")
+                            KeyboardControl.SendCtrlY();
+                        else if (inputLower == "ctrl+keys")
+                            KeyboardControl.SendCtrlS();
+                        else if (inputLower == "ctrl+keyn")
+                            KeyboardControl.SendCtrlN();
+                        else if (inputLower == "ctrl+keyp")
+                            KeyboardControl.SendCtrlP();
+                        else if (inputLower == "ctrl+keyf")
+                            KeyboardControl.SendCtrlF();
+                        else if (inputLower == "ctrl+shift+keyt")
+                            KeyboardControl.SendCtrlShiftT();
+                        else
+                        {
                         var asciiCode = MapKeyStringToAscii(inputLower);
                         if (asciiCode.HasValue)
                         {
@@ -433,7 +443,7 @@ class UserClient
 
     public static class KeyCodes
     {
-        // Buchstaben
+        // Letters
         public const byte VK_A = 0x41;
         public const byte VK_B = 0x42;
         public const byte VK_C = 0x43;
@@ -461,7 +471,7 @@ class UserClient
         public const byte VK_Y = 0x59;
         public const byte VK_Z = 0x5A;
 
-        // Zahlen
+        // Numbers
         public const byte VK_0 = 0x30;
         public const byte VK_1 = 0x31;
         public const byte VK_2 = 0x32;
@@ -473,7 +483,7 @@ class UserClient
         public const byte VK_8 = 0x38;
         public const byte VK_9 = 0x39;
 
-        // Steuerungstasten
+        // Control buttons
         public const byte VK_CONTROL = 0x11;
         public const byte VK_SHIFT = 0x10;
         public const byte VK_ALT = 0x12;
@@ -490,13 +500,13 @@ class UserClient
         public const byte VK_PRIOR = 0x21; // Page Up
         public const byte VK_NEXT = 0x22;  // Page Down
 
-        // Pfeiltasten
+        // Arrow keys
         public const byte VK_LEFT = 0x25;
         public const byte VK_UP = 0x26;
         public const byte VK_RIGHT = 0x27;
         public const byte VK_DOWN = 0x28;
 
-        // Sonderzeichen
+        // Special characters
         public const byte VK_MINUS = 0xBD;      // -
         public const byte VK_EQUALS = 0xBB;     // =
         public const byte VK_LBRACKET = 0xDB;   // [
@@ -509,7 +519,7 @@ class UserClient
         public const byte VK_SLASH = 0xBF;      // /
         public const byte VK_GRAVE = 0xC0;      // `
 
-        // Funktionstasten
+        // Function keys
         public const byte VK_F1 = 0x70;
         public const byte VK_F2 = 0x71;
         public const byte VK_F3 = 0x72;
@@ -523,7 +533,7 @@ class UserClient
         public const byte VK_F11 = 0x7A;
         public const byte VK_F12 = 0x7B;
 
-        // NumPad Tasten
+        // NumPad buttons
         public const byte VK_NUMPAD0 = 0x60;
         public const byte VK_NUMPAD1 = 0x61;
         public const byte VK_NUMPAD2 = 0x62;
@@ -540,13 +550,13 @@ class UserClient
         public const byte VK_DECIMAL = 0x6E;
         public const byte VK_DIVIDE = 0x6F;
 
-        // Zusätzliche Tasten
+        // Additional buttons
         public const byte VK_CAPITAL = 0x14; // Caps Lock
         public const byte VK_SCROLL = 0x91;  // Scroll Lock
         public const byte VK_NUMLOCK = 0x90; // Num Lock
         public const byte VK_PAUSE = 0x13;   // Pause
         public const byte VK_SNAPSHOT = 0x2C; // Print Screen
-        public const byte VK_APPS = 0x5D;    // Kontextmenü-Taste (Applications key)
+        public const byte VK_APPS = 0x5D;    // Context menu key (Applications key)
     }
 
     public async Task Local_Server_Send_Message(string message)

@@ -206,6 +206,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         public string operating_system = String.Empty;
         public string architecture = String.Empty;
         public string platform = String.Empty;
+        public string last_active_user = String.Empty;
         public string domain = String.Empty;
         public string antivirus_solution = String.Empty;
         public string firewall_status = String.Empty;
@@ -3176,6 +3177,7 @@ WHERE device_id = @deviceId");
             public string firewall_status { get; set; } = "Empty";
             public string platform { get; set; } = "Empty";
             public bool uptime_monitoring_enabled { get; set; } = false;
+            public string last_active_user { get; set; } = "Empty";
         }
 
         public List<MySQL_Entity> mysql_data;
@@ -3254,6 +3256,7 @@ WHERE device_id = @deviceId");
                                 firewall_status = reader["firewall_status"].ToString() ?? String.Empty,
                                 platform = reader["platform"].ToString() ?? String.Empty,
                                 uptime_monitoring_enabled = (reader["uptime_monitoring_enabled"]?.ToString() == "1"),
+                                last_active_user = reader["last_active_user"].ToString() ?? String.Empty,
                             };
 
                             mysql_data.Add(entity);
@@ -3331,6 +3334,7 @@ WHERE device_id = @deviceId");
                             notes_old_string = await Base64.Handler.Decode(reader["notes"].ToString()) ?? String.Empty;
                             antivirus_products_string = reader["antivirus_products"].ToString() ?? String.Empty;
                             antivirus_information_json = reader["antivirus_information"].ToString() ?? String.Empty;
+                            last_active_user = reader["last_active_user"].ToString() ?? String.Empty;
                         }
                     }
                 }

@@ -38,7 +38,8 @@ namespace NetLock_RMM_Server.SignalR
             public string? ram { get; set; }
             public string? ram_usage { get; set; }
             public string? tpm { get; set; }
-            // public string? environment_variables { get; set; }
+            public string? environment_variables { get; set; }
+            public string? last_active_user { get; set; }
         }
 
         public class Admin_Identity

@@ -94,7 +94,7 @@
 
                 if (permissions_tenants_locations_manage)
                 {
-                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Settings" @onclick="@(() => Update_Selected_Location(location_selectedRowContent))">@Localizer["manage"]</MudButton>
+                    <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Settings" Disabled="@(String.IsNullOrEmpty(location_selectedRowContent))" @onclick="@(() => Update_Selected_Location(location_selectedRowContent))">@Localizer["manage"]</MudButton>
                 }
 
                 <MudPaper Class="pa-0 mt-5">

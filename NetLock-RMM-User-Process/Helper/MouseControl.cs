@@ -68,7 +68,7 @@ namespace Helper
             return screens.ToArray();
         }
 
-        // Angepasste Methode zum Bewegen der Maus auf dem richtigen Bildschirm
+        // Customized method for moving the mouse on the correct screen
         public static async Task MoveMouse(int x, int y, int screenIndex)
         {
             try
@@ -82,11 +82,11 @@ namespace Helper
 
                 var screen = screens[screenIndex];
 
-                // Berechne die absoluten Koordinaten für den angegebenen Bildschirm
+                // Calculate the absolute coordinates for the specified screen
                 int absoluteX = screen.Left + x;
                 int absoluteY = screen.Top + y;
 
-                // Setze den Mauszeiger auf die berechneten absoluten Koordinaten
+                // Place the mouse pointer on the calculated absolute coordinates
                 SetCursorPos(absoluteX, absoluteY);
             }
             catch (Exception ex)
@@ -99,9 +99,9 @@ namespace Helper
         {
             try
             {
-                // Simuliere einen Mausklick
-                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); // Linke Maustaste drücken
-                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);   // Linke Maustaste loslassen
+                // Simulate a mouse click
+                mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0); // Press left mouse button
+                mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);   // Release left mouse button
             }
             catch (Exception ex)
             {
@@ -114,9 +114,9 @@ namespace Helper
         {
             try
             {
-                // Simuliere einen rechten Mausklick
-                mouse_event(0x0008, 0, 0, 0, 0); // Rechte Maustaste drücken
-                mouse_event(0x0010, 0, 0, 0, 0); // Rechte Maustaste loslassen
+                // Simulate a right mouse click
+                mouse_event(0x0008, 0, 0, 0, 0); // Press the right mouse button
+                mouse_event(0x0010, 0, 0, 0, 0); // Release the right mouse button
             }
             catch (Exception ex)
             {
@@ -128,7 +128,7 @@ namespace Helper
         {
             try
             {
-                // Linke Maustaste drücken (halten)
+                // Press (hold) the left mouse button
                 mouse_event(MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0);
             }
             catch (Exception ex)
@@ -141,7 +141,7 @@ namespace Helper
         {
             try
             {
-                // Linke Maustaste loslassen
+                // Release left mouse button
                 mouse_event(MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
             }
             catch (Exception ex)

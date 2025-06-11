@@ -37,7 +37,8 @@ namespace NetLock_RMM_Server.Agent.Windows
             public string? ram { get; set; }
             public string? ram_usage { get; set; }
             public string? tpm { get; set; }
-            // public string? environment_variables { get; set; }
+            public string? environment_variables { get; set; }
+            public string? last_active_user { get; set; }
         }
 
         public class Admin_Identity
@@ -184,6 +185,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "`ram`, " +
                         "`ram_usage`, " +
                         "`tpm`, " +
+                        "`last_active_user`, " +
                         "`environment_variables`) " +
                         "VALUES " +
                         "(@agent_version, " +
@@ -212,6 +214,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "@ram, " +
                         "@ram_usage, " +
                         "@tpm, " +
+                        "@last_active_user, " +
                         "@environment_variables);";
 
                     MySqlCommand cmd = new MySqlCommand(execute_query, conn);
@@ -242,7 +245,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@ram", device_identity.ram);
                     cmd.Parameters.AddWithValue("@ram_usage", device_identity.ram_usage);
                     cmd.Parameters.AddWithValue("@tpm", device_identity.tpm);
-                    cmd.Parameters.AddWithValue("@environment_variables", "");
+                    cmd.Parameters.AddWithValue("@environment_variables", device_identity.environment_variables);
+                    cmd.Parameters.AddWithValue("@last_active_user", device_identity.last_active_user);
 
                     cmd.ExecuteNonQuery();
 
@@ -290,7 +294,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                         "`ram_usage` = @ram_usage, " +
                         "`tpm` = @tpm, " +
                         "`environment_variables` = @environment_variables, " +
-                        "`synced` = @synced " +
+                        "`synced` = @synced, " +
+                        "`last_active_user` = @last_active_user " +
                         "WHERE device_name = @device_name AND location_id = @location_id AND tenant_id = @tenant_id";
 
                     MySqlCommand cmd = new MySqlCommand(execute_query, conn);
@@ -321,6 +326,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@tpm", device_identity.tpm);
                     cmd.Parameters.AddWithValue("@environment_variables", "");
                     cmd.Parameters.AddWithValue("@synced", synced);
+                    cmd.Parameters.AddWithValue("@last_active_user", device_identity.last_active_user);
 
                     cmd.ExecuteNonQuery();
                 }

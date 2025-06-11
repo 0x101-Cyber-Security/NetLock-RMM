@@ -66,7 +66,7 @@
         @{
             if (loading_overlay)
             {
-                <MudProgressLinear Size="Size.Medium" Class="mt-2" Color="Color.Info" Indeterminate="true">
+                <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
                     <MudText Typo="Typo.body1">@Localizer["execution_in_progress"]</MudText>
                 </MudProgressLinear>
             }
@@ -471,7 +471,6 @@
             if (!result.Canceled)
             {
                 var resultData = result.Data;
-                Console.WriteLine(resultData);
 
                 if (resultData != null)
                 {

@@ -57,6 +57,7 @@ namespace NetLock_RMM_Agent_Comm
         public static string ram = string.Empty;
         public static string ram_usage = string.Empty;
         public static string tpm = string.Empty;
+        public static string last_active_user = string.Empty;
 
         //Datatables
         public static DataTable events_data_table = new DataTable();

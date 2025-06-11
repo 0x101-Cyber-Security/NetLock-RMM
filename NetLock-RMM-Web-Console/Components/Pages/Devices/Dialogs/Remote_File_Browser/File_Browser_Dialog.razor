@@ -131,14 +131,14 @@
 
                     if (uploading_linear)
                     {
-                        <MudProgressLinear @bind-Value="_uploadProgress" Size="Size.Medium" Class="mt-2" Color="Color.Info">
+                        <MudProgressLinear @bind-Value="_uploadProgress" Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info">
                             <MudText Typo="Typo.body1">@_uploadProgressDisplayString</MudText>
                         </MudProgressLinear>
                     }
 
                     if (uploading_indeterminate)
                     {
-                        <MudProgressLinear Size="Size.Medium" Class="mt-2" Color="Color.Info" Indeterminate="true">
+                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
                             <MudText Typo="Typo.body1">@_uploadProgressDisplayString</MudText>
                         </MudProgressLinear>
                     }
@@ -291,6 +291,20 @@
                 {
                     remote_file_browser_drives_list = command.Split(',').ToList();
                     remote_file_browser_drive_string = remote_file_browser_drives_list[0];
+
+                    if (platform == "Linux" || platform == "MacOS")
+                    {
+                        // Check if root (/) is in the list, if so, select it
+						if (remote_file_browser_drives_list.Contains("/"))
+						{
+							remote_file_browser_drive_string = "/";
+						}
+						else
+						{
+							// If not, select the first drive
+							remote_file_browser_drive_string = remote_file_browser_drives_list[0];
+						}
+                    }
 
                     // Load the first drive // its not async for a reason, we need to wait for the drives to be loaded
                     Remote_File_Browser_Get_Index(remote_file_browser_drive_string, false);
@@ -1741,13 +1755,23 @@
 
         Logging.Handler.Debug("/dashboard -> Remote_File_Browser_Create_Directory_Dialog", "Result", result.Data.ToString());
 
-        // Extract file_name and content from result, its split with,
-        string[] result_array = result.Data.ToString().Split("\u001F");
-        string file_name = result_array[0];
-        string file_content = result_array[1];
+        // Datei-Name aus dem Dialogergebnis
+        string[] resultContent = result.Data.ToString().Split('\u001F');
+		string fileName = resultContent[0]; // Dateiname
+		string file_content = resultContent[1]; // Dateiinhalte
 
+        fileName = fileName.Trim();
 
-        await Remote_File_Browser_Create_File(_remote_file_path + "\\" + file_name, file_content);
+		string new_path = Path.Combine(_remote_file_path, fileName);
+
+        // Falls Linux oder MacOS, Slashes anpassen
+        if (platform == "Linux" || platform == "MacOS")
+        {
+            new_path = new_path.Replace("\\", "/");
+        }
+
+        // Datei erstellen
+        await Remote_File_Browser_Create_File(new_path, file_content);
     }
 
     private bool remote_file_browser_move_file_dialog_open = false;
@@ -1890,20 +1914,28 @@
                             var fileContent = new ProgressableStreamContent(new StreamContent(fileStream), 4096, progress =>
                             {
                                 _uploadProgress = progress;
-                                _uploadProgressDisplayString = $"{Localizer["uploading_file_to_server"].ToString()}: {progress:0.00}%";
+                                _uploadProgressDisplayString = $"{Localizer["uploading_file_to_server"]}: {progress:0.00}%";
                                 InvokeAsync(StateHasChanged); // Update UI with progress
                             });
 
-                            // Set the content headers for the file (based on the file type)
-                            fileContent.Headers.ContentType = new MediaTypeHeaderValue(_file.ContentType);
+                            // Determine content type or fallback to application/octet-stream
+                            var contentType = string.IsNullOrWhiteSpace(_file.ContentType) ? "application/octet-stream" : _file.ContentType;
+
+                            // Optional logging if ContentType is missing
+                            if (string.IsNullOrWhiteSpace(_file.ContentType))
+                            {
+                                Logging.Handler.Error("/manage_files -> Upload_File", $"Missing ContentType for file: {_file.Name}", "");
+                            }
+
+                            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
 
                             // Add the file content to the MultipartFormDataContent
                             content.Add(fileContent, "file", _file.Name);
                         }
                         catch (IOException ex)
                         {
-                            Logging.Handler.Error("/manage_files -> Upload_File", $"File exceeds max size: {ex.ToString()}", "");
-                            Snackbar.Add($"{Localizer["The file exceeds the maximum allowed size of"].ToString()} 10 GB.", Severity.Error);
+                            Logging.Handler.Error("/manage_files -> Upload_File", $"File exceeds max size: {ex}", "");
+                            Snackbar.Add($"{Localizer["The file exceeds the maximum allowed size of"]} 10 GB.", Severity.Error);
                             return;
                         }
                     }

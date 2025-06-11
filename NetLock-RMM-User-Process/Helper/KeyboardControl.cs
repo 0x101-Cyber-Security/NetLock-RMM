@@ -9,15 +9,15 @@ namespace Helper
 {
     internal class KeyboardControl
     {
-        // P/Invoke für keybd_event
+        // P/Invoke for keybd_event
         [DllImport("user32.dll", SetLastError = true)]
         public static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
-        // Konstanten für Keydown und Keyup
+        // Constants for keydown and keyup
         private const uint KEYEVENTF_KEYDOWN = 0x0000;
         private const uint KEYEVENTF_KEYUP = 0x0002;
 
-        // Virtual-Key-Codes für spezielle Tasten
+        // Virtual key codes for special keys
         private const byte VK_CONTROL = 0x11;
         private const byte VK_SHIFT = 0x10;
         private const byte VK_ALT = 0x12;

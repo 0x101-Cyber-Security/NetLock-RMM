@@ -73,6 +73,8 @@ namespace NetLock_RMM_Agent_Remote
             public string ram { get; set; }
             public string ram_usage { get; set; }
             public string tpm { get; set; }
+            public string environment_variables { get; set; }
+            public string last_active_user { get; set; }
         }
 
         public class Command_Entity
@@ -532,6 +534,9 @@ namespace NetLock_RMM_Agent_Remote
                     // Send the response back to the server
                     if (!String.IsNullOrEmpty(command_object.type.ToString()))
                     {
+                        if (String.IsNullOrEmpty(result))
+                            result = "Command executed. No result returned.";
+
                         Logging.Debug("Client", "Sending response back to the server", "result: " + result + "response_id: " + command_object.response_id);
                         await remote_server_client.InvokeAsync("ReceiveClientResponse", command_object.response_id, result);
                         Logging.Debug("Client", "Response sent back to the server", "result: " + result + "response_id: " + command_object.response_id);

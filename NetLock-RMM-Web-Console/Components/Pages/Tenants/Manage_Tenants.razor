@@ -135,7 +135,7 @@
 
                 if (permissions_tenants_manage)
                 {
-                    <MudButton Class="ml-2 mt-5" Size=Size.Small Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Settings" @onclick="@(() => UpdateSelectedTenant(tenants_selectedRowContent))">@Localizer["manage"]</MudButton>
+                    <MudButton Class="ml-2 mt-5" Size=Size.Small Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Settings" Disabled="@(String.IsNullOrEmpty(tenants_selectedRowContent))" @onclick="@(() => UpdateSelectedTenant(tenants_selectedRowContent))">@Localizer["manage"]</MudButton>
                 }
 
                 <MudTooltip Text="@Localizer["export_data"]">

@@ -50,6 +50,8 @@ namespace Global.Online_Mode
             public string ram { get; set; }
             public string ram_usage { get; set; }
             public string tpm { get; set; }
+            public string environment_variables { get; set; }
+            public string last_active_user { get; set; }
         }
 
         public class Processes
@@ -307,6 +309,10 @@ namespace Global.Online_Mode
                     // Get TPM
                     Device_Worker.tpm = Device_Information.Hardware.TPM_Status();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
+
+                    // Get last_active_user
+                    Device_Worker.last_active_user = Device_Information.OS.Get_Last_Active_User();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "last_active_user", Device_Worker.last_active_user);
                 }
                 else if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
                 {
@@ -369,6 +375,10 @@ namespace Global.Online_Mode
                     // Get TPM
                     Device_Worker.tpm = Device_Information.Hardware.TPM_Status();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "tpm_IsEnabled_InitialValue", Device_Worker.tpm);
+
+                    // Get last_active_user
+                    Device_Worker.last_active_user = Device_Information.OS.Get_Last_Active_User();
+                    Logging.Debug("Online_Mode.Handler.Authenticate", "last_active_user", Device_Worker.last_active_user);
                 }
 
                 //Create JSON
@@ -397,6 +407,8 @@ namespace Global.Online_Mode
                     ram = Device_Worker.ram,
                     ram_usage = Device_Worker.ram_usage,
                     tpm = Device_Worker.tpm,
+                    environment_variables = "-",
+                    last_active_user = Device_Worker.last_active_user,
                 };
 
                 // Create the object that contains the device_identity object
@@ -541,6 +553,8 @@ namespace Global.Online_Mode
                     ram = Device_Worker.ram,
                     ram_usage = Device_Worker.ram_usage,
                     tpm = Device_Worker.tpm,
+                    environment_variables = "-",
+                    last_active_user = Device_Worker.last_active_user,
                 };
 
                 // Get the processes list
@@ -720,6 +734,8 @@ namespace Global.Online_Mode
                     ram = Device_Worker.ram,
                     ram_usage = Device_Worker.ram_usage,
                     tpm = Device_Worker.tpm,
+                    environment_variables = "-",
+                    last_active_user = Device_Worker.last_active_user,
                 };
 
                 // Create the object that contains the device_identity object

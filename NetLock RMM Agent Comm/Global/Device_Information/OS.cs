@@ -9,6 +9,8 @@ using Windows.Helper;
 using Global.Helper;
 using System.Text.Json;
 using NetLock_RMM_Agent_Comm;
+using System.Diagnostics.Eventing.Reader;
+using System.Net.Http.Headers;
 
 namespace Global.Device_Information
 {
@@ -153,12 +155,12 @@ namespace Global.Device_Information
 
                 // Return the list of antivirus products as a JSON array
                 string antivirus_products_json = "[" + string.Join("," + Environment.NewLine, antivirus_productsJsonList) + "]";
-                Logging.Device_Information("Device_Information.Windows.Antivirus_Products", "antivirus_products_json", antivirus_products_json);
+                Logging.Device_Information("Device_Information.OS.Antivirus_Products", "antivirus_products_json", antivirus_products_json);
                 return antivirus_products_json;
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Windows.Antivirus_Products", "Collect antivirus products", ex.ToString());
+                Logging.Error("Device_Information.OS.Antivirus_Products", "Collect antivirus products", ex.ToString());
                 return "[]";
             }
         }
@@ -200,7 +202,7 @@ namespace Global.Device_Information
     
                         // Serialize the antivirus information object into a JSON string
                         antivirus_information_json = JsonSerializer.Serialize(antivirus_information, new JsonSerializerOptions { WriteIndented = true });
-                        Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "antivirus_information_json", antivirus_information_json);
+                        Logging.Device_Information("Device_Information.OS.Antivirus_Information", "antivirus_information_json", antivirus_information_json);
                     }
                 }
 
@@ -209,7 +211,7 @@ namespace Global.Device_Information
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Windows.Antivirus_Information", "Collect antivirus information", ex.ToString());
+                Logging.Error("Device_Information.OS.Antivirus_Information", "Collect antivirus information", ex.ToString());
                 return "{}";
             }
         }
@@ -273,8 +275,38 @@ namespace Global.Device_Information
             }
             catch (Exception ex)
             {
-                Logging.Error("Device_Information.Windows.Get_Last_Boot_Time", "Error retrieving last boot time", ex.Message);
+                Logging.Error("Device_Information.OS.Get_Last_Boot_Time", "Error retrieving last boot time", ex.ToString());
                 return null;
+            }
+        }
+
+        public static string Get_Last_Active_User()
+        {
+            try
+            {
+                string lastLoggedOnUser = "-";
+
+                if (OperatingSystem.IsWindows())
+                {
+                    lastLoggedOnUser = Windows.Helper.Registry.HKLM_Read_Value(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI", "LastLoggedOnUser");
+                }
+                else if (OperatingSystem.IsLinux())
+                {
+                    // Get the last active user from who command including ip
+                    lastLoggedOnUser = Linux.Helper.Bash.Execute_Script("Get_Last_Active_User", false, "who | awk '{print $1, $5}' | head -n 1");
+                }
+                else if (OperatingSystem.IsMacOS())
+                {
+                    // Trim any whitespace and return the user
+                    lastLoggedOnUser = MacOS.Helper.Zsh.Execute_Script("Get_Last_Active_User", false, "whoami");
+                }
+
+                return lastLoggedOnUser;
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Device_Information.OS.Get_Last_Active_User", "Error retrieving last active user", ex.ToString());
+                return "-";
             }
         }
     }

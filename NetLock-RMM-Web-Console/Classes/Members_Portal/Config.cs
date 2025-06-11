@@ -1,8 +1,4 @@
-﻿namespace NetLock_RMM_Web_Console.Classes.Members_Portal
+namespace NetLock_RMM_Web_Console.Classes.Members_Portal
 {
-    public class Config
-    {
-        public bool Enabled { get; set; } = false;
-        public bool Cloud { get; set; } = false;
-    }
+    //OSSCH_START c9a77c1e-df65-4e20-8f1c-395b317b682e //OSSCH_END
 }

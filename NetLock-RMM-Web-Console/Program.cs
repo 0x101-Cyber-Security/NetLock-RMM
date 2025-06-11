@@ -80,14 +80,9 @@ if (Web_Console.title == "Your company name")
 
 var language = builder.Configuration["Webinterface:Language"];
 
-// Members Portal Api
-var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Web_Console.Classes.Members_Portal.Config>() ?? new NetLock_RMM_Web_Console.Classes.Members_Portal.Config();
-
-if (membersPortal.Enabled)
-    Members_Portal.api_enabled = true;
-
-if (membersPortal.Cloud)
-    Members_Portal.cloud_enabled = true;
+// Check license code signed
+//OSSCH_START 8ae76d76-0746-436a-b83d-433aeca8e6c1 //OSSCH_END
+Console.WriteLine("---------Loader_End----------");
 
 // Output OS
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
@@ -376,7 +371,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START c351b105-fe21-45ae-a427-afa741160f4a //OSSCH_END
+//OSSCH_START 4a907f3e-5378-44fa-8ca4-a90ebaeab5d6 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
