@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using Helper.ScreenControl;
 
 namespace Helper
 {
@@ -232,10 +233,25 @@ namespace Helper
             try
             {
                 // Strg + F
-                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYDOWN, UIntPtr.Zero); // Strg drücken
-                keybd_event(VK_F, 0, KEYEVENTF_KEYDOWN, UIntPtr.Zero);       // F drücken
-                keybd_event(VK_F, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);         // F loslassen
-                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);   // Strg loslassen
+                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYDOWN, UIntPtr.Zero); // Press Ctrl
+                keybd_event(VK_F, 0, KEYEVENTF_KEYDOWN, UIntPtr.Zero);       // F press
+                keybd_event(VK_F, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);         // F release
+                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);   // Release Ctrl
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to send key: {ex.Message}");
+            }
+        }
+
+        // Send ctrl+alt+delete
+        public static void SendCtrlAltDelete()
+        {
+            try
+            {
+                Helper.ScreenControl.User32.SendSAS(AsUser: false);
+                Helper.ScreenControl.User32.SendSAS(true);
+                Console.WriteLine("Ctrl+Alt+Delete sent successfully.");
             }
             catch (Exception ex)
             {

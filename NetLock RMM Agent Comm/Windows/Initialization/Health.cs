@@ -85,5 +85,13 @@ namespace Windows.Initialization.Health
             Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM User Agent");
             Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent", Application_Paths.netlock_user_process_uac_exe);
         }
+
+        // Software Secure Attention Sequence
+        public static void SaS()
+        {
+            // Write the NetLock RMM SAS to the registry, if it does not exist
+            Logging.Debug("Initialization.Health.SAS", "Write to registry", "SoftwareSASGeneration");
+            Registry.HKLM_Write_Value(Application_Paths.hklm_sas_reg_path, "SoftwareSASGeneration", "3");
+        }
     }
 }

@@ -96,6 +96,7 @@ namespace NetLock_RMM_Agent_Comm
             Windows.Initialization.Health.Handler.Check_Directories();
             Windows.Initialization.Health.Handler.Check_Registry();
             Windows.Initialization.Health.Handler.User_Process();
+            Windows.Initialization.Health.Handler.SaS();
 
             // Set up synchronisation timer
             try

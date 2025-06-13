@@ -265,6 +265,8 @@ class UserClient
                             KeyboardControl.SendCtrlF();
                         else if (inputLower == "ctrl+shift+keyt")
                             KeyboardControl.SendCtrlShiftT();
+                        else if (inputLower == "ctrlaltdel")
+                            KeyboardControl.SendCtrlAltDelete();
                         else
                         {
                         var asciiCode = MapKeyStringToAscii(inputLower);

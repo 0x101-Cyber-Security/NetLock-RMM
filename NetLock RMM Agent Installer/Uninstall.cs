@@ -64,8 +64,11 @@ namespace NetLock_RMM_Agent_Installer
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Agent_Health.exe\"");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process.exe");
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_User_Process.exe\"");
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process_UAC.exe");
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_User_Process_UAC.exe\"");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe"); // kill legacy process
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\""); // kill legacy process
+
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
             }

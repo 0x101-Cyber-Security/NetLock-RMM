@@ -264,7 +264,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 8bd7c5b5-5068-40ba-9dd0-21c8d996931b //OSSCH_END
+        //OSSCH_START 9fb60c4f-b882-4b56-912b-decdd2187dda //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1362,7 +1362,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START d7db3903-7930-4de7-9ec0-8dd9220f7d8d //OSSCH_END
+    //OSSCH_START c81b6451-7ee3-49f7-9dfd-d8635f4779e7 //OSSCH_END
 }
 
 /*

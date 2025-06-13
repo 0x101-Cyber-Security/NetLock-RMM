@@ -10,6 +10,7 @@ using System.Security.AccessControl;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Globalization;
+using Windows.Helper.ScreenControl;
 
 namespace NetLock_RMM_Agent_Remote
 {
@@ -496,6 +497,13 @@ namespace NetLock_RMM_Agent_Remote
                                 try
                                 {
                                     Logging.Debug("Service.Setup_SignalR", "Remote Control command", command_object.command);
+
+                                    // Check if ctrlaltdel and send through SAS instead
+                                    if (command_object.remote_control_keyboard_input == "ctrlaltdel")
+                                    {
+                                        Logging.Debug("Service.Setup_SignalR", "Sending SAS for ctrlaltdel", command_object.remote_control_username);
+                                        User32.SendSAS(true); 
+                                    }
 
                                     //  Create the JSON object
                                     var jsonObject = new

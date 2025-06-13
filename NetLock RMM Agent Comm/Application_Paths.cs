@@ -61,6 +61,7 @@ namespace NetLock_RMM_Agent_Comm
         public static string netlock_rustdesk_reg_path = @"SOFTWARE\WOW6432Node\NetLock RMM\Comm Agent\RustDesk";
         public static string netlock_support_mode_reg_path = @"SOFTWARE\WOW6432Node\NetLock RMM\Comm Agent\Support_Mode";
         public static string hklm_run_directory_reg_path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run";
+        public static string hklm_sas_reg_path = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System";
 
         // Other
         public static string just_installed = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "just_installed.txt");
