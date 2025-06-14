@@ -1,7 +1,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 
-namespace Helper.ScreenControl;
+namespace NetLock_RMM_User_Process.Helper.ScreenControl;
 // Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class User32
@@ -1302,7 +1302,28 @@ public static class User32
     [DllImport("user32.dll")]
     public static extern nint SetClipboardData(int Format, nint hMem);
 
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    private static extern IntPtr GetClipboardData(uint uFormat);
+
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr GlobalLock(IntPtr hMem);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool GlobalUnlock(IntPtr hMem);
+
+
+    const uint CF_UNICODETEXT = 13;
+    const uint GMEM_MOVEABLE = 0x0002;
+
     [DllImport("user32.dll", EntryPoint = "ShowWindow", SetLastError = true)]
+
     public static extern bool ShowWindow(nint hWnd, int nCmdShow);
     /* 
 *  SystemParametersInfo(
@@ -1345,5 +1366,77 @@ public static class User32
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetUserObjectInformationW(nint hObj, int nIndex,
          [Out] byte[] pvInfo, uint nLength, out uint lpnLengthNeeded);
+    #endregion
+
+    #region Methods
+
+
+    public static void SetClipboardText(string text)
+    {
+        if (!OpenClipboard(IntPtr.Zero))
+            throw new Exception("Clipboard konnte nicht geöffnet werden.");
+
+        try
+        {
+            EmptyClipboard();
+
+            int bytes = (text.Length + 1) * 2; // Unicode-Zeichen = 2 Bytes
+            IntPtr hGlobal = GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)bytes);
+            if (hGlobal == IntPtr.Zero)
+                throw new Exception("GlobalAlloc fehlgeschlagen.");
+
+            IntPtr target = GlobalLock(hGlobal);
+            if (target == IntPtr.Zero)
+                throw new Exception("GlobalLock fehlgeschlagen.");
+
+            try
+            {
+                Marshal.Copy(text.ToCharArray(), 0, target, text.Length);
+                Marshal.WriteInt16(target, text.Length * 2, 0); // Null-Terminator
+            }
+            finally
+            {
+                GlobalUnlock(hGlobal);
+            }
+
+            if (SetClipboardData(CF_UNICODETEXT, hGlobal) == IntPtr.Zero)
+                throw new Exception("SetClipboardData fehlgeschlagen.");
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+    }
+
+    // Get users clipboard content
+    public static string GetClipboardText()
+    {
+        if (!OpenClipboard(IntPtr.Zero))
+            throw new Exception("Clipboard konnte nicht geöffnet werden.");
+        try
+        {
+            nint hData = GetClipboardData(CF_UNICODETEXT);
+            if (hData == IntPtr.Zero)
+                return string.Empty;
+            IntPtr target = GlobalLock(hData);
+            if (target == IntPtr.Zero)
+                throw new Exception("GlobalLock fehlgeschlagen.");
+            try
+            {
+                Console.WriteLine("Clipboard content: " + Marshal.PtrToStringUni(target));
+                return Marshal.PtrToStringUni(target);
+            }
+            finally
+            {
+                GlobalUnlock(hData);
+            }
+        }
+        finally
+        {
+            CloseClipboard();
+        }
+    }
+
+
     #endregion
 }

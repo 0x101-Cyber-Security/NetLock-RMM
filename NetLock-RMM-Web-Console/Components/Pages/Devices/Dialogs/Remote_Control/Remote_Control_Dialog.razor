@@ -1,4 +1,4 @@
-﻿@using MySqlConnector
+@using MySqlConnector
 @using System.Data.Common
 @using System.Text.Json
 @using OfficeOpenXml
@@ -65,7 +65,7 @@
 
 <MudDialog>
     <TitleContent>
-        <MudText Typo="Typo.h5">Remote Control (@device_name) BETA</MudText>
+        <MudText Typo="Typo.h5">Remote Control (@device_name)</MudText>
     </TitleContent>
     <DialogContent>
 
@@ -74,7 +74,7 @@
                 if (!Configuration.Members_Portal.isCodeSigned)
                 {
                     <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Error">
-                        Your version of NetLock RMM is not digitally signed. This may cause limitations such as restricted access to privileged processes (UAC).
+                        Your version of NetLock RMM is not code signed. Code signing is only included in the Pro & Cloud membership. This may cause limitations such as restricted access to privileged processes (UAC).
                         <br />
                         For more information, see:
                         <MudLink Href="https://docs.netlockrmm.com/en/web-console/remote-screen-control" Target="_blank">
@@ -120,7 +120,7 @@
                     else if (connected && !rendered)
                     {
                         <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
-                            <MudText Typo="Typo.body1">No screen output. Select another user session.</MudText>
+                            <MudText Typo="Typo.body1">No screen output. Select another user session. If you triggered a UAC or secure dialog, you need to select the machine name.</MudText>
                         </MudProgressLinear>
 
                         <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true"  OnClick="Remote_Get_Users" >Fetch users</MudButton>
@@ -139,8 +139,14 @@
                     else
                     {
                         <!-- UI-Bar mit MudSelects und Zoom -->
-                        <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; padding: 1rem;">
-
+                        <div style="
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;  /* Abstand zwischen Buttons */
+        justify-content: flex-start; /* Buttons linksbündig */
+        padding: 0.25rem;
+                ">
                             <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                                 @foreach (string user in users)
                                 {
@@ -174,25 +180,61 @@
                                 }
                             }
 
-                            <MudButton Class="ml-2 mt-2" Variant="Variant.Filled" @onclick="@(() => Remote_Keyboard_Input("ctrlaltdel"))">
-                               Ctrl + Alt + Delete
-                            </MudButton>
+                            <MudSwitch Class="ml-2 mt-2" @bind-Value="isClipboardEnabled" Color="Color.Primary" Label="Clipboard" />
 
-                            <MudButton Class="ml-2 mt-2" Variant="Variant.Outlined" OnClick="ToggleFullScreen">
-                                Fullscreen
-                            </MudButton>
+                            <MudTooltip Text="Send Ctrl + Alt + Delete">
+                                <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.LockOpen" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" @onclick="@(() => Remote_Keyboard_Input("ctrlaltdel"))"></MudIconButton>
+                            </MudTooltip>
 
-                            @if (!recordSessionForce)
+                            @if (permissions_devices_remote_shell)
                             {
-                                @if (!recordSession)
+                                <MudTooltip Text="Open remote shell">
+                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Terminal" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="Remote_Shell_Dialog"></MudIconButton>
+                                </MudTooltip>
+                            }
+
+                            @if(permissions_devices_remote_file_browser)
+                            {
+                                <MudTooltip Text="Open remote file browser">
+                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="Remote_File_Browser_Dialog"></MudIconButton>
+                                </MudTooltip>
+                            }
+
+                            @if (Configuration.Members_Portal.isCodeSigned)
+                            {
+                                @if (!recordSessionForce)
                                 {
-                                    <MudButton Class="ml-2 mt-2" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.PlayCircle" OnClick="StartRecordingSession">Start recording</MudButton>
-                                }
-                                else
-                                {
-                                    <MudButton Class="ml-2 mt-2" Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.StopCircle" OnClick="StopRecordingSession">Stop recording</MudButton>
+                                    @if (!recordSession)
+                                    {
+                                        <MudTooltip Text="Start recording">
+                                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.PlayCircle" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="StartRecordingSession"></MudIconButton>
+                                        </MudTooltip>
+                                    }
+                                    else
+                                    {
+                                        <MudTooltip Text="Stop recording">
+                                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.StopCircle" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="StopRecordingSession"></MudIconButton>
+                                        </MudTooltip>
+                                    }
                                 }
                             }
+                            else
+                            {
+                                <MudTooltip Text="Start recording (only for Pro users)">
+                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.PlayCircle" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" Disabled="true" OnClick="StartRecordingSession"></MudIconButton>
+                                </MudTooltip>
+                            }
+
+                            @if (isMobile)
+                            {
+                                <MudTooltip Text="Toggle mobile keyboard">
+                                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Keyboard" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="ToggleMobileKeyboard"></MudIconButton>
+                                </MudTooltip>
+                            }
+                            
+                            <MudTooltip Text="Toggle fullscreen">
+                                <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Fullscreen" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="ToggleFullScreen"></MudIconButton>
+                            </MudTooltip>
 
                         </div>
 
@@ -238,14 +280,56 @@
 
 @code {
 
+    #region Permissions System
+
+    private string netlock_username = String.Empty;
+    private string token = String.Empty;
+    private string permissions_json = String.Empty;
+
+    private bool permissions_devices_remote_shell = false;
+    private bool permissions_devices_remote_file_browser = false;
+    private bool permissions_devices_remote_control = false;
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+            bool has_all_tenants_permission = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
+
+            permissions_devices_remote_shell = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_remote_shell");
+            permissions_devices_remote_file_browser = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "devices_remote_file_browser");
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    private DotNetObjectReference<Remote_Control_Dialog> _dotNetRef;
+
     [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
     [Parameter] public string device_id { get; set; }
     [Parameter] public string device_name { get; set; }
     [Parameter] public string tenant_guid { get; set; }
     [Parameter] public string location_guid { get; set; }
-
-    private string netlock_username = String.Empty;
-    private string token = String.Empty;
 
     private bool loading_overlay = false;
     private bool error_occurred = false;
@@ -258,6 +342,13 @@
     private string recordSessionId = String.Empty;
     private string recordSessionIdDir = String.Empty;
     private int recordSessionCounter = 0;
+
+    // Clipboard
+    private bool isClipboardEnabled = true;
+
+    // Mobile
+    private bool isMobile = false;
+    private bool showMobileKeyboard = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -274,20 +365,15 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+        await Permissions();
 
-        // Check if user is authenticated
-        if (user?.Identity is not { IsAuthenticated: true })
+        isMobile = await JSRuntime.InvokeAsync<bool>("isMobileDevice");
+
+        if (isMobile)
         {
-            NavigationManager.NavigateTo("/login", true);
-            return;
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("mobileKeyboardInput.init", _dotNetRef);
         }
-
-        // Retrieve username from claims
-        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
-
-        token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
 
         recordSessionId = Randomizer.Handler.Number(6);
 
@@ -327,6 +413,7 @@
         public string remote_control_mouse_action { get; set; }
         public string remote_control_mouse_xyz { get; set; }
         public string remote_control_keyboard_input { get; set; }
+        public string remote_control_keyboard_content { get; set; }
     }
 
     public class Remote_Root_Object
@@ -376,7 +463,7 @@
             // ReceiveClientResponseCheckConnection
             remote_server_client.On<string>("ReceiveClientResponseCheckConnection", async (command) =>
             {
-                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseCheckConnection", command);
+                Logging.Handler.Debug("ReceiveClientResponseCheckConnection", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
                 await InvokeAsync(() =>
@@ -399,7 +486,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR: ReceiveClientResponseCheckConnection", "General error", ex.ToString());
+                        Logging.Handler.Error("ReceiveClientResponseCheckConnection", "General error", ex.ToString());
                     }
                 });
             });
@@ -407,7 +494,7 @@
             // ReceiveClientResponseRemoteControl
             remote_server_client.On<string>("ReceiveClientResponseRemoteControl", async (command) =>
             {
-                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseRemoteControl", command);
+                Logging.Handler.Debug("ReceiveClientResponseRemoteControl", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
                 await InvokeAsync(async () =>
@@ -426,7 +513,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControl", "General error", ex.ToString());
                     }
                 });
             });
@@ -434,7 +521,7 @@
             // ReceiveClientResponseRemoteControlScreenCapture
             remote_server_client.On<string>("ReceiveClientResponseRemoteControlScreenCapture", async (command) =>
             {
-                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseRemoteControlScreenCapture", command);
+                Logging.Handler.Debug("ReceiveClientResponseRemoteControlScreenCapture", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
                 await InvokeAsync(() =>
@@ -448,19 +535,8 @@
 
                         //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
-                        if (recordSession || recordSessionForce)
-                        {
-                            // Create the directory if it does not exist
-                            if (!Directory.Exists(recordSessionIdDir))
-                                Directory.CreateDirectory(recordSessionIdDir);
-
-                            if (recordSessionCounter % 2 == 0) // Save only every second screenshot to reduce performance overheat on the disk
-                                File.WriteAllBytes(Path.Combine(recordSessionIdDir, $"{recordSessionCounter}.png"), Convert.FromBase64String(command));
-
-                            recordSessionCounter++;
-                        }
-
-
+                        // Check if recording is enabled
+                        //OSSCH_START a5116af2-3427-4741-bada-d6e7c04eb5b1 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 22) // 22 = empty image
                         {
@@ -476,7 +552,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControlScreenCapture", "General error", ex.ToString());
                     }
                 });
             });
@@ -484,7 +560,7 @@
             // ReceiveClientResponseRemoteControlScreenIndexes
             remote_server_client.On<string>("ReceiveClientResponseRemoteControlUsers", async (command) =>
             {
-                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseRemoteControlUsers", command);
+                Logging.Handler.Debug("ReceiveClientResponseRemoteControlUsers", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
                 await InvokeAsync(() =>
@@ -524,7 +600,7 @@
                     }
                     catch (Exception ex)
                     {
-                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControlUsers", "General error", ex.ToString());
                     }
                 });
             });
@@ -532,7 +608,7 @@
             // ReceiveClientResponseRemoteControlScreenIndexes
             remote_server_client.On<string>("ReceiveClientResponseRemoteControlScreenIndexes", async (command) =>
             {
-                Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponseRemoteControlScreenIndexes", command);
+                Logging.Handler.Debug("ReceiveClientResponseRemoteControlScreenIndexes", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
                 await InvokeAsync(() =>
@@ -551,7 +627,43 @@
                     }
                     catch (Exception ex)
                     {
-                        Logging.Handler.Error("/dashboard -> Remote_Setup_SignalR", "General error", ex.ToString());
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControlScreenIndexes", "General error", ex.ToString());
+                    }
+                });
+            });
+
+            // ReceiveClientResponseRemoteControlClipboard
+            remote_server_client.On<string>("ReceiveClientResponseRemoteControlClipboard", async (command) =>
+            {
+                Logging.Handler.Debug("ReceiveClientResponseRemoteControlClipboard", "command", command);
+
+                // Use InvokeAsync to reflect changes on UI immediately
+                await InvokeAsync(() =>
+                {
+                    try
+                    {
+                        //Console.WriteLine(DateTime.Now + ": ReceiveClientResponseRemoteControlClipboard: " + command);
+                        // Set the clipboard content
+                        if (!String.IsNullOrEmpty(command) && command.Contains("clipboard_content%"))
+                        {
+                            // Split command (e.g. "clipboard_content%Hello World"))
+                            string[] parts = command.Split(new[] { "clipboard_content%" }, StringSplitOptions.None);
+
+                            if (parts.Length > 1)
+                                command = parts[1]; // Get the actual clipboard content
+                            else
+                                command = String.Empty; // No content found
+
+                            // Set the clipboard content in the browser
+                            if (!string.IsNullOrEmpty(command))
+                                JSRuntime.InvokeVoidAsync("setClipboardContent", command);
+                        }
+
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControlClipboard", "General error", ex.ToString());
                     }
                 });
             });
@@ -612,6 +724,7 @@
 
         remote_screen_refresh_timer = new System.Threading.Timer(async (e) =>
         {
+			//Console.WriteLine(DateTime.Now + ": Remote_Screen_Refresh_Timer_Setup: Refreshing screen...");
             await Remote_Refresh_Screen();
         }, null, 0, remote_screen_refresh_ms);
     }
@@ -620,6 +733,19 @@
     {
         remote_screen_refresh_timer.Dispose();
         await Remote_Screen_Refresh_Timer_Setup();
+    }
+
+    private async Task Remote_Screen_Refresh_Timer_Stop()
+    {
+        refresh_screen_timer_running = false;
+
+        if (remote_screen_refresh_timer != null)
+        {
+            remote_screen_refresh_timer.Dispose();
+            remote_screen_refresh_timer = null;
+        }
+
+        StateHasChanged();
     }
 
     private async Task Refresh_Remote_Information()
@@ -966,7 +1092,26 @@
 
     // Keyboard input
     private async Task Remote_Keyboard_Input(string key_code)
-    {   
+    {
+        string command_type = "2"; // 2 is default = keyboard input
+
+        // Check & get clipboard content from user
+        string clipboardContent = String.Empty;
+
+        if (key_code == "ctrl+keyv" && isClipboardEnabled)
+        {
+            clipboardContent = await JSRuntime.InvokeAsync<string>("getClipboardContent");
+
+            if (String.IsNullOrEmpty(clipboardContent))
+                clipboardContent = String.Empty;
+        }
+        else if (key_code == "ctrl+keyc" && isClipboardEnabled)
+        {
+            //Console.WriteLine(DateTime.Now + ": Copy ctrl key c trigger");
+            command_type = "6"; // get clipboard from user
+            //Console.WriteLine(DateTime.Now + ": Clipboard content: " + clipboardContent);
+        }
+
         // Check if connected
         if (!refresh_screen_timer_running)
             return;
@@ -991,12 +1136,13 @@
                 {
                     type = 4, // remote control
                     wait_response = true, 
-                    command = "2", // Will be converted to type at client side | 1 = mouse click | 2 = keyboard input
+                    command = command_type, // Will be converted to type at client side | 1 = mouse click | 2 = keyboard input
                     remote_control_username = user, // Target user
                     remote_control_screen_index = "0", // Screen index
                     remote_control_mouse_action = "0", // 0 = left click, 1 = right click
                 //remote_control_mouse_xyz = x + "," + y, // refresh screen
                     remote_control_keyboard_input = key_code, // refresh screen
+                    remote_control_keyboard_content = clipboardContent, // refresh screen
                 };
 
             var rootObject = new Remote_Root_Object
@@ -1179,6 +1325,74 @@
         }
     }
 
+    private bool _keyboardVisible = false;
+
+    private async Task ToggleMobileKeyboard()
+    {
+        if (_keyboardVisible)
+        {
+            await JSRuntime.InvokeVoidAsync("mobileKeyboardInput.hide");
+        }
+        else
+        {
+            await JSRuntime.InvokeVoidAsync("mobileKeyboardInput.show");
+
+        }
+        _keyboardVisible = !_keyboardVisible;
+    }
+
+    [JSInvokable]
+    public async Task HandleMobileTextInput(string input)
+    {
+        Console.WriteLine("User typed: " + input);
+
+        if (string.IsNullOrEmpty(input))
+            return;
+
+        // Normierung des Inputs (z.B. alles klein)
+        string normalizedInput = input.ToLowerInvariant();
+
+        // Mappe mobile Eingabe auf PC Keys (w, a, s, d)
+        string pcKey = MapMobileInputToPCKey(normalizedInput);
+
+        // Optional: Spezialzeichen normalisieren (Enter, Backspace etc.)
+        pcKey = GetNormalizedKeyCode(pcKey, pcKey);
+
+		Console.WriteLine("Mapped mobile input to PC key: " + pcKey);
+
+        // Sende den Key an Remote
+        await Remote_Keyboard_Input(pcKey);
+    }
+
+    /// <summary>
+    /// Mappt mobile Eingaben (a,b,c...) auf PC Keys (w,a,s,d).
+    /// Beispiel: 'a' -> 'a', 'b' -> 'w', 'c' -> 's', 'd' -> 'd'.
+    /// </summary>
+    private string MapMobileInputToPCKey(string input)
+    {
+        // Return key codes directly for individual letters:
+        if (input.Length == 1 && char.IsLetter(input[0]))
+        {
+            return "Key" + input.ToUpper();
+        }
+
+        // Otherwise the previous special cases:
+        switch (input)
+        {
+            case "enter": return "Enter";
+            case "backspace": return "Backspace";
+            case "tab": return "Tab";
+            case "escape":
+            case "esc": return "Escape";
+            case "space": return "Space";
+
+            // ...weiter wie gehabt
+
+            default:
+                return input;
+        }
+    }
+
     private bool isFocused = false;
 
     [JSInvokable("HandleKeyDown")]
@@ -1203,6 +1417,8 @@
             : mainKey;
 
         //Console.WriteLine($"Key pressed: {combo.ToLower()}");
+
+		Console.WriteLine($"Key pressed: {combo}");
 
         await Remote_Keyboard_Input(combo.ToLower());
     }
@@ -1579,6 +1795,95 @@
     {
         isFocused = true;
         return Task.CompletedTask;
+    }
+
+    #endregion
+
+    #region Remote File Browser
+
+    private bool remote_file_browser_dialog_open = false;
+
+    private async Task Remote_File_Browser_Dialog()
+    {
+        if (remote_file_browser_dialog_open)
+            return;
+
+        // Stop screen sharing for better performance
+        await Remote_Screen_Refresh_Timer_Stop();
+
+        string platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.ExtraLarge,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("device_id", device_id);
+        parameters.Add("device_name", device_name);
+        parameters.Add("tenant_guid", tenant_guid);
+        parameters.Add("location_guid", location_guid);
+        parameters.Add("platform", platform);
+
+        remote_file_browser_dialog_open = true;
+
+        var result = await DialogService.Show<Pages.Devices.Dialogs.Remote_File_Browser.File_Browser_Dialog>(string.Empty, parameters, options).Result;
+
+        remote_file_browser_dialog_open = false;
+        
+		// Restart the screen refresh timer
+        await Remote_Screen_Refresh_Timer_Setup();
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/devices -> Remote_Shell_Dialog", "Result", result.Data.ToString());
+    }
+
+    #endregion
+
+    #region Remote Shell
+
+    private bool remote_shell_dialog_open = false;
+
+    private async Task Remote_Shell_Dialog()
+    {
+        if (remote_shell_dialog_open)
+            return;
+
+        // Stop screen sharing for better performance
+        await Remote_Screen_Refresh_Timer_Stop();
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.ExtraLarge,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("device_id", device_id);
+        parameters.Add("device_name", device_name);
+        parameters.Add("tenant_guid", tenant_guid);
+        parameters.Add("location_guid", location_guid);
+
+        remote_shell_dialog_open = true;
+
+        var result = await DialogService.Show<Pages.Devices.Dialogs.Remote_Shell.Remote_Shell_Dialog>(string.Empty, parameters, options).Result;
+
+        remote_shell_dialog_open = false;
+
+        // Restart the screen refresh timer
+        await Remote_Screen_Refresh_Timer_Setup();
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/devices -> Remote_Shell_Dialog", "Result", result.Data.ToString());
     }
 
     #endregion

@@ -106,512 +106,526 @@
 
         @if (permissions_settings_enabled && permissions_settings_system_enabled)
         {
-            @if (!Configuration.Members_Portal.cloud_enabled)
-            {
-                <MudText Typo="Typo.h5">System</MudText>
+            <MudTabs KeepPanelsAlive=true Class="mt-0" Elevation="4" Rounded="false" Color="@Color.Default">
+                <MudTabPanel Text="Overview">
 
-                <MudPaper Elevation="4" Class="mt-5">
-
-                    <MudText Class="ml-2" Typo="Typo.h6">@Localizer["MySQL"]</MudText>
-
-                    <MudGrid>
-                        <!-- MySQL Connection Status -->
-                        <MudItem xs="12" sm="4">
-                            <MudCard Class="pa-2" Elevation="2">
-                                <MudCardContent>
-                                    @if (mysqlConnectionStatus)
-                                    {
-                                        <div style="display: flex; align-items: center;">
-                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                                            <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
-                                        </div>
-
-                                        <!-- Additional MySQL Info -->
-                                        <MudText Typo="Typo.body2">Version: @mysqlVersion</MudText>
-                                        <MudText Typo="Typo.body2">@Localizer["uptime"]: @mysqlUptime (seconds)</MudText>
-                                        <MudText Typo="Typo.body2">@Localizer["active connections"]: @mysqlConnectedUsers</MudText>
-                                        <MudText Typo="Typo.body2">@Localizer["database size"]: @mysqlDatabaseSize</MudText>
-
-                                        <!-- Security Info -->
-                                        <MudText Typo="Typo.body2">@Localizer["max connections"]: @mysqlMaxConnections</MudText>
-                                        <MudText Typo="Typo.body2">@Localizer["failed logins"]: @mysqlFailedLogins</MudText>
-                                    }
-                                    else
-                                    {
-                                        <div style="display: flex; align-items: center;">
-                                            <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                                            <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
-                                        </div>
-                                    }
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-
-                    <MudText Class="mt-3 ml-2" Typo="Typo.h6">@Localizer["active queries"]</MudText>
-
-                    <MudTable Height="25vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@mysqlActiveQueries" Filter="new Func<MySQL_Active_Queries, bool>(MySQL_Active_Queries_Table_Filter_Func)">
-                        <ToolBarContent>
-                            <MudTextField Class="mt-0" @bind-Value="mysql_active_queries_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Id))" style="white-space: nowrap;">Id</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.User))" style="white-space: nowrap;">User</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Host))" style="white-space: nowrap;">Host</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Database))" style="white-space: nowrap;">Database</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Command))" style="white-space: nowrap;">Command</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Time))" style="white-space: nowrap;">Time</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.State))" style="white-space: nowrap;">State</MudTh>
-                            <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Info))" style="white-space: nowrap;">Info</MudTh>
-                        </HeaderContent>
-
-                        <RowTemplate Context="row">
-
-                            <MudTd DataLabel="Id" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.Id
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="User" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.User
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="Host" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.Host
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="Database" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.Database
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="Command" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center; color: @(GetCommandColor(row.Command, row.Time))">
-                                    &nbsp;@row.Command
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="Time" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.Time
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="State" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.State
-                                </span>
-                            </MudTd>
-
-                            <MudTd DataLabel="Info" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
-                                <span style="display: flex; align-items: center;">
-                                    &nbsp;@row.Info
-                                </span>
-                            </MudTd>
-
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["entries per page"]" />
-                        </PagerContent>
-                    </MudTable>
-
-                </MudPaper>
-
-                <MudPaper Class="mt-3">
-                    <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Web Console"]</MudText>
-
-                    <MudGrid>
-                        <!-- CPU Usage -->
-                        <MudItem xs="12" sm="4">
-                            <MudCard Class="pa-2" Elevation="2">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.subtitle1">@Localizer["cpu usage"]: @cpuUsage%</MudText>
-                                    <MudProgressLinear Value="@cpuUsage" Color="Color.Primary" />
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <!-- RAM Usage -->
-                        <MudItem xs="12" sm="4">
-                            <MudCard Class="pa-2" Elevation="2">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.subtitle1">@Localizer["ram usage"]: @ramUsage%</MudText>
-                                    <MudProgressLinear Value="@ramUsage" Color="Color.Warning" />
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-
-                        <!-- Disk Usage -->
-                        <MudItem xs="12" sm="4">
-                            <MudCard Class="pa-2" Elevation="2">
-                                <MudCardContent>
-                                    <MudText Typo="Typo.subtitle1">@Localizer["disk usage"]: @diskUsage%</MudText>
-                                    <MudProgressLinear Value="@diskUsage" Color="Color.Info" />
-                                </MudCardContent>
-                            </MudCard>
-                        </MudItem>
-                    </MudGrid>
-                </MudPaper>
-
-                @foreach (var server in servers)
-                {
-                    DateTime lastHeartbeat;
-                    bool isRecent = false;
-
-                    try
+                    @if (!Configuration.Members_Portal.cloud_enabled)
                     {
-                        // Try to parse the heartbeat timestamp
-                        lastHeartbeat = DateTime.Parse(server.hearthbeat);
-                        isRecent = (DateTime.Now - lastHeartbeat).TotalMinutes <= 10;
+                        <MudPaper Elevation="4" Class="mt-0">
+
+                            <MudText Class="ml-2" Typo="Typo.h6">@Localizer["MySQL"]</MudText>
+
+                            <MudGrid>
+                                <!-- MySQL Connection Status -->
+                                <MudItem xs="12" sm="4">
+                                    <MudCard Class="pa-2" Elevation="2">
+                                        <MudCardContent>
+                                            @if (mysqlConnectionStatus)
+                                            {
+                                                <div style="display: flex; align-items: center;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                                    <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
+                                                </div>
+
+                                                <!-- Additional MySQL Info -->
+                                                <MudText Typo="Typo.body2">Version: @mysqlVersion</MudText>
+                                                <MudText Typo="Typo.body2">@Localizer["uptime"]: @mysqlUptime (seconds)</MudText>
+                                                <MudText Typo="Typo.body2">@Localizer["active connections"]: @mysqlConnectedUsers</MudText>
+                                                <MudText Typo="Typo.body2">@Localizer["database size"]: @mysqlDatabaseSize</MudText>
+
+                                                <!-- Security Info -->
+                                                <MudText Typo="Typo.body2">@Localizer["max connections"]: @mysqlMaxConnections</MudText>
+                                                <MudText Typo="Typo.body2">@Localizer["failed logins"]: @mysqlFailedLogins</MudText>
+                                            }
+                                            else
+                                            {
+                                                <div style="display: flex; align-items: center;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                                    <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
+                                                </div>
+                                            }
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudText Class="mt-3 ml-2" Typo="Typo.h6">@Localizer["active queries"]</MudText>
+
+                            <MudTable Height="25vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="true" Items="@mysqlActiveQueries" Filter="new Func<MySQL_Active_Queries, bool>(MySQL_Active_Queries_Table_Filter_Func)">
+                                <ToolBarContent>
+                                    <MudTextField Class="mt-0" @bind-Value="mysql_active_queries_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Id))" style="white-space: nowrap;">Id</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.User))" style="white-space: nowrap;">User</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Host))" style="white-space: nowrap;">Host</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Database))" style="white-space: nowrap;">Database</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Command))" style="white-space: nowrap;">Command</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Time))" style="white-space: nowrap;">Time</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.State))" style="white-space: nowrap;">State</MudTh>
+                                    <MudTh @onclick="() => mysql_active_queries_table_sorted_column = (nameof(MySQL_Active_Queries.Info))" style="white-space: nowrap;">Info</MudTh>
+                                </HeaderContent>
+
+                                <RowTemplate Context="row">
+
+                                    <MudTd DataLabel="Id" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.Id
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="User" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.User
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Host" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.Host
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Database" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.Database
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Command" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center; color: @(GetCommandColor(row.Command, row.Time))">
+                                            &nbsp;@row.Command
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Time" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.Time
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="State" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.State
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="Info" @onclick="() => mysql_active_queries_RowClickHandler(row)" class="@mysql_active_queries_GetRowClass(row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            &nbsp;@row.Info
+                                        </span>
+                                    </MudTd>
+
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["entries per page"]" />
+                                </PagerContent>
+                            </MudTable>
+
+                        </MudPaper>
+
+                        <MudPaper Class="mt-3">
+                            <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Web Console"]</MudText>
+
+                            <MudGrid>
+                                <!-- CPU Usage -->
+                                <MudItem xs="12" sm="4">
+                                    <MudCard Class="pa-2" Elevation="2">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.subtitle1">@Localizer["cpu usage"]: @cpuUsage%</MudText>
+                                            <MudProgressLinear Value="@cpuUsage" Color="Color.Primary" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+
+                                <!-- RAM Usage -->
+                                <MudItem xs="12" sm="4">
+                                    <MudCard Class="pa-2" Elevation="2">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.subtitle1">@Localizer["ram usage"]: @ramUsage%</MudText>
+                                            <MudProgressLinear Value="@ramUsage" Color="Color.Warning" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+
+                                <!-- Disk Usage -->
+                                <MudItem xs="12" sm="4">
+                                    <MudCard Class="pa-2" Elevation="2">
+                                        <MudCardContent>
+                                            <MudText Typo="Typo.subtitle1">@Localizer["disk usage"]: @diskUsage%</MudText>
+                                            <MudProgressLinear Value="@diskUsage" Color="Color.Info" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+
+                        @foreach (var server in servers)
+                        {
+                            DateTime lastHeartbeat;
+                            bool isRecent = false;
+
+                            try
+                            {
+                                // Try to parse the heartbeat timestamp
+                                lastHeartbeat = DateTime.Parse(server.hearthbeat);
+                                isRecent = (DateTime.Now - lastHeartbeat).TotalMinutes <= 10;
+                            }
+                            catch (Exception ex)
+                            {
+                                // Error handling for invalid or missing date
+                                Logging.Handler.Error("Heartbeat-Parsing", "Error parsing server heartbeat", ex.ToString());
+                            }
+
+                            <MudPaper Class="mt-3">
+                                <MudText Class="ml-2" Typo="Typo.h6">@server.name (@server.os) @(server.docker == "1" ? " (Docker)" : String.Empty)</MudText>
+                                <MudText Class="ml-2" Typo="Typo.subtitle2">IP: @server.ip_address | Domain: @server.domain</MudText>
+
+                                <MudText Class="ml-2" Typo="Typo.subtitle2" Color="@(isRecent ? Color.Success : Color.Error)">@Localizer["last hearthbeat"]: @server.hearthbeat</MudText>
+
+                                <MudGrid>
+                                    <!-- CPU Usage -->
+                                    <MudItem xs="12" sm="4">
+                                        <MudCard Class="pa-2" Elevation="2">
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.subtitle1">@Localizer["cpu usage"]: @server.cpu_usage%</MudText>
+                                                <MudProgressLinear Value="@Convert.ToDouble(server.cpu_usage)" Color="Color.Primary" />
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+
+                                    <!-- RAM Usage -->
+                                    <MudItem xs="12" sm="4">
+                                        <MudCard Class="pa-2" Elevation="2">
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.subtitle1">@Localizer["ram usage"]: @server.ram_usage%</MudText>
+                                                <MudProgressLinear Value="@Convert.ToDouble(server.ram_usage)" Color="Color.Warning" />
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+
+                                    <!-- Disk Usage -->
+                                    <MudItem xs="12" sm="4">
+                                        <MudCard Class="pa-2" Elevation="2">
+                                            <MudCardContent>
+                                                <MudText Typo="Typo.subtitle1">@Localizer["disk usage"]: @server.disk_usage%</MudText>
+                                                <MudProgressLinear Value="@Convert.ToDouble(server.disk_usage)" Color="Color.Info" />
+                                            </MudCardContent>
+                                        </MudCard>
+                                    </MudItem>
+                                </MudGrid>
+
+                                <MudExpansionPanel>
+                                    <TitleContent>
+                                        <div class="d-flex">
+                                            <MudIcon Icon="@Icons.Material.Filled.SettingsApplications" class="mr-3"></MudIcon>
+                                            <MudText>@Localizer["appsettings.json"]</MudText>
+                                        </div>
+                                    </TitleContent>
+
+                                    <ChildContent>
+                                        <MudTextField Class="ml-2 mr-2" T="string" Lines="20" Variant="Variant.Text" ReadOnly="true" @bind-Text="server.appsettings" />
+                                    </ChildContent>
+
+                                </MudExpansionPanel>
+                            </MudPaper>
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        // Error handling for invalid or missing date
-                        Logging.Handler.Error("Heartbeat-Parsing", "Error parsing server heartbeat", ex.ToString());
-                    }
+
+                    <!-- NetLock RMM File Server Status -->
 
                     <MudPaper Class="mt-3">
-                        <MudText Class="ml-2" Typo="Typo.h6">@server.name (@server.os) @(server.docker == "1" ? " (Docker)" : String.Empty)</MudText>
-                        <MudText Class="ml-2" Typo="Typo.subtitle2">IP: @server.ip_address | Domain: @server.domain</MudText>
-
-                        <MudText Class="ml-2" Typo="Typo.subtitle2" Color="@(isRecent ? Color.Success : Color.Error)">@Localizer["last hearthbeat"]: @server.hearthbeat</MudText>
+                        <MudText Class="ml-2" Typo="Typo.h6">@Localizer["NetLock RMM File Server"] (@Configuration.File_Server.Connection_String)</MudText>
 
                         <MudGrid>
-                            <!-- CPU Usage -->
                             <MudItem xs="12" sm="4">
                                 <MudCard Class="pa-2" Elevation="2">
                                     <MudCardContent>
-                                        <MudText Typo="Typo.subtitle1">@Localizer["cpu usage"]: @server.cpu_usage%</MudText>
-                                        <MudProgressLinear Value="@Convert.ToDouble(server.cpu_usage)" Color="Color.Primary" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
 
-                            <!-- RAM Usage -->
-                            <MudItem xs="12" sm="4">
-                                <MudCard Class="pa-2" Elevation="2">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.subtitle1">@Localizer["ram usage"]: @server.ram_usage%</MudText>
-                                        <MudProgressLinear Value="@Convert.ToDouble(server.ram_usage)" Color="Color.Warning" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                        <div style="display: flex; align-items: center;">
+                                            @if (fileServerConnectionStatus)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                                <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                                <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
+                                            }
+                                        </div>
 
-                            <!-- Disk Usage -->
-                            <MudItem xs="12" sm="4">
-                                <MudCard Class="pa-2" Elevation="2">
-                                    <MudCardContent>
-                                        <MudText Typo="Typo.subtitle1">@Localizer["disk usage"]: @server.disk_usage%</MudText>
-                                        <MudProgressLinear Value="@Convert.ToDouble(server.disk_usage)" Color="Color.Info" />
                                     </MudCardContent>
                                 </MudCard>
                             </MudItem>
                         </MudGrid>
 
-                        <MudExpansionPanel>
-                            <TitleContent>
-                                <div class="d-flex">
-                                    <MudIcon Icon="@Icons.Material.Filled.SettingsApplications" class="mr-3"></MudIcon>
-                                    <MudText>@Localizer["appsettings.json"]</MudText>
-                                </div>
-                            </TitleContent>
-
-                            <ChildContent>
-                                <MudTextField Class="ml-2 mr-2" T="string" Lines="20" Variant="Variant.Text" ReadOnly="true" @bind-Text="server.appsettings" />
-                            </ChildContent>
-
-                        </MudExpansionPanel>
                     </MudPaper>
-                }
-            }
 
-            <!-- NetLock RMM File Server Status -->
+                    <MudPaper Class="mt-3">
+                        <MudText Class="ml-2" Typo="Typo.h6">@Localizer["NetLock RMM Remote Server"] (@Configuration.Remote_Server.Connection_String)</MudText>
 
-            <MudPaper Class="mt-3">
-                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["NetLock RMM File Server"] (@Configuration.File_Server.Connection_String)</MudText>
+                        <MudGrid>
+                            <!-- Remote Server Connection Status -->
+                            <MudItem xs="12" sm="4">
+                                <MudCard Class="pa-2" Elevation="2">
+                                    <MudCardContent>
 
-                <MudGrid>
-                    <MudItem xs="12" sm="4">
-                        <MudCard Class="pa-2" Elevation="2">
-                            <MudCardContent>
+                                        <div style="display: flex; align-items: center;">
 
-                                <div style="display: flex; align-items: center;">
-                                    @if (fileServerConnectionStatus)
-                                    {
-                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                                        <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                                        <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
-                                    }
-                                </div>
+                                            @if (remoteServerConnectionStatus)
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                                <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
+                                            }
+                                            else
+                                            {
+                                                <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                                <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
+                                            }
 
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
+                                        </div>
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+                        </MudGrid>
 
-            </MudPaper>
-
-            <MudPaper Class="mt-3">
-                <MudText Class="ml-2" Typo="Typo.h6">@Localizer["NetLock RMM Remote Server"] (@Configuration.Remote_Server.Connection_String)</MudText>
-
-                <MudGrid>
-                    <!-- Remote Server Connection Status -->
-                    <MudItem xs="12" sm="4">
-                        <MudCard Class="pa-2" Elevation="2">
-                            <MudCardContent>
-
-                                <div style="display: flex; align-items: center;">
-
-                                    @if (remoteServerConnectionStatus)
-                                    {
-                                        <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                                        <MudText Class="ml-2" Color="Color.Success">@Localizer["connected"]</MudText>
-                                    }
-                                    else
-                                    {
-                                        <MudIcon Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                                        <MudText Class="ml-2" Color="Color.Error">@Localizer["not connected"]</MudText>
-                                    }
-
-                                </div>
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-                </MudGrid>
-
-                @if (!_dnsWarning && !Configuration.Members_Portal.cloud_enabled)
-                {
-                    <MudAlert Class="mt-2 ml-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Dns">PTR record mismatch detected! Your provided hostname resolves to: @_dnsWarningText but it should resolve to: @Configuration.Remote_Server.Hostname instead, according to your provided configuration. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch</MudAlert>
-                }
-
-                <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.NetworkCheck" OnClick="Test_Remote_File_Server_Connection">@Localizer["Check again"]</MudButton>
-
-            </MudPaper>
-
-            @if (!Configuration.Members_Portal.cloud_enabled)
-            {
-                <MudPaper Class="mt-3">
-
-                    <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
-
-                    @if (!Configuration.Members_Portal.api_enabled)
-                    {
-                        <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.SyncDisabled">@Localizer["members portal api is not enabled. Please enable it in the appsettings.json"]</MudAlert>
-                    }
-                    else
-                    {
-                        <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Filled" Label="@Localizer["enter your api key here"]" @bind-Text="members_portal_api_key" Immediate="true" />
-                        <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Api_Key" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["save"]</MudButton>
-
-                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["license status"]</MudText>
-
-                        @if (members_portal_status == "Active")
+                        @if (!_dnsWarning && !Configuration.Members_Portal.cloud_enabled)
                         {
-                            <div style="display: flex; align-items: center;">
-                                <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
-                                <MudText Class="ml-2" Color="Color.Success">@Localizer["active"]</MudText>
-                            </div>
+                            <MudAlert Class="mt-2 ml-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Dns">PTR record mismatch detected! Your provided hostname resolves to: @_dnsWarningText but it should resolve to: @Configuration.Remote_Server.Hostname instead, according to your provided configuration. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch</MudAlert>
+                        }
+
+                        <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.NetworkCheck" OnClick="Test_Remote_File_Server_Connection">@Localizer["Check again"]</MudButton>
+
+                    </MudPaper>
+
+                </MudTabPanel>
+                <MudTabPanel Text="Members Portal Api">
+                    @if (!Configuration.Members_Portal.cloud_enabled)
+                    {
+                        <MudPaper Class="mt-0">
+
+                            <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
+
+                            @if (!Configuration.Members_Portal.api_enabled)
+                            {
+                                <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.SyncDisabled">@Localizer["members portal api is not enabled. Please enable it in the appsettings.json"]</MudAlert>
+                            }
+                            else
+                            {
+                                <MudTextField Class="ml-2 mr-2" T="string" Variant="Variant.Filled" Label="@Localizer["enter your api key here"]" @bind-Text="members_portal_api_key" Immediate="true" />
+                                <MudButton Class="mt-2 ml-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="Save_Api_Key" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["save"]</MudButton>
+
+                                <MudText Class="ml-2 mt-2" Typo="Typo.h6">@Localizer["license status"]</MudText>
+
+                                @if (members_portal_status == "Active")
+                                {
+                                    <div style="display: flex; align-items: center;">
+                                        <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" />
+                                        <MudText Class="ml-2" Color="Color.Success">@Localizer["active"]</MudText>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div style="display: flex; align-items: center;">
+                                        <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
+                                        <MudText Class="ml-2" Color="Color.Error">@Localizer["expired"]</MudText>
+                                    </div>
+                                }
+
+                                <MudText Class="ml-2 mt-2" Typo="Typo.body1">Name: @members_portal_license_name</MudText>
+                                <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
+                                <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard_limit"]: @members_portal_licenses_hard_limit</MudText>
+                                <MudText Class="ml-2" Typo="Typo.body1">@Localizer["code_signed"]: @members_portal_code_signed</MudText>
+
+                                <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
+                            }
+
+                        </MudPaper>
+                    }
+                </MudTabPanel>
+                <MudTabPanel Text="Updates">
+                    <MudPaper Class="mt-0">
+                        <MudText Class="ml-2" Typo="Typo.h6">Automatic Agent Updates</MudText>
+                        <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary">Windows</MudSwitch>
+                    </MudPaper>
+                </MudTabPanel>
+                <MudTabPanel Text="Database">
+                    <MudPaper Class="mt-0">
+                        <MudText Class="ml-2" Typo="Typo.h6">Clean Up & Optimize Database</MudText>
+                        <MudText Class="mt-2 ml-2" Typo="Typo.body1">
+                            Automatic cleanup of the database.
+                        </MudText>
+
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_drivers_history_enabled" Label="Applications Drivers History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_drivers_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_installed_history_enabled" Label="Applications Installed History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_installed_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_logon_history_enabled" Label="Applications Logon History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_logon_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_scheduled_tasks_history_enabled" Label="Applications Scheduled Tasks History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_scheduled_tasks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_services_history_enabled" Label="Applications Services History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_services_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_antivirus_products_history_enabled" Label="Device Information Antivirus Products History" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_antivirus_products_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cpu_history_enabled" Label="Device information CPU history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cpu_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cronjobs_history_enabled" Label="Device information cronjobs history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cronjobs_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_disks_history_enabled" Label="Device information disks history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_disks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_general_history_enabled" Label="Device information general history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_general_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_history_enabled" Label="Device information history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_network_adapters_history_enabled" Label="Device information network adapters history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_network_adapters_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_ram_history_enabled" Label="Device information RAM history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_ram_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_task_manager_history_enabled" Label="Device information task manager history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_task_manager_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                            <MudItem xs="12" md="6">
+                                <MudCard Class="ml-2 mb-4">
+                                    <MudCardContent>
+                                        <MudCheckBox T="bool" @bind-Value="cleanup_events_history_enabled" Label="Events history" Color="Color.Primary" />
+                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_events_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                    </MudCardContent>
+                                </MudCard>
+                            </MudItem>
+
+                        </MudGrid>
+
+                        <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
+                        <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
+                    </MudPaper>
+                </MudTabPanel>
+                <MudTabPanel Text="Remote Screen Control">
+                    <MudPaper Class="mt-0 mb-0">
+                        @if (!Configuration.Members_Portal.isCodeSigned)
+                        {
+                            <MudAlert Class="mb-3" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning">@Application_Settings.onlyPro</MudAlert>
+                        }
+
+                        <MudText Class="ml-2" Typo="Typo.h6">Remote Screen Control Recording</MudText>
+                        <MudSwitch Class="ml-2" Color="Color.Primary" @bind-Value="remoteScreenSessionRecordingForced" Label="Force session recording"></MudSwitch>
+                        <MudText Class="ml-2 mt-2" Typo="Typo.body1">When enabled, all remote screen control sessions will be recorded by the server.</MudText>
+
+                        <MudCheckBox T="bool" @bind-Value="remoteScreenSessionRecordingAutoClean" Label="Auto purge" Color="Color.Primary" />
+
+                        @if (Configuration.Members_Portal.cloud_enabled)
+                        {
+                            <MudText Class="ml-2 mt-2" Typo="Typo.body1">Your recordings will be kept for seven days.</MudText>
                         }
                         else
                         {
-                            <div style="display: flex; align-items: center;">
-                                <MudIcon Class="ml-2" Icon="@Icons.Material.Filled.Error" Color="Color.Error" />
-                                <MudText Class="ml-2" Color="Color.Error">@Localizer["expired"]</MudText>
-                            </div>
+                            <MudNumericField Class="ml-2 mt-2" @bind-Value="remoteScreenSessionRecordingForcedDays" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
                         }
 
-                        <MudText Class="ml-2 mt-2" Typo="Typo.body1">Name: @members_portal_license_name</MudText>
-                        <MudText Class="ml-2" Typo="Typo.body1">@Localizer["licenses used"]: @members_portal_licenses_used / @members_portal_licenses_max</MudText>
-                        <MudText Class="ml-2" Typo="Typo.body1">@Localizer["hard_limit"]: @members_portal_licenses_hard_limit</MudText>
-                        <MudText Class="ml-2" Typo="Typo.body1">@Localizer["code_signed"]: @members_portal_code_signed</MudText>
+                        <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveRemoteScreenSessionRecordingSettings">Save</MudButton>
+                    </MudPaper>
+                </MudTabPanel>
 
-                        <MudButton Class="ml-2 mt-3 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" StartIcon="@Icons.Material.Filled.Update" OnClick="Update_Members_Portal_License_Information" Disabled="@(String.IsNullOrEmpty(members_portal_api_key))">@Localizer["refresh license information"]</MudButton>
-                    }
-
-                </MudPaper>
-            }
-
-            <MudPaper Class="mt-3">
-                <MudText Class="ml-2" Typo="Typo.h6">Automatic Agent Updates</MudText>
-                <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary">Windows</MudSwitch>
-            </MudPaper>
-
-            <MudPaper Class="mt-3">
-                <MudText Class="ml-2" Typo="Typo.h6">Clean Up & Optimize Database</MudText>
-                <MudText Class="mt-2 ml-2" Typo="Typo.body1">
-                    Automatic cleanup of the database.
-                </MudText>
-
-                <MudGrid>
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_applications_drivers_history_enabled" Label="Applications Drivers History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_drivers_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_applications_installed_history_enabled" Label="Applications Installed History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_installed_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_applications_logon_history_enabled" Label="Applications Logon History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_logon_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_applications_scheduled_tasks_history_enabled" Label="Applications Scheduled Tasks History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_scheduled_tasks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_applications_services_history_enabled" Label="Applications Services History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_services_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_antivirus_products_history_enabled" Label="Device Information Antivirus Products History" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_antivirus_products_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cpu_history_enabled" Label="Device information CPU history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cpu_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cronjobs_history_enabled" Label="Device information cronjobs history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cronjobs_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_disks_history_enabled" Label="Device information disks history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_disks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_general_history_enabled" Label="Device information general history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_general_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_history_enabled" Label="Device information history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_network_adapters_history_enabled" Label="Device information network adapters history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_network_adapters_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_ram_history_enabled" Label="Device information RAM history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_ram_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_device_information_task_manager_history_enabled" Label="Device information task manager history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_task_manager_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                    <MudItem xs="12" md="6">
-                        <MudCard Class="ml-2 mb-4">
-                            <MudCardContent>
-                                <MudCheckBox T="bool" @bind-Value="cleanup_events_history_enabled" Label="Events history" Color="Color.Primary" />
-                                <MudNumericField Class="mt-2" @bind-Value="cleanup_events_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                            </MudCardContent>
-                        </MudCard>
-                    </MudItem>
-
-                </MudGrid>
-
-                <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
-                <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
-            </MudPaper>
-
-            <MudPaper Class="mt-3 mb-5">
-                <MudText Class="ml-2" Typo="Typo.h6">Remote Screen Control</MudText>
-                <MudText Class="ml-2 mt-2" Typo="Typo.body1">When enabled, all remote screen control sessions will be recorded.</MudText>
-                <MudSwitch Class="ml-2" Color="Color.Primary" @bind-Value="remoteScreenSessionRecordingForced" Label="Force session recording"></MudSwitch>
-
-                <MudCheckBox T="bool" @bind-Value="remoteScreenSessionRecordingAutoClean" Label="Auto purge" Color="Color.Primary" />
-
-                @if (Configuration.Members_Portal.cloud_enabled)
-                {
-                    <MudText Class="ml-2 mt-2" Typo="Typo.body1">Your recordings will be kept for seven days.</MudText>
-                }
-                else
-                {
-                    <MudNumericField Class="ml-2 mt-2" @bind-Value="remoteScreenSessionRecordingForcedDays" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                }
-
-                <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveRemoteScreenSessionRecordingSettings">Save</MudButton>
-            </MudPaper>
+            </MudTabs>
         }
 
     </Authorized>
@@ -939,13 +953,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START 09bbfc36-367e-4802-995c-b8231b7d3ada //OSSCH_END
+    //OSSCH_START b05cc4ea-94e3-4d96-b753-a389021f7fe2 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START a0e2efd1-fffb-45c8-bafb-121712a70fec //OSSCH_END
+    //OSSCH_START b69c22d6-39ce-40b4-a85f-e4e6501b7c47 //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 9a127c13-aca7-410d-8a81-d6812df7bca4 //OSSCH_END
+    //OSSCH_START 4313e71d-67c0-4ce3-87bd-81a03812afb0 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()

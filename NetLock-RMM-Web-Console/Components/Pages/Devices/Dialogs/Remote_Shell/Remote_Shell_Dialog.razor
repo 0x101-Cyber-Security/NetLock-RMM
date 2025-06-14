@@ -25,9 +25,9 @@
 <style>
 
     .monaco-editor {
-        flex-grow: 1;
-        height: 25vh;
-        width: 100%; /* Each editor takes half of the screen width */
+    flex-grow: 1;
+    height: 25vh;
+    width: 100%; /* Each editor takes half of the screen width */
     }
 
 </style>
@@ -96,7 +96,7 @@
     [Parameter] public string tenant_guid { get; set; }
     [Parameter] public string location_guid { get; set; }
 
-	private string netlock_username = String.Empty;
+    private string netlock_username = String.Empty;
     private string token = String.Empty;
     private bool loading_overlay = false;
 
@@ -105,7 +105,7 @@
         // Get the current user from the authentication state
         var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
 
-		// Check if user is authenticated
+        // Check if user is authenticated
         if (user?.Identity is not { IsAuthenticated: true })
         {
             NavigationManager.NavigateTo("/login", true);
@@ -135,7 +135,7 @@
                 Theme = "vs-dark",
                 Language = "powershell",
                 ReadOnly = true,
-                //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
             };
     }
 
@@ -149,7 +149,7 @@
                 Theme = "vs-dark",
                 Language = "powershell",
                 ReadOnly = false,
-                //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
             };
     }
 
@@ -169,14 +169,18 @@
 
     private async Task Get_Scripts()
     {
+        string platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
+
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM scripts;";
+            string query = "SELECT * FROM scripts WHERE platform = @platform;";
+
             MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@platform", platform);
 
             using (DbDataReader reader = await cmd.ExecuteReaderAsync())
             {
@@ -198,15 +202,19 @@
 
     private async Task Get_Script(string name)
     {
+        string platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
+
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
             await conn.OpenAsync();
 
-            string query = "SELECT * FROM scripts WHERE platform = 'Windows' AND shell = 'PowerShell' AND name = @name;";
+            string query = "SELECT * FROM scripts WHERE platform = @platform AND name = @name;";
+            
             MySqlCommand cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@name", name);
+			cmd.Parameters.AddWithValue("@platform", platform);
 
             using (DbDataReader reader = await cmd.ExecuteReaderAsync())
             {

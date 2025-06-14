@@ -81,7 +81,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START be47afc8-21eb-4886-85ba-1af4b6cb6a7a //OSSCH_END
+//OSSCH_START a48ef38a-444f-490a-a91f-b9fc50cbba03 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -333,7 +333,7 @@ builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessag
 
 // Add background services
 builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.MySQL.AutoCleanupService>();
-//builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.ScreenRecorder.AutoCleanupService>(); disabled until remote screen control release
+builder.Services.AddHostedService<NetLock_RMM_Web_Console.Classes.ScreenRecorder.AutoCleanupService>(); //disabled until remote screen control release
 
 // Generate tokenservice secretkey
 Web_Console.token_service_secret_key = Randomizer.Handler.Token(true, 32);
@@ -371,7 +371,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 8a10d340-dd3d-4bc2-8234-42f962526bfa //OSSCH_END
+//OSSCH_START a2b9d7a2-eb17-493d-8f50-8a81f537c2d3 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

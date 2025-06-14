@@ -40,9 +40,9 @@ namespace NetLock_RMM_Web_Console.Classes.ScreenRecorder
             try
             {
                 Logging.Handler.Debug("Classes.ScreenRecorder.AutoCleanupService", "Task started at:", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                Console.WriteLine("Classes.ScreenRecorder.AutoCleanupService -> Task started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                //Console.WriteLine("Classes.ScreenRecorder.AutoCleanupService -> Task started at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
-                bool isEnabled = Convert.ToBoolean(await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_auto_clean_enabled"));
+                bool isEnabled = (await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_auto_clean_enabled")) == "1";
                 int daysToKeep = Convert.ToInt32(await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "remote_screen_session_recording_forced_days"));
 
                 Logging.Handler.Debug("Classes.ScreenRecorder.AutoCleanupService", "Auto cleanup enabled:", isEnabled.ToString());
@@ -79,6 +79,8 @@ namespace NetLock_RMM_Web_Console.Classes.ScreenRecorder
                 {
                     Logging.Handler.Error("Classes.ScreenRecorder.AutoCleanupService", "Recordings directory does not exist:", recordingsDir);
                 }
+
+                Logging.Handler.Debug("Classes.ScreenRecorder.AutoCleanupService", "Cleanup completed successfully.", "");
             }
             catch (Exception ex)
             {

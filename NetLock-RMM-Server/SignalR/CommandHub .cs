@@ -72,6 +72,7 @@ namespace NetLock_RMM_Server.SignalR
             public string remote_control_mouse_action { get; set; }
             public string remote_control_mouse_xyz { get; set; }
             public string remote_control_keyboard_input { get; set; }
+            public string remote_control_keyboard_content { get; set; }
             public string command { get; set; } // used for service, task manager, screen capture
         }
          
@@ -465,6 +466,11 @@ namespace NetLock_RMM_Server.SignalR
                     {
                         Logging.Handler.Debug("SignalR CommandHub", "ReceiveClientResponseRemoteControlUsers", $"Response sent to admin client {admin_client_id}: {response}");
                         await CommandHubSingleton.Instance.HubContext.Clients.Client(admin_client_id).SendAsync("ReceiveClientResponseRemoteControlUsers", response);
+                    }
+                    else if (command == "6") // get clipboard from user
+                    {
+                        Logging.Handler.Debug("SignalR CommandHub", "ReceiveClientResponseRemoteControlClipboard", $"Response sent to admin client {admin_client_id}: {response}");
+                        await CommandHubSingleton.Instance.HubContext.Clients.Client(admin_client_id).SendAsync("ReceiveClientResponseRemoteControlClipboard", response);
                     }
                 }
 

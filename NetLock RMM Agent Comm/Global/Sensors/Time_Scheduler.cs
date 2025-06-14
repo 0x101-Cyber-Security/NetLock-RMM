@@ -1107,7 +1107,7 @@ namespace Global.Sensors
                                                 if (Configuration.Agent.language == "en-US")
                                                 {
                                                     details =
-                                                        $"Less than the limit of {sensor_item.disk_usage}% of storage space is available. Currently, {drive_usage}% is occupied, leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
+                                                        $"Less than the limit of {sensor_item.disk_usage}% of storage space is available. Leaving {drive_free_space_gb} GB of free space remaining." + Environment.NewLine + Environment.NewLine +
                                                         "Sensor name: " + sensor_item.name + Environment.NewLine +
                                                         "Description: " + sensor_item.description + Environment.NewLine +
                                                         "Type: Drive (less than X percent free)" + Environment.NewLine +
@@ -1122,7 +1122,7 @@ namespace Global.Sensors
                                                 else if (Configuration.Agent.language == "de-DE")
                                                 {
                                                     details =
-                                                        $"Weniger als der Grenzwert von {sensor_item.disk_usage}% an Speicherplatz ist verfügbar. Aktuell sind {drive_usage}% belegt, sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
+                                                        $"Weniger als der Grenzwert von {sensor_item.disk_usage}% an Speicherplatz ist verfügbar. Sodass noch {drive_free_space_gb} GB verfügbar sind." + Environment.NewLine + Environment.NewLine +
                                                         "Sensor Name: " + sensor_item.name + Environment.NewLine +
                                                         "Beschreibung: " + sensor_item.description + Environment.NewLine +
                                                         "Typ: Laufwerk (weniger als X Prozent frei)" + Environment.NewLine +

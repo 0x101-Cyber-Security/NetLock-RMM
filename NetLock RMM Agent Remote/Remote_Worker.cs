@@ -94,6 +94,7 @@ namespace NetLock_RMM_Agent_Remote
             public string remote_control_mouse_action { get; set; }
             public string remote_control_mouse_xyz { get; set; }
             public string remote_control_keyboard_input { get; set; }
+            public string remote_control_keyboard_content { get; set; }
             public string command { get; set; } // used for service, task manager, screen capture
         }
 
@@ -514,6 +515,7 @@ namespace NetLock_RMM_Agent_Remote
                                         remote_control_mouse_action = command_object.remote_control_mouse_action,
                                         remote_control_mouse_xyz = command_object.remote_control_mouse_xyz,
                                         remote_control_keyboard_input = command_object.remote_control_keyboard_input,
+                                        remote_control_keyboard_content = command_object.remote_control_keyboard_content,
                                     };
 
                                     // Convert the object into a JSON string
@@ -796,6 +798,10 @@ namespace NetLock_RMM_Agent_Remote
                 }
                 else if (messageParts[0] == "users")
                 {
+                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
+                }
+                else if (messageParts[0] == "clipboard_content")
+                { 
                     await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
                 }
             }

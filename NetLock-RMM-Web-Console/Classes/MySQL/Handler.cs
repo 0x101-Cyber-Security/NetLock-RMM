@@ -354,5 +354,35 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         {
             return await Quick_Reader("SELECT members_portal_api_key FROM settings;", "members_portal_api_key");
         }
+
+        // Get device platform
+        public static async Task<string> Get_Device_Platform(string device_id)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            string query = "SELECT platform FROM devices WHERE id = @device_id;";
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+                string platform = cmd.ExecuteScalar()?.ToString() ?? String.Empty;
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_Device_Platform", "Query", query);
+
+                return platform;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_Device_Platform", "Query: " + query, ex.ToString());
+                return String.Empty;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
     }
 }

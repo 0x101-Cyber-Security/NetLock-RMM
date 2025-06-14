@@ -133,6 +133,91 @@ window.startRemoteControlSession = (elementId) => {
     });
 };
 
+window.mobileKeyboardInput = {
+    _dotNetRef: null,
+    _input: null,
+
+    init: function(dotNetRef) {
+        this._dotNetRef = dotNetRef;
+
+        if (!this._input) {
+            this._input = document.createElement('input');
+            this._input.type = 'text';
+            this._input.id = 'mobile-text-input';
+            this._input.autocapitalize = 'off';
+            this._input.autocomplete = 'off';
+            this._input.spellcheck = false;
+            
+            // Unsichtbar machen, aber sichtbar genug, damit iOS/Android Tastatur aufgeht
+            this._input.style.position = 'absolute';
+            this._input.style.bottom = '10px';
+            this._input.style.left = '10px';
+            this._input.style.opacity = '0.01';
+            this._input.style.height = '1px';
+            this._input.style.width = '1px';
+            this._input.style.zIndex = '9999';
+
+            document.body.appendChild(this._input);
+
+            // Eingabe Event abfangen
+            this._input.addEventListener('input', (e) => {
+                const val = e.target.value;
+                if (val.length > 0) {
+                    // An Blazor weiterleiten
+                    this._dotNetRef.invokeMethodAsync('HandleMobileTextInput', val);
+                    e.target.value = '';
+                }
+            });
+
+            // Optional: Enter oder andere Tasten abfangen, falls benötigt
+            this._input.addEventListener('keydown', (e) => {
+                // z.B. Eingaben weiterleiten oder ESC etc.
+            });
+        }
+    },
+
+    show: function() {
+        if (!this._input) return;
+        this._input.style.opacity = '0.01';
+        this._input.focus();
+    },
+
+    hide: function() {
+        if (!this._input) return;
+        this._input.blur();
+    }
+};
+
+// Function to get user clipboard content
+window.getClipboardContent = async () => {
+    try {
+        const text = await navigator.clipboard.readText();
+        return text;
+    } catch (err) {
+        console.error('Failed to read clipboard contents: ', err);
+        return '';
+    }
+};
+
+// Function to write text to the clipboard
+window.setClipboardContent = async (text) => {
+    try {
+        await navigator.clipboard.writeText(text);
+    } catch (err) {
+        console.error('Failed to write to clipboard: ', err);
+    }
+};
+
+window.fallbackSetClipboard = async function (text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        console.log("fallbackSetClipboard: Clipboard set to:", text);
+    } catch (err) {
+        console.error('fallbackSetClipboard failed:', err);
+    }
+};
+
+
 
 // JavaScript function for capturing the mouse position
 function captureMousePosition(elementId) {
