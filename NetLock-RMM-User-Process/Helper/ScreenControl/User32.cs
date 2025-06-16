@@ -1366,6 +1366,10 @@ public static class User32
     [DllImport("user32.dll", SetLastError = true)]
     public static extern bool GetUserObjectInformationW(nint hObj, int nIndex,
          [Out] byte[] pvInfo, uint nLength, out uint lpnLengthNeeded);
+
+    [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern IntPtr LoadLibrary(string lpFileName);
+
     #endregion
 
     #region Methods

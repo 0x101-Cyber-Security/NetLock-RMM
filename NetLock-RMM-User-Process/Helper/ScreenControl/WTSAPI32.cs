@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-using Global.Helper;
 
-namespace Windows.Helper.ScreenControl;
+namespace NetLock_RMM_User_Process.Helper.ScreenControl;
 // Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class WTSAPI32
@@ -102,7 +101,7 @@ public static class WTSAPI32
             uint sessionId = WTSGetActiveConsoleSessionId();
             if (sessionId == 0xFFFFFFFF)
             {
-                Logging.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", "WTSGetActiveConsoleSessionId() returned 0xFFFFFFFF");
+                Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", "WTSGetActiveConsoleSessionId() returned 0xFFFFFFFF");
                 Console.WriteLine("❌ Keine aktive Konsole gefunden.");
                 return null;
             }
@@ -114,14 +113,14 @@ public static class WTSAPI32
             else
             {
                 int error = Marshal.GetLastWin32Error();
-                Logging.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"WTSQueryUserToken({sessionId}) failed with error {error}");
+                Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"WTSQueryUserToken({sessionId}) failed with error {error}");
                 Console.WriteLine($"❌ WTSQueryUserToken({sessionId}) failed with {error}");
                 return null;
             }
         }
         catch (Exception ex)
         {
-            Logging.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"Exception: {ex.Message}");
+            Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"Exception: {ex.Message}");
             Console.WriteLine("Fehler beim Tokenholen: " + ex);
             return null;
         }

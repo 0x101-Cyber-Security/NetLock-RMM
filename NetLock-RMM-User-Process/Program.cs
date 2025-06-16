@@ -415,6 +415,14 @@ class Program
         {
             Console.WriteLine("Starting User Process...");
 
+            /*IntPtr handle = User32.LoadLibrary("sas.dll");
+            if (handle == IntPtr.Zero)
+            {
+                Console.WriteLine("Failed to load sas.dll. Ensure it is present in the application directory.");
+                return;
+            }*/
+            //Console.WriteLine("sas.dll loaded successfully.");
+
             var client = new UserClient();
             await client.Local_Server_Connect();
 

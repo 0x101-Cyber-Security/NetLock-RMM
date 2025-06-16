@@ -266,8 +266,10 @@ namespace NetLock_RMM_User_Process.Helper.ScreenControl
         {
             try
             {
-                ScreenControl.User32.SendSAS(AsUser: false);
-                ScreenControl.User32.SendSAS(true);
+                //ScreenControl.User32.SendSAS(true);
+                //Thread.Sleep(100); // Wait for the SAS to be sent
+                //ScreenControl.User32.SendSAS(AsUser: false);
+             
                 Console.WriteLine("Ctrl+Alt+Delete sent successfully.");
             }
             catch (Exception ex)

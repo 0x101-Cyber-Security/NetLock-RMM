@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.Globalization;
 using Windows.Helper.ScreenControl;
+using System.Runtime.InteropServices;
 
 namespace NetLock_RMM_Agent_Remote
 {
@@ -503,7 +504,56 @@ namespace NetLock_RMM_Agent_Remote
                                     if (command_object.remote_control_keyboard_input == "ctrlaltdel")
                                     {
                                         Logging.Debug("Service.Setup_SignalR", "Sending SAS for ctrlaltdel", command_object.remote_control_username);
-                                        User32.SendSAS(true); 
+
+                                        Sas_Diagnostics.LogContext();
+
+                                        User32.SendSAS(false); // Send the SAS twice to ensure it is processed correctly
+                                        //User32.SendSAS(true); // Send the SAS twice to ensure it is processed correctly
+
+                                        /*
+                                        IntPtr? token = Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken();
+
+                                        Logging.Debug("Service.Setup_SignalR", "User token for ctrlaltdel", token.HasValue ? "Available" : "Not available");
+
+                                        Sas_Diagnostics.LogContext();
+
+                                        if (token.HasValue)
+                                        {
+                                            Logging.Debug("Service.Setup_SignalR", "Token received", "Trying to impersonate user...");
+
+                                            if (WTSAPI32.DuplicateToken(token.Value, WTSAPI32.SecurityImpersonation, out IntPtr dupToken))
+                                            {
+                                                if (WTSAPI32.ImpersonateLoggedOnUser(dupToken))
+                                                {
+                                                    try
+                                                    {
+                                                        Logging.Debug("Service.Setup_SignalR", "Impersonation", "Success. Sending SAS as user.");
+                                                        User32.SendSAS(true);
+                                                    }
+                                                    finally
+                                                    {
+                                                        WTSAPI32.RevertToSelf();
+                                                        Kernel32.CloseHandle(dupToken);
+                                                        Logging.Debug("Service.Setup_SignalR", "Impersonation", "Reverted to self.");
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    int err = Marshal.GetLastWin32Error();
+                                                    string errMsg = new System.ComponentModel.Win32Exception(err).Message;
+                                                    Logging.Debug("Service.Setup_SignalR", "Impersonation failed", $"Error: {err} - {errMsg}");
+                                                }
+                                            }
+                                            else
+                                            {
+                                                int err = Marshal.GetLastWin32Error();
+                                                string errMsg = new System.ComponentModel.Win32Exception(err).Message;
+                                                Logging.Debug("Service.Setup_SignalR", "DuplicateToken failed", $"Error: {err} - {errMsg}");
+                                            }
+                                        }
+
+                                        // User32.SendSAS(true);
+                                        */
                                     }
 
                                     //  Create the JSON object
@@ -900,8 +950,6 @@ namespace NetLock_RMM_Agent_Remote
             {
                 Logging.Error("Remote_Control_Send_Screen", "failed", ex.ToString());
             }
-
-
         }
 
         public void Stop()

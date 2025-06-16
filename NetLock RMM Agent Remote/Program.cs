@@ -7,9 +7,6 @@ var builder = Host.CreateApplicationBuilder(args);
 
 Console.WriteLine("Starting NetLock RMM Remote Agent");
 
-//SessionScreenshotService.MakeScreenshot(IntPtr.Zero, 0);
-//SessionScreenshotService.Run();
-
 // Check if debug mode
 if (Logging.Check_Debug_Mode()) // debug_mode
 {
@@ -18,37 +15,6 @@ if (Logging.Check_Debug_Mode()) // debug_mode
 }
 else
     Console.WriteLine("Debug mode disabled");
-
-// Thats dev stuff
-Global.Configuration.Agent.debug_mode = true;
-
-//var test = Win32Interop.GetActiveSessions(); // Typinferenz mit var, List<T> Problem gelöst
-
-/*
-foreach (var session in test)
-{
-    Console.WriteLine($"Session ID: {session.Id}, Name: {session.Name}, Type: {session.Type}, Username: {session.Username}");
-    Logging.Debug("Program.cs", "Startup", $"Session ID: {session.Id}, Name: {session.Name}, Type: {session.Type}, Username: {session.Username}");
-}
-*/
-
-/*bool success = Win32Interop.CreateInteractiveSystemProcess(
-    commandLine: @"C:\Program Files\New folder (2)\NetLock RMM Windows Login Screen Test.exe",
-    targetSessionId: 0, // oder z. B. Process.GetCurrentProcess().SessionId
-    hiddenWindow: false,
-    out var procInfo);
-
-if (success)
-{
-    Console.WriteLine("Prozess gestartet mit PID: " + procInfo.dwProcessId);
-    Logging.Debug("Program.cs", "Startup", "Prozess gestartet mit PID: " + procInfo.dwProcessId);
-}
-else
-{
-    Console.WriteLine("Fehler beim Starten des Prozesses.");
-    Logging.Debug("Program.cs", "Startup", "Fehler beim Starten des Prozesses.");
-}
-*/
 
 if (OperatingSystem.IsWindows())
 {

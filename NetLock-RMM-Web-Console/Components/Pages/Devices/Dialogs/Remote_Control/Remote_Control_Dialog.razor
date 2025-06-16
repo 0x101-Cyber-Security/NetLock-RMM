@@ -92,7 +92,7 @@
 
                     @if (!connected)
                     {
-                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
+                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Warning" Indeterminate="true">
                             <MudText Typo="Typo.body1">The device is not connected to the NetLock RMM backend. Waiting for it to come back.</MudText>
                         </MudProgressLinear>
                     } 
@@ -119,8 +119,8 @@
                     }
                     else if (connected && !rendered)
                     {
-                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
-                            <MudText Typo="Typo.body1">No screen output. Select another user session. If you triggered a UAC or secure dialog, you need to select the machine name.</MudText>
+                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Warning" Indeterminate="true">
+                            <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background.</MudText>
                         </MudProgressLinear>
 
                         <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true"  OnClick="Remote_Get_Users" >Fetch users</MudButton>
@@ -181,6 +181,10 @@
                             }
 
                             <MudSwitch Class="ml-2 mt-2" @bind-Value="isClipboardEnabled" Color="Color.Primary" Label="Clipboard" />
+
+                            <MudTooltip Text="Fetch user sessions">
+                                <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="Remote_Get_Users"></MudIconButton>
+                            </MudTooltip>
 
                             <MudTooltip Text="Send Ctrl + Alt + Delete">
                                 <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.LockOpen" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" @onclick="@(() => Remote_Keyboard_Input("ctrlaltdel"))"></MudIconButton>
@@ -273,7 +277,7 @@
     </DialogContent>
     <DialogActions>
 
-        <MudButton Class="mt-2" Size="Size.Small" Color="Color.Warning" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.StopScreenShare" OnClick="Dispose">@Localizer["stop_remote_session"]</MudButton>
+        <MudButton Class="mt-2" Size="Size.Small" Color="Color.Default" FullWidth="true" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.StopScreenShare" OnClick="Dispose">@Localizer["stop_remote_session"]</MudButton>
 
     </DialogActions>
 </MudDialog>
@@ -337,6 +341,7 @@
 
     private string imageSrc = String.Empty;
 
+    // Recording
     private bool recordSession = false;
     private bool recordSessionForce = false;
     private string recordSessionId = String.Empty;
@@ -536,11 +541,26 @@
                         //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START a5116af2-3427-4741-bada-d6e7c04eb5b1 //OSSCH_END
+                        //OSSCH_START d18de671-c1b1-4d80-b76a-b4cad5f483d6 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 22) // 22 = empty image
                         {
                             rendered = false;
+                            // Switch to the next user, if the end of the array is reached, start over
+							if (users.Count() > 0)
+							{
+								int currentIndex = users.IndexOf(user);
+								if (currentIndex < users.Count() - 1)
+								{
+									user = users[currentIndex + 1];
+									Remote_Get_Screen_Indexes();
+								}
+								else
+								{
+									user = users[0]; // Switch to first user session
+									Remote_Get_Screen_Indexes();
+								}
+							}
                         }
                         else
                         {
@@ -1296,6 +1316,7 @@
         }
     }
 
+    // Window dragging
     private bool isDragging = false;
     private bool hasMoved = false;
 
@@ -1325,48 +1346,42 @@
         }
     }
 
-    private bool _keyboardVisible = false;
+    private bool _mobileKeyboardVisible = false;
 
     private async Task ToggleMobileKeyboard()
     {
-        if (_keyboardVisible)
-        {
+        if (_mobileKeyboardVisible)
             await JSRuntime.InvokeVoidAsync("mobileKeyboardInput.hide");
-        }
         else
-        {
             await JSRuntime.InvokeVoidAsync("mobileKeyboardInput.show");
 
-        }
-        _keyboardVisible = !_keyboardVisible;
+        _mobileKeyboardVisible = !_mobileKeyboardVisible;
     }
 
     [JSInvokable]
     public async Task HandleMobileTextInput(string input)
     {
-        Console.WriteLine("User typed: " + input);
+        //Console.WriteLine("User typed: " + input);
 
         if (string.IsNullOrEmpty(input))
             return;
 
-        // Normierung des Inputs (z.B. alles klein)
+        // Standardization of the input (e.g. everything small)
         string normalizedInput = input.ToLowerInvariant();
 
-        // Mappe mobile Eingabe auf PC Keys (w, a, s, d)
+        // Mobile input folder on PC Keys (w, a, s, d)
         string pcKey = MapMobileInputToPCKey(normalizedInput);
 
-        // Optional: Spezialzeichen normalisieren (Enter, Backspace etc.)
+        // Optional: Normalize special characters (Enter, Backspace etc.)
         pcKey = GetNormalizedKeyCode(pcKey, pcKey);
 
-		Console.WriteLine("Mapped mobile input to PC key: " + pcKey);
-
-        // Sende den Key an Remote
+        // Send the key to Remote
         await Remote_Keyboard_Input(pcKey);
     }
 
     /// <summary>
-    /// Mappt mobile Eingaben (a,b,c...) auf PC Keys (w,a,s,d).
-    /// Beispiel: 'a' -> 'a', 'b' -> 'w', 'c' -> 's', 'd' -> 'd'.
+    /// Maps mobile inputs (a,b,c...) to PC keys (w,a,s,d).
+    /// Example: 'a' -> 'a', 'b' -> 'w', 'c' -> 's', 'd' -> 'd'.
     /// </summary>
     private string MapMobileInputToPCKey(string input)
     {
@@ -1386,7 +1401,7 @@
             case "esc": return "Escape";
             case "space": return "Space";
 
-            // ...weiter wie gehabt
+			// ... needs to be expanded for other special keys as needed
 
             default:
                 return input;
@@ -1417,8 +1432,6 @@
             : mainKey;
 
         //Console.WriteLine($"Key pressed: {combo.ToLower()}");
-
-		Console.WriteLine($"Key pressed: {combo}");
 
         await Remote_Keyboard_Input(combo.ToLower());
     }
@@ -1532,7 +1545,7 @@
     {
         return code switch
         {
-            // Buchstaben
+            // Letters
             "KeyA" => KeyCodes.VK_A,
             "KeyB" => KeyCodes.VK_B,
             "KeyC" => KeyCodes.VK_C,
@@ -1560,7 +1573,7 @@
             "KeyY" => KeyCodes.VK_Y,
             "KeyZ" => KeyCodes.VK_Z,
 
-            // Zahlen (Top Row)
+            // Numbers (Top Row)
             "Digit0" => KeyCodes.VK_0,
             "Digit1" => KeyCodes.VK_1,
             "Digit2" => KeyCodes.VK_2,
@@ -1572,7 +1585,7 @@
             "Digit8" => KeyCodes.VK_8,
             "Digit9" => KeyCodes.VK_9,
 
-            // Steuerungstasten
+            // Control buttons
             "ControlLeft" => KeyCodes.VK_CONTROL,
             "ControlRight" => KeyCodes.VK_CONTROL,
             "ShiftLeft" => KeyCodes.VK_SHIFT,
@@ -1593,13 +1606,13 @@
             "PageUp" => KeyCodes.VK_PRIOR,
             "PageDown" => KeyCodes.VK_NEXT,
 
-            // Pfeiltasten
+            // Arrow keys
             "ArrowLeft" => KeyCodes.VK_LEFT,
             "ArrowUp" => KeyCodes.VK_UP,
             "ArrowRight" => KeyCodes.VK_RIGHT,
             "ArrowDown" => KeyCodes.VK_DOWN,
 
-            // Sonderzeichen
+            // Special characters
             "Minus" => KeyCodes.VK_MINUS,
             "Equal" => KeyCodes.VK_EQUALS,
             "BracketLeft" => KeyCodes.VK_LBRACKET,
@@ -1612,7 +1625,7 @@
             "Slash" => KeyCodes.VK_SLASH,
             "Backquote" => KeyCodes.VK_GRAVE,
 
-            // Funktionstasten
+            // Function keys
             "F1" => KeyCodes.VK_F1,
             "F2" => KeyCodes.VK_F2,
             "F3" => KeyCodes.VK_F3,
@@ -1626,7 +1639,7 @@
             "F11" => KeyCodes.VK_F11,
             "F12" => KeyCodes.VK_F12,
 
-            // NumPad Tasten
+            // NumPad buttons
             "Numpad0" => KeyCodes.VK_NUMPAD0,
             "Numpad1" => KeyCodes.VK_NUMPAD1,
             "Numpad2" => KeyCodes.VK_NUMPAD2,
@@ -1643,7 +1656,7 @@
             "NumpadDecimal" => KeyCodes.VK_DECIMAL,
             "NumpadDivide" => KeyCodes.VK_DIVIDE,
 
-            // Zusätzliche Tasten
+            // Additional buttons
             "CapsLock" => KeyCodes.VK_CAPITAL,
             "ScrollLock" => KeyCodes.VK_SCROLL,
             "NumLock" => KeyCodes.VK_NUMLOCK,
@@ -1657,7 +1670,7 @@
 
     public static class KeyCodes
     {
-        // Buchstaben
+        // Letters
         public const byte VK_A = 0x41;
         public const byte VK_B = 0x42;
         public const byte VK_C = 0x43;
@@ -1685,7 +1698,7 @@
         public const byte VK_Y = 0x59;
         public const byte VK_Z = 0x5A;
 
-        // Zahlen
+		// Number keys (Top Row)
         public const byte VK_0 = 0x30;
         public const byte VK_1 = 0x31;
         public const byte VK_2 = 0x32;
@@ -1697,7 +1710,7 @@
         public const byte VK_8 = 0x38;
         public const byte VK_9 = 0x39;
 
-        // Steuerungstasten
+        // Control buttons
         public const byte VK_CONTROL = 0x11;
         public const byte VK_SHIFT = 0x10;
         public const byte VK_ALT = 0x12;
@@ -1714,13 +1727,13 @@
         public const byte VK_PRIOR = 0x21; // Page Up
         public const byte VK_NEXT = 0x22;  // Page Down
 
-        // Pfeiltasten
+        // Arrow keys
         public const byte VK_LEFT = 0x25;
         public const byte VK_UP = 0x26;
         public const byte VK_RIGHT = 0x27;
         public const byte VK_DOWN = 0x28;
 
-        // Sonderzeichen
+        // Special characters
         public const byte VK_MINUS = 0xBD;      // -
         public const byte VK_EQUALS = 0xBB;     // =
         public const byte VK_LBRACKET = 0xDB;   // [
@@ -1733,7 +1746,7 @@
         public const byte VK_SLASH = 0xBF;      // /
         public const byte VK_GRAVE = 0xC0;      // `
 
-        // Funktionstasten
+        // Function keys
         public const byte VK_F1 = 0x70;
         public const byte VK_F2 = 0x71;
         public const byte VK_F3 = 0x72;
@@ -1747,7 +1760,7 @@
         public const byte VK_F11 = 0x7A;
         public const byte VK_F12 = 0x7B;
 
-        // NumPad Tasten
+        // NumPad buttons
         public const byte VK_NUMPAD0 = 0x60;
         public const byte VK_NUMPAD1 = 0x61;
         public const byte VK_NUMPAD2 = 0x62;
@@ -1770,10 +1783,11 @@
         public const byte VK_NUMLOCK = 0x90; // Num Lock
         public const byte VK_PAUSE = 0x13;   // Pause
         public const byte VK_SNAPSHOT = 0x2C; // Print Screen
-        public const byte VK_APPS = 0x5D;    // Kontextmenü-Taste (Applications key)
+        public const byte VK_APPS = 0x5D;    // Context menu-Taste (Applications key)
     }
 
-    private async Task HandleMouseScroll(WheelEventArgs e)
+		// TBWO: Needs to be implemenmted later
+    /*private async Task HandleMouseScroll(WheelEventArgs e)
     {
         // Recognize the scroll direction and intensity
         double scrollX = e.DeltaX;
@@ -1783,7 +1797,7 @@
 
         // Forward the scroll information to the remote device
         //await SendScrollToRemoteDevice(scrollX, scrollY);
-    }
+    }*/
 
     private Task HandleBlur(FocusEventArgs e)
     {

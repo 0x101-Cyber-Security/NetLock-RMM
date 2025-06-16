@@ -93,6 +93,35 @@ namespace Windows.Helper
             }
         }
 
+        // Write dword32 value to HKLM
+        public static bool HKLM_Write_Dword_Value(string path, string value, int content)
+        {
+            try
+            {
+                // Immer die 64-Bit-Registry verwenden
+                RegistryKey regkey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, RegistryView.Registry64).CreateSubKey(path, true);
+                if (regkey != null)
+                {
+                    regkey.SetValue(value, content, RegistryValueKind.DWord);
+                    regkey.Close();
+                    regkey.Dispose();
+
+                    Logging.Registry("Helper.Registry_Handler.HKLM_Write_Dword_Value", "Path: " + path + " Value: " + value + " Content: " + content, "Done.");
+                    return true;
+                }
+                else
+                {
+                    Logging.Error("Helper.Registry_Handler.HKLM_Write_Dword_Value", "Path: " + path + " konnte nicht geöffnet werden.", "Failed");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Helper.Registry_Handler.HKLM_Write_Dword_Value", "Path: " + path + " Value: " + value + " Content: " + content, "Failed: " + ex.ToString());
+                return false;
+            }
+        }
+
         public static bool HKLM_Delete_Value(string path, string value)
         {
             try

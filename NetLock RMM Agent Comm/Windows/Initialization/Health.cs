@@ -91,7 +91,7 @@ namespace Windows.Initialization.Health
         {
             // Write the NetLock RMM SAS to the registry, if it does not exist
             Logging.Debug("Initialization.Health.SAS", "Write to registry", "SoftwareSASGeneration");
-            Registry.HKLM_Write_Value(Application_Paths.hklm_sas_reg_path, "SoftwareSASGeneration", "3");
+            Registry.HKLM_Write_Dword_Value(Application_Paths.hklm_sas_reg_path, "SoftwareSASGeneration", 1);
         }
     }
 }
