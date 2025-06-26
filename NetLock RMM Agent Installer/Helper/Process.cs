@@ -40,5 +40,31 @@ namespace Helper
                 return false;
             }
         }
+
+        public static void HideApplicationWindow()
+        {
+            // Hide the application window
+            try
+            {
+                Process currentProcess = Process.GetCurrentProcess();
+                IntPtr handle = currentProcess.MainWindowHandle;
+                if (handle != IntPtr.Zero)
+                {
+                    ShowWindow(handle, SW_HIDE);
+                    Logging.Handler.Debug("Helper._Process.HideApplicationWindow", "Hide application window.", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Helper._Process.HideApplicationWindow] -> Hide application window: Done.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Helper._Process.HideApplicationWindow", "Failed to hide application window.", ex.ToString());
+                Console.WriteLine("[" + DateTime.Now + "] - [Helper._Process.HideApplicationWindow] -> Failed to hide application window: " + ex.Message);
+            }
+        }
+
+        [System.Runtime.InteropServices.DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_HIDE = 0; // Hide the window
     }
 }

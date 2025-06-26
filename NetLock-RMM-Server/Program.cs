@@ -31,6 +31,7 @@ using System.IO.Compression;
 using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PatternContexts;
 using System.Reflection;
+using System.Configuration;
 
 // Check directories
 NetLock_RMM_Server.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
@@ -78,7 +79,10 @@ Roles.LLM = role_llm;
 var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<NetLock_RMM_Server.Members_Portal.Config>() ?? new NetLock_RMM_Server.Members_Portal.Config();
 
 if (membersPortal.Enabled)
+{
     Members_Portal.api_enabled = true;
+    Members_Portal.api_key = membersPortal.ApiKeyOverride ?? String.Empty;
+}
 
 // Output OS
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
@@ -134,6 +138,10 @@ Console.WriteLine(Environment.NewLine);
 // Output members portal configuration
 Console.WriteLine("[Members Portal]");
 Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
+
+if (!String.IsNullOrEmpty(Members_Portal.api_key))
+    Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
+
 Console.WriteLine(Environment.NewLine);
 
 // Logging
@@ -255,6 +263,14 @@ else
     }
 
     await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
+
+    // Get api key
+    if (String.IsNullOrEmpty(Members_Portal.api_key))
+    {
+        Members_Portal.api_key = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
+
+        Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.api_key);
+    }
 }
 
 Console.WriteLine(Environment.NewLine);
@@ -264,7 +280,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 136834f0-5542-4308-a546-8df3afc221cd //OSSCH_END
+        //OSSCH_START 12ac6c17-efbc-4207-abdd-fe1c6faf11ff //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1362,7 +1378,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START c830c9b4-217a-43b1-868f-aace469a9858 //OSSCH_END
+    //OSSCH_START 0437f1f8-da38-4064-86a9-e21434e79c2a //OSSCH_END
 }
 
 /*

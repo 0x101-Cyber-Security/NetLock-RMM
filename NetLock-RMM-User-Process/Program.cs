@@ -415,6 +415,8 @@ class Program
         {
             Console.WriteLine("Starting User Process...");
 
+            Dpi.SetProcessDpiAwareness(Dpi.ProcessDpiAwareness.Process_Per_Monitor_DPI_Aware);
+
             /*IntPtr handle = User32.LoadLibrary("sas.dll");
             if (handle == IntPtr.Zero)
             {

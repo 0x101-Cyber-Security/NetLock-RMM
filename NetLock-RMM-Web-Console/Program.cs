@@ -17,6 +17,8 @@ using NetLock_RMM_Web_Console.Components.Pages.Devices;
 using LettuceEncrypt;
 using LettuceEncrypt.Acme;
 using MudBlazor;
+using Microsoft.AspNetCore.HttpOverrides;
+using static MudBlazor.Defaults;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
 
@@ -38,7 +40,10 @@ var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncryp
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
 var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
-var publicOverrideUrl = builder.Configuration.GetValue<string>("Webinterface:publicOverrideUrl", String.Empty);
+var publicOverrideUrlRaw = builder.Configuration.GetValue<string>("Webinterface:publicOverrideUrl", string.Empty);
+var publicOverrideUrl = publicOverrideUrlRaw.TrimEnd('/');
+var allowedIps = builder.Configuration.GetSection("Kestrel:IpWhitelist").Get<List<string>>() ?? new List<string>();
+var knownProxies = builder.Configuration.GetSection("Kestrel:KnownProxies").Get<List<string>>() ?? new List<string>();
 
 Web_Console.loggingEnabled = loggingEnabled;
 
@@ -81,7 +86,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START aa5688cb-d7b2-4fb3-97a2-4c9eb9697971 //OSSCH_END
+//OSSCH_START 888fef65-1164-410b-868d-3605a1a15195 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -107,6 +112,8 @@ Console.WriteLine($"Https Port: {https_port}");
 Console.WriteLine($"Https (force): {https_force}");
 Console.WriteLine($"Hsts: {hsts}");
 Console.WriteLine($"Hsts Max Age: {hsts_max_age}");
+Console.WriteLine($"Allowed IPs: {string.Join(", ", allowedIps)}");
+Console.WriteLine($"Known Proxies: {string.Join(", ", knownProxies)}");
 Console.WriteLine($"LetsEncrypt: {letsencrypt}");
 
 Console.WriteLine($"Custom Certificate Path: {cert_path}");
@@ -147,6 +154,10 @@ Console.WriteLine(Environment.NewLine);
 // Output members portal configuration
 Console.WriteLine("[Members Portal]");
 Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
+
+if (!String.IsNullOrEmpty(Members_Portal.api_key))
+    Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
+
 Console.WriteLine(Environment.NewLine);
 
 // Webinterface
@@ -271,6 +282,7 @@ else
         {
             Console.WriteLine("Database tables do not exist. Creating tables...");
             await Database.Execute_Installation_Script();
+            await Database.Execute_Update_Scripts();
             Console.WriteLine("Database tables created.");
         }
         else // Table exists
@@ -287,6 +299,19 @@ else
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine("Database structure okay.");
             Console.ResetColor();
+
+            // Get api key
+            if (String.IsNullOrEmpty(Members_Portal.api_key))
+            {
+                Members_Portal.api_key = await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Get_Api_Key();
+
+                Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.api_key);
+            }
+            else
+                await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Set_Api_Key(Members_Portal.api_key);
+
+            // Update license info
+            await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_License_Info_Json(Members_Portal.api_key);
         }
     }
 }
@@ -340,6 +365,75 @@ Web_Console.token_service_secret_key = Randomizer.Handler.Token(true, 32);
 
 var app = builder.Build();
 
+// Middleware to filter the IP addresses
+var knownProxiesStrings = builder.Configuration.GetSection("Kestrel:KnownProxies").Get<List<string>>() ?? new List<string>();
+
+var forwardedHeadersOptions = new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+};
+
+bool hasValidProxy = false;
+
+foreach (var proxyIpString in knownProxiesStrings)
+{
+    if (IPAddress.TryParse(proxyIpString, out var proxyIp))
+    {
+        forwardedHeadersOptions.KnownProxies.Add(proxyIp);
+        hasValidProxy = true;
+        Logging.Handler.Debug("Middleware", "KnownProxies", $"Added known proxy IP: {proxyIp}");
+        Console.WriteLine($"Added known proxy IP: {proxyIp}");
+    }
+    else
+    {
+        Logging.Handler.Error("Middleware", "KnownProxies", $"'{proxyIpString}' is not a valid IP address and will be ignored.");
+        Console.WriteLine($"Warning: '{proxyIpString}' is not a valid IP address and will be ignored.");
+    }
+}
+
+// Check if proxy IPs were added
+if (hasValidProxy)
+{
+    app.UseForwardedHeaders(forwardedHeadersOptions);
+}
+else
+{
+    Console.WriteLine("No valid KnownProxies found, skipping UseForwardedHeaders middleware.");
+}
+
+if (allowedIps == null || allowedIps.Count == 0)
+{
+    Logging.Handler.Debug("Middleware", "IP Whitelisting", "No IP addresses are whitelisted. All IPs will be allowed.");
+    Console.WriteLine("No IP addresses are whitelisted. All IPs will be allowed.");
+}
+else
+{
+    Logging.Handler.Debug("Middleware", "IP Whitelisting", "IP whitelisting enabled. Whitelisted IPs: " + string.Join(", ", allowedIps));
+    Console.WriteLine("IP whitelisting enabled. Whitelisted IPs: " + string.Join(", ", allowedIps));
+
+    app.Use(async (context, next) =>
+    {
+        var remoteIp = context.Connection.RemoteIpAddress?.ToString();
+        var forwardedFor = context.Request.Headers["X-Forwarded-For"].ToString();
+        var forwardedProto = context.Request.Headers["X-Forwarded-Proto"].ToString();
+
+        Logging.Handler.Debug("Middleware", "RemoteIpAddress", remoteIp);
+        Logging.Handler.Debug("Middleware", "X-Forwarded-For", forwardedFor);
+        Logging.Handler.Debug("Middleware", "X-Forwarded-Proto", forwardedProto);
+
+        // If the request is forwarded, use the first IP from the X-Forwarded-For header
+        if (!allowedIps.Contains(remoteIp))
+        {
+            Logging.Handler.Error("Middleware", "IP Whitelisting", $"IP {remoteIp} is not whitelisted.");
+            context.Response.StatusCode = 403;
+            await context.Response.WriteAsync("Your IP is unknown.");
+            return;
+        }
+
+        await next();
+    });
+}
+
 // temporary static selection
 if (language == "en-US")
     app.UseRequestLocalization("en-US");
@@ -371,7 +465,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START bfe25df9-8a82-432e-9bf2-c9085c5b63da //OSSCH_END
+//OSSCH_START 8af6f544-6eeb-49e5-b5d4-cd0a51c2bbf2 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

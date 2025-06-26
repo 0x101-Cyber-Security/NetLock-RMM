@@ -236,17 +236,17 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@antivirus_solution", device_identity.antivirus_solution);
                     cmd.Parameters.AddWithValue("@firewall_status", device_identity.firewall_status);
                     cmd.Parameters.AddWithValue("@architecture", device_identity.architecture);
-                    cmd.Parameters.AddWithValue("@last_boot", device_identity.last_boot);
+                    cmd.Parameters.AddWithValue("@last_boot", Helper.Truncate(device_identity.last_boot));
                     cmd.Parameters.AddWithValue("@timezone", device_identity.timezone);
-                    cmd.Parameters.AddWithValue("@cpu", device_identity.cpu);
+                    cmd.Parameters.AddWithValue("@cpu", Helper.Truncate(device_identity.cpu));
                     cmd.Parameters.AddWithValue("@cpu_usage", device_identity.cpu_usage);
-                    cmd.Parameters.AddWithValue("@mainboard", device_identity.mainboard);
-                    cmd.Parameters.AddWithValue("@gpu", device_identity.gpu);
-                    cmd.Parameters.AddWithValue("@ram", device_identity.ram);
+                    cmd.Parameters.AddWithValue("@mainboard", Helper.Truncate(device_identity.mainboard));
+                    cmd.Parameters.AddWithValue("@gpu", Helper.Truncate(device_identity.gpu));
+                    cmd.Parameters.AddWithValue("@ram", Helper.Truncate(device_identity.ram));
                     cmd.Parameters.AddWithValue("@ram_usage", device_identity.ram_usage);
-                    cmd.Parameters.AddWithValue("@tpm", device_identity.tpm);
+                    cmd.Parameters.AddWithValue("@tpm", Helper.Truncate(device_identity.tpm));
                     cmd.Parameters.AddWithValue("@environment_variables", device_identity.environment_variables);
-                    cmd.Parameters.AddWithValue("@last_active_user", device_identity.last_active_user);
+                    cmd.Parameters.AddWithValue("@last_active_user", Helper.Truncate(device_identity.last_active_user));
 
                     cmd.ExecuteNonQuery();
 
@@ -315,18 +315,18 @@ namespace NetLock_RMM_Server.Agent.Windows
                     cmd.Parameters.AddWithValue("@antivirus_solution", device_identity.antivirus_solution);
                     cmd.Parameters.AddWithValue("@firewall_status", device_identity.firewall_status);
                     cmd.Parameters.AddWithValue("@architecture", device_identity.architecture);
-                    cmd.Parameters.AddWithValue("@last_boot", device_identity.last_boot);
+                    cmd.Parameters.AddWithValue("@last_boot", Helper.Truncate(device_identity.last_boot));
                     cmd.Parameters.AddWithValue("@timezone", device_identity.timezone);
-                    cmd.Parameters.AddWithValue("@cpu", device_identity.cpu);
+                    cmd.Parameters.AddWithValue("@cpu", Helper.Truncate(device_identity.cpu));
                     cmd.Parameters.AddWithValue("@cpu_usage", device_identity.cpu_usage);
-                    cmd.Parameters.AddWithValue("@mainboard", device_identity.mainboard);
-                    cmd.Parameters.AddWithValue("@gpu", device_identity.gpu);
-                    cmd.Parameters.AddWithValue("@ram", device_identity.ram);
+                    cmd.Parameters.AddWithValue("@mainboard", Helper.Truncate(device_identity.mainboard));
+                    cmd.Parameters.AddWithValue("@gpu", Helper.Truncate(device_identity.gpu));
+                    cmd.Parameters.AddWithValue("@ram", Helper.Truncate(device_identity.ram));
                     cmd.Parameters.AddWithValue("@ram_usage", device_identity.ram_usage);
-                    cmd.Parameters.AddWithValue("@tpm", device_identity.tpm);
+                    cmd.Parameters.AddWithValue("@tpm", Helper.Truncate(device_identity.tpm));
                     cmd.Parameters.AddWithValue("@environment_variables", "");
                     cmd.Parameters.AddWithValue("@synced", synced);
-                    cmd.Parameters.AddWithValue("@last_active_user", device_identity.last_active_user);
+                    cmd.Parameters.AddWithValue("@last_active_user", Helper.Truncate(device_identity.last_active_user));
 
                     cmd.ExecuteNonQuery();
                 }
@@ -513,7 +513,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                         }
 
                         // Verarbeiten Sie die Device-Identity
-                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "device_identity", $"Device identity: {device_identity.device_name}");
+                        Logging.Handler.Debug("Agent.Windows.Authentification.InvokeAsync", "device_identity", $"Device name: {device_identity.device_name}");
 
                         // Get the tenant id & location id with tenant_guid & location_guid
                         (int tenant_id, int location_id) = await Helper.Get_Tenant_Location_Id(device_identity.tenant_guid, device_identity.location_guid);

@@ -120,7 +120,7 @@
                     else if (connected && !rendered)
                     {
                         <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Warning" Indeterminate="true">
-                            <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background.</MudText>
+                            <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background. Please wait.</MudText>
                         </MudProgressLinear>
 
                         <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true"  OnClick="Remote_Get_Users" >Fetch users</MudButton>
@@ -138,7 +138,7 @@
                     }
                     else
                     {
-                        <!-- UI-Bar mit MudSelects und Zoom -->
+                        <!-- UI bar with MudSelects and Zoom -->
                         <div style="
         display: flex;
         align-items: center;
@@ -340,6 +340,8 @@
     private string error_occurred_display = String.Empty;
 
     private string imageSrc = String.Empty;
+    private int remoteScreenFetchTries = 0;
+    private int remoteScreenFetchMaxTries => users.Count;
 
     // Recording
     private bool recordSession = false;
@@ -538,34 +540,48 @@
                         // Set the image source
                         this.imageSrc = imageSrc;
 
-                        //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
+                        Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START d18de671-c1b1-4d80-b76a-b4cad5f483d6 //OSSCH_END
+                        //OSSCH_START 08a021ba-a616-466c-bb41-c611d015ac41 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 22) // 22 = empty image
                         {
                             rendered = false;
-                            // Switch to the next user, if the end of the array is reached, start over
-							if (users.Count() > 0)
-							{
-								int currentIndex = users.IndexOf(user);
-								if (currentIndex < users.Count() - 1)
-								{
-									user = users[currentIndex + 1];
-									Remote_Get_Screen_Indexes();
-								}
-								else
-								{
-									user = users[0]; // Switch to first user session
-									Remote_Get_Screen_Indexes();
-								}
-							}
+                            remoteScreenFetchTries++;
+
+                            if (remoteScreenFetchTries >= remoteScreenFetchMaxTries)
+                            {
+                                // Run through all users, none had a picture - Retrieve new users
+                                Remote_Get_Users();
+                                remoteScreenFetchTries = 0;
+
+                                if (users.Count > 0)
+                                {
+                                    user = users[0];
+                                    Remote_Get_Screen_Indexes();
+                                }
+                            }
+                            else
+                            {
+                                // Try the next user
+                                if (users.Count > 0)
+                                {
+                                    int currentIndex = users.IndexOf(user);
+                                    if (currentIndex < users.Count - 1)
+                                        user = users[currentIndex + 1];
+                                    else
+                                        user = users[0]; // loop to first
+
+                                    Remote_Get_Screen_Indexes();
+                                }
+                            }
                         }
                         else
                         {
                             connected = true;
                             rendered = true;
+                            remoteScreenFetchTries = 0; // Reset on success
                         }
 
                         StateHasChanged();
@@ -734,7 +750,7 @@
 
     // Loop to refresh the screen
     private System.Threading.Timer remote_screen_refresh_timer;
-    private int remote_screen_refresh_ms = 300;
+    private int remote_screen_refresh_ms = 500;
 
     private async Task Remote_Screen_Refresh_Timer_Setup()
     {

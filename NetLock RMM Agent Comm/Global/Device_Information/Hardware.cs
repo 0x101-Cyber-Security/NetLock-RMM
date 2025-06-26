@@ -1695,33 +1695,56 @@ foreach (var diskObj in allDisks)
             }
             else if (OperatingSystem.IsLinux())
             {
-                // Get GPU
-                gpu = Linux.Helper.Bash.Execute_Script("GPU_Name", false, "lshw -C display");
-
-                var match_product = Regex.Match(gpu, $@"product:\s*(.+)");
-                var match_vendor = Regex.Match(gpu, $@"vendor:\s*(.+)");
-
-                if (!string.IsNullOrWhiteSpace(gpu))
+                string output = Linux.Helper.Bash.Execute_Script("GPU_Name", false, "lshw -C display");
+                if (!string.IsNullOrWhiteSpace(output))
                 {
-                    // GPU-Informationen aus der Ausgabe extrahieren
-                    string product = match_product.Success ? match_product.Groups[1].Value : string.Empty;
-                    string vendor = match_vendor.Success ? match_vendor.Groups[1].Value : string.Empty;
+                    string product = null;
+                    string vendor = null;
 
-                    if (!string.IsNullOrWhiteSpace(product) && !string.IsNullOrWhiteSpace(vendor))
+                    // Alle Zeilen durchsuchen
+                    var lines = output.Split('\n');
+                    foreach (var line in lines)
                     {
-                        gpu = $"{vendor.Trim()} {product.Trim()}";
+                        var trimmed = line.Trim();
+                        if (trimmed.StartsWith("product:"))
+                        {
+                            product = trimmed.Substring("product:".Length).Trim();
+                        }
+                        else if (trimmed.StartsWith("vendor:"))
+                        {
+                            vendor = trimmed.Substring("vendor:".Length).Trim();
+                        }
+
+                        // If both are found, cancel
+                        if (!string.IsNullOrEmpty(product) && !string.IsNullOrEmpty(vendor))
+                        {
+                            break;
+                        }
                     }
-                    else if (!string.IsNullOrWhiteSpace(product))
+
+                    if (!string.IsNullOrEmpty(product) && !string.IsNullOrEmpty(vendor))
                     {
-                        gpu = product.Trim();
+                        gpu = $"{vendor} {product}";
                     }
-                    else if (!string.IsNullOrWhiteSpace(vendor))
+                    else if (!string.IsNullOrEmpty(product))
                     {
-                        gpu = vendor.Trim();
+                        gpu = product;
+                    }
+                    else if (!string.IsNullOrEmpty(vendor))
+                    {
+                        gpu = vendor;
+                    }
+                    else
+                    {
+                        gpu = "N/A";
                     }
                 }
+                else
+                {
+                    gpu = "N/A";
+                }
 
-                Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", Device_Worker.gpu);
+                Logging.Debug("Online_Mode.Handler.Authenticate", "gpu", gpu);
             }
             else if (OperatingSystem.IsMacOS())
             {

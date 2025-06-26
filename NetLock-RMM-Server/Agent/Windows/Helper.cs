@@ -206,5 +206,21 @@ namespace NetLock_RMM_Server.Agent.Windows
             }
         }
 
+        // MySQL varchar shortener. We do this because if there is a agent side error causing to send a long string to the database, it will cause an error. With this the device is not rejected.
+        public static string Truncate(string? value, int maxLength = 255)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(value))
+                    return value ?? string.Empty;
+
+                return value.Length <= maxLength ? value : value.Substring(0, maxLength);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("NetLock_RMM_Server.Modules.Helper.Truncate", "General error", ex.ToString());
+                return string.Empty;
+            }
+        }
     }
 }

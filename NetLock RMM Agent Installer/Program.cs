@@ -42,6 +42,14 @@ namespace NetLock_RMM_Agent_Installer
         {
             try
             {
+                // Check if running as admin
+                if (!Helper.Elevation.IsElevated())
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: This application requires administrative or root privileges. Please run as administrator or root.");
+                    Logging.Handler.Error("Main", "Elevation", "This application requires administrative or root privileges. Please run as administrator or root.");
+                    Thread.Sleep(5000);
+                    Environment.Exit(0);
+                }
 
                 Console.Title = "NetLock RMM Agent Installer";
                 Console.ForegroundColor = ConsoleColor.Red;

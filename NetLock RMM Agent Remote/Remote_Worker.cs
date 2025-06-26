@@ -276,13 +276,9 @@ namespace NetLock_RMM_Agent_Remote
             {
                 if (!string.IsNullOrEmpty(device_identity))
                 {
-                    if (!remote_server_client_setup)
+                    if (!remote_server_client_setup || remote_server_client == null || remote_server_client.State == HubConnectionState.Disconnected)
                     {
                         await Setup_SignalR();
-                    }
-                    else if (remote_server_client.State == HubConnectionState.Disconnected)
-                    {
-                        await Remote_Connect();
                     }
                     else if (remote_server_client.State == HubConnectionState.Connected)
                     {
@@ -317,6 +313,9 @@ namespace NetLock_RMM_Agent_Remote
 
                 Device_Identity device_identity_object = JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
 
+                if (remote_server_client != null)
+                    await remote_server_client.DisposeAsync();
+
                 remote_server_client = new HubConnectionBuilder()
                 .WithUrl(remote_server_url, options =>
                 {
@@ -330,10 +329,11 @@ namespace NetLock_RMM_Agent_Remote
                 {
                     if (OperatingSystem.IsWindows())
                         logging.AddEventLog();
-                    
+
                     logging.AddConsole();
                     logging.SetMinimumLevel(LogLevel.Warning);
                 })
+                .WithAutomaticReconnect()
                 .Build();
 
                 remote_server_client.On<string>("ReceiveMessage", async (command) =>
@@ -616,30 +616,6 @@ namespace NetLock_RMM_Agent_Remote
             catch (Exception ex)
             {
                 Logging.Error("Service.Setup_SignalR", "Failed to start SignalR.", ex.ToString());
-            }
-        }
-
-        private async Task Remote_Connect()
-        {
-            try
-            {
-                // Check if the device_identity is empty, if so, return
-                if (String.IsNullOrEmpty(device_identity))
-                {
-                    Logging.Error("Service.Remote_Connect", "Device identity is empty.", device_identity);
-                    return;
-                }
-                else
-                    Logging.Debug("Service.Remote_Connect", "Device identity is not empty. Trying to connect to remote server.", device_identity);
-
-                // Connect to the remote server
-                await remote_server_client.StartAsync();
-                Console.WriteLine("Service.Remote_Connect", "Connected to the server.", "");
-                Logging.Debug("Service.Remote_Connect", "Connected to the server.", "");
-            }
-            catch (Exception ex)
-            {
-                Logging.Error("Service.Remote_Connect", "Failed to connect to the server.", ex.ToString());
             }
         }
 
