@@ -70,11 +70,13 @@ https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-gith
 # Setup NetLock RMM using Docker in 10 minutes
 [See in our documentation](https://docs.netlockrmm.com/en/server-installation-docker)
 
-Do you wish to get started as fast as possible? Our docker compose script ensures a easy and smooth setup. The script expects docker compose to be installed, on a linux disctribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM componments as well as a MySQL 8.0 server.
- 
-## Video Tutorial
-[Watch the video on YouTube](https://youtu.be/-VMoL6wnSKs)
- 
+Do you wish to get started as fast as possible? Our docker compose script ensures a easy and smooth setup, currently supporting three deployment scenarios:
+- Single IP / VPS / Bare Metal, basically a machine & ip only for NetLock RMM
+- Reverse Proxy (supports any reverse proxy)
+- Local Testing (only for local test environments, not for production)
+
+The script expects docker compose to be installed, on a linux disctribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM componments as well as a MySQL 8.0 server and connects everything with each other.
+
 1. Download the script with wget.
 ```plaintext
 sudo wget -P /home https://raw.githubusercontent.com/0x101-Cyber-Security/NetLock-RMM/main/docker-compose-quick-setup.sh
@@ -91,5 +93,8 @@ sudo ./home/docker-compose-quick-setup.sh
 ```
 
 4. Follow the instructions.
+
+## Video Tutorial
+[Watch the video on YouTube](https://youtu.be/-VMoL6wnSKs)
 
 Happy monitoring! 🥳
