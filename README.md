@@ -23,6 +23,7 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 ### 🛡️ **Flexible & Scalable Architecture**
 - **Modular Server Roles**: Run all components on a single machine or distribute them across multiple roles for scalability.
 - **Fallback Servers**: Define backup servers for each role to ensure high availability.
+- **Reverse Proxy Support**: Reverse proxies are fully supported.
 
 ### 🖥️ **Cross-Platform Agent Support**
 - Compatible with **Windows, Linux, and macOS** (x64 & ARM64).
