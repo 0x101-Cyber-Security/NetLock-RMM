@@ -334,10 +334,10 @@ elif [[ "$setup_option" == "2" ]]; then # Reverse Proxy
     # Get internal ip of the server
     server_ip=$(hostname -I | awk '{print $1}')
 
-    read "Is this the server where your reverse proxy is running? (Y/n): " reverse_proxy_server
+    read -p "Is this the server where your reverse proxy is running? (Y/n): " reverse_proxy_server
     reverse_proxy_server=${reverse_proxy_server:-Y}
     echo ""
-    read "Please enter the IP of the server where your reverse proxy is running: " reverse_proxy_ip
+    read -p "Please enter the IP of the server where your reverse proxy is running: " reverse_proxy_ip
     if [[ -z "$reverse_proxy_ip" ]]; then
         echo "No IP entered. Exiting."
         exit 1
@@ -365,6 +365,7 @@ elif [[ "$setup_option" == "2" ]]; then # Reverse Proxy
       if [[ -z "$server_ip" ]]; then
           echo "No IP entered. Exiting."
           exit 1
+      fi # here is a missing fi which causes the script to work
     fi
 
     # If the reverse proxy is on the same server, we can use localhost for forwarding, otherwise we use the server's IP
