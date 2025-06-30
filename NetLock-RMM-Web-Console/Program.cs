@@ -19,6 +19,8 @@ using LettuceEncrypt.Acme;
 using MudBlazor;
 using Microsoft.AspNetCore.HttpOverrides;
 using static MudBlazor.Defaults;
+using NetLock_RMM_Web_Console.Classes.Helper;
+using Org.BouncyCastle.Asn1.X509.Qualified;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
 
@@ -86,7 +88,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START 888fef65-1164-410b-868d-3605a1a15195 //OSSCH_END
+//OSSCH_START 3c5fdba8-f5c1-43a3-b8dd-2c75db2bf662 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -465,7 +467,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 8af6f544-6eeb-49e5-b5d4-cd0a51c2bbf2 //OSSCH_END
+//OSSCH_START e02dfac9-d0b3-4e88-b508-b5d0a858b98c //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

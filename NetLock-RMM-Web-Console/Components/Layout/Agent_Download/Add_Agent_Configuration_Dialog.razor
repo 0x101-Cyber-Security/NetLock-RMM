@@ -61,6 +61,18 @@
         {
             await conn.OpenAsync();
 
+            // Check if the configuration name already exists
+            string checkQuery = "SELECT COUNT(*) FROM agent_package_configurations WHERE name = @name;";
+
+			MySqlCommand checkCmd = new MySqlCommand(checkQuery, conn);
+			checkCmd.Parameters.AddWithValue("@name", name);
+            long count = (long)await checkCmd.ExecuteScalarAsync();
+			if (count > 0)
+			{
+				this.Snackbar.Add("A configuration with this name already exists.", Severity.Error);
+				return;
+			}
+
             string query = "INSERT INTO agent_package_configurations (name, guid) VALUES (@name, @guid);";
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
@@ -81,6 +93,7 @@
 
         if (success)
         {
+			this.Snackbar.Add("Configuration created.", Severity.Success);
             this.MudDialog.Close(DialogResult.Ok("success"));
         }
         else

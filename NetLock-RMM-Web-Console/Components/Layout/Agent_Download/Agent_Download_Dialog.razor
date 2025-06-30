@@ -57,7 +57,7 @@
                 <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
                 <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
 
-                <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Immediate="true" Required="true" RequiredError="@Localizer["required"]">
                     @{
                         foreach (var name in tenants_list)
                         {
@@ -66,7 +66,7 @@
                     }
                 </MudSelect>
 
-                <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Required="true" RequiredError="@Localizer["required"]">
+                <MudSelect Class="mt-2" T="string" Label="@Localizer["location"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="location_name" @bind-Value:after="async () => { await Get_Location_Id(location_name); }" Immediate="true" Required="true" RequiredError="@Localizer["required"]">
                     @{
                         foreach (var name in locations_list)
                         {
@@ -133,6 +133,7 @@
     public static List<string> tenants_list = new List<string> { };
     public static List<string> locations_list = new List<string> { };
 
+    private string id = String.Empty;
     private string name = String.Empty;
     private bool ssl = false;
     private string package_guid = String.Empty;
@@ -161,9 +162,6 @@
             NavigationManager.NavigateTo("/login", true);
             return;
         }
-
-        await Get_Tenants();
-        await Get_Locations("1"); // Default tenant
 
         await Get_Configurations();
         StateHasChanged();
@@ -285,7 +283,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Tenants", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Tenants", "Result", ex.ToString());
         }
         finally
         {
@@ -320,13 +318,14 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Tenant_Id", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Tenant_Id", "Result", ex.ToString());
         }
         finally
         {
             await conn.CloseAsync();
         }
 
+        // Get Locations for tenant
         await Get_Locations(tenant_id);
     }
 
@@ -359,12 +358,14 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Locations", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Locations", "Result", ex.ToString());
         }
         finally
         {
             await conn.CloseAsync();
         }
+
+        StateHasChanged();
     }
 
     // Get location id from locations by name
@@ -394,7 +395,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Location_Id", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Location_Id", "Result", ex.ToString());
         }
         finally
         {
@@ -429,7 +430,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.ToString());
         }
         finally
         {
@@ -440,6 +441,9 @@
     // Get Configuration
     private async Task Get_Configuration(string name)
     {
+        tenant_name = String.Empty;
+		location_name = String.Empty;
+
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         string ssl_converted = String.Empty;
@@ -461,6 +465,7 @@
                 {
                     while (await reader.ReadAsync())
                     {
+                        id = reader["id"].ToString() ?? String.Empty;
                         name = reader["name"].ToString() ?? String.Empty;
                         communication_servers = reader["communication_servers"].ToString() ?? String.Empty;
                         remote_servers = reader["remote_servers"].ToString() ?? String.Empty;
@@ -478,15 +483,19 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Configurations", "Result", ex.ToString());
         }
         finally
         {
             await conn.CloseAsync();
         }
 
-        await Get_Names();
-        await Get_Guids();
+        await Get_Tenants();
+        await Get_Locations(tenant_id); // Get locations for default tenant
+        await Get_Guids(); // Get tenant & location guids by id
+        await Get_Names(); // Get tenant & location names by id
+        
+        StateHasChanged();
     }
 
     // Get tenant & location name by id
@@ -532,12 +541,14 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Names", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Names", "Result", ex.ToString());
         }
         finally
         {
             await conn.CloseAsync();
         }
+
+        StateHasChanged();
     }
 
     // Get tenant guid & location guid by id
@@ -583,7 +594,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Get_Guids", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Get_Guids", "Result", ex.ToString());
         }
         finally
         {
@@ -595,15 +606,19 @@
     // Update Configuration
     private async Task Update_Configuration()
     {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
         try
         {
             await conn.OpenAsync();
 
-            string query = "UPDATE agent_package_configurations SET `ssl` = @ssl, communication_servers = @communication_servers, remote_servers = @remote_servers, update_servers = @update_servers, trust_servers = @trust_servers, file_servers = @file_servers, tenant_id = @tenant_id, location_id = @location_id, language = @language WHERE name = @name;";
+            string query = "UPDATE agent_package_configurations SET `ssl` = @ssl, communication_servers = @communication_servers, remote_servers = @remote_servers, update_servers = @update_servers, trust_servers = @trust_servers, file_servers = @file_servers, tenant_id = @tenant_id, location_id = @location_id, language = @language WHERE id = @id;";
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@name", name);
             cmd.Parameters.AddWithValue("@communication_servers", communication_servers);
             cmd.Parameters.AddWithValue("@remote_servers", remote_servers);
@@ -616,10 +631,12 @@
             cmd.Parameters.AddWithValue("@ssl", ssl ? 1 : 0);
 
             cmd.ExecuteNonQuery();
+
+            this.Snackbar.Add("Configuration saved.", Severity.Success);
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Update_Configuration", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Update_Configuration", "Result", ex.ToString());
         }
         finally
         {
@@ -660,7 +677,7 @@
         }
         catch (Exception ex)
         {
-            Logging.Handler.Error("/MainLayout -> Download_Configuration", "Result", ex.Message);
+            Logging.Handler.Error("/MainLayout -> Download_Configuration", "Result", ex.ToString());
         }
     }
 
@@ -685,7 +702,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START 096c9a7e-69d7-47ee-bc5b-8270eb4a7458 //OSSCH_END
+    //OSSCH_START 632b33f2-11b7-4274-81f9-098cd483a15d //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {
