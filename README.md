@@ -5,7 +5,7 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 
 
 
-![Web Console Preview](https://netlockrmm.com/assets/images/remote-features.gif)
+![Web Console Preview](https://netlockrmm.com/assets/images/web-console-animation.webp)
 
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
