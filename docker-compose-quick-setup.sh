@@ -597,7 +597,7 @@ sudo tee /home/netlock/server/appsettings.json > /dev/null <<EOF
     "Enabled": $le_enabled,
     "AcceptTermsOfService": true,
     "DomainNames": [
-      "$le_domain"
+      "$server_domain"
     ],
     "EmailAddress": "$le_email",
     "AllowedChallengeTypes": "Http01",
