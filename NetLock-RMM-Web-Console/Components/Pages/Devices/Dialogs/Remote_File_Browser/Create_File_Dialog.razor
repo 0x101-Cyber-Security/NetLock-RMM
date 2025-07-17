@@ -30,7 +30,7 @@
 
         <MudTextField Label="Name" T="string" @bind-Value="@name" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
 
-        <StandaloneCodeEditor Id="remote_shell_output-editor" CssClass="monaco-editor" @ref="file_editor" ConstructionOptions="Editor_Construction_Options" />
+        <StandaloneCodeEditor Id="remote_shell_output-editor" CssClass="monaco-editor" @ref="file_editor" ConstructionOptions="Editor_Construction_Options" OnDidChangeModelContent="Remote_Shell_Editor_Handle_Input" />
 
     </DialogContent>
     <DialogActions>

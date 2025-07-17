@@ -1,4 +1,5 @@
-﻿using System;
+﻿using NetLock_RMM_User_Process.Windows.Helper;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,11 +16,11 @@ namespace MacOS.Helper
             {
                 //Global.Initialization.Health.Check_Directories();
 
-                Logging.Handler.Debug("MacOS.Helper.Zsh.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
+                Handler.Debug("MacOS.Helper.Zsh.Execute_Script", "Executing script", $"type: {type}, script length: {script.Length}");
 
                 if (String.IsNullOrEmpty(script))
                 {
-                    Logging.Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Script is empty", "");
+                    Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Script is empty", "");
                     return "-";
                 }
 
@@ -32,7 +33,7 @@ namespace MacOS.Helper
                     // Convert Windows line endings (\r\n) to Unix line endings (\n)
                     script = decoded_script.Replace("\r\n", "\n");
 
-                    Logging.Handler.Debug("MacOS.Helper.Zsh.Execute_Script", "Decoded script", script);
+                    Handler.Debug("MacOS.Helper.Zsh.Execute_Script", "Decoded script", script);
                 }
 
                 // Create a new process
@@ -65,7 +66,7 @@ namespace MacOS.Helper
                     // Check for errors
                     if (!string.IsNullOrEmpty(error))
                     {
-                        Logging.Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Error executing script", error);
+                        Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Error executing script", error);
                         return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
                     }
                     else
@@ -76,7 +77,7 @@ namespace MacOS.Helper
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Error executing script", ex.ToString());
+                Handler.Error("MacOS.Helper.Zsh.Execute_Script", "Error executing script", ex.ToString());
                 return ex.Message;
             }
         }

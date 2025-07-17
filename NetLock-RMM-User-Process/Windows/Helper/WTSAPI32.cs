@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace NetLock_RMM_User_Process.Helper.ScreenControl;
+namespace NetLock_RMM_User_Process.Windows.Helper;
 // Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class WTSAPI32
@@ -70,18 +70,18 @@ public static class WTSAPI32
     static extern nint WTSOpenServer(string pServerName);
 
     [DllImport("Wtsapi32.dll", SetLastError = true)]
-    public static extern bool WTSQueryUserToken(uint sessionId, out IntPtr Token);
+    public static extern bool WTSQueryUserToken(uint sessionId, out nint Token);
     [DllImport("kernel32.dll", SetLastError = true)]
     static extern uint WTSGetActiveConsoleSessionId();
 
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool ImpersonateLoggedOnUser(IntPtr hToken);
+    public static extern bool ImpersonateLoggedOnUser(nint hToken);
 
     [DllImport("advapi32.dll", SetLastError = true)]
     public static extern bool RevertToSelf();
 
     [DllImport("advapi32.dll", SetLastError = true)]
-    public static extern bool DuplicateToken(IntPtr ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, out IntPtr DuplicateTokenHandle);
+    public static extern bool DuplicateToken(nint ExistingTokenHandle, int SECURITY_IMPERSONATION_LEVEL, out nint DuplicateTokenHandle);
 
     public const int SecurityImpersonation = 2;
 
@@ -94,14 +94,14 @@ public static class WTSAPI32
         public WTS_CONNECTSTATE_CLASS State;
     }
 
-    public static IntPtr? TryGetUserToken()
+    public static nint? TryGetUserToken()
     {
         try
         {
             uint sessionId = WTSGetActiveConsoleSessionId();
             if (sessionId == 0xFFFFFFFF)
             {
-                Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", "WTSGetActiveConsoleSessionId() returned 0xFFFFFFFF");
+                Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", "WTSGetActiveConsoleSessionId() returned 0xFFFFFFFF");
                 Console.WriteLine("❌ Keine aktive Konsole gefunden.");
                 return null;
             }
@@ -113,14 +113,14 @@ public static class WTSAPI32
             else
             {
                 int error = Marshal.GetLastWin32Error();
-                Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"WTSQueryUserToken({sessionId}) failed with error {error}");
+                Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"WTSQueryUserToken({sessionId}) failed with error {error}");
                 Console.WriteLine($"❌ WTSQueryUserToken({sessionId}) failed with {error}");
                 return null;
             }
         }
         catch (Exception ex)
         {
-            Logging.Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"Exception: {ex.Message}");
+            Handler.Debug("Windows.Helper.ScreenControl.WTSAPI32.TryGetUserToken", "TryGetUserToken", $"Exception: {ex.Message}");
             Console.WriteLine("Fehler beim Tokenholen: " + ex);
             return null;
         }

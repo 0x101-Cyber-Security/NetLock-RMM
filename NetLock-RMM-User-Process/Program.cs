@@ -5,8 +5,12 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Helper;
-using NetLock_RMM_User_Process.Helper.ScreenControl;
+using NetLock_RMM_User_Process.Helper.Keyboard;
+using NetLock_RMM_User_Process.Windows.Helper;
+using NetLock_RMM_User_Process.Windows.Mouse;
+using NetLock_RMM_User_Process.Windows.ScreenControl;
+using WindowsInput;
+using static System.Net.Mime.MediaTypeNames;
 
 class UserClient
 {
@@ -190,15 +194,25 @@ class UserClient
 
             switch (command.type)
             {
-                case "0": // Screen Capture
-                    string base64Image = String.Empty;
-                    
-                    if (OperatingSystem.IsWindows())
-                        base64Image = await ScreenCapture.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
-                    /*else if (OperatingSystem.IsMacOS())
-                        base64Image = await ScreenCaptureMacOS.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
-                    */
-                    await Local_Server_Send_Message($"screen_capture${command.response_id}${base64Image}");
+                    // Ersetze den Fall "0" in ProcessCommand wie folgt:
+                    case "0": // Screen Capture
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                string base64Image = string.Empty;
+                                if (OperatingSystem.IsWindows())
+                                    base64Image = await ScreenCapture.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
+                                // else if (OperatingSystem.IsMacOS()) ...
+
+                                await Local_Server_Send_Message($"screen_capture${command.response_id}${base64Image}");
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Screenshot-Fehler: {ex.Message}");
+                            }
+                        });
+
                     break;
 
                 case "1": // Move Mouse / Clicks
@@ -292,20 +306,28 @@ class UserClient
                             KeyboardControl.SendCtrlR();
                         else
                         {
-                            if (shift)
-                                inputLower = inputLower.Replace("shift+", ""); // Remove shift from the input for ASCII mapping
-
-                            var asciiCode = Keys.MapKeyStringToAscii(inputLower);
-                            if (asciiCode.HasValue)
+                            if (command.remote_control_keyboard_input.Length > 1)
                             {
-                                await KeyboardControl.SendKey(asciiCode.Value, shift);
+                                if (shift)
+                                    inputLower = inputLower.Replace("shift+", ""); // Remove shift from the input for ASCII mapping
+
+                                var asciiCode = Keys.MapKeyStringToAscii(inputLower);
+                                if (asciiCode.HasValue)
+                                {
+                                    await KeyboardControl.SendKey(asciiCode.Value, shift);
+                                }
+                                else
+                                {
+                                    Console.WriteLine($"Unknown keyboard input: {input}");
+                                }
                             }
                             else
                             {
-                                Console.WriteLine($"Unknown keyboard input: {input}");
+                                var sim1 = new InputSimulator();
+                                sim1.Keyboard.TextEntry(command.remote_control_keyboard_input);
                             }
                         }
-                    break;
+                        break;
                 }
                 case "3":
                     int screen_indexes = 0;
@@ -320,14 +342,21 @@ class UserClient
                 case "6": // Get clipboard from user
                     KeyboardControl.SendCtrlC();
 
-                    Thread.Sleep(200); // Wait for clipboard to update
+                    await Task.Delay(200); // Wait for clipboard to update
 
                     string clipboardContent = User32.GetClipboardText();
                     //Logging.Handler.Debug($"Clipboard content: {clipboardContent}", "", "");
 
                     await Local_Server_Send_Message($"clipboard_content${command.response_id}$clipboard_content%{clipboardContent}");
                     break;
+                case "7": // Send text
 
+                    Console.WriteLine($"Sending text: {command.remote_control_keyboard_input}");
+
+                    var sim = new InputSimulator();
+                    sim.Keyboard.TextEntry(command.remote_control_keyboard_input);
+
+                    break;
                 default:
                     Console.WriteLine("Unknown command type.");
                     break;
@@ -338,6 +367,7 @@ class UserClient
             Console.WriteLine($"Failed to process command: {ex.Message}");
         }
     }
+
     public async Task Local_Server_Send_Message(string message)
     {
         try

@@ -1,7 +1,7 @@
 using Microsoft.Win32.SafeHandles;
 using System.Runtime.InteropServices;
 
-namespace NetLock_RMM_User_Process.Helper.ScreenControl;
+namespace NetLock_RMM_User_Process.Windows.Helper;
 // Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 
 public static class User32
@@ -1303,20 +1303,20 @@ public static class User32
     public static extern nint SetClipboardData(int Format, nint hMem);
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr SetClipboardData(uint uFormat, IntPtr hMem);
+    private static extern nint SetClipboardData(uint uFormat, nint hMem);
 
     [DllImport("user32.dll", SetLastError = true)]
-    private static extern IntPtr GetClipboardData(uint uFormat);
+    private static extern nint GetClipboardData(uint uFormat);
 
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GlobalAlloc(uint uFlags, UIntPtr dwBytes);
+    private static extern nint GlobalAlloc(uint uFlags, nuint dwBytes);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GlobalLock(IntPtr hMem);
+    private static extern nint GlobalLock(nint hMem);
 
     [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern bool GlobalUnlock(IntPtr hMem);
+    private static extern bool GlobalUnlock(nint hMem);
 
 
     const uint CF_UNICODETEXT = 13;
@@ -1368,7 +1368,7 @@ public static class User32
          [Out] byte[] pvInfo, uint nLength, out uint lpnLengthNeeded);
 
     [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
-    public static extern IntPtr LoadLibrary(string lpFileName);
+    public static extern nint LoadLibrary(string lpFileName);
 
     #endregion
 
@@ -1377,7 +1377,7 @@ public static class User32
 
     public static void SetClipboardText(string text)
     {
-        if (!OpenClipboard(IntPtr.Zero))
+        if (!OpenClipboard(nint.Zero))
             throw new Exception("Clipboard konnte nicht geöffnet werden.");
 
         try
@@ -1385,12 +1385,12 @@ public static class User32
             EmptyClipboard();
 
             int bytes = (text.Length + 1) * 2; // Unicode-Zeichen = 2 Bytes
-            IntPtr hGlobal = GlobalAlloc(GMEM_MOVEABLE, (UIntPtr)bytes);
-            if (hGlobal == IntPtr.Zero)
+            nint hGlobal = GlobalAlloc(GMEM_MOVEABLE, (nuint)bytes);
+            if (hGlobal == nint.Zero)
                 throw new Exception("GlobalAlloc fehlgeschlagen.");
 
-            IntPtr target = GlobalLock(hGlobal);
-            if (target == IntPtr.Zero)
+            nint target = GlobalLock(hGlobal);
+            if (target == nint.Zero)
                 throw new Exception("GlobalLock fehlgeschlagen.");
 
             try
@@ -1403,7 +1403,7 @@ public static class User32
                 GlobalUnlock(hGlobal);
             }
 
-            if (SetClipboardData(CF_UNICODETEXT, hGlobal) == IntPtr.Zero)
+            if (SetClipboardData(CF_UNICODETEXT, hGlobal) == nint.Zero)
                 throw new Exception("SetClipboardData fehlgeschlagen.");
         }
         finally
@@ -1415,15 +1415,15 @@ public static class User32
     // Get users clipboard content
     public static string GetClipboardText()
     {
-        if (!OpenClipboard(IntPtr.Zero))
+        if (!OpenClipboard(nint.Zero))
             throw new Exception("Clipboard konnte nicht geöffnet werden.");
         try
         {
             nint hData = GetClipboardData(CF_UNICODETEXT);
-            if (hData == IntPtr.Zero)
+            if (hData == nint.Zero)
                 return string.Empty;
-            IntPtr target = GlobalLock(hData);
-            if (target == IntPtr.Zero)
+            nint target = GlobalLock(hData);
+            if (target == nint.Zero)
                 throw new Exception("GlobalLock fehlgeschlagen.");
             try
             {

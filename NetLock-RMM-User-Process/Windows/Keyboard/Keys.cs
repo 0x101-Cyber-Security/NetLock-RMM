@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetLock_RMM_User_Process.Helper.ScreenControl
+namespace NetLock_RMM_User_Process.Helper.Keyboard
 {
     internal class Keys
     {

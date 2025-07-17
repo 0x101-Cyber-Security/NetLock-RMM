@@ -1,11 +1,12 @@
-﻿using System;
+﻿using NetLock_RMM_User_Process.Windows.Helper;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetLock_RMM_User_Process.Helper.ScreenControl
+namespace NetLock_RMM_User_Process.Helper.Keyboard
 {
     internal class KeyboardControl
     {
@@ -82,7 +83,7 @@ namespace NetLock_RMM_User_Process.Helper.ScreenControl
             {
                 //Console.WriteLine("Sending Ctrl + V with content: " + content);
 
-                if (!String.IsNullOrEmpty(content))
+                if (!string.IsNullOrEmpty(content))
                     User32.SetClipboardText(content); // Places the content on the clipboard
 
                 // Strg + V
@@ -417,5 +418,7 @@ namespace NetLock_RMM_User_Process.Helper.ScreenControl
                 Console.WriteLine($"Failed to send key: {ex.Message}");
             }
         }
+
+        // Send text
     }
 }

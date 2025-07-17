@@ -18,8 +18,13 @@ window.preventContextMenu = (clientX, clientY) => {
     }, { once: true });
 };
 
-window.focusElement = (element) => {
-    element.focus();
+window.focusElement = (elementId) => {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.focus();
+    } else {
+        console.warn("Element not found:", elementId);
+    }
 };
 
 window.enableDrag = (elementId) => {

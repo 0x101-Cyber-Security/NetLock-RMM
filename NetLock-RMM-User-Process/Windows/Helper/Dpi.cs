@@ -5,7 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace NetLock_RMM_User_Process.Helper.ScreenControl
+namespace NetLock_RMM_User_Process.Windows.Helper
 {
     internal class Dpi
     {

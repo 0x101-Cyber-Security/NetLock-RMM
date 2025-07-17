@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
 
-namespace Helper
+namespace NetLock_RMM_User_Process.Windows.Mouse
 {
     internal class MouseControl
     {
@@ -41,20 +41,20 @@ namespace Helper
             public uint Flags;
         }
 
-        public delegate bool MonitorEnumDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData);
+        public delegate bool MonitorEnumDelegate(nint hMonitor, nint hdcMonitor, ref Rect lprcMonitor, nint dwData);
 
         [DllImport("user32.dll")]
-        private static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MonitorEnumDelegate lpfnEnum, IntPtr dwData);
+        private static extern bool EnumDisplayMonitors(nint hdc, nint lprcClip, MonitorEnumDelegate lpfnEnum, nint dwData);
 
         [DllImport("user32.dll")]
-        private static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfo lpmi);
+        private static extern bool GetMonitorInfo(nint hMonitor, ref MonitorInfo lpmi);
 
         // Methode zum Abrufen aller Bildschirme
         public static Rect[] GetAllScreens()
         {
-            var screens = new System.Collections.Generic.List<Rect>();
+            var screens = new List<Rect>();
 
-            EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero, (IntPtr hMonitor, IntPtr hdcMonitor, ref Rect lprcMonitor, IntPtr dwData) =>
+            EnumDisplayMonitors(nint.Zero, nint.Zero, (nint hMonitor, nint hdcMonitor, ref Rect lprcMonitor, nint dwData) =>
             {
                 MonitorInfo mi = new MonitorInfo();
                 mi.Size = (uint)Marshal.SizeOf(mi);
@@ -63,7 +63,7 @@ namespace Helper
                     screens.Add(mi.Monitor);
                 }
                 return true;
-            }, IntPtr.Zero);
+            }, nint.Zero);
 
             return screens.ToArray();
         }

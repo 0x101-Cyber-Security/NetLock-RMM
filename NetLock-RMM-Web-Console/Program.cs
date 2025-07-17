@@ -88,7 +88,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START 3c5fdba8-f5c1-43a3-b8dd-2c75db2bf662 //OSSCH_END
+//OSSCH_START 369e9ab7-f0bb-41c9-8c49-3323d3e4d39e //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -467,7 +467,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e02dfac9-d0b3-4e88-b508-b5d0a858b98c //OSSCH_END
+//OSSCH_START ed604c00-d5c9-4294-b564-2e0ff6c7c731 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

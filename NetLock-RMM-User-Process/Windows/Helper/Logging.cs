@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using NetLock_RMM_User_Process;
 
-namespace Logging
+namespace NetLock_RMM_User_Process.Windows.Helper
 {
     public class Handler
     {
