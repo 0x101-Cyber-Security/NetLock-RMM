@@ -77,13 +77,13 @@ namespace NetLock_RMM_Agent_Installer
             else if (OperatingSystem.IsLinux())
             {
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-comm");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-remote");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-health");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-health");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-health");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-user-process");
             }
             else if (OperatingSystem.IsMacOS())
             {
@@ -226,6 +226,7 @@ namespace NetLock_RMM_Agent_Installer
                 Logging.Handler.Debug("Main", "Stopping services.", Application_Paths.program_files_remote_agent_service_name_osx);
                 Zsh.Execute_Script("Stopping services", false, $"launchctl stop {Application_Paths.program_files_remote_agent_service_name_osx}");
             }
+
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Services stopped.");
 
             // Wait a little to allow service manager to release handles to prevent service marked for deletion error
@@ -253,20 +254,20 @@ namespace NetLock_RMM_Agent_Installer
             else if (OperatingSystem.IsLinux())
             {
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-comm");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-comm");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-comm");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-agent-remote");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-agent-remote");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-remote");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
-                Bash.Execute_Script("Terminating processes", false, "pkill netlock-rmm-user-process");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-user-process");
             }
             else if (OperatingSystem.IsMacOS())
             {
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Comm");
-                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Comm");
+                Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Agent_Comm");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Remote");
-                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Remote");
+                Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Agent_Remote");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health");
-                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Health");
+                Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Agent_Health");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 

@@ -57,8 +57,8 @@ namespace Helper
                     string output = process.StandardOutput.ReadToEnd();
                     string error = process.StandardError.ReadToEnd();
 
-                    // Wait for the process to exit, with a timeout of 2 minutes
-                    process.WaitForExit(120000);
+                    // Wait for the process to exit, with a timeout of 30 seconds
+                    process.WaitForExit(30000);
 
                     // Check for errors
                     if (!string.IsNullOrEmpty(error))

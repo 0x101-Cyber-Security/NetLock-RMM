@@ -189,7 +189,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Check if the data is new
                 string applications_installed_json_string_hashed = await IO.Get_SHA512_From_String(applications_installed_json_string);
 
-                string applications_installed_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_installed");
+                string applications_installed_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_installed");
                 applications_installed_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_installed_json_string_hashed_db);
 
                 if (applications_installed_json_string_hashed != applications_installed_json_string_hashed_db)
@@ -207,7 +207,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Insert cronjobs_history
                 // Check if the data is new
                 string cronjobs_json_string_hashed = await IO.Get_SHA512_From_String(cronjobs_json_string);
-                string cronjobs_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "cronjobs");
+                string cronjobs_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "cronjobs");
                 cronjobs_json_string_hashed_db = await IO.Get_SHA512_From_String(cronjobs_json_string_hashed_db);
 
                 if (cronjobs_json_string_hashed != cronjobs_json_string_hashed_db)
@@ -225,7 +225,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert applications_logon_history
                 // Check if the data is new
                 string applications_logon_json_string_hashed = await IO.Get_SHA512_From_String(applications_logon_json_string);
-                string applications_logon_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_logon");
+                string applications_logon_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_logon");
                 applications_logon_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_logon_json_string_hashed_db);
 
                 if (applications_logon_json_string_hashed != applications_logon_json_string_hashed_db)
@@ -243,7 +243,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert applications_scheduled_tasks_history
                 // Check if the data is new
                 string applications_scheduled_tasks_json_string_hashed = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string);
-                string applications_scheduled_tasks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_scheduled_tasks");
+                string applications_scheduled_tasks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_scheduled_tasks");
                 applications_scheduled_tasks_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string_hashed_db);
 
                 if (applications_scheduled_tasks_json_string_hashed != applications_scheduled_tasks_json_string_hashed_db)
@@ -261,7 +261,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert applications_services_history
                 // Check if the data is new
                 string applications_services_json_string_hashed = await IO.Get_SHA512_From_String(applications_services_json_string);
-                string applications_services_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_services");
+                string applications_services_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_services");
                 applications_services_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_services_json_string_hashed_db);
 
                 if (applications_services_json_string_hashed != applications_services_json_string_hashed_db)
@@ -279,7 +279,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert applications_drivers_history
                 // Check if the data is new
                 string applications_drivers_json_string_hashed = await IO.Get_SHA512_From_String(applications_drivers_json_string);
-                string applications_drivers_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "applications_drivers");
+                string applications_drivers_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_drivers");
                 applications_drivers_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_drivers_json_string_hashed_db);
 
                 if (applications_drivers_json_string_hashed != applications_drivers_json_string_hashed_db)
@@ -344,7 +344,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_disks_history
                 // Check if the data is new
                 string disks_json_string_hashed = await IO.Get_SHA512_From_String(disks_json_string);
-                string disks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "disks");
+                string disks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "disks");
                 disks_json_string_hashed_db = await IO.Get_SHA512_From_String(disks_json_string_hashed_db);
 
                 if (disks_json_string_hashed != disks_json_string_hashed_db)
@@ -362,7 +362,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_cpu_history
                 // Check if the data is new
                 string cpu_json_string_hashed = await IO.Get_SHA512_From_String(cpu_json_string);
-                string cpu_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "cpu_information");
+                string cpu_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "cpu_information");
                 cpu_json_string_hashed_db = await IO.Get_SHA512_From_String(cpu_json_string_hashed_db);
 
                 if (cpu_json_string_hashed != cpu_json_string_hashed_db)
@@ -380,7 +380,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_ram_history
                 // Check if the data is new
                 string ram_json_string_hashed = await IO.Get_SHA512_From_String(ram_json_string);
-                string ram_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "ram_information");
+                string ram_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "ram_information");
                 ram_json_string_hashed_db = await IO.Get_SHA512_From_String(ram_json_string_hashed_db);
 
                 if (ram_json_string_hashed != ram_json_string_hashed_db)
@@ -398,7 +398,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_network_adapters_history
                 // Check if the data is new
                 string network_adapters_json_string_hashed = await IO.Get_SHA512_From_String(network_adapters_json_string);
-                string network_adapters_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "network_adapters");
+                string network_adapters_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "network_adapters");
                 network_adapters_json_string_hashed_db = await IO.Get_SHA512_From_String(network_adapters_json_string_hashed_db);
 
                 if (network_adapters_json_string_hashed != network_adapters_json_string_hashed_db)
@@ -416,7 +416,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_task_manager_history
                 // Check if the data is new
                 string processes_json_string_hashed = await IO.Get_SHA512_From_String(processes_json_string);
-                string processes_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "processes");
+                string processes_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "processes");
                 processes_json_string_hashed_db = await IO.Get_SHA512_From_String(processes_json_string_hashed_db);
                 
                 if (processes_json_string_hashed != processes_json_string_hashed_db)
@@ -434,7 +434,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert device_information_antivirus_history
                 // Check if the data is new
                 string antivirus_information_json_string_hashed = await IO.Get_SHA512_From_String(antivirus_information_json_string);
-                string antivirus_information_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE device_id = {device_id};", "antivirus_information");
+                string antivirus_information_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "antivirus_information");
                 antivirus_information_json_string_hashed_db = await IO.Get_SHA512_From_String(antivirus_information_json_string_hashed_db);
 
                 if (antivirus_information_json_string_hashed != antivirus_information_json_string_hashed_db)

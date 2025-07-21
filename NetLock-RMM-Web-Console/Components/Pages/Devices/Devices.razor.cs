@@ -180,7 +180,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("System_Logs", "Get_Members_Portal_License_Limit", ex.Message);
+                Logging.Handler.Error("System_Logs", "Get_Members_Portal_License_Limit", ex.ToString());
             }
         }
 
@@ -2115,6 +2115,8 @@ WHERE device_id = @deviceId");
         private string applications_services_table_view_port = "70vh";
         private string applications_services_table_sorted_column;
         private string applications_services_table_search_string = "";
+        private int applications_services_table_rowsPerPage = 25;
+        private int applications_services_table_currentPage = 0;
 
         private bool Applications_Services_Table_Filter_Func(Applications_Services_Entity row)
         {
@@ -3334,6 +3336,7 @@ WHERE device_id = @deviceId");
                             notes_old_string = await Base64.Handler.Decode(reader["notes"].ToString()) ?? String.Empty;
                             antivirus_products_string = reader["antivirus_products"].ToString() ?? String.Empty;
                             antivirus_information_json = reader["antivirus_information"].ToString() ?? String.Empty;
+                            antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty;
                             last_active_user = reader["last_active_user"].ToString() ?? String.Empty;
                         }
                     }

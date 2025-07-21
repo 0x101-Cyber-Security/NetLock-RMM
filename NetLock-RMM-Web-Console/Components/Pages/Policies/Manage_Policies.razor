@@ -69,13 +69,13 @@
                 <MudButton Class="ml-2 mt-5" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" @onclick="async () => { await Update_Selected_Policy(policies_selectedRowContent_id); }">@Localizer["manage"]</MudButton>
             }
 
-            <MudTooltip Text="@Localizer["export_data"]">
+            <MudTooltip Text="Export data">
                 <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Show_Export_Table_Dialog"></MudIconButton>
             </MudTooltip>
 
             <MudTable Class="mt-5" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@policies_mysql_data" Filter="new Func<Policies_Entity, bool>(Policies_Table_Filter_Func)">
                 <ToolBarContent>
-                    <MudTextField @bind-Value="policies_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    <MudTextField @bind-Value="policies_table_search_string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                 </ToolBarContent>
                 <HeaderContent>
                     <MudTh><MudTableSortLabel SortBy="new Func<Policies_Entity, object>(x => x.policy_name)">@Localizer["name"]</MudTableSortLabel></MudTh>

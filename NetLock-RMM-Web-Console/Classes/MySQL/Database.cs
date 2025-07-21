@@ -432,6 +432,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         private static string upgrade_script_2_5_1_1_to_2_5_1_2 = "QUxURVIgVEFCTEUgYGFjY291bnRzYCBEUk9QIENPTFVNTiBgc2Vzc2lvbl9ndWlkYDsNCkFMVEVSIFRBQkxFIGBhY2NvdW50c2AgQUREIENPTFVNTiBgcmVtb3RlX3Nlc3Npb25fdG9rZW5gIE1FRElVTVRFWFQgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgYHRlbmFudHNgOw==";
         private static string upgrade_script_2_5_1_2_to_2_5_1_3 = "QUxURVIgVEFCTEUgYHNldHRpbmdzYCBBREQgQ09MVU1OIGBzZXNzaW9uX3JlY29yZGluZ19mb3JjZV9lbmFibGVkYCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBgY2xlYW51cF9ldmVudHNfaGlzdG9yeV9kYXlzYDsNCkFMVEVSIFRBQkxFIGBzZXR0aW5nc2AgQ0hBTkdFIENPTFVNTiBgc2Vzc2lvbl9yZWNvcmRpbmdfZm9yY2VfZW5hYmxlZGAgYHNlc3Npb25fcmVjb3JkaW5nX2ZvcmNlZF9lbmFibGVkYCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBgY2xlYW51cF9ldmVudHNfaGlzdG9yeV9kYXlzYDsNCkFMVEVSIFRBQkxFIGBzZXR0aW5nc2AgQ0hBTkdFIENPTFVNTiBgc2Vzc2lvbl9yZWNvcmRpbmdfZm9yY2VkX2VuYWJsZWRgIGByZW1vdGVfc2NyZWVuX3Nlc3Npb25fcmVjb3JkaW5nX2ZvcmNlZF9lbmFibGVkYCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBgY2xlYW51cF9ldmVudHNfaGlzdG9yeV9kYXlzYDsNCkFMVEVSIFRBQkxFIGBzZXR0aW5nc2AgQUREIENPTFVNTiBgcmVtb3RlX3NjcmVlbl9zZXNzaW9uX3JlY29yZGluZ19mb3JjZWRfZGF5c2AgSU5UIE5VTEwgREVGQVVMVCAnMTUnIEFGVEVSIGByZW1vdGVfc2NyZWVuX3Nlc3Npb25fcmVjb3JkaW5nX2ZvcmNlZF9lbmFibGVkYDsNCkFMVEVSIFRBQkxFIGBzZXR0aW5nc2AgQUREIENPTFVNTiBgcmVtb3RlX3NjcmVlbl9zZXNzaW9uX3JlY29yZGluZ19hdXRvX2NsZWFuX2VuYWJsZWRgIElOVCBOVUxMIERFRkFVTFQgJzEnIEFGVEVSIGByZW1vdGVfc2NyZWVuX3Nlc3Npb25fcmVjb3JkaW5nX2ZvcmNlZF9lbmFibGVkYDs=";
         private static string upgrade_script_2_5_1_3_to_2_5_1_6 = "QUxURVIgVEFCTEUgYGRldmljZXNgIEFERCBDT0xVTU4gYGxhc3RfYWN0aXZlX3VzZXJgIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBgdXB0aW1lX21vbml0b3JpbmdfZW5hYmxlZGA7";
+        private static string upgrade_script_2_5_1_6_to_2_5_2_2 = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09MVU1OIHVwZGF0ZV9wZW5kaW5nIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGxhc3RfYWN0aXZlX3VzZXI7DQpBTFRFUiBUQUJMRSBkZXZpY2VzIEFERCBDT0xVTU4gdXBkYXRlX3N0YXJ0ZWQgREFURVRJTUUgTlVMTCBERUZBVUxUICcyMDAwLTAxLTAxIDAwOjAwOjAwJyBBRlRFUiB1cGRhdGVfcGVuZGluZzs=";
+        private static string upgrade_script_2_5_1_6_to_2_5_2_2v2 = "QUxURVIgVEFCTEUgc2V0dGluZ3MgQ0hBTkdFIENPTFVNTiBhZ2VudF91cGRhdGVzX2VuYWJsZWQgYWdlbnRfdXBkYXRlc193aW5kb3dzX2VuYWJsZWQgSU5UIE5VTEwgREVGQVVMVCAnMCcgQUZURVIgcGFja2FnZV9wcm92aWRlcl91cmwsIEFERCBDT0xVTU4gYWdlbnRfdXBkYXRlc19saW51eF9lbmFibGVkIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGFnZW50X3VwZGF0ZXNfd2luZG93c19lbmFibGVkLCBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWFjb3NfZW5hYmxlZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBhZ2VudF91cGRhdGVzX2xpbnV4X2VuYWJsZWQ7DQpBTFRFUiBUQUJMRSBzZXR0aW5ncyBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWF4X2NvbmN1cnJlbnRfdXBkYXRlcyBJTlQgTlVMTCBERUZBVUxUICc1JyBBRlRFUiBhZ2VudF91cGRhdGVzX21hY29zX2VuYWJsZWQ7";
+
 
         // Execute installation SQL script
         public static async Task<bool> Execute_Installation_Script()
@@ -593,6 +596,8 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             scripts.Add(upgrade_script_2_5_1_1_to_2_5_1_2);
             scripts.Add(upgrade_script_2_5_1_2_to_2_5_1_3);
             scripts.Add(upgrade_script_2_5_1_3_to_2_5_1_6);
+            scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2);
+            scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2v2);
 
             // Disabled due to testing...
 
@@ -608,7 +613,10 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
 
             // Execute script
             foreach (var script in scripts)
+            {
                 await MySQL.Handler.Execute_Command(await Base64.Handler.Decode(script));
+                Thread.Sleep(1000); // Sleep for 1 second to avoid issues with MySQL
+            }
 
             // Convert sensors
             if (db_version == "2.0.0.0")
@@ -753,6 +761,30 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             catch (Exception ex)
             {
                 Logging.Handler.Error("Classes.MySQL.Database", "MySQL_Query", ex.ToString());
+            }
+        }
+
+        public static async Task EnforceCloudSettings() // Preventing data flood on our side, needs to be adjusted on server side too in the future
+        {
+            string query = "UPDATE settings SET cleanup_applications_drivers_history_enabled = 1, cleanup_applications_drivers_history_days = 1, cleanup_applications_installed_history_enabled = 1, cleanup_applications_installed_history_days = 1, cleanup_applications_logon_history_enabled = 1, cleanup_applications_logon_history_days = 1, cleanup_applications_scheduled_tasks_history_enabled = 1, cleanup_applications_scheduled_tasks_history_days = 1, cleanup_applications_services_history_enabled = 1, cleanup_applications_services_history_days = 1, cleanup_device_information_antivirus_products_history_enabled = 1, cleanup_device_information_antivirus_products_history_days = 1, cleanup_device_information_cpu_history_enabled = 1, cleanup_device_information_cpu_history_days = 1, cleanup_device_information_cronjobs_history_enabled = 1, cleanup_device_information_cronjobs_history_days = 1, cleanup_device_information_disks_history_enabled = 1, cleanup_device_information_disks_history_days = 1, cleanup_device_information_general_history_enabled = 1, cleanup_device_information_general_history_days = 1, cleanup_device_information_history_enabled = 1, cleanup_device_information_history_days = 1, cleanup_device_information_network_adapters_history_enabled = 1, cleanup_device_information_network_adapters_history_days = 1, cleanup_device_information_ram_history_enabled = 1, cleanup_device_information_ram_history_days = 1, cleanup_device_information_task_manager_history_enabled = 1, cleanup_device_information_task_manager_history_days = 1, cleanup_events_history_enabled = 0;";
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand command = new MySqlCommand(query, conn);
+                
+                await command.ExecuteNonQueryAsync();
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Database", "Result", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
             }
         }
     }

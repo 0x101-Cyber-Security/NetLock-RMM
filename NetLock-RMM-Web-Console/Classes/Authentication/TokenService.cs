@@ -22,7 +22,7 @@ public class TokenService
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(claims),
-                Expires = DateTime.UtcNow.AddHours(10), // 10 hours are a usual work day (with pause included)
+                Expires = DateTime.UtcNow.AddHours(16), // 16 hours are a usual work day (with pause included and for dashboard monitoring)
                 SigningCredentials = new SigningCredentials(_signingKey, SecurityAlgorithms.HmacSha256Signature),
                 Issuer = CustomAuthenticationStateProvider.Issuer,  // New entry
                 Audience = CustomAuthenticationStateProvider.Audience // New entry

@@ -88,7 +88,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START 369e9ab7-f0bb-41c9-8c49-3323d3e4d39e //OSSCH_END
+//OSSCH_START da198fa0-69a5-4630-80cf-184a79799b5b //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -312,6 +312,27 @@ else
             else
                 await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Set_Api_Key(Members_Portal.api_key);
 
+            // Do cloud stuff
+            if (Members_Portal.cloud_enabled)
+            {
+                Console.WriteLine("Cloud enabled. Checking cloud connection...");
+                if (await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Check_Connection())
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("Cloud connection successful.");
+                    Console.ResetColor();
+
+                    // Enforce cloud settings
+                    await Database.EnforceCloudSettings();
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.WriteLine("Cloud connection failed. Please check your internet connection or firewall settings.");
+                    Console.ResetColor();
+                }
+            }
+
             // Update license info
             await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_License_Info_Json(Members_Portal.api_key);
         }
@@ -467,7 +488,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START ed604c00-d5c9-4294-b564-2e0ff6c7c731 //OSSCH_END
+//OSSCH_START 732debd0-7b4e-42f3-9220-c20536081d1c //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

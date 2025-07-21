@@ -235,7 +235,7 @@
                     <MudPaper Class="mt-5">
                         <MudText Class="ml-2 mt-0" Typo="Typo.h5">@Localizer["collections"]</MudText>
                         <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
-                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Antivirus: Kontrollierter Ordnerzugriff</MudText>
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Antivirus: Controlled folder access</MudText>
                         <MudSwitch Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
                         <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_add" Label="@Localizer["add"]" Color="Color.Primary" />
                         <MudCheckBox Class="ml-2" T="bool" @bind-Value="@collections_antivirus_controlled_folder_access_manage" Label="@Localizer["manage"]" Color="Color.Primary" />
@@ -952,12 +952,12 @@
 
             Logging.Handler.Debug("/user_settings -> Update_User", "result", old_username);
 
-            this.Snackbar.Add("Gespeichert.", Severity.Success);
+            this.Snackbar.Add("Saved.", Severity.Success);
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/user_settings -> Save_User", "Result", ex.Message);
-            this.Snackbar.Add("Es ist ein Fehler aufgetreten.", Severity.Error);
+            this.Snackbar.Add("A error occured.", Severity.Error);
         }
         finally
         {

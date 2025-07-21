@@ -92,7 +92,7 @@
 
                 <MudTable Class="mt-0" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@scripts_mysql_data" Filter="new Func<Scripts_Entity, bool>(Scripts_Table_Filter_Func)">
                     <ToolBarContent>
-                        <MudTextField @bind-Value="scripts_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <MudTextField @bind-Value="scripts_table_search_string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                     </ToolBarContent>
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.name)">@Localizer["name"]</MudTableSortLabel></MudTh>

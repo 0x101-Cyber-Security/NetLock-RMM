@@ -81,7 +81,7 @@
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.username)" style="white-space: nowrap;">@Localizer["username"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.role)" style="white-space: nowrap;">@Localizer["role"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.mail)" style="white-space: nowrap;">@Localizer["mail_address"]</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.phone)" style="white-space: nowrap;">@Localizer["phone"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.phone)" style="white-space: nowrap;">Phone</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.last_login)" style="white-space: nowrap;">@Localizer["last_login"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.ip_address)" style="white-space: nowrap;">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
                     <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.two_factor_enabled)" style="white-space: nowrap;">@Localizer["2factor"]</MudTableSortLabel></MudTh>
@@ -106,7 +106,7 @@
                         </span>
                     </MudTd>
 
-                    <MudTd DataLabel="@Localizer["phone"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                    <MudTd DataLabel="Phone" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
                         <span style="display: flex; align-items: center;">
                             <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" />&nbsp;@users_row.phone
                         </span>

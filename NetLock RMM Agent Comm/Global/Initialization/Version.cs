@@ -13,6 +13,7 @@ using NetLock_RMM_Agent_Comm;
 using System.Text.Json;
 using Global.Helper;
 using Linux.Helper;
+using System.Runtime.InteropServices;
 
 namespace Global.Initialization
 {
@@ -119,46 +120,57 @@ namespace Global.Initialization
 
                 // Download the new version
                 // Check OS & Architecture
-                string installer_package_url = String.Empty;
+                string installer_package_url = string.Empty;
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
                 Logging.Debug("Main", "Detecting OS & Architecture", "");
 
-                if (OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem)
+                var arch = RuntimeInformation.ProcessArchitecture;
+
+                if (OperatingSystem.IsWindows())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
-                    Logging.Debug("Main", "Windows x64 detected", "");
-                    installer_package_url = Application_Paths.installer_package_url_winx64;
+                    if (arch == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
+                        Logging.Debug("Main", "Windows x64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_winx64;
+                    }
+                    else if (arch == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows ARM64 detected.");
+                        Logging.Debug("Main", "Windows ARM64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_winarm64;
+                    }
                 }
-                else if (OperatingSystem.IsWindows() && !Environment.Is64BitOperatingSystem)
+                else if (OperatingSystem.IsLinux())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to WindowsARM.");
-                    Logging.Debug("Main", "Switching to WindowsARM", "");
-                    installer_package_url = Application_Paths.installer_package_url_winarm64;
+                    if (arch == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
+                        Logging.Debug("Main", "Linux x64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_linuxx64;
+                    }
+                    else if (arch == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux ARM64 detected.");
+                        Logging.Debug("Main", "Linux ARM64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_linuxarm64;
+                    }
                 }
-                else if (OperatingSystem.IsLinux() && Environment.Is64BitOperatingSystem)
+                else if (OperatingSystem.IsMacOS())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
-                    Logging.Debug("Main", "Linux x64 detected", "");
-                    installer_package_url = Application_Paths.installer_package_url_linuxx64;
-                }
-                else if (OperatingSystem.IsLinux() && !Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to LinuxARM.");
-                    Logging.Debug("Main", "Switching to LinuxARM", "");
-                    installer_package_url = Application_Paths.installer_package_url_linuxarm64;
-                }
-                else if (OperatingSystem.IsMacOS() && Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
-                    Logging.Debug("Main", "MacOS x64 detected", "");
-                    installer_package_url = Application_Paths.installer_package_url_osx64;
-                }
-                else if (OperatingSystem.IsMacOS() && !Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to MacOSARM.");
-                    Logging.Debug("Main", "Switching to MacOSARM", "");
-                    installer_package_url = Application_Paths.installer_package_url_osxarm64;
+                    if (arch == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
+                        Logging.Debug("Main", "MacOS x64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_osx64;
+                    }
+                    else if (arch == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS ARM64 detected.");
+                        Logging.Debug("Main", "MacOS ARM64 detected", "");
+                        installer_package_url = Application_Paths.installer_package_url_osxarm64;
+                    }
                 }
                 else
                 {
@@ -212,44 +224,43 @@ namespace Global.Initialization
                     installer.StartInfo.ArgumentList.Add(Application_Paths.program_data_server_config_json);
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Normal;
                     installer.Start();
-                    //installer.WaitForExit();
+                    await installer.WaitForExitAsync();
                 }
                 else if (OperatingSystem.IsLinux())
                 {
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: Linux");
                     Logging.Debug("Main", "Run installer", "Linux");
 
-                    // Set permissions
-                    Logging.Debug("Main", "Argument", $"sudo chmod +x \"{Application_Paths.c_temp_installer_path}\"");
-                    Bash.Execute_Script("Installer Permissions", false, $"sudo chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    // Create installer
+                    Linux.Helper.Linux.CreateInstallerService();
 
                     Process installer = new Process();
                     installer.StartInfo.FileName = "/bin/bash";
                     installer.StartInfo.ArgumentList.Add("-c");
-                    installer.StartInfo.ArgumentList.Add($"nohup sudo \"{Application_Paths.c_temp_installer_path}\" fix \"{Application_Paths.program_data_server_config_json}\"");
+                    installer.StartInfo.ArgumentList.Add($"systemctl start netlock-rmm-agent-installer");
                     installer.StartInfo.RedirectStandardOutput = true;
                     installer.StartInfo.RedirectStandardError = true;
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     installer.Start();
-                    //await installer.WaitForExitAsync();
+                    await installer.WaitForExitAsync();
                 }
                 else if (OperatingSystem.IsMacOS())
                 {
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Run installer: MacOS");
                     Logging.Debug("Main", "Run installer", "MacOS");
 
-                    // Set permissions
-                    Logging.Debug("Main", "Argument", $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
-                    MacOS.Helper.Zsh.Execute_Script("Installer Permissions", false, $"chmod +x \"{Application_Paths.c_temp_installer_path}\"");
+                    // Create installer service
+                    MacOS.Helper.MacOS.CreateInstallerService();
 
                     Process installer = new Process();
                     installer.StartInfo.FileName = "zsh";
-                    installer.StartInfo.Arguments = $"-c \"sudo {Application_Paths.c_temp_installer_path} fix \"{Application_Paths.program_data_server_config_json}\"";
+                    installer.StartInfo.ArgumentList.Add("-c");
+                    installer.StartInfo.ArgumentList.Add($"sudo launchctl load -w /Library/LaunchDaemons/com.netlock.rmm.installer.plist");
                     installer.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     installer.StartInfo.RedirectStandardOutput = true;
                     installer.StartInfo.RedirectStandardError = true;
                     installer.Start();
-                    //installer.WaitForExit();
+                    await installer.WaitForExitAsync();
                 }
             }
             catch (Exception ex)

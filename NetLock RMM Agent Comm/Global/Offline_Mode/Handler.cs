@@ -1,7 +1,6 @@
 ﻿using NetLock_RMM_Agent_Comm;
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Runtime;
@@ -9,6 +8,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Global.Helper;
+using Microsoft.Data.Sqlite;
 
 namespace Global.Offline_Mode
 {
@@ -23,12 +23,12 @@ namespace Global.Offline_Mode
 
             try
             {
-                using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String))
+                using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
                 {
                     db_conn.Open();
 
-                    SQLiteCommand scdCommand = new SQLiteCommand("SELECT * FROM policy;", db_conn);
-                    SQLiteDataReader reader = scdCommand.ExecuteReader();
+                    SqliteCommand scdCommand = new SqliteCommand("SELECT * FROM policy;", db_conn);
+                    SqliteDataReader reader = scdCommand.ExecuteReader();
 
                     while (reader.Read())
                     {

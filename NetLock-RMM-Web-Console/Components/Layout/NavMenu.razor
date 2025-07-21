@@ -496,7 +496,7 @@
         {
             await conn.OpenAsync();
 
-            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants;", conn);
+            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants ORDER BY name ASC;", conn);
             DbDataReader reader = await command.ExecuteReaderAsync();
 
             if (reader.HasRows)

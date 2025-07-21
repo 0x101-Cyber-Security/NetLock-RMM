@@ -124,6 +124,87 @@ namespace Global.Device_Information
             return "-";
         }
 
+        public static string GetActiveAntivirusProduct()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Bitmaske für "Real-Time Protection aktiviert" (0x10)
+                int RealTimeProtectionFlag = 0x10;
+
+                try
+                {
+                    var products = new List<(string Name, int State, DateTime? Timestamp)>();
+
+                    using (var searcher = new ManagementObjectSearcher("root\\SecurityCenter2", "SELECT displayName, productState, timestamp FROM AntiVirusProduct"))
+                    {
+                        foreach (ManagementObject obj in searcher.Get())
+                        {
+                            var name = obj["displayName"]?.ToString() ?? "Unknown AV";
+                            var state = Convert.ToInt32(obj["productState"] ?? 0);
+
+                            // Convert timestamp in WMI format to DateTime (if available)
+                            DateTime? ts = null;
+                            if (obj["timestamp"] != null)
+                            {
+                                try
+                                {
+                                    ts = ManagementDateTimeConverter.ToDateTime(obj["timestamp"].ToString());
+                                }
+                                catch
+                                {
+                                    // Ignore errors during parsing
+                                }
+                            }
+
+                            products.Add((name, state, ts));
+                            Logging.Device_Information("Device_Information.OS.AV_Candidates", name, $"State={state}, Timestamp={ts?.ToString("o") ?? "n/a"}");
+                        }
+                    }
+
+                    if (products.Count == 0)
+                        return "-";
+
+                    // 1) If there is at least one timestamp -> the latest product
+                    var withTimestamp = products.Where(p => p.Timestamp.HasValue);
+                    if (withTimestamp.Any())
+                    {
+                        var latestByTime = withTimestamp
+                            .OrderByDescending(p => p.Timestamp.Value)
+                            .First();
+                        
+                        return latestByTime.Name;
+                    }
+
+                    // 2) Otherwise: all with Real-Time Protection activated, the strongest (highest state value)
+                    var realtimeOn = products
+                        .Where(p => (p.State & RealTimeProtectionFlag) == RealTimeProtectionFlag);
+                    if (realtimeOn.Any())
+                    {
+                        var strongestRealtime = realtimeOn
+                            .OrderByDescending(p => p.State)
+                            .First();
+                    
+                        return strongestRealtime.Name;
+                    }
+
+                    // 3) Fallback: Product with the highest productState
+                    var strongestOverall = products
+                        .OrderByDescending(p => p.State)
+                        .First();
+
+                    return strongestOverall.Name;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Device_Information.OS.LatestAntivirusProduct", "Collect latest antivirus product", ex.ToString());
+                    return "-";
+                }
+            }
+            else // Not Windows, therefore no antivirus information available
+            {
+                return "-"; 
+            }
+        }
 
         public static string Antivirus_Products()
         {
@@ -288,7 +369,54 @@ namespace Global.Device_Information
 
                 if (OperatingSystem.IsWindows())
                 {
-                    lastLoggedOnUser = Windows.Helper.Registry.HKLM_Read_Value(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\LogonUI", "LastLoggedOnUser");
+                    try
+                    {
+                        // 1) Query all LogonSessions with LogonType=2 (Interactive)
+                        var sessionQuery = new ManagementObjectSearcher("root\\CIMV2", "SELECT LogonId, StartTime FROM Win32_LogonSession WHERE LogonType = 2");
+
+                        var sessions = sessionQuery.Get().Cast<ManagementObject>().Select(obj =>
+                            {
+                                var id = obj["LogonId"]?.ToString();
+                                var start = obj["StartTime"]?.ToString();
+                                DateTime startTime = ManagementDateTimeConverter.ToDateTime(start);
+                                return new { LogonId = id, StartTime = startTime };
+                            }).ToList();
+
+                        if (!sessions.Any())
+                            return "-";
+
+                        // 2) Determine the associated Win32_Account for each session (via Win32_LoggedOnUser)
+                        var users = sessions.Select(sess =>
+                        {
+                            string query = $"ASSOCIATORS OF {{Win32_LogonSession.LogonId='{sess.LogonId}'}} WHERE AssocClass=Win32_LoggedOnUser Role=Dependent";
+                            var assoc = new ManagementObjectSearcher("root\\CIMV2", query).Get().Cast<ManagementObject>().FirstOrDefault();
+
+                            if (assoc == null)
+                                return null;
+
+                            // Domain\UserName
+                            string domain = assoc["Domain"]?.ToString();
+                            string name = assoc["Name"]?.ToString();
+                            
+                            return new
+                            {
+                                User = string.IsNullOrEmpty(domain) ? name : $"{domain}\\{name}",
+                                sess.StartTime
+                            };
+                        }).Where(x => x != null).ToList();
+
+                        if (!users.Any())
+                            return "-";
+
+                        // 3) Sort by StartTime and return the most recent
+                        var latest = users.OrderByDescending(x => x.StartTime).First();
+
+                        lastLoggedOnUser = latest.User;
+                    }
+                    catch (Exception ex)
+                    {
+                        lastLoggedOnUser = "-";
+                    }
                 }
                 else if (OperatingSystem.IsLinux())
                 {

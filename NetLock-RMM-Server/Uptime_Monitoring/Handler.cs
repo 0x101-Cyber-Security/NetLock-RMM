@@ -1,4 +1,5 @@
 ﻿using MySqlConnector;
+using NetLock_RMM_Server.Background_Services;
 using NetLock_RMM_Server.SignalR;
 using System.Data.Common;
 using System.Text.Json;
@@ -9,12 +10,22 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
     {
         public static async Task Do(string identityJson, bool connected)
         {
+            // Check if server uptime is LESS than 30 minutes
+            if (Configuration.Server.serverStartTime > DateTime.Now.AddMinutes(-30))
+            {
+                Logging.Handler.Debug("Uptime_Monitoring.Handler.Do", "Server uptime is less than 30 minutes, skipping event creation.", "");
+                return;
+            }
+
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
             string notification_json = @"{""mail"":true,""microsoft_teams"":true,""telegram"":true,""ntfy_sh"":true}";
 
             try
             {
+                // Check own application runtime to
+
+
                 // Extract device_name, location_name & tenant_name from JSON
                 Logging.Handler.Debug("Uptime_Monitoring.Handler.Do", "identityJson", identityJson);
 
@@ -56,6 +67,15 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
                 if (!uptime_monitoring_enabled)
                 {
                     Logging.Handler.Debug("Uptime_Monitoring.Handler.Do", "uptime_monitoring_enabled", "false");
+                    return;
+                }
+
+                // Check if device is in update pending state
+                int updatePending = Convert.ToInt32(await MySQL.Handler.Quick_Reader($"SELECT COUNT(*) AS count FROM devices WHERE id = {device_id} AND update_pending = 1;", "count"));
+
+                if (updatePending == 1)
+                {
+                    Logging.Handler.Debug("Uptime_Monitoring.Handler.Do", "Device is in update pending state, skipping event creation.", "");
                     return;
                 }
 

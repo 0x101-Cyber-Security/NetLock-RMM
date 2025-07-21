@@ -200,11 +200,11 @@
                                 </MudPaper>
                             </MudPopover>
 
-                            <MudTooltip Text="Open Chat">
+                            @*<MudTooltip Text="Open Chat">
                                 <MudIconButton Icon="@Icons.Material.Filled.Chat"
                                                Color="Color.Primary"
                                                OnClick="@ToggleChat" />
-                            </MudTooltip>
+                            </MudTooltip>*@
 
                             @if (permissions_devices_remote_shell)
                             {
@@ -288,7 +288,7 @@
                 }
             }
 
-            <MudDrawer Class="pa-4" Anchor="Anchor.Right" Open="@_chatOpen" Elevation="8" Width="350px" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Temporary" Overlay="true">
+            @* <MudDrawer Class="pa-4" Anchor="Anchor.Right" Open="@_chatOpen" Elevation="8" Width="350px" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Temporary" Overlay="true">
 
                 <MudText Typo="Typo.h6">Chat</MudText>
                 <MudDivider Class="mb-2" />
@@ -303,7 +303,7 @@
                 </MudPaper>
 
                 <MudTextField T="string" Placeholder="Type a message…" Class="mt-2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" AdornmentOnClick="SendMessage" />
-            </MudDrawer>
+            </MudDrawer> *@
 
         </MudPaper>
 
@@ -578,7 +578,7 @@
                         Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START 8ed17ce6-ab7f-4267-a644-df183784e7bb //OSSCH_END
+                        //OSSCH_START 56833560-38e2-4eb7-ba41-6799653f9f90 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 22) // 22 = empty image
                         {

@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.Win32;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace NetLock_RMM_Agent_Installer
 {
@@ -255,53 +256,62 @@ namespace NetLock_RMM_Agent_Installer
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
 
-                if (OperatingSystem.IsWindows() && Environment.Is64BitOperatingSystem)
+                if (OperatingSystem.IsWindows())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_winx64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_winx64;
-                    health_package_url = Application_Paths.health_agent_package_url_winx64;
-                    user_process_package_url = Application_Paths.user_process_package_url_winx64;
+                    if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows ARM64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_winarm64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_winarm64;
+                        health_package_url = Application_Paths.health_agent_package_url_winarm64;
+                        user_process_package_url = Application_Paths.user_process_package_url_winarm64;
+                    }
+                    else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_winx64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_winx64;
+                        health_package_url = Application_Paths.health_agent_package_url_winx64;
+                        user_process_package_url = Application_Paths.user_process_package_url_winx64;
+                    }
                 }
-                else if (OperatingSystem.IsWindows() && !Environment.Is64BitOperatingSystem)
+                else if (OperatingSystem.IsLinux())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to WindowsARM.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_winarm64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_winarm64;
-                    health_package_url = Application_Paths.health_agent_package_url_winarm64;
-                    user_process_package_url = Application_Paths.user_process_package_url_winarm64;
+                    if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux ARM64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_linuxarm64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_linuxarm64;
+                        health_package_url = Application_Paths.health_agent_package_url_linuxarm64;
+                        user_process_package_url = Application_Paths.user_process_package_url_linuxarm64;
+                    }
+                    else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_linuxx64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_linuxx64;
+                        health_package_url = Application_Paths.health_agent_package_url_linuxx64;
+                        user_process_package_url = Application_Paths.user_process_package_url_linuxx64;
+                    }
                 }
-                else if (OperatingSystem.IsLinux() && Environment.Is64BitOperatingSystem)
+                else if (OperatingSystem.IsMacOS())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_linuxx64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_linuxx64;
-                    health_package_url = Application_Paths.health_agent_package_url_linuxx64;
-                    user_process_package_url = Application_Paths.user_process_package_url_linuxx64;
-                }
-                else if (OperatingSystem.IsLinux() && !Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to LinuxARM.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_linuxarm64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_linuxarm64;
-                    health_package_url = Application_Paths.health_agent_package_url_linuxarm64;
-                    user_process_package_url = Application_Paths.user_process_package_url_linuxarm64;
-                }
-                else if (OperatingSystem.IsMacOS() && Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_osx64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_osx64;
-                    health_package_url = Application_Paths.health_agent_package_url_osx64;
-                    user_process_package_url = Application_Paths.user_process_package_url_osx64;
-                }
-                else if (OperatingSystem.IsMacOS() && !Environment.Is64BitOperatingSystem)
-                {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Switching to MacOSARM.");
-                    comm_package_url = Application_Paths.comm_agent_package_url_osxarm64;
-                    remote_package_url = Application_Paths.remote_agent_package_url_osxarm64;
-                    health_package_url = Application_Paths.health_agent_package_url_osxarm64;
-                    user_process_package_url = Application_Paths.user_process_package_url_osxarm64;
+                    if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS ARM64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_osxarm64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_osxarm64;
+                        health_package_url = Application_Paths.health_agent_package_url_osxarm64;
+                        user_process_package_url = Application_Paths.user_process_package_url_osxarm64;
+                    }
+                    else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
+                    {
+                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
+                        comm_package_url = Application_Paths.comm_agent_package_url_osx64;
+                        remote_package_url = Application_Paths.remote_agent_package_url_osx64;
+                        health_package_url = Application_Paths.health_agent_package_url_osx64;
+                        user_process_package_url = Application_Paths.user_process_package_url_osx64;
+                    }
                 }
                 else
                 {
@@ -462,44 +472,6 @@ namespace NetLock_RMM_Agent_Installer
                     }
                 }
 
-                // Backup old server_config.json if fix mode
-                if (arg1 == "fix")
-                {
-                    Logging.Handler.Debug("Main", "Fix mode", "Enabled.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Fix mode: Enabled.");
-
-                    if (!File.Exists(Application_Paths.program_data_comm_agent_server_config))
-                    {
-                        Logging.Handler.Debug("Main", "Backup old server_config.json", "Not present.");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Old server_config.json: Not present. Fix argument wont work. Please use clean.");
-                        Thread.Sleep(5000);
-                        Environment.Exit(0);
-                    }
-
-                    // Delete old backup server config
-                    if (File.Exists(Application_Paths.c_temp_server_config_backup_path))
-                    {
-                        File.Delete(Application_Paths.c_temp_server_config_backup_path);
-                        Logging.Handler.Debug("Main", "Delete old server_config.json backup", "Done.");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old server_config.json backup: Done.");
-                    }
-
-                    // Backup old server_config.json
-                    if (File.Exists(Application_Paths.program_data_comm_agent_server_config))
-                    {
-                        File.Copy(Application_Paths.program_data_comm_agent_server_config, Application_Paths.c_temp_server_config_backup_path, true);
-                        Logging.Handler.Debug("Main", "Backup old server_config.json", "Done.");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Backup old server_config.json: Done.");
-                    }
-                    else
-                    {
-                        Logging.Handler.Debug("Main", "Backup old server_config.json", "Not present.");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Backup old server_config.json: Not present.");
-                    }
-
-                    // continues after uninstaller
-                }
-
                 // Execute uninstaller and wait for it to finish
                 if (arg1 == "fix")
                     Uninstall.Fix();
@@ -550,7 +522,7 @@ namespace NetLock_RMM_Agent_Installer
                 {
                     // Fix server_config.json
                     // Read old server_config.json
-                    string server_config_json_old = File.ReadAllText(Application_Paths.c_temp_server_config_backup_path);
+                    string server_config_json_old = File.ReadAllText(Application_Paths.program_data_health_agent_server_config);
                     Logging.Handler.Debug("Main", "Server_Config_Handler.Load (server_config_json_old)", server_config_json_old);
                     Server_Config server_config_old = JsonSerializer.Deserialize<Server_Config>(server_config_json_old);
 
@@ -601,8 +573,6 @@ namespace NetLock_RMM_Agent_Installer
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process package.");
                     ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), Application_Paths.program_files_user_agent_dir, true);
                 }
-
-                // We are not adding the user process to the registry, because the comm agent will do that for us
 
                 // Copy server config json to program data dir
                 if (arg1 == "clean" && arguments)

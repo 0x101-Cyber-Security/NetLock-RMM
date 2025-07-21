@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using System.Data;
 using System.Linq;
 using System.Runtime;
@@ -43,13 +43,13 @@ namespace Global.Events
             {
                 Logging.Debug("Events.Logger.Consume_Events", "", "Start");
 
-                using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Events_Database_String))
+                using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Events_Database_String))
                 {
                     db_conn.Open();
 
                     foreach (DataRow row in Device_Worker.events_data_table.Rows)
                     {
-                        SQLiteCommand command = new SQLiteCommand("INSERT INTO events ('severity', 'reported_by', 'event', 'description', 'notification_json', 'type', 'language', 'status') VALUES (" +
+                        SqliteCommand command = new SqliteCommand("INSERT INTO events ('severity', 'reported_by', 'event', 'description', 'notification_json', 'type', 'language', 'status') VALUES (" +
                             "'" + Encryption.String_Encryption.Encrypt(row["severity"].ToString(), Application_Settings.NetLock_Local_Encryption_Key) + "', " + //_event
                             "'" + Encryption.String_Encryption.Encrypt(row["reported_by"].ToString(), Application_Settings.NetLock_Local_Encryption_Key) + "', " + //_event
                             "'" + Encryption.String_Encryption.Encrypt(row["event"].ToString(), Application_Settings.NetLock_Local_Encryption_Key) + "', " + //_event
@@ -89,13 +89,13 @@ namespace Global.Events
 
                 int count = 0;
 
-                using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Events_Database_String))
+                using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Events_Database_String))
                 {
                     db_conn.Open();
 
                     //Count Reader
-                    SQLiteCommand count_scdCommand = new SQLiteCommand("SELECT * FROM events;", db_conn);
-                    SQLiteDataReader count_reader = count_scdCommand.ExecuteReader();
+                    SqliteCommand count_scdCommand = new SqliteCommand("SELECT * FROM events;", db_conn);
+                    SqliteDataReader count_reader = count_scdCommand.ExecuteReader();
 
                     while (count_reader.Read())
                         count++;
@@ -117,8 +117,8 @@ namespace Global.Events
                         Logging.Debug("Events.Logger.Process_Events", "Connection Check", "Online.");
 
                     //Start processing
-                    SQLiteCommand scdCommand = new SQLiteCommand("SELECT * FROM events;", db_conn);
-                    SQLiteDataReader reader = scdCommand.ExecuteReader();
+                    SqliteCommand scdCommand = new SqliteCommand("SELECT * FROM events;", db_conn);
+                    SqliteDataReader reader = scdCommand.ExecuteReader();
 
                     while (reader.Read())
                     {
@@ -133,7 +133,7 @@ namespace Global.Events
                         //If status send success, update its status in db
                         if (status_send)
                         {
-                            SQLiteCommand command = new SQLiteCommand("UPDATE events SET status = '" + Encryption.String_Encryption.Encrypt("1", Application_Settings.NetLock_Local_Encryption_Key) + "' WHERE id = '" + reader["id"].ToString() + "';", db_conn);
+                            SqliteCommand command = new SqliteCommand("UPDATE events SET status = '" + Encryption.String_Encryption.Encrypt("1", Application_Settings.NetLock_Local_Encryption_Key) + "' WHERE id = '" + reader["id"].ToString() + "';", db_conn);
                             command.ExecuteNonQuery();
                         }
 
@@ -150,7 +150,7 @@ namespace Global.Events
                         //Delete processed event
                         if (log_delete)
                         {
-                            SQLiteCommand command = new SQLiteCommand("DELETE FROM events WHERE id = '" + reader["id"].ToString() + "';", db_conn);
+                            SqliteCommand command = new SqliteCommand("DELETE FROM events WHERE id = '" + reader["id"].ToString() + "';", db_conn);
                             command.ExecuteNonQuery();
                         }
                     }

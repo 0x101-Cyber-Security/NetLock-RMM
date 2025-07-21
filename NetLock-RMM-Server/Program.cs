@@ -32,6 +32,9 @@ using Microsoft.AspNetCore.Routing.Tree;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PatternContexts;
 using System.Reflection;
 using System.Configuration;
+using NetLock_RMM_Server.Background_Services;
+
+NetLock_RMM_Server.Configuration.Server.serverStartTime = DateTime.Now; // Set server start time
 
 // Check directories
 NetLock_RMM_Server.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
@@ -280,7 +283,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 5eca997f-263a-4d72-b1d9-f4589dddea3b //OSSCH_END
+        //OSSCH_START 547c1960-c4cb-40c7-ad23-3ae77a192595 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -303,6 +306,7 @@ builder.Services.AddSignalR(options =>
 builder.Services.AddHostedService<Events_Notification_Service>();
 builder.Services.AddHostedService<Server_Information_Service>();
 builder.Services.AddHostedService<Members_Portal_License_Service>();
+builder.Services.AddHostedService<UpdateStateMonitoringService>();
 
 var app = builder.Build();
 
@@ -1378,7 +1382,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START d073a1a7-1ac5-44a2-8475-586304fe424a //OSSCH_END
+    //OSSCH_START 487afad8-03cb-4576-9b72-60dc5ccd7458 //OSSCH_END
 }
 
 /*

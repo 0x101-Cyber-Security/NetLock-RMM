@@ -162,7 +162,6 @@
                                     <MudTextField @bind-Value="@two_factor_codeInput" Label="@Localizer["2factor_verification_code"]" OnKeyDown="Enter" Required="true" RequiredError="@Localizer["required"]" Immediate="true" />
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="@Authenticate">@Localizer["verificate"]</MudButton>
                                 }
-
                             }
 
                             <!--Error Message-->
@@ -235,6 +234,7 @@
 
     private int invalid_count = 0;
 
+
     private async Task Enter(KeyboardEventArgs e)
     {
         if (e.Code == "Enter" && !String.IsNullOrEmpty(password))
@@ -249,7 +249,7 @@
 
         try
         {
-            conn.Open();
+            await conn.OpenAsync();
 
             MySqlCommand command = new MySqlCommand("SELECT * FROM accounts WHERE username = @username;", conn);
             command.Parameters.AddWithValue("@username", username);
@@ -274,7 +274,7 @@
                 return;
             }
 
-            reader.Close();
+            await reader.CloseAsync();
         }
         catch (Exception ex)
         {
@@ -283,7 +283,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
 
         Logging.Handler.Debug("/login -> Authenticate", "isPasswordCorrect", isPasswordCorrect.ToString());
@@ -321,15 +321,19 @@
                         two_factor_state = 2;
                         await Two_Factor_Authentification_VerifyCode();
 
-                        if (two_factor_isCodeVerified)
+                        if (!String.IsNullOrEmpty(two_factor_codeInput))
                         {
-                            user_verified = true;
-                        }
-                        else
-                        {
-                            message = Localizer["2factor_invalid_code"];
-                            invalid_count++;
-                            return; // Abort if the code is incorrect
+                            if (two_factor_isCodeVerified)
+                            {
+                                user_verified = true;
+                                message = String.Empty; // Clear message on successful verification
+                            }
+                            else
+                            {
+                                message = Localizer["2factor_invalid_code"];
+                                invalid_count++;
+                                return; // Abort if the code is incorrect
+                            }
                         }
                     }
                 }

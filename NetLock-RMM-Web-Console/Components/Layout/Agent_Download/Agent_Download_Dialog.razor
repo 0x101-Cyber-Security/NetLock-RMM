@@ -29,7 +29,7 @@
             {
                 <MudButton Class="ml-2 mb-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="Add_Agent_Configuration_Dialog">@Localizer["create_new_configuration"]</MudButton>
 
-                <MudSelect Class="mt-2" T="string" Label="Name" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
+                <MudSelect Class="mt-2" T="string" Label="Selected configuration" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="name" @bind-Value:after="async () => { await Get_Configuration(name); }" Required="true" RequiredError="@Localizer["required"]" Disabled="creating_installer">
                     @{
                         foreach (var name in agent_package_configurations_list)
                         {
@@ -41,7 +41,9 @@
 
             if (!String.IsNullOrEmpty(name))
             {
-                <MudCheckBox Class="ml-2" T="bool" @bind-Value="@ssl" @bind-Value:after="Update_Ports" Label="SSL" Color="Color.Primary" />
+                <MudTextField class="mt-2" Label="Name" T="string" @bind-Value="name" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+
+                <MudCheckBox Class="mt-2 ml-2" T="bool" @bind-Value="@ssl" @bind-Value:after="Update_Ports" Label="SSL" Color="Color.Primary" />
 
                 <div style="display: flex; align-items: center;">
                     <MudText Typo="Typo.h6">@Localizer["target_server"]</MudText>
@@ -442,7 +444,7 @@
     private async Task Get_Configuration(string name)
     {
         tenant_name = String.Empty;
-		location_name = String.Empty;
+        location_name = String.Empty;
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -494,7 +496,7 @@
         await Get_Locations(tenant_id); // Get locations for default tenant
         await Get_Guids(); // Get tenant & location guids by id
         await Get_Names(); // Get tenant & location names by id
-        
+
         StateHasChanged();
     }
 
@@ -615,7 +617,7 @@
         {
             await conn.OpenAsync();
 
-            string query = "UPDATE agent_package_configurations SET `ssl` = @ssl, communication_servers = @communication_servers, remote_servers = @remote_servers, update_servers = @update_servers, trust_servers = @trust_servers, file_servers = @file_servers, tenant_id = @tenant_id, location_id = @location_id, language = @language WHERE id = @id;";
+            string query = "UPDATE agent_package_configurations SET `name` = @name, `ssl` = @ssl, communication_servers = @communication_servers, remote_servers = @remote_servers, update_servers = @update_servers, trust_servers = @trust_servers, file_servers = @file_servers, tenant_id = @tenant_id, location_id = @location_id, language = @language WHERE id = @id;";
 
             MySqlCommand cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@id", id);
@@ -702,7 +704,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START 9ac64c9c-43e1-4e96-b0cb-62b17be9c911 //OSSCH_END
+    //OSSCH_START 44f92f7d-2ffc-47bb-9f3c-8f961cfbe32d //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {

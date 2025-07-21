@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO;
-using System.Data.SQLite;
+using Microsoft.Data.Sqlite;
 using NetLock_RMM_Agent_Comm;
 using Global.Helper;
 
@@ -48,7 +48,16 @@ namespace Global.Initialization
                 {
                     if (File.Exists(data_db_path) == false)
                     {
-                        SQLiteConnection.CreateFile(data_db_path);
+                        Logging.Debug("Initialization.Database.NetLock_Data_Setup", "create_db (data)", "DB not existing, creating new one.");
+
+                        // Create the database file
+                        using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
+                        {
+                            db_conn.Open();
+                            db_conn.Close();
+                            db_conn.Dispose();
+                        }
+
                         Logging.Debug("Initialization.Database.NetLock_Data_Setup", "create_db (data)", "DB created.");
                     }
                     else
@@ -67,7 +76,7 @@ namespace Global.Initialization
                 //Connect to Data DB
                 try
                 {
-                    using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String))
+                    using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
                     {
                         db_conn.Open();
 
@@ -84,7 +93,7 @@ namespace Global.Initialization
 
                             ");";
 
-                        SQLiteCommand policy_table_command = new SQLiteCommand(policy_table_sql, db_conn);
+                        SqliteCommand policy_table_command = new SqliteCommand(policy_table_sql, db_conn);
                         policy_table_command.ExecuteNonQuery();
 
                         /*
@@ -174,12 +183,11 @@ namespace Global.Initialization
             {
                 if (!File.Exists(report_db_path))
                 {
-                    SQLiteConnection.CreateFile(report_db_path);
                     Logging.Debug("Database_Setup", "create_db (events)", "DB created.");
 
                     Thread.Sleep(2500);
 
-                    using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Events_Database_String))
+                    using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Events_Database_String))
                     {
                         db_conn.Open();
 
@@ -195,7 +203,7 @@ namespace Global.Initialization
                             "language TEXT NULL DEFAULT NULL," +
                             "status TEXT NULL DEFAULT NULL);";
 
-                        SQLiteCommand command = new SQLiteCommand(events_table_sql, db_conn);
+                        SqliteCommand command = new SqliteCommand(events_table_sql, db_conn);
                         command.ExecuteNonQuery();
 
                         db_conn.Close();

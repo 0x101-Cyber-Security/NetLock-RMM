@@ -2715,7 +2715,7 @@
                                                     <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Applications_Services_Table_Dialog"></MudIconButton>
                                                 </MudTooltip>
 
-                                                <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@applications_services_mysql_data" Filter="new Func<Applications_Services_Entity, bool>(Applications_Services_Table_Filter_Func)">
+                                                <MudTable Class="mt-0" Height="50vh" FixedHeader="true" FixedFooter="true" Hover="true"  RowsPerPage="@applications_services_table_rowsPerPage" RowsPerPageChanged="@((int val) => applications_services_table_rowsPerPage = val)" CurrentPage="@applications_services_table_currentPage" CurrentPageChanged="@((int val) => applications_services_table_currentPage = val)"  Dense="true" Items="@applications_services_mysql_data" Filter="new Func<Applications_Services_Entity, bool>(Applications_Services_Table_Filter_Func)">
                                                     <ToolBarContent>
                                                         <MudTextField @bind-Value="applications_services_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                                                     </ToolBarContent>
@@ -3356,7 +3356,7 @@
                                 </MudTabPanel>
                             }
 
-                            @if (permissions_devices_antivirus && platform == "Windows")
+                            @if (permissions_devices_antivirus && platform == "Windows" && antivirus_solution == "Windows Defender")
                             {
                                 <MudTabPanel Text="Antivirus">
                             

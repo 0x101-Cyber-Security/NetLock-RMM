@@ -101,16 +101,17 @@
 
         @if (Configuration.Members_Portal.cloud_enabled)
         {
-            <MudAlert Severity="Severity.Warning">This section is administered by the cloud team. The view is limited. :-)</MudAlert>
+            <MudAlert Class="mb-3" Severity="Severity.Warning">This section is administered by the cloud team. The view is limited. :-)</MudAlert>
         }
 
         @if (permissions_settings_enabled && permissions_settings_system_enabled)
         {
             <MudTabs KeepPanelsAlive=true Class="mt-0" Elevation="4" Rounded="false" Color="@Color.Default">
+
+                @if (!Configuration.Members_Portal.cloud_enabled)
+                {
                 <MudTabPanel Text="Overview">
 
-                    @if (!Configuration.Members_Portal.cloud_enabled)
-                    {
                         <MudPaper Elevation="4" Class="mt-0">
 
                             <MudText Class="ml-2" Typo="Typo.h6">@Localizer["MySQL"]</MudText>
@@ -330,7 +331,6 @@
                                 </MudExpansionPanel>
                             </MudPaper>
                         }
-                    }
 
                     <!-- NetLock RMM File Server Status -->
 
@@ -400,9 +400,12 @@
                     </MudPaper>
 
                 </MudTabPanel>
-                <MudTabPanel Text="Members Portal Api">
+
+                }
                     @if (!Configuration.Members_Portal.cloud_enabled)
                     {
+                    <MudTabPanel Text="Members Portal Api">
+
                         <MudPaper Class="mt-0">
 
                             <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
@@ -442,163 +445,182 @@
                             }
 
                         </MudPaper>
+
+                    </MudTabPanel>
                     }
-                </MudTabPanel>
                 <MudTabPanel Text="Updates">
                     <MudPaper Class="mt-0">
-                        <MudText Class="ml-2" Typo="Typo.h6">Automatic Agent Updates</MudText>
-                        <MudSwitch Class="ml-2" @bind-Value="agent_updates_enabled" @bind-Value:after="Set_Agent_Updates" Color="Color.Primary">Windows</MudSwitch>
+                        <MudText Class="ml-2" Typo="Typo.h6">Automatic agent updates</MudText>
+                        <MudSwitch Class="ml-2" @bind-Value="agent_updates_windows_enabled" Color="Color.Primary">Windows</MudSwitch>
+                        <MudSwitch Class="ml-2" @bind-Value="agent_updates_linux_enabled" Color="Color.Primary">Linux</MudSwitch>
+                        <MudSwitch Class="ml-2" @bind-Value="agent_updates_macos_enabled" Color="Color.Primary">MacOS</MudSwitch>
+
+                        @if (!Configuration.Members_Portal.cloud_enabled)
+                        {
+                            <div style="display: flex; align-items: center; width: 250px">
+                                <MudNumericField Class="ml-2" @bind-Value="agent_updates_max_concurrent_updates" Label="Max concurrent updates" Variant="Variant.Text" Min="1" Max="100" />
+
+                                <MudTooltip Text="Controls how many devices update their agent concurrently. Choose a value appropriate for your available CPU, memory, and bandwidth to prevent ressource shortage & failed update processes.">
+                                    <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                                </MudTooltip>
+                            </div>
+                        }
+
+                        <MudButton Class="ml-2 mt-3 mb-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAgentUpdates">Save</MudButton>
                     </MudPaper>
                 </MudTabPanel>
-                <MudTabPanel Text="Database">
-                    <MudPaper Class="mt-0">
-                        <MudText Class="ml-2" Typo="Typo.h6">Clean Up & Optimize Database</MudText>
-                        <MudText Class="mt-2 ml-2" Typo="Typo.body1">
-                            Automatic cleanup of the database.
-                        </MudText>
+                @if (!Configuration.Members_Portal.cloud_enabled)
+                {
+                    <MudTabPanel Text="Database">
+                        <MudPaper Class="mt-0">
+                            <MudText Class="ml-2" Typo="Typo.h6">Clean Up & Optimize Database</MudText>
+                            <MudText Class="mt-2 ml-2" Typo="Typo.body1">
+                                Automatic cleanup of the database.
+                            </MudText>
 
-                        <MudGrid>
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_drivers_history_enabled" Label="Applications Drivers History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_drivers_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                            <MudGrid>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_applications_drivers_history_enabled" Label="Applications Drivers History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_drivers_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_installed_history_enabled" Label="Applications Installed History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_installed_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_applications_installed_history_enabled" Label="Applications Installed History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_installed_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_logon_history_enabled" Label="Applications Logon History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_logon_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_applications_logon_history_enabled" Label="Applications Logon History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_logon_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_scheduled_tasks_history_enabled" Label="Applications Scheduled Tasks History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_scheduled_tasks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_applications_scheduled_tasks_history_enabled" Label="Applications Scheduled Tasks History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_scheduled_tasks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_applications_services_history_enabled" Label="Applications Services History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_services_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_applications_services_history_enabled" Label="Applications Services History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_applications_services_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_antivirus_products_history_enabled" Label="Device Information Antivirus Products History" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_antivirus_products_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_antivirus_products_history_enabled" Label="Device Information Antivirus Products History" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_antivirus_products_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cpu_history_enabled" Label="Device information CPU history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cpu_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cpu_history_enabled" Label="Device information CPU history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cpu_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cronjobs_history_enabled" Label="Device information cronjobs history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cronjobs_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_cronjobs_history_enabled" Label="Device information cronjobs history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_cronjobs_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_disks_history_enabled" Label="Device information disks history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_disks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_disks_history_enabled" Label="Device information disks history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_disks_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_general_history_enabled" Label="Device information general history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_general_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_general_history_enabled" Label="Device information general history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_general_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_history_enabled" Label="Device information history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_history_enabled" Label="Device information history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_network_adapters_history_enabled" Label="Device information network adapters history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_network_adapters_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_network_adapters_history_enabled" Label="Device information network adapters history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_network_adapters_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_ram_history_enabled" Label="Device information RAM history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_ram_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_ram_history_enabled" Label="Device information RAM history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_ram_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_device_information_task_manager_history_enabled" Label="Device information task manager history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_task_manager_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_device_information_task_manager_history_enabled" Label="Device information task manager history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_device_information_task_manager_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                            <MudItem xs="12" md="6">
-                                <MudCard Class="ml-2 mb-4">
-                                    <MudCardContent>
-                                        <MudCheckBox T="bool" @bind-Value="cleanup_events_history_enabled" Label="Events history" Color="Color.Primary" />
-                                        <MudNumericField Class="mt-2" @bind-Value="cleanup_events_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
-                                    </MudCardContent>
-                                </MudCard>
-                            </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudCard Class="ml-2 mb-4">
+                                        <MudCardContent>
+                                            <MudCheckBox T="bool" @bind-Value="cleanup_events_history_enabled" Label="Events history" Color="Color.Primary" />
+                                            <MudNumericField Class="mt-2" @bind-Value="cleanup_events_history_days" Label="Older than X days" Variant="Variant.Text" Min="1" Max="9999" />
+                                        </MudCardContent>
+                                    </MudCard>
+                                </MudItem>
 
-                        </MudGrid>
+                            </MudGrid>
 
-                        <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
-                        <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
-                    </MudPaper>
-                </MudTabPanel>
+                            <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@Save_Cleanup_Settings">Save</MudButton>
+                            <MudButton Class="ml-2 mt-2 mb-3" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="@Optimize_Database">Optimize Database</MudButton>
+                        </MudPaper>
+                    </MudTabPanel>
+                }
                 <MudTabPanel Text="Remote Screen Control">
                     <MudPaper Class="mt-0 mb-0">
                         @if (!Configuration.Members_Portal.isCodeSigned)
@@ -758,7 +780,10 @@
     private string mysqlMaxConnections = String.Empty;
 
     // Agent Update Settings
-    private bool agent_updates_enabled = false;
+    private bool agent_updates_windows_enabled = false;
+    private bool agent_updates_linux_enabled = false;
+    private bool agent_updates_macos_enabled = false;
+    private int agent_updates_max_concurrent_updates = 0;
 
     // Members Portal
     private string members_portal_api_key = String.Empty;
@@ -953,44 +978,103 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START 70ca00b8-a2d2-4cb4-9a9f-8cce2d1e5afd //OSSCH_END
+    //OSSCH_START bcb29f0a-890c-47b8-b2ec-40989be48a84 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 5dbc127e-05d0-46a9-a49d-4d563eaea5d1 //OSSCH_END
+    //OSSCH_START 46a90f83-b88d-4984-879f-10b9397cd77b //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 9610a910-b57f-463b-840e-446b83d79c31 //OSSCH_END
+    //OSSCH_START c1e8a070-de06-424e-b403-ba755e5727c6 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()
     {
-        string updates_enabled = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_enabled");
+        string windows_updates_enabled = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_windows_enabled");
+        string linux_updates_enabled = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_linux_enabled");
+        string macos_updates_enabled = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_macos_enabled");
 
-        if (updates_enabled == "1")
-            agent_updates_enabled = true;
+        if (windows_updates_enabled == "1")
+            agent_updates_windows_enabled = true;
         else
-            agent_updates_enabled = false;
+            agent_updates_windows_enabled = false;
+
+        if (linux_updates_enabled == "1")
+            agent_updates_linux_enabled = true;
+        else
+            agent_updates_linux_enabled = false;
+
+        if (macos_updates_enabled == "1")
+            agent_updates_macos_enabled = true;
+        else
+            agent_updates_macos_enabled = false;
+
+        agent_updates_max_concurrent_updates = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings", "agent_updates_max_concurrent_updates"));
     }
 
     // Set agent updates settings
-    private async Task Set_Agent_Updates()
+    private async Task SaveAgentUpdates()
     {
+        Snackbar.Configuration.ShowCloseIcon = true;
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
-        if (agent_updates_enabled)
+        if (agent_updates_windows_enabled)
         {
-            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_enabled", "true");
-            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 1;");
-
-            Snackbar.Add(Localizer["agent updates enabled"], Severity.Success);
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_windows_enabled", "true");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_windows_enabled = 1;");
         }
         else
         {
-            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_enabled", "false");
-            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_enabled = 0;");
-
-            Snackbar.Add(Localizer["agent updates disabled"], Severity.Warning);
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_windows_enabled", "false");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_windows_enabled = 0;");
         }
+
+        if (agent_updates_linux_enabled)
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_linux_enabled", "true");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_linux_enabled = 1;");
+        }
+        else
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_linux_enabled", "false");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_linux_enabled = 0;");
+        }
+
+        if (agent_updates_macos_enabled)
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_macos_enabled", "true");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_macos_enabled = 1;");
+        }
+        else
+        {
+            Logging.Handler.Debug("/system -> Set_Agent_Updates", "agent_updates_macos_enabled", "false");
+            await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET agent_updates_macos_enabled = 0;");
+        }
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        string query = "UPDATE settings SET agent_updates_max_concurrent_updates = @agent_updates_max_concurrent_updates;";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@agent_updates_max_concurrent_updates", agent_updates_max_concurrent_updates.ToString());
+
+            Logging.Handler.Debug("SaveAgentUpdates", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("SaveAgentUpdates", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        Snackbar.Add("Saved.", Severity.Success);
     }
 
     // Check the dns ptr record

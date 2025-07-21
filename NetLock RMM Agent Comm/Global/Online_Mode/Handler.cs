@@ -18,8 +18,7 @@ using Global.Helper;
 using System.Management;
 using NetLock_RMM_Agent_Comm;
 using System.Reflection.PortableExecutable;
-using System.Data.SQLite;
-using System.Data.Entity.Core.Mapping;
+using Microsoft.Data.Sqlite;
 
 namespace Global.Online_Mode
 {
@@ -263,7 +262,7 @@ namespace Global.Online_Mode
                     Logging.Debug("Online_Mode.Handler.Authenticate", "domain", Device_Worker.domain);
 
                     // Get Antivirus solution
-                    Device_Worker.antivirus_solution = Windows.Helper.WMI.Search("root\\SecurityCenter2", "select * FROM AntivirusProduct", "displayName");
+                    Device_Worker.antivirus_solution = Device_Information.OS.GetActiveAntivirusProduct();
                     Logging.Debug("Online_Mode.Handler.Authenticate", "antivirus_solution", Device_Worker.antivirus_solution);
 
                     // Get Firewall status
@@ -466,6 +465,7 @@ namespace Global.Online_Mode
 
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 Device_Worker.authorized = true;
                             }
@@ -498,6 +498,7 @@ namespace Global.Online_Mode
 
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 Device_Worker.authorized = false;
                             }
@@ -826,11 +827,11 @@ namespace Global.Online_Mode
 
                             Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
 
-                            using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String)) // Remove old policy and insert new policy
+                            using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String)) // Remove old policy and insert new policy
                             {
                                 db_conn.Open();
 
-                                SQLiteCommand command = new SQLiteCommand(@"DELETE FROM policy; " +
+                                SqliteCommand command = new SqliteCommand(@"DELETE FROM policy; " +
                                 "INSERT INTO policy (" +
                                 "'antivirus_settings_json', " +
                                 "'antivirus_exclusions_json', " +
@@ -865,11 +866,11 @@ namespace Global.Online_Mode
                         {
                             Logging.Debug("Online_Mode.Handler.Policy", "Insert into policy database", "Starting...");
 
-                            using (SQLiteConnection db_conn = new SQLiteConnection(Application_Settings.NetLock_Data_Database_String))
+                            using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
                             {
                                 db_conn.Open();
 
-                                SQLiteCommand command = new SQLiteCommand("DELETE FROM policy;", db_conn);
+                                SqliteCommand command = new SqliteCommand("DELETE FROM policy;", db_conn);
 
                                 command.ExecuteNonQuery();
 
