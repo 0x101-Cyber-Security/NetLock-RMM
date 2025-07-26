@@ -267,4 +267,10 @@
   <data name="wait_for_device_to_download_file" xml:space="preserve">
     <value>Warten auf das Herunterladen der Datei durch das Gerät.</value>
   </data>
+  <data name="copy_filename" xml:space="preserve">
+    <value>Dateiname kopieren</value>
+  </data>
+  <data name="copy_full_path" xml:space="preserve">
+    <value>Vollständigen pfad kopieren</value>
+  </data>
 </root>
