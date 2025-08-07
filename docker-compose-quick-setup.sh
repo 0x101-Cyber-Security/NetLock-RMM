@@ -624,7 +624,7 @@ services:
     image: mysql:8.0
     container_name: mysql8-container
     environment:
-      MYSQL_ROOT_PASSWORD: $mysql_password
+      MYSQL_ROOT_PASSWORD: "$mysql_password"
       MYSQL_DATABASE: netlock
     volumes:
       - /home/netlock/mysql/data:/var/lib/mysql
