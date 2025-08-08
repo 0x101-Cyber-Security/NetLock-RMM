@@ -1,0 +1,75 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft": "Error",
+      "Microsoft.Hosting.Lifetime": "Warning"
+    },
+    "Custom": {
+      "Enabled": true
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "Endpoint": {
+      "Http": {
+        "Enabled": ${web_console_http_enabled},
+        "Port": ${web_console_port_http}
+      },
+      "Https": {
+        "Enabled": ${web_console_https_enabled},
+        "Port": ${web_console_port_https},
+        "Force": true,
+        "Hsts": {
+          "Enabled": true
+        },
+        "Certificate": {
+          "Path": "${web_console_cert_path}",
+          "Password": "${le_pfx_password}"
+        }
+      }
+    },
+    "IpWhitelist": ${ip_whitelist_json},
+    "KnownProxies": ${known_proxies_json}
+  },
+  "NetLock_Remote_Server": {
+    "Server": "${web_console_server_host}",
+    "Port": ${web_console_server_port},
+    "UseSSL": ${web_console_server_ssl}
+  },
+  "NetLock_File_Server": {
+    "Server": "${web_console_server_host}",
+    "Port": ${web_console_server_port},
+    "UseSSL": ${web_console_server_ssl}
+  },
+  "MySQL": {
+    "Server": "mysql8-container",
+    "Port": 3306,
+    "Database": "netlock",
+    "User": "root",
+    "Password": "${mysql_password}",
+    "SslMode": "None",
+    "AdditionalConnectionParameters": "AllowPublicKeyRetrieval=True;"
+  },
+  "LettuceEncrypt": {
+    "Enabled": ${le_enabled},
+    "AcceptTermsOfService": true,
+    "DomainNames": [
+      "${web_console_domain}", "${server_domain}"
+    ],
+    "EmailAddress": "${le_email}",
+    "AllowedChallengeTypes": "Http01",
+    "CertificateStoredPfxPassword": "${le_pfx_password}"
+  },
+  "Webinterface": {
+    "Title": "${web_console_title}",
+    "Language": "en-US",
+    "Membership_Reminder": true,
+    "PublicOverrideUrl": "${publicOverrideUrl}"
+  },
+  "Members_Portal_Api": {
+    "Enabled": true,
+    "Cloud": false,
+    "ApiKeyOverride": "${apiKeyOverride}"
+  }
+}

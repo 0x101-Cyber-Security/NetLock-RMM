@@ -1,0 +1,70 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning",
+      "Microsoft": "Error",
+      "Microsoft.Hosting.Lifetime": "Warning",
+      "Microsoft.AspNetCore.SignalR": "Error",
+      "Microsoft.AspNetCore.Http.Connections": "Error"
+    },
+    "Custom": {
+      "Enabled": false
+    }
+  },
+  "AllowedHosts": "*",
+  "Kestrel": {
+    "Endpoint": {
+      "Http": {
+        "Enabled": ${server_http_enabled},
+        "Port": ${server_port_http}
+      },
+      "Https": {
+        "Enabled": ${server_https_enabled},
+        "Port": ${server_port_https},
+        "Force": ${server_https_forced},
+        "Hsts": {
+          "Enabled": true
+        },
+        "Certificate": {
+          "Path": "/path/to/certificates/certificate.pfx",
+          "Password": "${le_pfx_password}"
+        }
+      }
+    },
+    "Roles": {
+      "Comm": true,
+      "Update": true,
+      "Trust": true,
+      "Remote": true,
+      "Notification": true,
+      "File": true,
+      "LLM": true
+    }
+  },
+  "MySQL": {
+    "Server": "mysql8-container",
+    "Port": 3306,
+    "Database": "netlock",
+    "User": "root",
+    "Password": "${mysql_password}",
+    "SslMode": "None",
+    "AdditionalConnectionParameters": "AllowPublicKeyRetrieval=True;"
+  },
+  "LettuceEncrypt": {
+    "Enabled": ${le_enabled},
+    "AcceptTermsOfService": true,
+    "DomainNames": [
+      "${server_domain}"
+    ],
+    "EmailAddress": "${le_email}",
+    "AllowedChallengeTypes": "Http01",
+    "CertificateStoredPfxPassword": "${le_pfx_password}"
+  },
+  "Members_Portal_Api": {
+    "Enabled": true,
+    "ApiKeyOverride": "${apiKeyOverride}"
+  },
+  "Environment": {
+    "Docker": true
+  }
+}

@@ -1,0 +1,51 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql8-container
+    environment:
+      MYSQL_ROOT_PASSWORD: ${mysql_password}
+      MYSQL_DATABASE: netlock
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+    networks:
+      - netlock-network
+    restart: always
+    command: --skip-log-bin
+
+  netlock-web-console:
+    image: nicomak101/netlock-rmm-web-console:latest
+    container_name: netlock-web-console
+    environment:
+      - TZ=${timezone}
+    volumes:
+      - "./web_console/appsettings.json:/app/appsettings.json"
+      - "./web_console/internal:/app/internal"
+      - "./web_console/logs:/var/0x101 Cyber Security/NetLock RMM/Web Console/"
+      - "./letsencrypt:/app/letsencrypt"
+      - /etc/localtime:/etc/localtime:ro
+    ports:${web_console_docker_ports}
+    networks:
+      - netlock-network
+    restart: always
+
+  netlock-rmm-server:
+    image: nicomak101/netlock-rmm-server:latest
+    container_name: netlock-rmm-server
+    environment:
+      - TZ=${timezone}
+    volumes:
+      - "./server/appsettings.json:/app/appsettings.json"
+      - "./server/internal:/app/internal"
+      - "./server/files:/app/www/private/files"
+      - "./server/logs:/var/0x101 Cyber Security/NetLock RMM/Server/"
+      - "./letsencrypt:/app/letsencrypt"
+      - /etc/localtime:/etc/localtime:ro
+    ports:${server_docker_ports}
+    networks:
+      - netlock-network
+    restart: always
+
+networks:
+  netlock-network:
+    driver: bridge
