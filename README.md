@@ -82,24 +82,29 @@ Do you wish to get started as fast as possible? Our docker compose script ensure
 - Reverse Proxy (supports any reverse proxy)
 - Local Testing (only for local test environments, not for production)
 
-The script expects docker compose to be installed, on a linux disctribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM componments as well as a MySQL 8.0 server and connects everything with each other.
+The script expects docker compose to be installed, on a linux distribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM components as well as a MySQL 8.0 server and connects everything with each other.
 
-1. Download the script with wget.
-```plaintext
-sudo wget -P /home https://raw.githubusercontent.com/0x101-Cyber-Security/NetLock-RMM/main/docker-compose-quick-setup.sh
+1. Clone the repository (latest commit only):
+```bash
+git clone --depth 1 https://github.com/0x101-Cyber-Security/NetLock-RMM.git
 ```
 
-2. Make it executable:
-```plaintext
-sudo chmod +x /home/docker-compose-quick-setup.sh
+2. Navigate to the Docker deployment directory:
+```bash
+cd NetLock-RMM/NetLock-docker-quick-deployment
 ```
 
-3. Execute it:
-```plaintext
-sudo ./home/docker-compose-quick-setup.sh
+3. Make the scripts executable (if necessary):
+```bash
+chmod +x 01_quick-install.sh 02_update-ssl-certificates.sh
 ```
 
-4. Follow the instructions.
+4. Execute the setup script:
+```bash
+sudo ./01_quick-install.sh
+```
+
+5. Follow the instructions in the script.
 
 ## Video Tutorial
 [Watch the video on YouTube](https://youtu.be/-VMoL6wnSKs)
