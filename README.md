@@ -1,4 +1,4 @@
-# NetLock RMM
+# SCNCORE-PLUS
 NetLock RMM is an Remote Monitoring & Management (RMM) software built for Managed Service Providers, with a future focus on cybersecurity. NetLock RMM is primarily written in C#, Blazor, ASP.NET Core, and SignalR.
 
 NetLock RMM can be deployed in various environments, including cloud setups or isolated/offline configurations. It supports multiple operating systems, including Windows and Linux, and can also run within Docker & Kubernetes, providing flexibility for different deployment preferences.
