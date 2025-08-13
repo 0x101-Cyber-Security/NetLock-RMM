@@ -1,0 +1,259 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Settings.Notifications.E_Mail.Edit_Mail_Notification_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="@Localizer["mail"]" T="string" @bind-Value="mail_address" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="description" Immediate="@true" />
+
+        <MudSelect T="string" @bind-Value="severity" Label="@Localizer["severity"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+            <MudSelectItem T="string" Value="@Localizer["any"]" />
+            <MudSelectItem T="string" Value="@Localizer["critical"]" />
+            <MudSelectItem T="string" Value="@Localizer["high"]" />
+            <MudSelectItem T="string" Value="@Localizer["moderate"]" />
+            <MudSelectItem T="string" Value="@Localizer["low"]" />
+        </MudSelect>
+
+        <div style="display: flex; align-items: center;">
+            <MudCheckBox @bind-Value="uptime_monitoring_enabled" Color="Color.Primary">@Localizer["uptime_monitoring"]</MudCheckBox>
+
+            <MudTooltip Text="@Localizer["uptime_monitoring_tooltip"]">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+            </MudTooltip>
+        </div>
+
+        <MudDropContainer T="DropItem" Items="tenants" ItemsSelector="@((item,dropzone) => item.identifier == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+            <ChildContent>
+                <MudDropZone T="DropItem" identifier="drop_zone_one" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+                    <MudText Typo="Typo.h6" Class="mb-4">@Localizer["tenants"]</MudText>
+                </MudDropZone>
+                <MudDropZone T="DropItem" identifier="drop_zone_two" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+                    <MudText Typo="Typo.h6" Class="mb-4">@Localizer["selected_tenants"]</MudText>
+                </MudDropZone>
+            </ChildContent>
+            <ItemRenderer>
+                <MudPaper Elevation="25" Class="pa-4 my-4">@context.id</MudPaper>
+            </ItemRenderer>
+        </MudDropContainer>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+        <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" Disabled="@(String.IsNullOrEmpty(mail_address))">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private string scncore_username = string.Empty;
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+    [Parameter] public string mail_address { get; set; }
+    [Parameter] public string description { get; set; }
+    [Parameter] public string language { get; set; }
+    [Parameter] public string severity { get; set; }
+    [Parameter] public string tenants_json { get; set; }
+    [Parameter] public bool uptime_monitoring_enabled { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve email from claims
+        scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+        await Get_Tenants();
+
+        // convert severity
+        if (severity == "0")
+            severity = Localizer["low"];
+        else if (severity == "1")
+            severity = Localizer["moderate"];
+        else if (severity == "2")
+            severity = Localizer["high"];
+        else if (severity == "3")
+            severity = Localizer["critical"];
+        else if (severity == "4")
+            severity = Localizer["any"];
+    }
+
+    private List<DropItem> tenants = new();
+
+    public class DropItem
+    {
+        public string id { get; set; }
+        public string identifier { get; set; }
+    }
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.identifier = dropItem.DropzoneIdentifier;
+    }
+
+    private async Task Get_Tenants()
+    {
+        var tenants_list = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(tenants_json);
+
+        foreach (var tenant in tenants_list)
+        {
+            tenant["id"] = await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"]));
+
+            tenants.Add(new DropItem { 
+                id = tenant["id"],
+                identifier = tenant["identifier"]
+            });
+        }
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        string tenant_name_decoded = reader["name"].ToString() ?? String.Empty;
+
+                        bool exists = tenants.Any(item => item.id == tenant_name_decoded);
+
+                        if (exists == false)
+                            tenants.Add(new DropItem { id = reader["name"].ToString() ?? String.Empty, identifier = "drop_zone_one" });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Edit_Mail_Notification_Dialog", "Get_Tenants_Sort_Tenants", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        //Get all tenants from drop zone two
+        var filtered_tenants = tenants.Where(item => item.identifier == "drop_zone_two").ToList();
+
+        // foreach filtered tenant, get tenant_id
+        foreach (var tenant in filtered_tenants)
+        {
+            int tenant_id = await Classes.MySQL.Handler.Get_Tenant_Id(tenant.id);
+
+            // replace name with id
+            tenant.id = tenant_id.ToString();
+        }
+
+        tenants_json = JsonSerializer.Serialize(filtered_tenants);
+
+        Logging.Handler.Debug("Add_Mail_Notification_Dialog", "tenants_json", tenants_json);
+
+        if (tenants_json.Count() != 0)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                // convert severity
+                string sevirity_converted = String.Empty;
+
+                if (severity == Localizer["low"])
+                    sevirity_converted = "0";
+                else if (severity == Localizer["moderate"])
+                    sevirity_converted = "1";
+                else if (severity == Localizer["high"])
+                    sevirity_converted = "2";
+                else if (severity == Localizer["critical"])
+                    sevirity_converted = "3";
+                else if (severity == Localizer["any"])
+                    sevirity_converted = "4";
+
+                // convert uptime_monitoring_enabled
+                int uptime_monitoring_enabled = 0;
+
+                if (this.uptime_monitoring_enabled)
+                    uptime_monitoring_enabled = 1;
+                else
+                    uptime_monitoring_enabled = 0;
+
+                await conn.OpenAsync();
+
+                string execute_query = "UPDATE mail_notifications SET mail_address = @mail_address, author = @author, description = @description, severity = @severity, tenants = @tenants, uptime_monitoring_enabled = @uptime_monitoring_enabled WHERE id = @id;";
+
+                MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                cmd.Parameters.AddWithValue("@id", id);
+                cmd.Parameters.AddWithValue("@mail_address", mail_address);
+                cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@author", scncore_username);
+                cmd.Parameters.AddWithValue("@description", description);
+                cmd.Parameters.AddWithValue("@severity", sevirity_converted);
+                cmd.Parameters.AddWithValue("@tenants", tenants_json);
+                cmd.Parameters.AddWithValue("@uptime_monitoring_enabled", uptime_monitoring_enabled);
+
+                cmd.ExecuteNonQuery();
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Add_Mail_Notification_Dialog", "General error", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            if (success)
+            {
+                MudDialog.Close(DialogResult.Ok("success"));
+            }
+            else
+            {
+                Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add(Localizer["no_tenants_selected"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

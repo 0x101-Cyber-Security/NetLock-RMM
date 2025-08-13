@@ -1,0 +1,52 @@
+﻿using System.Runtime.InteropServices;
+
+namespace SCNCore_Plus_Web_Console
+{
+    public class Application_Paths
+    {
+        //public static string logs_dir = @"C:\ProgramData\0x101 Cyber Security\SCNCore Plus\Web Console\Logs";
+        public static string logs_dir = Path.Combine(GetBasePath(), "0x101 Cyber Security", "SCNCore Plus", "Web Console", "Logs");
+
+        public static string _private_files_devices = "devices";
+
+        public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
+        public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
+
+        public static string internal_recordings_dir = Path.Combine(GetCurrentDirectory(), "internal", "recordings");
+
+        //OSSCH_START
+        public static string internal_license_info_json_path = Path.Combine(GetCurrentDirectory(), "internal", "license_info.json");
+        public static string scncore_plus_logo_svg_path = Path.Combine(Environment.CurrentDirectory, "wwwroot", "media", "images", "SCNCore-Plus-Logo-Transparent.svg");
+        public static string scncore_plus_logo_png_path = Path.Combine(Environment.CurrentDirectory, "wwwroot", "media", "images", "SCNCore-Plus-Logo-Transparent.png");
+
+        //OSSCH_END
+
+        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
+
+        private static string GetBasePath()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "/var";
+            }
+            else
+            {
+                throw new NotSupportedException("Unsupported OS");
+            }
+        }
+
+        private static string GetCurrentDirectory()
+        {
+            return AppContext.BaseDirectory;
+        }
+
+        //public static string debug_txt_path = @"C:\ProgramData\0x101 Cyber Security\SCNCore Plus\Web Console\debug.txt";
+
+        //URLs
+        public static string redirect_path = "/redirect";
+    }
+}

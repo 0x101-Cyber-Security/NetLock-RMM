@@ -1,0 +1,1139 @@
+﻿@page "/manage_files"
+
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+@using System.Net;
+@using System.Net.Http;
+@using System.Net.Http.Headers;
+@using SCNCore_Plus_Web_Console.Configuration;
+@using System.Text.RegularExpressions;
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Collections.Files.Manage_Files> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .custom-expansion-panel {
+    background-color: transparent;
+    }
+
+    .dialog-blurring {
+    backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+    font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+    padding-bottom: 50px;
+    text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+    .desktop-icon {
+    display: none;
+    }
+    }
+
+    .mud-select-spacing {
+    min-width: 120px;
+    margin-left: 8px;
+    margin-right: 8px;
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+
+        @if (permissions_collections_enabled && permissions_collections_files_enabled)
+        {
+            <MudText Class="mb-5" Typo="Typo.h5">@Localizer["title"]</MudText>
+
+            @if (permissions_collections_files_add)
+            {
+                <div class="d-flex flex-column flex-md-row align-items-center">
+
+                    <MudButton Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.ArrowBack" @onclick="async () => { await Get_Index(String.Empty, false, true); }">@Localizer["back"]</MudButton>
+
+                    <MudButton Class="mt-2 mt-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Refresh" @onclick="async () => { await Get_Index(files_selected_directory_path, false, false); }">@Localizer["refresh"]</MudButton>
+
+                    <MudButton Class="mt-2 mt-md-0 ml-0 ml-md-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Create_Directoy_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.CreateNewFolder">@Localizer["create_folder"]</MudButton>
+
+                    <MudFileUpload T="IBrowserFile" FilesChanged="Upload_File">
+                        <ActivatorContent>
+                            <MudButton Class="mt-2 mt-md-0 ml-0 ml-md-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.UploadFile" Disabled="@uploading">@Localizer["upload_file"]</MudButton>
+                        </ActivatorContent>
+                    </MudFileUpload>
+
+                </div>
+
+
+                if (uploading)
+                {
+                    <MudProgressLinear @bind-Value="_uploadProgress" Size="Size.Medium" Class="mt-2" Color="Color.Info">
+                        <MudText Typo="Typo.body1">@_uploadProgress %</MudText>
+                    </MudProgressLinear>
+                }
+            }
+
+            <MudPaper Class="mt-5">
+
+                <MudTable Class="mt-2" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="int.MaxValue" Dense="false" Items="@files_mysql_data" Filter="new Func<Files_Entity, bool>(Files_Table_Filter_Func)">
+                    <ToolBarContent>
+                        <MudTextField Class="" Placeholder="@files_selected_directory_path" Adornment="Adornment.Start" IconSize="Size.Medium" AdornmentIcon="@Icons.Material.Filled.Link" @bind-Value="files_selected_directory_path" ReadOnly="true" Immediate="true"></MudTextField>
+                        <MudTextField Class="ml-2" @bind-Value="files_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.name)">Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.type)">@Localizer["type"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.size)">@Localizer["size"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.last_modified)">@Localizer["modification_date"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.access)">@Localizer["access"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.guid)">GUID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.password)">@Localizer["password"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Files_Entity, object>(x => x.sha512)">SHA512</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="files_row">
+
+                        <MudTd DataLabel="Name" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
+                                <ActivatorContent>
+                                    <span style="display: flex; align-items: center;">
+                                        @if (files_row.type == Localizer["directory"].ToString())
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.Folder" />
+                                        }
+                                        else
+                                        {
+                                            <MudIcon Icon="@Icons.Material.Filled.FileCopy" />
+                                        }
+                                        &nbsp;@files_row.name
+                                    </span>
+                                </ActivatorContent>
+                                <ChildContent>
+                                    @{
+                                        if (files_row.type == Localizer["directory"].ToString())
+                                        {
+                                            <MudMenuItem @onclick="async () => { await Files_Directories_Delete(files_row.name, files_row.path, String.Empty, true); }">@Localizer["delete"]</MudMenuItem>
+                                            <MudMenuItem @onclick="async () => { await Rename_Dialog(files_row.path, String.Empty); }">@Localizer["rename"]</MudMenuItem>
+                                        }
+                                        else
+                                        {
+                                            <MudMenuItem @onclick="async () => { await Files_Directories_Delete(files_row.name, files_row.path, files_row.guid, false); }">@Localizer["delete"]</MudMenuItem>
+                                            <MudMenuItem @onclick="async () => { await Rename_Dialog(files_row.path, files_row.guid); }">@Localizer["rename"]</MudMenuItem>
+
+                                            if (files_row.access == Localizer["private"])
+                                            {
+                                                <MudMenuItem @onclick="async () => { await Copy_URL(files_row.guid, true, files_row.password); }">@Localizer["copy_url"]</MudMenuItem>
+                                            }
+                                            else
+                                            {
+                                                <MudMenuItem @onclick="async () => { await Copy_URL(files_row.guid, false, files_row.password); }">@Localizer["copy_url"]</MudMenuItem>
+                                            }
+
+                                            <MudMenuItem @onclick="async () => { await Download_File(files_row.guid, true, files_row.password); }">@Localizer["download"]</MudMenuItem>
+                                        }
+                                    }
+                                </ChildContent>
+                            </MudMenu>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["type"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.type
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["size"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.size
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["modification_date"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.last_modified
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["access"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center; padding: 4px;">
+                                @{
+                                    if (files_row.type != Localizer["directory"].ToString())
+                                    {
+                                        <MudSelect T="string" Variant="Variant.Text" Dense="true" Class="compact-select" @bind-Value=files_row.access @bind-Value:after="@(() => Update_Access(files_row.guid, files_row.access))">
+                                            <MudSelectItem T="string" Value="@("Public")">@Localizer["public"]</MudSelectItem>
+                                            <MudSelectItem T="string" Value="@("Private")">@Localizer[Localizer["private"].ToString()]</MudSelectItem>
+                                        </MudSelect>
+                                    }
+                                }
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="GUID" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.guid
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["password"]" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.password
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="SHA512" @onclick="() => Files_RowClickHandler(files_row)" class="@Files_GetRowClass(files_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@files_row.sha512
+                            </span>
+                        </MudTd>
+
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                    </PagerContent>
+                </MudTable>
+
+            </MudPaper>
+        }
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_json = String.Empty;
+
+    private bool permissions_collections_enabled = false;
+    private bool permissions_collections_files_enabled = false;
+    private bool permissions_collections_files_add = false;
+    private bool permissions_collections_files_edit = false;
+    private bool permissions_collections_files_delete = false;
+    private bool permissions_collections_files_scncore = false;
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_enabled");
+            permissions_collections_files_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_files_enabled");
+            permissions_collections_files_add = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_files_add");
+            permissions_collections_files_edit = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_files_edit");
+            permissions_collections_files_delete = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_files_delete");
+            permissions_collections_files_scncore = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_files_scncore");
+
+            if (!permissions_collections_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        if (!await Permissions())
+            return;
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await Get_Index(String.Empty, true, false);
+
+        StateHasChanged();
+    }
+
+    private string files_json = String.Empty;
+
+    private async Task Get_Index(string path, bool base_path, bool backwards)
+    {
+        try
+        {
+            // Handle navigating backwards
+            if (backwards && file_selected_old_paths_list.Count > 0)
+            {
+                if (file_selected_old_paths_list.Count > 1)
+                {
+                    // Remove the current path
+                    file_selected_old_paths_list.RemoveAt(file_selected_old_paths_list.Count - 1);
+
+                    // Get the previous path
+                    path = file_selected_old_paths_list[file_selected_old_paths_list.Count - 1];
+                }
+                else
+                {
+                    // If only one path is left, go to the base path
+                    path = "base1337";
+                    file_selected_old_paths_list.Clear();  // Reset old paths list
+                    file_selected_old_paths_list.Add(path);  // Add the base path back to the history
+                }
+
+                // Log the action
+                Logging.Handler.Debug("/manage_files -> Get_Index", "Backwards", path);
+            }
+
+            // Convert path to base path if required
+            if (base_path)
+            {
+                path = "base1337";
+            }
+
+            // Ensure path is not empty before making an API request
+            if (String.IsNullOrEmpty(path))
+            {
+                path = "base1337";
+            }
+
+            // Retrieve API key
+            string api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+            // Create a HttpClient instance
+            using (var httpClient = new HttpClient())
+            {
+                // Set headers
+                httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                httpClient.DefaultRequestHeaders.Add("x-api-key", api_key);
+
+                string requestUrl = $"{File_Server.Connection_String}/admin/files/index/{Uri.EscapeDataString(path)}";
+                Logging.Handler.Debug("/manage_files -> Get_Index", "Request URL", requestUrl);
+
+                // Send the request
+                var response = await httpClient.PostAsync(requestUrl, new StringContent(files_json, Encoding.UTF8, "application/json"));
+
+                // Handle response
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    Logging.Handler.Debug("/manage_files -> Get_Index", "Result", result);
+
+                    // Check for Unauthorized response
+                    if (result == "Unauthorized.")
+                    {
+                        Snackbar.Add(Localizer["unauthorized"], Severity.Error);
+                        return;
+                    }
+
+                    // Add current path to list before updating
+                    if (file_selected_old_paths_list.Count == 0 || file_selected_old_paths_list[file_selected_old_paths_list.Count - 1] != path)
+                    {
+                        file_selected_old_paths_list.Add(path);
+                    }
+
+                    // Parse the JSON response
+                    var jsonDocument = JsonNode.Parse(result);
+                    JsonArray indexArray = jsonDocument["index"].AsArray();
+                    string serverPath = jsonDocument["server_path"].ToString();
+
+                    files_mysql_data = new List<Files_Entity>();
+
+                    // Handle empty index array
+                    if (indexArray.Count == 0)
+                    {
+                        files_selected_directory_path = Regex.Replace(path, Regex.Escape(serverPath), "");
+
+                        // Special case for base path
+                        if (path == "base1337")
+                        {
+                            files_selected_directory_path = ""; // Set to empty string
+                        }
+                    }
+                    else
+                    {
+                        foreach (var _object in indexArray)
+                        {
+                            string last_modified = String.Empty;
+
+                            // Convert last modified date to a readable format
+                            if (DateTime.TryParse(_object["last_modified"].ToString(), out DateTime lastModifiedDateTime))
+                            {
+                                last_modified = lastModifiedDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+                            }
+                            else
+                            {
+                                last_modified = "Invalid date";
+                            }
+
+                            Files_Entity entity = new Files_Entity
+                                {
+                                    name = _object["name"]?.ToString() ?? String.Empty,
+                                    path = _object["path"]?.ToString() ?? String.Empty,
+                                    type = _object["type"]?.ToString() ?? String.Empty,
+                                    size = _object["size"]?.ToString() ?? String.Empty,
+                                    last_modified = last_modified,
+                                    sha512 = _object["sha512"]?.ToString() ?? String.Empty,
+                                    guid = _object["guid"]?.ToString() ?? String.Empty,
+                                    password = _object["password"]?.ToString() ?? String.Empty,
+                                    access = _object["access"]?.ToString() ?? String.Empty
+                                };
+
+                            // Check if type is directory
+                            if (entity.type == "0")
+                            {
+                                entity.type = Localizer["directory"].ToString();
+                            }
+
+                            // Only index scncore folder if permission
+                            if (entity.name == "scncore" && !permissions_collections_files_scncore)
+                            {
+                                continue;
+                            }
+
+                            files_mysql_data.Add(entity);
+                        }
+
+                        files_selected_path = path;
+
+                        // Remove serverPath from files_selected_path
+                        files_selected_directory_path = Regex.Replace(files_selected_path, Regex.Escape(serverPath), "");
+
+                        files_selected_directory_path = files_selected_directory_path;
+
+                        // Special case for base path
+                        if (path == "base1337")
+                        {
+                            files_selected_directory_path = ""; // Set to empty string
+                        }
+                    }
+                }
+                else
+                {
+                    // Handle request failure
+                    Logging.Handler.Error("/manage_files -> Get_Index", "Response", response.StatusCode.ToString());
+                    Snackbar.Add(Localizer["error"], Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Get_Index", "", ex.ToString());
+            Snackbar.Add(Localizer["error"], Severity.Error);
+        }
+        finally
+        {
+            StateHasChanged();
+        }
+    }
+
+    private async Task Remote_File_Browser_Path_Keyboard_Enter(KeyboardEventArgs e)
+    {
+        //if (e.Key == "Enter" && !String.IsNullOrEmpty(remote_file_browser_path))
+        //await Remote_File_Browser_Get_Index(remote_file_browser_path, false);
+    }
+
+    private string files_selected_path = "base1337";
+    //private string files_selected_directory_path = "\\";
+    private string files_selected_directory_path = String.Empty;
+    private List<string> file_selected_old_paths_list = new List<string> { };
+
+    public List<Files_Entity> files_mysql_data;
+
+    public class Files_Entity
+    {
+        public string id { get; set; } = String.Empty;
+        public string name { get; set; } = String.Empty;
+        public string path { get; set; } = String.Empty;
+        public string type { get; set; } = String.Empty;
+        public string size { get; set; } = String.Empty;
+        public string last_modified { get; set; } = String.Empty;
+        public string sha512 { get; set; } = String.Empty;
+        public string guid { get; set; } = String.Empty;
+        public string password { get; set; } = String.Empty;
+        public string access { get; set; } = String.Empty;
+    }
+
+    private string files_table_view_port = "70vh";
+    private string files_table_sorted_column;
+    private string files_table_search_string = "";
+
+    private bool Files_Table_Filter_Func(Files_Entity row)
+    { 
+        if (string.IsNullOrEmpty(files_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.name.Contains(files_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.path.Contains(files_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.type.Contains(files_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.size.Contains(files_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.last_modified.Contains(files_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string files_selectedRowContent_id = String.Empty; 
+    private string files_selectedRowContent_name = String.Empty; 
+
+    private async void Files_RowClickHandler(Files_Entity row)
+    {
+        files_selectedRowContent_id = row.id;
+        files_selectedRowContent_name = row.name;
+        files_selected_path = row.path;
+
+        // Get index from path
+        if (row.type == Localizer["directory"].ToString())
+        {
+            files_selected_directory_path = row.path;
+            await Get_Index(row.path, false, false);
+        }
+        /*else // download file | causes buggy navigation
+        {
+            await Download_File(row.guid, true, row.password);
+            }*/
+    }
+
+    private string Files_GetRowClass(Files_Entity row)
+    {
+        return row.name == files_selectedRowContent_name ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private bool Files_Get_Row_Selected()
+    {
+        if (String.IsNullOrEmpty(files_selectedRowContent_name) == false)
+            return false;
+        else
+            return true;
+    }
+
+    private bool create_directory_dialog_open = false;
+
+    private async Task Create_Directoy_Dialog()
+    {
+        if (create_directory_dialog_open)
+            return;
+
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("files_selected_path", files_selected_path);
+
+        create_directory_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Collections.Files.Dialogs.Create_Directory_Dialog>(string.Empty, parameters, options).Result;
+
+        create_directory_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        if (result.Data == "success")
+        {
+            Snackbar.Add(Localizer["success"], Severity.Success);
+            await Get_Index(files_selected_path, false, false);
+        }
+
+        Logging.Handler.Debug("/manage_files -> Add_Script_Dialog", "Result", result.Data.ToString());
+    }
+
+    private bool rename_dialog_open = false;
+
+    private async Task Rename_Dialog(string path, string guid)
+    {
+        if (rename_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("files_selected_path", path);
+        parameters.Add("guid", guid);
+
+        rename_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Collections.Files.Dialogs.Rename_Dialog>(string.Empty, parameters, options).Result;
+
+        rename_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        if (result.Data == "success")
+        {
+            Snackbar.Add(Localizer["success"], Severity.Success);
+            await Get_Index(files_selected_directory_path, false, false);
+        }
+
+        Logging.Handler.Debug("/manage_files -> Add_Script_Dialog", "Result", result.Data.ToString());
+    }
+
+    private async Task Copy_URL(string guid, bool _private, string password)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        string url = String.Empty;
+        
+        if (_private)
+        {
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid + "&password=" + password;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid + "&password=" + password;
+        }
+        else
+        {
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
+        }
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+
+        Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
+    }
+
+    // Open as new link for user to download
+    private async Task Download_File(string guid, bool _private, string password)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+		string url = String.Empty;
+
+        if (_private)
+        {
+            if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid + "&password=" + password;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid + "&password=" + password;
+        }
+        else
+        {
+            if (!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
+                url = Configuration.Web_Console.publicOverrideUrl + "/admin/files/download?guid=" + guid;
+            else
+                url = File_Server.Connection_String + "/admin/files/download?guid=" + guid;
+        }
+
+        await JSRuntime.InvokeVoidAsync("window.open", url, "_blank");
+    }
+
+    private async Task Files_Directories_Delete(string name, string path, string guid, bool directory)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        // Check if base directory and return
+        if (directory && path == "admin" || path == "devices")
+        {
+            Snackbar.Add(Localizer["cannot delete main directories"], Severity.Error);
+            return;
+        }
+
+        // Remove everything before the last slash
+        string path_cleaned = Regex.Replace(path, @".*[\\/]", "");
+
+        Logging.Handler.Debug("/manage_files -> Remote_File_Browser_Delete_Directory", "Path", path);
+
+        bool? dialog_result = false;
+
+        if (directory)
+            dialog_result = await DialogService.ShowMessageBox(Localizer["warning"], Localizer["Are you sure you want to delete the directory?"] + " " + path_cleaned, yesText: "" + Localizer["confirm"] + "", cancelText: "" + Localizer["cancel"] + "");
+        else
+            dialog_result = await DialogService.ShowMessageBox(Localizer["warning"], Localizer["Are you sure you want to delete the file?"] + " " + path_cleaned, yesText: "" + Localizer["confirm"] + "", cancelText: "" + Localizer["cancel"] + "");
+
+        bool state = Convert.ToBoolean(dialog_result == null ? "false" : "true");
+
+        Logging.Handler.Debug("/manage_files -> Remote_File_Browser_Delete_Directory", "Result", state.ToString());
+
+        // if true
+        if (!state)
+            return;
+
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        try
+        {
+            // Create the JSON object (command, path)
+            string jsonObject;
+
+            if (directory)
+            {
+                jsonObject = JsonSerializer.Serialize(new { command = "delete_directory", name = name, path = path });
+            }
+            else
+            {
+                jsonObject = JsonSerializer.Serialize(new { command = "delete_file", name = name, path = path, guid = guid });
+            }
+
+            var jsonContent = new StringContent(jsonObject, Encoding.UTF8, "application/json");
+
+            string api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+            using (var httpClient = new HttpClient())
+            {
+                // Set the API key in the header
+                httpClient.DefaultRequestHeaders.Add("x-api-key", api_key);
+
+                // Debug output for the upload URL
+                Logging.Handler.Debug("/manage_files", "OK", SCNCore_Plus_Web_Console.Configuration.File_Server.Connection_String + "/admin/files/command" + Uri.EscapeDataString(files_selected_path));
+
+                // POST request with JSON data
+                var response = await httpClient.PostAsync(SCNCore_Plus_Web_Console.Configuration.File_Server.Connection_String + "/admin/files/command", jsonContent);
+
+                // Process the answer
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    Logging.Handler.Debug("/manage_files -> OK", "result", result);
+
+                    if (result == "Unauthorized.")
+                    {
+                        Snackbar.Add(Localizer["unauthorized"], Severity.Error);
+                        return;
+                    }
+
+                    Snackbar.Add(Localizer["success"], Severity.Success);
+                }
+                else
+                {
+                    Logging.Handler.Error("/manage_files -> OK", "response", response.StatusCode.ToString());
+                    Snackbar.Add(Localizer["error"], Severity.Error);
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> OK", "", ex.ToString());
+            Snackbar.Add(Localizer["error"], Severity.Error);
+        }
+        finally
+        {
+            await Get_Index(files_selected_path, false, false);
+        }
+    }
+
+    private string selected_file_access = "Public";
+
+    private async Task Update_Access(string guid, string access)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string execute_query = "UPDATE files SET access = @access, password = @password WHERE guid = @guid;";
+
+            MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+            cmd.Parameters.AddWithValue("@guid", guid);
+            cmd.Parameters.AddWithValue("@password", Guid.NewGuid().ToString());
+            cmd.Parameters.AddWithValue("@access", access);
+
+            cmd.ExecuteNonQuery();
+
+            Snackbar.Add(Localizer["access_updated"], Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Update_Access", "General error", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+
+            await Get_Index(files_selected_directory_path, false, false);
+        }
+    }
+
+    private bool uploading = false; // Fortschritt in Prozent
+    private double _uploadProgress = 0; // Fortschritt in Prozent
+    private IList<IBrowserFile> _files = new List<IBrowserFile>();
+
+    private async void Upload_File(IBrowserFile file)
+    {
+        try
+        {
+            Snackbar.Configuration.ShowCloseIcon = true;
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            uploading = true;
+
+            _files.Clear();
+            _files.Add(file);
+
+            // Max size for the uploaded file (e.g., 10 gb)
+            long maxAllowedSize = 10L * 1024 * 1024 * 1024; // 10 gb
+
+            // Retrieve API key
+            string api_key = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
+
+            // Create a HttpClient instance
+            using (var httpClient = new HttpClient())
+            {
+                httpClient.Timeout = TimeSpan.FromHours(24); // Set timeout to 24 hours
+
+                // Set headers (no need for "application/json" since we are sending a file)
+                httpClient.DefaultRequestHeaders.Add("x-api-key", api_key);
+
+                // Handle the path and add the file name to it
+                string uploadPath = string.IsNullOrWhiteSpace(files_selected_directory_path) ? file.Name : $"{files_selected_directory_path.TrimEnd('/')}/{file.Name}";
+
+                Logging.Handler.Debug("/manage_files", "Upload_File", File_Server.Connection_String + "/admin/files/upload/" + Uri.EscapeDataString(uploadPath));
+
+                // Create MultipartFormDataContent for the file
+                using (var content = new MultipartFormDataContent())
+                {
+                    try
+                    {
+                        // Open the file stream with size check
+                        var fileStream = file.OpenReadStream(maxAllowedSize); // Throws if file is too big
+
+                        // Create stream content with progress handling
+                        var fileContent = new ProgressableStreamContent(new StreamContent(fileStream), 4096, progress =>
+                        {
+                            _uploadProgress = progress;
+                            InvokeAsync(StateHasChanged); // Update UI with progress
+                        });
+
+                        // Use fallback if file.ContentType is null or empty
+                        var contentType = string.IsNullOrWhiteSpace(file.ContentType)
+                            ? "application/octet-stream"
+                            : file.ContentType;
+
+                        // Optional: log a warning if no content type is set
+                        if (string.IsNullOrWhiteSpace(file.ContentType))
+                        {
+                            Logging.Handler.Error("/manage_files -> Upload_File", $"Missing ContentType for file: {file.Name}", "");
+                        }
+
+                        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+
+                        // Add the file content to the MultipartFormDataContent
+                        content.Add(fileContent, "file", file.Name);
+                    }
+                    catch (IOException ex)
+                    {
+                        Logging.Handler.Error("/manage_files -> Upload_File", $"File exceeds max size: {ex}", "");
+                        Snackbar.Add($"{Localizer["The file exceeds the maximum allowed size of"]} {maxAllowedSize / (1024 * 1024)} MB.", Severity.Error);
+                        return;
+                    }
+
+                    // Send the request to the server with the path included in the URL
+                    var uploadUrl = $"{File_Server.Connection_String}/admin/files/upload/{Uri.EscapeDataString(uploadPath)}";
+                    var response = await httpClient.PostAsync(uploadUrl, content);
+
+                    // Handle the response
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var result = await response.Content.ReadAsStringAsync();
+                        Logging.Handler.Debug("/manage_files -> Upload_File", "result", result);
+
+                        if (result == "Unauthorized.")
+                        {
+                            Snackbar.Add(Localizer["unauthorized"], Severity.Error);
+                            return;
+                        }
+
+                        Snackbar.Add(Localizer["upload_success"], Severity.Success);
+                    }
+                    else
+                    {
+                        // Log and display error
+                        Logging.Handler.Error("/manage_files -> Upload_File", "response", response.StatusCode.ToString());
+                        Snackbar.Add(Localizer["error"], Severity.Error);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Upload_File", "", ex.ToString());
+            Snackbar.Add(Localizer["error"], Severity.Error);
+        }
+        finally
+        {
+            uploading = false;
+            _uploadProgress = 0;
+            await Get_Index(files_selected_directory_path, false, false);
+        }
+    }
+
+
+
+    public class ProgressableStreamContent : HttpContent
+    {
+        private readonly HttpContent _content;
+        private readonly int _bufferSize;
+        private readonly Action<double> _progress;
+
+        public ProgressableStreamContent(HttpContent content, int bufferSize, Action<double> progress)
+        {
+            _content = content ?? throw new ArgumentNullException(nameof(content));
+            _bufferSize = bufferSize;
+            _progress = progress;
+            foreach (var header in _content.Headers)
+            {
+                Headers.TryAddWithoutValidation(header.Key, header.Value);
+            }
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        {
+            try
+            {
+                var buffer = new byte[_bufferSize];
+                long size = _content.Headers.ContentLength ?? -1L;
+
+                // If size -1, calculate the size manually
+                if (size < 0)
+                {
+                    size = (await _content.ReadAsStreamAsync()).Length;
+                }
+
+                long uploaded = 0;
+
+                using (var contentStream = await _content.ReadAsStreamAsync())
+                {
+                    while (true)
+                    {
+                        var length = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                        if (length == 0)
+                        {
+                            break;
+                        }
+
+                        await stream.WriteAsync(buffer, 0, length);
+                        uploaded += length;
+
+                        if (size > 0)
+                        {
+                            var progress = (double)uploaded / size * 100;
+
+                            // Round to two decimal places
+                            progress = Math.Round(progress, 2);
+
+                            _progress(progress); // Callback aufrufen
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fehlerprotokollierung
+                Logging.Handler.Error("/manage_files -> SerializeToStreamAsync", "", ex.ToString());
+            }
+        }
+
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = _content.Headers.ContentLength ?? -1;
+            return length >= 0;
+        }
+    }
+
+    #region Data_Export
+    private async Task Trigger_Export_Table_Dialog()
+    {
+        await Export_Table_Dialog("files");
+    }
+
+    private async Task Export_Table_Dialog(string type)
+    {
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        var result = await this.DialogService.Show<Shared.Export_Data_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        if (result != null && result.Data != null)
+        {
+            if (result.Data.ToString() == "JSON")
+                await Export_Data_Json(type);
+            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
+                await Export_Data_Spreadsheet(type);
+            else if (result.Data.ToString() == "HTML")
+                await Export_Data_HTML(type);
+        }
+    }
+
+    private async Task Export_Data_Json(string type)
+    {
+        try
+        {
+            string jsonContent = String.Empty;
+
+            // Erstellen eines JSON-Strings aus den MudTable-Einträgen
+            if (type == "files")
+                jsonContent = JsonSerializer.Serialize(files_mysql_data, new JsonSerializerOptions { WriteIndented = true });
+
+            // Aufruf der JavaFile-Funktion für den Export als .txt
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.json", jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Export_Data_Json", "", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_HTML(string type)
+    {
+        try
+        {
+            StringBuilder htmlBuilder = new StringBuilder();
+
+            if (type == "files")
+            {
+                // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                htmlBuilder.Append("<table border='1'><tr>");
+                foreach (var property in files_mysql_data.First().GetType().GetProperties())
+                {
+                    htmlBuilder.Append($"<th>{property.Name}</th>");
+                }
+                htmlBuilder.Append("</tr>");
+
+                // Baue die Tabelleneinträge basierend auf den Daten
+                foreach (var entry in files_mysql_data)
+                {
+                    htmlBuilder.Append("<tr>");
+                    foreach (var property in entry.GetType().GetProperties())
+                    {
+                        htmlBuilder.Append($"<td>{property.GetValue(entry)}</td>");
+                    }
+                    htmlBuilder.Append("</tr>");
+                }
+            }
+
+            htmlBuilder.Append("</table>");
+
+            string htmlContent = htmlBuilder.ToString();
+
+            // Hier wird JavaFile-Interop verwendet, um den HTML-Inhalt herunterzuladen
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.html", htmlContent, "text/html");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Export_Data_HTML", "", ex.Message);
+        }
+    }
+
+    private async Task Export_Data_Spreadsheet(string type)
+    {
+        try
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
+
+                if (type == "files")
+                {
+                    if (files_mysql_data.Count > 0)
+                    {
+                        int headerRow = 1;
+
+                        // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                        int columnIndex = 1;
+                        foreach (var property in files_mysql_data.First().GetType().GetProperties())
+                        {
+                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
+                            columnIndex++;
+                        }
+
+                        int dataRow = headerRow + 1;
+
+                        // Baue die Tabelleneinträge basierend auf den Daten
+                        foreach (var entry in files_mysql_data)
+                        {
+                            columnIndex = 1;
+                            foreach (var property in entry.GetType().GetProperties())
+                            {
+                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
+                                columnIndex++;
+                            }
+
+                            dataRow++;
+                        }
+                    }
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                // Hier wird JavaFile-Interop verwendet, um die Datei herunterzuladen
+                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_files -> Export_Data_Spreadsheet", "", ex.Message);
+        }
+    }
+    #endregion
+}

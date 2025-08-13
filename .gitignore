@@ -33,52 +33,52 @@ Desktop.ini
 *.tmp
 
 # --- Project-specific paths additionally for safety reasons ---
-/NetLock RMM Agent Installer/.vs/
-/NetLock RMM Agent Installer/bin/
-/NetLock RMM Agent Installer/obj/
+/SCNCore Plus Agent Installer/.vs/
+/SCNCore Plus Agent Installer/bin/
+/SCNCore Plus Agent Installer/obj/
 
-/NetLock-RMM-Agent-Installer-Windows/.vs/
-/NetLock-RMM-Agent-Installer-Windows/bin/
-/NetLock-RMM-Agent-Installer-Windows/obj/
+/SCNCore-Plus-Agent-Installer-Windows/.vs/
+/SCNCore-Plus-Agent-Installer-Windows/bin/
+/SCNCore-Plus-Agent-Installer-Windows/obj/
 
-/NetLock-RMM-Agent-Uninstaller-Windows/.vs/
-/NetLock-RMM-Agent-Uninstaller-Windows/bin/
-/NetLock-RMM-Agent-Uninstaller-Windows/obj/
+/SCNCore-Plus-Agent-Uninstaller-Windows/.vs/
+/SCNCore-Plus-Agent-Uninstaller-Windows/bin/
+/SCNCore-Plus-Agent-Uninstaller-Windows/obj/
 
-/NetLock RMM Agent Comm/.vs/
-/NetLock RMM Agent Comm/bin/
-/NetLock RMM Agent Comm/bin/Release/net8.0/
-/NetLock RMM Agent Comm/obj/
+/SCNCore Plus Agent Comm/.vs/
+/SCNCore Plus Agent Comm/bin/
+/SCNCore Plus Agent Comm/bin/Release/net8.0/
+/SCNCore Plus Agent Comm/obj/
 
-/NetLock-RMM-Health-Agent-Windows/.vs/
-/NetLock-RMM-Health-Agent-Windows/bin/
-/NetLock-RMM-Health-Agent-Windows/bin/Release/net8.0/
-/NetLock-RMM-Health-Agent-Windows/obj/
-/NetLock-RMM-Health-Agent-Windows/NetLock RMM Health Agent (Windows)/.vs/
-/NetLock-RMM-Health-Agent-Windows/NetLock RMM Health Agent (Windows)/bin/
-/NetLock-RMM-Health-Agent-Windows/NetLock RMM Health Agent (Windows)/obj/
+/SCNCore-Plus-Health-Agent-Windows/.vs/
+/SCNCore-Plus-Health-Agent-Windows/bin/
+/SCNCore-Plus-Health-Agent-Windows/bin/Release/net8.0/
+/SCNCore-Plus-Health-Agent-Windows/obj/
+/SCNCore-Plus-Health-Agent-Windows/SCNCore Plus Health Agent (Windows)/.vs/
+/SCNCore-Plus-Health-Agent-Windows/SCNCore Plus Health Agent (Windows)/bin/
+/SCNCore-Plus-Health-Agent-Windows/SCNCore Plus Health Agent (Windows)/obj/
 
-/NetLock RMM Agent Remote/.vs/
-/NetLock RMM Agent Remote/bin/
-/NetLock RMM Agent Remote/bin/Release/net8.0/
-/NetLock RMM Agent Remote/obj/
+/SCNCore Plus Agent Remote/.vs/
+/SCNCore Plus Agent Remote/bin/
+/SCNCore Plus Agent Remote/bin/Release/net8.0/
+/SCNCore Plus Agent Remote/obj/
 
-/NetLock-RMM-Remote-Agent-Windows/.vs/
-/NetLock-RMM-Remote-Agent-Windows/bin/
-/NetLock-RMM-Remote-Agent-Windows/bin/Release/net8.0/
-/NetLock-RMM-Remote-Agent-Windows/obj/
-/NetLock-RMM-Remote-Agent-Windows/NetLock RMM Remote Agent (Windows)/.vs/
-/NetLock-RMM-Remote-Agent-Windows/NetLock RMM Remote Agent (Windows)/bin/
-/NetLock-RMM-Remote-Agent-Windows/NetLock RMM Remote Agent (Windows)/obj/
+/SCNCore-Plus-Remote-Agent-Windows/.vs/
+/SCNCore-Plus-Remote-Agent-Windows/bin/
+/SCNCore-Plus-Remote-Agent-Windows/bin/Release/net8.0/
+/SCNCore-Plus-Remote-Agent-Windows/obj/
+/SCNCore-Plus-Remote-Agent-Windows/SCNCore Plus Remote Agent (Windows)/.vs/
+/SCNCore-Plus-Remote-Agent-Windows/SCNCore Plus Remote Agent (Windows)/bin/
+/SCNCore-Plus-Remote-Agent-Windows/SCNCore Plus Remote Agent (Windows)/obj/
 
-/NetLock-RMM-Server/.vs/
-/NetLock-RMM-Server/bin/
-/NetLock-RMM-Server/obj/
+/SCNCore-Plus-Server/.vs/
+/SCNCore-Plus-Server/bin/
+/SCNCore-Plus-Server/obj/
 
-/NetLock-RMM-User-Process/.vs/
-/NetLock-RMM-User-Process/bin/
-/NetLock-RMM-User-Process/obj/
+/SCNCore-Plus-User-Process/.vs/
+/SCNCore-Plus-User-Process/bin/
+/SCNCore-Plus-User-Process/obj/
 
-/NetLock-RMM-Web-Console/.vs/
-/NetLock-RMM-Web-Console/bin/
-/NetLock-RMM-Web-Console/obj/
+/SCNCore-Plus-Web-Console/.vs/
+/SCNCore-Plus-Web-Console/bin/
+/SCNCore-Plus-Web-Console/obj/

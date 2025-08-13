@@ -1,0 +1,155 @@
+﻿@page "/manage_scripts"
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Collections.Scripts.Manage_Scripts> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .selected-row-light {
+    background-color: lightgray;
+    }
+
+    .selected-row-dark {
+    background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+    background-color: transparent;
+    }
+
+    .dialog-blurring {
+    backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+    font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+    padding-bottom: 50px;
+    text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+    .desktop-icon {
+    display: none;
+    }
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+
+        @if(permissions_collections_enabled && permissions_collections_scripts_enabled)
+        {
+            <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+
+            @if (permissions_collections_scripts_add)
+            {
+                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Add_Script_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add">@Localizer["add"]</MudButton>
+            }
+
+            @if (permissions_collections_scripts_edit)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Edit_Script_Dialog(scripts_selectedRowContent_json))" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit" Disabled="Scripts_Get_Row_Selected()">@Localizer["edit"]</MudButton>
+            }
+
+            @if (permissions_collections_scripts_delete)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Delete_Script_Dialog(scripts_selectedRowContent_id))" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="Scripts_Get_Row_Selected()">@Localizer["delete"]</MudButton>
+            }
+
+            @if (permissions_collections_scripts_add)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.Code" OnClick="@Community_Scripts_Dialog">Community Scripts</MudButton>
+            }
+
+            <MudTooltip Text="Learn more in the docs">
+                <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.QuestionMark" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" Href="https://docs.scncorermm.com/en/web-console/scripts" Target="_blank"></MudIconButton>
+            </MudTooltip>
+            
+            <MudPaper Class="mt-5">
+
+                <MudTooltip Text="@Localizer["export_data"]">
+                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Table_Dialog"></MudIconButton>
+                </MudTooltip>
+
+                <MudTable Class="mt-0" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@scripts_mysql_data" Filter="new Func<Scripts_Entity, bool>(Scripts_Table_Filter_Func)">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="scripts_table_search_string" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.name)">@Localizer["name"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.platform)">@Localizer["platform"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.shell)">Shell</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.author)">@Localizer["author"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Scripts_Entity, object>(x => x.date)">@Localizer["date"]</MudTableSortLabel></MudTh>
+
+                    </HeaderContent>
+                    <RowTemplate Context="scripts_row">
+
+                        <MudTd DataLabel="@Localizer["name"]" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.name
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["platform"]" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.platform
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="Shell" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.shell
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.description
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["author"]" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.author
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["date"]" @onclick="() => Scripts_RowClickHandler(scripts_row)" @ondblclick="() => Scripts_RowDblClickHandler(scripts_row)" class="@Scripts_GetRowClass(scripts_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@scripts_row.date
+                            </span>
+                        </MudTd>
+
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="Entries per page" />
+                    </PagerContent>
+                </MudTable>
+
+            </MudPaper>
+        }
+
+    </Authorized>
+</AuthorizeView>
+

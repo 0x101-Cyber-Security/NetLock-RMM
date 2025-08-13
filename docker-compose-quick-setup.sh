@@ -25,7 +25,7 @@ reverse_proxy_ip=""
 reverse_proxy_forward_host=""
 known_proxies_json="[]"
 IpWhitelist=()
-web_console_title="NetLock RMM"
+web_console_title="SCNCore Plus"
 apiKeyOverride=""
 
 cat << "EOF"
@@ -40,7 +40,7 @@ EOF
 
 set -e
 echo ""
-echo "Welcome to the NetLock RMM Docker Quick Setup Script!"
+echo "Welcome to the SCNCore Plus Docker Quick Setup Script!"
 echo "Verifing docker installation..."
 
 # Check if Docker is installed
@@ -87,12 +87,12 @@ echo "[Docker installed]"
 echo "[4 GB of free working memory (RAM)]"
 echo ""
 echo "[ATTENTION!!!]"
-echo "The script only covers some scenarious and tries to guide you through the setup process. NetLock RMM supports any environment (single ip, reverse proxies etc.). If you fail with your installation, please read the documentation at: https://docs.netlockrmm.com/installation/docker-quick-setup"
-echo "If you have any questions and need community support, please join our Discord server: https://discord.gg/HqUpZgtX4U"
-echo "If you are a business, need support with your setup and you are interested into the Pro or Cloud membership, please contact us at: support@0x101-cyber-security.de"
+echo "The script only covers some scenarious and tries to guide you through the setup process. SCNCore Plus supports any environment (single ip, reverse proxies etc.). If you fail with your installation, please read the documentation at: https://docs.scncorermm.com/installation/docker-quick-setup"
+echo "If you have any questions and need community support, please join our Discord server: https://discord.gg/scncore"
+echo "If you are a business, need support with your setup and you are interested into the Pro or Cloud membership, please contact us at: support@scncore.com"
 echo ""
-echo "Our pro membership includes code signing, unlimited devices and we assist you with the setup of your NetLock RMM instance in your own environment."
-echo "We also offer a managed hosting solution for NetLock RMM, please contact us for more information or check our website."
+echo "Our pro membership includes code signing, unlimited devices and we assist you with the setup of your SCNCore Plus instance in your own environment."
+echo "We also offer a managed hosting solution for SCNCore Plus, please contact us for more information or check our website."
 
 read -p "Continue if you have read. (Y/n): " read_ok
 read_ok=${read_ok:-Y}
@@ -150,7 +150,7 @@ fi
 echo ""
 
 # Ask the user for the MySQL root password
-read -p "Please enter the MySQL root password (will be used for NetLock RMM): " mysql_password
+read -p "Please enter the MySQL root password (will be used for SCNCore Plus): " mysql_password
 if [[ -z "$mysql_password" ]]; then
     echo "No MySQL password entered. Exiting."
     exit 1
@@ -161,8 +161,8 @@ echo ""
 # Ask for the web console title
 read -p "Please enter the title for the web console (PRO only!, leave blank if you do not have a pro membership): " web_console_title
 if [[ -z "$web_console_title" ]]; then
-    echo "No title entered. Defaulting to 'NetLock RMM'."
-    web_console_title="NetLock RMM"
+    echo "No title entered. Defaulting to 'SCNCore Plus'."
+    web_console_title="SCNCore Plus"
 fi
 
 echo ""
@@ -248,16 +248,16 @@ done
 
 echo ""
 
-# Let the user enter their main domain (Please enter your domain you will use for NetLock RMM. NOT YOUR SUBDOMAIN!!! Example: netlockrmm.com)
-read -p "Please enter the domain (NOT SUBDOMAIN) you will use (example: netlockrmm.com). The subdomains to be created will be displayed afterwards: " le_domain
+# Let the user enter their main domain (Please enter your domain you will use for SCNCore Plus. NOT YOUR SUBDOMAIN!!! Example: scncorermm.com)
+read -p "Please enter the domain (NOT SUBDOMAIN) you will use (example: scncorermm.com). The subdomains to be created will be displayed afterwards: " le_domain
 if [[ -z "$le_domain" ]]; then
     echo "No domain entered. Exiting."
     exit 1
 fi
 
 # Generate web console and server domains
-web_console_domain="nl-webconsole.$le_domain"
-server_domain="nl-server.$le_domain"
+web_console_domain="scn-console.$le_domain"
+server_domain="scn-server.$le_domain"
 
 echo ""
 
@@ -299,7 +299,7 @@ if [[ "$setup_option" == "1" ]]; then # No Reverse Proxy with Let's Encrypt
 
     echo "Make sure you have the following ports open on your server:"
     echo "80 (HTTP) and 443 (HTTPS) for web console access. Port 80 is used for Let's Encrypt certificate generation. Hold it open until the certificate is generated."
-    echo "7443 for the NetLock RMM server (remote access, file transfer, etc.)."
+    echo "7443 for the SCNCore Plus server (remote access, file transfer, etc.)."
 
     # Confirm the ports
     read -p "Have you opened the ports 80, 443 and 7443 on your server? (Y/n): " ports_open
@@ -449,16 +449,16 @@ echo "Starting the setup process..."
 echo "Create directories..."
 
 # Directories
-sudo mkdir -p /home/netlock/{mysql/data,letsencrypt,web_console/internal,web_console/logs,server/logs,server/files,server/internal}
+sudo mkdir -p /home/scncore/{mysql/data,letsencrypt,web_console/internal,web_console/logs,server/logs,server/files,server/internal}
 
 # Create empty appsettings files
-sudo touch /home/netlock/web_console/appsettings.json
-sudo touch /home/netlock/server/appsettings.json
+sudo touch /home/scncore/web_console/appsettings.json
+sudo touch /home/scncore/server/appsettings.json
 
 echo "Creating web console appsettings.json..."
 
 # Write appsettings.json for Web Console (correct path!)
-sudo tee /home/netlock/web_console/appsettings.json > /dev/null <<EOF
+sudo tee /home/scncore/web_console/appsettings.json > /dev/null <<EOF
 {
   "Logging": {
     "LogLevel": {
@@ -493,20 +493,20 @@ sudo tee /home/netlock/web_console/appsettings.json > /dev/null <<EOF
     "IpWhitelist": $ip_whitelist_json,
     "KnownProxies": $known_proxies_json
   },
-  "NetLock_Remote_Server": {
-    "Server": "netlock-rmm-server",
+  "SCNCore_Remote_Server": {
+    "Server": "scncore-plus-server",
     "Port": $web_console_server_port,
     "UseSSL": false
   },
-  "NetLock_File_Server": {
-    "Server": "netlock-rmm-server",
+  "SCNCore_File_Server": {
+    "Server": "scncore-plus-server",
     "Port": $web_console_server_port,
     "UseSSL": false
   },
   "MySQL": {
     "Server": "mysql8-container",
     "Port": 3306,
-    "Database": "netlock",
+    "Database": "scncore",
     "User": "root",
     "Password": "$mysql_password",
     "SslMode": "None",
@@ -540,7 +540,7 @@ echo "appsettings.json for web console was created."
 
 echo "Creating server appsettings.json..."
 
-sudo tee /home/netlock/server/appsettings.json > /dev/null <<EOF
+sudo tee /home/scncore/server/appsettings.json > /dev/null <<EOF
 {
   "Logging": {
     "LogLevel": {
@@ -587,7 +587,7 @@ sudo tee /home/netlock/server/appsettings.json > /dev/null <<EOF
   "MySQL": {
     "Server": "mysql8-container",
     "Port": 3306,
-    "Database": "netlock",
+    "Database": "scncore",
     "User": "root",
     "Password": "$mysql_password",
     "SslMode": "None",
@@ -616,81 +616,81 @@ EOF
 echo "appsettings.json for server created."
 
 # Create docker compose yml
-sudo touch /home/netlock/docker-compose.yml
+sudo touch /home/scncore/docker-compose.yml
 
-sudo tee /home/netlock/docker-compose.yml > /dev/null <<EOF
+sudo tee /home/scncore/docker-compose.yml > /dev/null <<EOF
 services:
   mysql:
     image: mysql:8.0
     container_name: mysql8-container
     environment:
       MYSQL_ROOT_PASSWORD: "$mysql_password"
-      MYSQL_DATABASE: netlock
+      MYSQL_DATABASE: scncore
     volumes:
-      - /home/netlock/mysql/data:/var/lib/mysql
+      - /home/scncore/mysql/data:/var/lib/mysql
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "3306:3306"
     networks:
-      - netlock-network
+      - scncore-network
     restart: always
     command: --skip-log-bin
 
-  netlock-web-console:
-    image: nicomak101/netlock-rmm-web-console:latest
-    container_name: netlock-web-console
+  scncore-web-console:
+    image: nicomak101/scncore-plus-web-console:latest
+    container_name: scncore-web-console
     environment:
       - TZ=$timezone
     volumes:
-      - "/home/netlock/web_console/appsettings.json:/app/appsettings.json"
-      - "/home/netlock/web_console/internal:/app/internal"
-      - "/home/netlock/web_console/logs:/var/0x101 Cyber Security/NetLock RMM/Web Console/"
-      - "/home/netlock/letsencrypt:/app/letsencrypt"
+      - "/home/scncore/web_console/appsettings.json:/app/appsettings.json"
+      - "/home/scncore/web_console/internal:/app/internal"
+      - "/home/scncore/web_console/logs:/var/SCNCore Technologies/SCNCore Plus/Web Console/"
+      - "/home/scncore/letsencrypt:/app/letsencrypt"
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "80:80"
       - "443:443"
     networks:
-      - netlock-network
+      - scncore-network
     restart: always
 
-  netlock-rmm-server:
-    image: nicomak101/netlock-rmm-server:latest
-    container_name: netlock-rmm-server
+  scncore-plus-server:
+    image: nicomak101/scncore-plus-server:latest
+    container_name: scncore-plus-server
     environment:
       - TZ=$timezone
     volumes:
-      - "/home/netlock/server/appsettings.json:/app/appsettings.json"
-      - "/home/netlock/server/internal:/app/internal"
-      - "/home/netlock/server/files:/app/www/private/files"
-      - "/home/netlock/server/logs:/var/0x101 Cyber Security/NetLock RMM/Server/"
-      - "/home/netlock/letsencrypt:/app/letsencrypt"
+      - "/home/scncore/server/appsettings.json:/app/appsettings.json"
+      - "/home/scncore/server/internal:/app/internal"
+      - "/home/scncore/server/files:/app/www/private/files"
+      - "/home/scncore/server/logs:/var/SCNCore Technologies/SCNCore Plus/Server/"
+      - "/home/scncore/letsencrypt:/app/letsencrypt"
       - /etc/localtime:/etc/localtime:ro
     ports:
       - "7080:7080"
       - "7443:7443"
     networks:
-      - netlock-network
+      - scncore-network
     restart: always
 
 networks:
-  netlock-network:
+  scncore-network:
     driver: bridge
 EOF
 
-echo "docker-compose.yml created in /home/netlock"
+echo "docker-compose.yml created in /home/scncore"
 
 echo ""
 
-read -p "Everything seems to be ready. Startup NetLock RMM containers now? (Y/n): " start_now
+read -p "Everything seems to be ready. Startup SCNCore Plus containers now? (Y/n): " start_now
 start_now=${start_now:-Y}
 
 if [[ "$start_now" =~ ^[Yy]$ ]]; then
-    echo "Starting NetLock containers..."
-    sudo docker compose -f /home/netlock/docker-compose.yml up -d
+    echo "Starting SCNCore containers..."
+    sudo docker compose -f /home/scncore/docker-compose.yml up -d
 else
     echo "You can start it later with:"
-    echo "   sudo docker compose -f /home/netlock/docker-compose.yml up -d"
+    echo "   sudo docker compose -f /home/scncore/docker-compose.yml up -d"
 fi
 
 echo ""
@@ -706,15 +706,15 @@ fi
 echo "Depending on your setup, it might take a few minutes until the web console & server is available."
 echo ""
 echo "If you have any issues, please check the logs with:"
-echo "   sudo docker logs netlock-web-console"
-echo "   sudo docker logs netlock-rmm-server"
+echo "   sudo docker logs scncore-web-console"
+echo "   sudo docker logs scncore-plus-server"
 echo ""
-echo "If you need help, please join our Discord server: https://discord.gg/HqUpZgtX4U"
-echo "If you are a business and need support with your setup, please contact us at: support@0x101-cyber-security.de"
+echo "If you need help, please join our Discord server: https://discord.gg/scncore"
+echo "If you are a business and need support with your setup, please contact us at: support@scncore.com"
 echo ""
 echo "Default credentials for web console:"
 echo "Username: admin"
 echo "Password: admin"
 echo "(You will be prompted to change the password on first login.)"
 echo ""
-echo "Thank you for using NetLock RMM!"
+echo "Thank you for using SCNCore Plus!"

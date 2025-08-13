@@ -1,0 +1,664 @@
+﻿@page "/manage_sensors"
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Collections.Sensors.Manage_Sensors> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+
+    <Authorized>
+        
+        @if (permissions_collections_sensors_enabled)
+        {
+            <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+
+            @if (permissions_collections_sensors_add)
+            {
+                <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@Add_Sensor_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add">@Localizer["add"]</MudButton>
+            }
+
+            @if (permissions_collections_sensors_edit)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Edit_Sensor_Dialog(sensors_selectedRowContent_id, sensors_selectedRowContent_json))" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit" Disabled="Sensors_Get_Row_Selected()">@Localizer["edit"]</MudButton>
+            }
+
+            @if (permissions_collections_sensors_delete)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Delete_Sensor_Dialog(sensors_selectedRowContent_id))" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" Disabled="Sensors_Get_Row_Selected()">@Localizer["delete"]</MudButton>
+            }
+
+            <MudPaper Class="mt-5">
+
+                <MudTooltip Text="@Localizer["export_data"]">
+                    <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Table_Dialog"></MudIconButton>
+                </MudTooltip>
+
+                <MudTable Class="mt-0" Height="70vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@sensors_mysql_data" Filter="new Func<Sensors_Entity, bool>(Sensors_Table_Filter_Func)">
+                    <ToolBarContent>
+                        <MudTextField @bind-Value="sensors_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.name)">@Localizer["name"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.platform)">@Localizer["platform"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.category)">@Localizer["category"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.sub_category)">@Localizer["sub_category"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.severity)">@Localizer["severity"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.description)">@Localizer["description"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.author)">@Localizer["author"]</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<Sensors_Entity, object>(x => x.date)">@Localizer["date"]</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="sensors_row">
+
+                        <MudTd DataLabel="@Localizer["name"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.name
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["platform"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.platform
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["category"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.category
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["sub_category"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.sub_category
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["severity"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.severity
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["description"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.description
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["author"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.author
+                            </span>
+                        </MudTd>
+
+                        <MudTd DataLabel="@Localizer["date"]" @onclick="() => Sensors_RowClickHandler(sensors_row)" @ondblclick="() => Sensors_RowDblClickHandler(sensors_row)" class="@Sensors_GetRowClass(sensors_row)" style="white-space: nowrap;">
+                            <span style="display: flex; align-items: center;">
+                                &nbsp;@sensors_row.date
+                            </span>
+                        </MudTd>
+
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_site"]" />
+                    </PagerContent>
+                </MudTable>
+
+            </MudPaper>
+        }
+
+    </Authorized>
+ </AuthorizeView>
+
+@code {
+
+    #region Permissions System
+
+    private string permissions_json = String.Empty;
+
+    private bool permissions_collections_enabled = false;
+    private bool permissions_collections_sensors_enabled = false;
+    private bool permissions_collections_sensors_add = false;
+    private bool permissions_collections_sensors_edit = false;
+    private bool permissions_collections_sensors_delete = false;
+
+    // Auth:
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_enabled");
+            permissions_collections_sensors_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_sensors_enabled");
+            permissions_collections_sensors_add = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_sensors_add");
+            permissions_collections_sensors_edit = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_sensors_edit");
+            permissions_collections_sensors_delete = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "collections_sensors_delete");
+
+            if (!permissions_collections_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        if (!await Permissions())
+            return;
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await Sensors_Load();
+
+        StateHasChanged();
+    }
+
+    private string sensors_json = String.Empty;
+
+    private async Task Sensors_Load()
+    {
+        sensors_mysql_data = new List<Sensors_Entity>();
+
+        string query = "SELECT * FROM sensors;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM sensors;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        //convert computable to human readable
+                        string severity_converted = String.Empty;
+                        string category_converted = String.Empty;
+                        string sub_category_converted = String.Empty;
+
+                        //severity
+                        if (reader["severity"].ToString() == "0")
+                            severity_converted = Localizer["low"];
+                        else if (reader["severity"].ToString() == "1")
+                            severity_converted = Localizer["moderate"];
+                        else if (reader["severity"].ToString() == "2")
+                            severity_converted = Localizer["high"];
+                        else if (reader["severity"].ToString() == "3")
+                            severity_converted = Localizer["critical"];
+
+                        //category
+                        if (reader["category"].ToString() == "0")
+                            category_converted = Localizer["utilization"];
+                        else if (reader["category"].ToString() == "1")
+                            category_converted = "Windows Eventlog";    
+                        else if (reader["category"].ToString() == "2")
+                            category_converted = "PowerShell";
+                        else if (reader["category"].ToString() == "3")
+                            category_converted = Localizer["service"];
+                        else if (reader["category"].ToString() == "4")
+                            category_converted = "Ping";
+                        else if (reader["category"].ToString() == "5")
+                            category_converted = "Bash";
+                        else if (reader["category"].ToString() == "6")
+                            category_converted = "Zsh";
+
+                        //sub_category
+                        if (reader["sub_category"].ToString() == "0")
+                            sub_category_converted = Localizer["processor"];
+                        else if (reader["sub_category"].ToString() == "1")
+                            sub_category_converted = Localizer["ram"];
+                        else if (reader["sub_category"].ToString() == "2")
+                            sub_category_converted = Localizer["drive"];
+                        else if (reader["sub_category"].ToString() == "3")
+                            sub_category_converted = Localizer["process_cpu_usage_%"];
+                        else if (reader["sub_category"].ToString() == "4")
+                            sub_category_converted = Localizer["process_ram_usage_%"];
+                        else if (reader["sub_category"].ToString() == "5")
+                            sub_category_converted = Localizer["process_ram_usage_mb"];
+
+                        //clean categories for view
+                        if (category_converted == "Windows Eventlog" || category_converted == "PowerShell" || category_converted == Localizer["service"] || category_converted == "Ping" || category_converted == "Bash" || category_converted == "Zsh")
+                            sub_category_converted = "-";
+
+                        Sensors_Entity entity = new Sensors_Entity //Create entity
+                            {
+                                id = reader["id"].ToString(),
+                                name = reader["name"].ToString(),
+                                description = reader["description"].ToString(),
+                                author = reader["author"].ToString(),
+                                date = reader["date"].ToString(),
+                                category = category_converted,
+                                sub_category = sub_category_converted,
+                                severity = severity_converted,
+                                json = reader["json"].ToString(),
+                                platform = reader["platform"].ToString()
+                            };
+
+                        sensors_mysql_data.Add(entity);
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors -> Sensors_Load", "Result", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    public List<Sensors_Entity> sensors_mysql_data;
+
+    public class Sensors_Entity
+    {
+        public string id { get; set; } = String.Empty;
+        public string name { get; set; } = String.Empty;
+        public string description { get; set; } = String.Empty;
+        public string author { get; set; } = String.Empty;
+        public string date { get; set; } = String.Empty;
+        public string category { get; set; } = String.Empty;
+        public string sub_category { get; set; } = String.Empty;
+        public string disk_category { get; set; } = String.Empty;
+        public string severity { get; set; } = String.Empty;
+        public string json { get; set; } = String.Empty;
+        public string platform{ get; set; } = String.Empty;
+    }
+
+    private string sensors_table_view_port = "70vh";
+    private string sensors_table_sorted_column;
+    private string sensors_table_search_string = "";
+
+    private bool Sensors_Table_Filter_Func(Sensors_Entity row)
+    { 
+        if (string.IsNullOrEmpty(sensors_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.name.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.description.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.category.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.author.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.date.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+            row.json.Contains(sensors_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string sensors_selectedRowContent_id = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+    private string sensors_selectedRowContent_json = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void Sensors_RowClickHandler(Sensors_Entity row)
+    {
+        sensors_selectedRowContent_id = row.id;
+        sensors_selectedRowContent_json = row.json;
+    }
+
+    private async void Sensors_RowDblClickHandler(Sensors_Entity row)
+    {
+        sensors_selectedRowContent_id = row.id;
+        sensors_selectedRowContent_json = row.json;
+
+        if (permissions_collections_sensors_edit)
+            await Edit_Sensor_Dialog(row.id, row.json);
+    }
+
+    private string Sensors_GetRowClass(Sensors_Entity row)
+    {
+        return row.id == sensors_selectedRowContent_id ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private bool Sensors_Get_Row_Selected()
+    {
+        if (String.IsNullOrEmpty(sensors_selectedRowContent_id) == false)
+            return false;
+        else
+            return true;
+    }
+
+    private bool add_sensor_dialog_open = false;
+
+    private async Task Add_Sensor_Dialog()
+    {
+        if (add_sensor_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        add_sensor_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Collections.Sensors.Dialogs.Add_Sensor_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        add_sensor_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/manage_sensors -> Add_Sensor_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            sensors_json = result.Data.ToString();
+
+            await Sensors_Load();
+        }
+    }
+
+    private bool edit_sensor_dialog_open = false;
+
+    private async Task Edit_Sensor_Dialog(string id, string json)
+    {
+        if (edit_sensor_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("id", id);
+        parameters.Add("json", json);
+
+        edit_sensor_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Collections.Sensors.Dialogs.Edit_Sensor_Dialog>(string.Empty, parameters, options).Result;
+
+        edit_sensor_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/manage_sensors -> Edit_Sensor_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            sensors_json = result.Data.ToString();
+
+            sensors_selectedRowContent_id = String.Empty;
+            sensors_selectedRowContent_json = String.Empty;
+
+            await Sensors_Load();
+        }
+    }
+
+    private bool delete_sensor_dialog_open = false;
+
+    private async Task Delete_Sensor_Dialog(string id)
+    {
+        if (delete_sensor_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("id", id);
+
+        delete_sensor_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Collections.Sensors.Dialogs.Delete_Sensor_Dialog>(string.Empty, parameters, options).Result;
+
+        delete_sensor_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/manage_sensors -> Delete_Sensor_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            sensors_json = result.Data.ToString();
+
+            sensors_selectedRowContent_id = String.Empty;
+            sensors_selectedRowContent_json = String.Empty;
+
+            await Sensors_Load();
+        }
+    }
+
+    #region Data_Export
+    private async Task Trigger_Export_Table_Dialog()
+    {
+        await Export_Table_Dialog("sensors");
+    }
+
+    private async Task Export_Table_Dialog(string type)
+    {
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        var result = await this.DialogService.Show<Shared.Export_Data_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        if (result != null && result.Data != null)
+        {
+            if (result.Data.ToString() == "JSON")
+                await Export_Data_Json(type);
+            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
+                await Export_Data_Spreadsheet(type);
+            else if (result.Data.ToString() == "HTML")
+                await Export_Data_HTML(type);
+        }
+    }
+
+    private async Task Export_Data_Json(string type)
+    {
+        try
+        {
+            string jsonContent = String.Empty;
+
+            // Erstellen eines JSON-Strings aus den MudTable-Einträgen
+            if (type == "sensors")
+                jsonContent = JsonSerializer.Serialize(sensors_mysql_data, new JsonSerializerOptions { WriteIndented = true });
+
+            // Aufruf der JavaScript-Funktion für den Export als .txt
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.json", jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors -> Export_Data_Json", "", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_HTML(string type)
+    {
+        try
+        {
+            StringBuilder htmlBuilder = new StringBuilder();
+
+            if (type == "sensors")
+            {
+                // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                htmlBuilder.Append("<table border='1'><tr>");
+                foreach (var property in sensors_mysql_data.First().GetType().GetProperties())
+                {
+                    htmlBuilder.Append($"<th>{property.Name}</th>");
+                }
+                htmlBuilder.Append("</tr>");
+
+                // Baue die Tabelleneinträge basierend auf den Daten
+                foreach (var entry in sensors_mysql_data)
+                {
+                    htmlBuilder.Append("<tr>");
+                    foreach (var property in entry.GetType().GetProperties())
+                    {
+                        htmlBuilder.Append($"<td>{property.GetValue(entry)}</td>");
+                    }
+                    htmlBuilder.Append("</tr>");
+                }
+            }
+
+            htmlBuilder.Append("</table>");
+
+            string htmlContent = htmlBuilder.ToString();
+
+            // Hier wird JavaScript-Interop verwendet, um den HTML-Inhalt herunterzuladen
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.html", htmlContent, "text/html");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors -> Export_Data_HTML", "", ex.Message);
+        }
+    }
+
+    private async Task Export_Data_Spreadsheet(string type)
+    {
+        try
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
+
+                if (type == "sensors")
+                {
+                    if (sensors_mysql_data.Count > 0)
+                    {
+                        int headerRow = 1;
+
+                        // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                        int columnIndex = 1;
+                        foreach (var property in sensors_mysql_data.First().GetType().GetProperties())
+                        {
+                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
+                            columnIndex++;
+                        }
+
+                        int dataRow = headerRow + 1;
+
+                        // Baue die Tabelleneinträge basierend auf den Daten
+                        foreach (var entry in sensors_mysql_data)
+                        {
+                            columnIndex = 1;
+                            foreach (var property in entry.GetType().GetProperties())
+                            {
+                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
+                                columnIndex++;
+                            }
+
+                            dataRow++;
+                        }
+                    }
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
+                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_sensors -> Export_Data_Spreadsheet", "", ex.Message);
+        }
+    }
+    #endregion
+}

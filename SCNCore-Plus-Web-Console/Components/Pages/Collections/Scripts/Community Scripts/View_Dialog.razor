@@ -1,0 +1,520 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .monaco-editor {
+    flex-grow: 1;
+    height: 50vh;
+    width: 100%; /* Each editor takes full screen width */
+    }
+
+    /* For mobile devices (max width 600px) */
+    @@media (max-width: 600px) {
+    .monaco-editor {
+    height: 300px; /* Reduced height for mobile */
+    width: 100%; /* Full width on mobile */
+    }
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animated-text {
+        animation: pulse 2s infinite ease-in-out;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .wave-emoji {
+        display: inline-block;
+        animation: wave 2s infinite;
+        transform-origin: 70% 70%;
+    }
+
+    @@keyframes wave {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        15% {
+            transform: rotate(15deg);
+        }
+
+        30% {
+            transform: rotate(-10deg);
+        }
+
+        45% {
+            transform: rotate(15deg);
+        }
+
+        60% {
+            transform: rotate(-10deg);
+        }
+
+        75% {
+            transform: rotate(15deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
+</style>
+
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
+</MudOverlay>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">Script</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        @if (Convert.ToBoolean(is_admin))
+        {
+            <MudAlert Severity="Severity.Warning" Icon="@Icons.Material.Filled.Info">The script has been published and is maintained by SCNCores script scout. Review and use at your own risk! 😊</MudAlert>
+        }
+
+        <MudTextField Class="mt-3" Label="Name" T="string" @bind-Value="@name" Required="true" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Description" T="string" @bind-Value="@description" Required="false" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Platform" T="string" @bind-Value="@platform" Required="false" RequiredError="Required" ReadOnly="true" />
+        <MudTextField Label="Shell" T="string" @bind-Value="@shell" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Created" T="string" @bind-Value="@created" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Last edited" T="string" @bind-Value="@last_edited" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Maintainer" T="string" @bind-Value="@maintainer" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="Contact" T="string" @bind-Value="@contact" Required="false" RequiredError="Required" Immediate="@true" ReadOnly="true" />
+
+        @{
+            if (platform == "Windows")
+            {
+                if (shell == "PowerShell")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="PowerShell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "System")
+            {
+                if (shell == "MySQL")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="MySQL_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "Linux")
+            {
+                if (shell == "Bash")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Shell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+            else if (platform == "MacOS")
+            {
+                if (shell == "Zsh")
+                {
+                    <StandaloneCodeEditor Id="powershell-editor" CssClass="monaco-editor" @ref="script_editor" ConstructionOptions="Shell_Editor_Construction_Options" OnDidChangeModelContent="Editor_Handle_Input" />
+                }
+            }
+        }
+
+    </DialogContent>
+    <DialogActions>
+
+        @if (!String.IsNullOrEmpty(github_url))
+        {
+            <MudButton OnClick="Update" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Sync with GitHub</MudButton>
+        }
+
+        <MudButton OnClick="Report" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Report</MudButton>
+        <MudButton OnClick="Revoke" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Revoke</MudButton>
+        <MudButton OnClick="Import" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default">Import to collection</MudButton>
+        <MudButton OnClick="Cancel">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private bool loading_overlay = false;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public string created { get; set; }
+    [Parameter] public string last_edited { get; set; }
+    [Parameter] public string maintainer { get; set; }
+    [Parameter] public string contact { get; set; }
+    [Parameter] public string is_admin { get; set; }
+    [Parameter] public string name { get; set; }
+    [Parameter] public string description { get; set; }
+    [Parameter] public string platform { get; set; }
+    [Parameter] public string shell { get; set; }
+    [Parameter] public string script { get; set; }
+    [Parameter] public string guid { get; set; }
+    [Parameter] public string github_url { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+		// Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        await script_editor.SetValue(await Base64.Handler.Decode(script));
+
+        StateHasChanged();
+    } 
+
+    public class Script
+    {
+        public string name { get; set; }
+        public string date { get; set; }
+        public string author { get; set; }
+        public string description { get; set; }
+        public string platform { get; set; }
+        public string shell { get; set; }
+        public string script { get; set; }
+    }
+
+    private StandaloneCodeEditor script_editor = null!;
+
+    private StandaloneEditorConstructionOptions PowerShell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+	    {
+		    AutomaticLayout = true,
+            Theme = "vs-dark",
+		    Language = "powershell",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+	    };
+    }
+
+    private StandaloneEditorConstructionOptions MySQL_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+            {
+                AutomaticLayout = true,
+                Theme = "vs-dark",
+                Language = "mysql",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+            };
+    }
+
+    private StandaloneEditorConstructionOptions Shell_Editor_Construction_Options(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+	    {
+		    AutomaticLayout = true,
+            Theme = "vs-dark",
+		    Language = "shell",
+            //Value = @"New-Item -ItemType File -Path 'C:\Test.txt\' | Set-Content -Value 'Dies ist ein Test'"
+	    };
+    }
+
+    private async Task Editor_Handle_Input(ModelContentChangedEvent e)
+    {
+        script = await script_editor.GetValue();
+    }
+
+    private async Task Import()
+    {
+        loading_overlay = true;
+        StateHasChanged();
+
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        //  Create the JSON object
+        var jsonObject = new
+        {
+            name = name,
+            date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            author = maintainer + " (" + contact + ")",
+            description = description,
+            platform = platform,
+            shell = shell,
+            script = await Base64.Handler.Decode(this.script),
+        };
+
+        // Convert the object into a JSON string
+        string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+        Logging.Handler.Debug("Community_Scripts.Import", "json", json);
+
+        string query = "INSERT INTO `scripts` (`name`, `description`, `author`, `platform`, `shell`, `script`, `json`) VALUES (@name, @description, @author, @platform, @shell, @script, @json);";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@name", name);
+            cmd.Parameters.AddWithValue("@description", description);
+            cmd.Parameters.AddWithValue("@author", maintainer + " (" + contact + ")");
+            cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@shell", shell);
+            cmd.Parameters.AddWithValue("@script", await Base64.Handler.Decode(this.script));
+            cmd.Parameters.AddWithValue("@json", json);
+
+            Logging.Handler.Debug("Community_Scripts.Import", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+
+            this.Snackbar.Add("Script imported successfully!", Severity.Success);
+
+            Logging.Handler.Debug("Community_Scripts.Import", "MySQL_Query", "Script imported successfully!");
+
+            // Close the dialog
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Community_Scripts.Import", "MySQL_Query", ex.ToString());
+            this.Snackbar.Add("Error importing script: " + ex.Message, Severity.Error);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+            loading_overlay = false;
+            StateHasChanged();
+        }
+    }
+
+    // revoke script from the community
+    private async Task Revoke()
+    {
+        loading_overlay = true;
+        StateHasChanged();
+
+        try
+        {
+            Snackbar.Configuration.ShowCloseIcon = true;
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
+            url = url + "/api/community/scripts/revoke";
+
+            // Create json with guid
+            var jsonObject = new
+            {
+                guid = guid,
+            };
+
+            // Convert the object into a JSON string
+            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+
+            if (result == "0")
+            {
+                Snackbar.Add("Script revoked successfully!", Severity.Success);
+                Logging.Handler.Debug("Community_Scripts.Revoke", "MySQL_Query", "Script revoked successfully!");
+
+                // Close the dialog
+                MudDialog.Close(DialogResult.Ok("revoked"));
+            }
+            else if (result == "1")
+            {
+                Snackbar.Add("Error revoking script: " + result, Severity.Error);
+                Logging.Handler.Error("Community_Scripts.Revoke", "MySQL_Query", result);
+            }
+            else if (result == "2")
+            {
+                Snackbar.Add("No permissions. The script belongs to another user.", Severity.Warning);
+                Logging.Handler.Error("Community_Scripts.Revoke", "MySQL_Query", result);
+            }
+            else
+            {
+                Snackbar.Add("Error revoking script: " + result, Severity.Error);
+                Logging.Handler.Error("Community_Scripts.Revoke", "MySQL_Query", result);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Community_Scripts.Revoke", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            loading_overlay = false;
+            StateHasChanged();
+        }
+    }
+
+    // report script to the admin
+    private async Task Report()
+    {
+        try
+        {
+            Snackbar.Configuration.ShowCloseIcon = true;
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            var options = new DialogOptions
+                {
+                    CloseButton = true,
+                    FullWidth = true,
+                    MaxWidth = MaxWidth.Small,
+                    BackgroundClass = "dialog-blurring",
+                };
+
+            var parameters = new DialogParameters();
+            var dialog = DialogService.Show<Pages.Collections.Scripts.Community_Scripts.Report_Dialog>("Report script", parameters, options);
+
+            var messageResult = await dialog.Result;
+            string reason = String.Empty;
+
+            if (!messageResult.Canceled)
+                reason = messageResult.Data.ToString();
+            else
+                return;
+
+            loading_overlay = true;
+            StateHasChanged();
+
+            string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
+            url = url + "/api/community/scripts/report";
+
+            // Create json with guid
+            var jsonObject = new
+            {
+                guid = guid,
+                description = reason,
+            };
+
+            // Convert the object into a JSON string
+            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+
+            if (result == "0")
+            {
+                Snackbar.Add("Script reported successfully!", Severity.Success);
+                Logging.Handler.Debug("Community_Scripts.Report", "MySQL_Query", "Script reported successfully!");
+                loading_overlay = false;
+                StateHasChanged();
+            }
+            else if (result == "1")
+            {
+                Snackbar.Add("Error reporting script: " + result, Severity.Error);
+                Logging.Handler.Error("Community_Scripts.Report", "MySQL_Query", result);
+                loading_overlay = false;
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add("Error reporting script: " + result, Severity.Error);
+                Logging.Handler.Error("Community_Scripts.Report", "MySQL_Query", result);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Community_Scripts.Report", "MySQL_Query", ex.ToString());
+            loading_overlay = false;
+            StateHasChanged();
+        }
+    }
+
+    public async Task Update()
+    {
+        try
+        {
+            loading_overlay = true;
+			StateHasChanged();
+
+            Snackbar.Configuration.ShowCloseIcon = true;
+			Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            // Build json object (url)
+            var json = new
+            {
+                url = github_url
+            };
+
+            // Convert to json string
+            string json_string = JsonSerializer.Serialize(json);
+
+            string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
+            url = url + "/api/community/scripts/request_script";
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json_string);
+
+            // 0 = imported, 1 = updated, 2 = script not found, 3 = error
+            if (result == "0")
+            {
+                Snackbar.Add("Script imported successfully.", Severity.Success);
+            }
+            else if (result == "1")
+            {
+                Snackbar.Add("Script synced successfully.", Severity.Info);
+				MudDialog.Close(DialogResult.Ok("updated"));
+            }
+            else if (result == "2")
+            {
+                Snackbar.Add("Script not found. Make sure your URL is valid.", Severity.Error);
+            }
+            else if (result == "3")
+            {
+                Snackbar.Add("Error while importing script. Make sure your URL is valid.", Severity.Error);
+            }
+        }
+		catch (Exception ex)
+		{
+			Logging.Handler.Error("Community_Scripts.Update", "MySQL_Query", ex.ToString());
+		}
+        finally
+		{
+			loading_overlay = false;
+			StateHasChanged();
+		}
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

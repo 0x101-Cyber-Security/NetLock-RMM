@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35013.160
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SCNCore Plus User Process", "SCNCore Plus User Process.csproj", "{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Debug|x64.ActiveCfg = Debug|x64
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Debug|x64.Build.0 = Debug|x64
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Release|x64.ActiveCfg = Release|x64
+		{F4AB4F9E-D0FE-4DFD-A6A1-BEC5C464EB0D}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DE2A22C4-4B10-4879-A3AE-5349CC927269}
+	EndGlobalSection
+EndGlobal

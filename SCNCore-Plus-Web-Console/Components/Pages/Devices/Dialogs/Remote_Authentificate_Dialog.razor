@@ -1,0 +1,78 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Devices.Dialogs.Remote_Authentificate_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog Style="width: 600px;">
+    <TitleContent>
+        <MudText Typo="Typo.h5">@Localizer["authentification"]</MudText>
+    </TitleContent>
+    <DialogContent>
+
+        <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
+        <MudTextField Class="mt-2" Label="@Localizer["username"]" T="string" Lines="1" @bind-Value="@scncore_username_display" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="true" />
+        <MudTextField Label="@Localizer["password"]" T="string" Lines="1" @bind-Value="@password" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" InputType="@InputType.Password" ReadOnly="false" />
+
+    </DialogContent>
+    <DialogActions>
+
+        <MudButton OnClick="@OK" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+        <MudButton OnClick="@Cancel" Variant="Variant.Text" Size="@Size.Small" Color="@Color.Default">@Localizer["cancel"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private string scncore_username_display = String.Empty;
+    private string scncore_username = String.Empty;
+    private string password = String.Empty;
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve username from claims
+        scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+		scncore_username_display = scncore_username;
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool user_verified = await Classes.Authentication.User.Verify_User(scncore_username, password);
+
+        if (user_verified) // Check custom session guid
+        {
+            this.MudDialog.Close(DialogResult.Ok("authentificated"));
+        }
+        else
+        {
+            this.Snackbar.Add(Localizer["auth_failed_check_credentials"], Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

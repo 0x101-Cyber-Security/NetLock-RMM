@@ -1,0 +1,578 @@
+﻿@page "/location_settings"
+@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Tenants.Location_Management.Location_Settings> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+        @{
+            if (permissions_tenants_locations_manage)
+            {
+                <MudText Typo="Typo.h4">@Localizer["title"] (@location_name)</MudText>
+
+                <MudButton Class="mt-5 mr-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.ArrowBack" Href="/tenant_settings">@Localizer["back"]</MudButton>
+
+                if (permissions_tenants_locations_edit)
+                {
+                    <MudButton Class="mt-5 mr-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Show_Edit_Location_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit">@Localizer["edit"]</MudButton>
+                }
+               
+                if (permissions_tenants_locations_delete)
+                {
+                    <MudButton Class="mt-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" StartIcon="@Icons.Material.Filled.Delete" OnClick="@Delete_Location_Dialog">@Localizer["delete"]</MudButton>
+                }
+                
+                <MudPaper Class="pa-0 ma- mt-5">
+
+                    <MudText Class="pa-2" Typo="Typo.h5" Align="Align.Left">@Localizer["groups"]</MudText>
+
+                    @if (permissions_tenants_groups_add)
+                    {
+                        <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" StartIcon="@Icons.Material.Filled.GroupAdd" OnClick="@Show_Add_Group_Dialog">@Localizer["add"]</MudButton>
+                    }
+
+                    @if (permissions_tenants_groups_edit)
+                    {
+                        <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Show_Edit_Group_Dialog(group_selectedRowContent_id, group_selectedRowContent_name, group_selectedRowContent_description))" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit" Disabled="(String.IsNullOrEmpty(group_selectedRowContent_id))">@Localizer["edit"]</MudButton>
+                    }
+
+                    @if (permissions_tenants_groups_delete)
+                    {
+                        <MudButton Class="ml-2 mt-5" Size="Size.Small" Variant="Variant.Filled" OnClick="@(() => Show_Delete_Group_Dialog(group_selectedRowContent_id))" Color="Color.Error" StartIcon="@Icons.Material.Filled.Recycling" Disabled="(String.IsNullOrEmpty(group_selectedRowContent_id))">@Localizer["delete"]</MudButton>
+                    }
+
+                    <MudTable Height="59vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@groups_mysql_data" Filter="new Func<Groups_Entity, bool>(Groups_Table_Filter_Func)">
+                        <ToolBarContent>
+                            <MudTextField @bind-Value="groups_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Groups_Entity, object>(x => x.name)" style="white-space: nowrap;">Name</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Groups_Entity, object>(x => x.date)" style="white-space: nowrap;">@Localizer["created"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Groups_Entity, object>(x => x.author)" style="white-space: nowrap;">@Localizer["author"]</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Groups_Entity, object>(x => x.description)" style="white-space: nowrap;">@Localizer["description"]</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="groups_row">
+
+                            <MudTd DataLabel="Name" @onclick="() => Groups_RowClickHandler(groups_row)" @ondblclick="() => Groups_RowDblClickHandler(groups_row)" class="@Groups_GetRowClass(groups_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.GroupAdd" Size="Size.Small" />&nbsp;@groups_row.name
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["created"]" @onclick="() => Groups_RowClickHandler(groups_row)" @ondblclick="() => Groups_RowDblClickHandler(groups_row)" class="@Groups_GetRowClass(groups_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" />&nbsp;@groups_row.date
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["author"]" @onclick="() => Groups_RowClickHandler(groups_row)" @ondblclick="() => Groups_RowDblClickHandler(groups_row)" class="@Groups_GetRowClass(groups_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.SupportAgent" Size="Size.Small" />&nbsp;@groups_row.author
+                                </span>
+                            </MudTd>
+
+                            <MudTd DataLabel="@Localizer["description"]" @onclick="() => Groups_RowClickHandler(groups_row)" @ondblclick="() => Groups_RowDblClickHandler(groups_row)" class="@Groups_GetRowClass(groups_row)" style="white-space: nowrap;">
+                                <span style="display: flex; align-items: center;">
+                                    <MudIcon Icon="@Icons.Material.Filled.Description" Size="Size.Small" />&nbsp;@groups_row.description
+                                </span>
+                            </MudTd>
+
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                        </PagerContent>
+                    </MudTable>
+
+                </MudPaper>
+            }
+        }
+
+        </Authorized>
+    </AuthorizeView>
+
+    <style>
+        .dialog-blurring {
+            backdrop-filter: blur(10px);
+        }
+    </style>
+
+@code {
+
+    #region Permissions System
+
+    private bool permissions_tenants_locations_manage = false;
+    private bool permissions_tenants_locations_edit = false;
+    private bool permissions_tenants_locations_delete = false;
+    
+    private bool permissions_tenants_groups_add = false;
+    private bool permissions_tenants_groups_edit = false;
+    private bool permissions_tenants_groups_delete = false;
+        
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_tenants_locations_manage = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_locations_manage");
+            permissions_tenants_locations_edit = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_locations_edit");
+            permissions_tenants_locations_delete = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_locations_delete");
+
+            permissions_tenants_groups_add = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_groups_add");
+            permissions_tenants_groups_edit = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_groups_edit");
+			permissions_tenants_groups_delete = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "tenants_groups_delete");
+
+            if (!permissions_tenants_locations_manage || !permissions_tenants_locations_edit || !permissions_tenants_locations_delete)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        tenant_guid = await localStorage.GetItemAsync<string>("tenant_guid");
+        location_name = await localStorage.GetItemAsync<string>("location_name");
+
+        if (!await Permissions())
+            return;
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await Get_Location_Name();
+        await Get_Groups_Overview();
+
+        StateHasChanged();
+    }
+
+    private string tenant_id = String.Empty;
+    private string tenant_guid = String.Empty;
+    private string location_id = String.Empty;
+    private string location_name = String.Empty;
+    private string description = String.Empty;
+
+    public class Groups_Entity
+    {
+        public string id { get; set; } = String.Empty;
+        public string name { get; set; } = String.Empty;
+        public string date { get; set; } = String.Empty;
+        public string author { get; set; } = String.Empty;
+        public string description { get; set; } = String.Empty;
+    }
+
+    public List<Groups_Entity> groups_mysql_data;
+
+    private string groups_table_view_port = "70vh";
+    private string groups_table_sorted_column;
+    private string groups_table_search_string = "";
+
+    private bool Groups_Table_Filter_Func(Groups_Entity row)
+    {
+        if (string.IsNullOrEmpty(groups_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.name.Contains(groups_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.date.Contains(groups_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.author.Contains(groups_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.description.Contains(groups_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string group_selectedRowContent_id = String.Empty;
+    private string group_selectedRowContent_name = String.Empty;
+    private string group_selectedRowContent_description = String.Empty;
+
+    private void Groups_RowClickHandler(Groups_Entity row)
+    {
+        group_selectedRowContent_id = row.id;
+        group_selectedRowContent_name = row.name;
+        group_selectedRowContent_description = row.description;
+    }
+
+    private async void Groups_RowDblClickHandler(Groups_Entity row)
+    {
+        await Show_Edit_Group_Dialog(row.id, row.name, row.description);
+    }
+
+    private string Groups_GetRowClass(Groups_Entity row)
+    {
+        return row.id == group_selectedRowContent_id ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private bool show_add_group_dialog_open = false;
+
+    private async Task Show_Add_Group_Dialog()
+    {
+        if (show_add_group_dialog_open)
+            return;
+
+        var options = new DialogOptions
+        {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("tenant_id", tenant_id);
+        parameters.Add("location_id", location_id);
+
+        show_add_group_dialog_open = true;
+
+        var result = await this.DialogService.Show<Tenants.Dialogs.Group_Management.Add_Group_Dialog>(string.Empty, parameters, options).Result;
+
+        show_add_group_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+    }
+
+    private bool show_delete_group_dialog_open = false;
+
+    private async Task Show_Delete_Group_Dialog(string group_id)
+    {
+        if (show_delete_group_dialog_open)
+            return;
+
+        var options = new DialogOptions
+        {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("group_id", group_id);
+        parameters.Add("tenant_id", tenant_id);
+        parameters.Add("location_id", location_id);
+
+        show_delete_group_dialog_open = true;
+
+        var result = await this.DialogService.Show<Tenants.Dialogs.Group_Management.Delete_Group_Dialog>(string.Empty, parameters, options).Result;
+
+        show_delete_group_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+    }
+
+    private bool show_edit_group_dialog_open = false;
+
+    private async Task Show_Edit_Group_Dialog(string group_id, string group_name, string description)
+    {
+        if (show_edit_group_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("name", group_name);
+        parameters.Add("description", description);
+        parameters.Add("group_id", group_id);
+        parameters.Add("tenant_id", tenant_id);
+        parameters.Add("location_id", location_id);
+
+        show_edit_group_dialog_open = true;
+
+        var result = await this.DialogService.Show<Tenants.Dialogs.Group_Management.Edit_Group_Dialog>(string.Empty, parameters, options).Result;
+
+        show_edit_group_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+    }
+
+    private bool delete_location_dialog_open = false;
+
+    private async Task Delete_Location_Dialog()
+    {
+        if (delete_location_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("tenant_id", tenant_id);
+        parameters.Add("location_id", location_id);
+
+        delete_location_dialog_open = true;
+
+        var result = await this.DialogService.Show<Tenants.Dialogs.Location_Management.Delete_Location_Dialog>(string.Empty, parameters, options).Result;
+
+        delete_location_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/tenant_settings -> Delete_Location_Dialog", "Result", result.Data.ToString() ?? String.Empty);
+    }
+
+    private bool show_edit_location_dialog_open = false;
+
+    private async Task Show_Edit_Location_Dialog()
+    {
+        if (show_edit_location_dialog_open)
+            return;
+
+        var options = new DialogOptions
+        {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("tenant_id", tenant_id);
+        parameters.Add("location_id", location_id);
+        parameters.Add("name", location_name);
+        parameters.Add("description", description);
+
+        show_edit_location_dialog_open = true;
+
+        var result = await DialogService.Show<Tenants.Dialogs.Location_Management.Edit_Location_Dialog>(string.Empty, parameters, options).Result;
+
+        show_edit_location_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+    }
+
+    // Get location name by location_id
+    private async Task Get_Location_Name()
+    {
+        string location_guid = await localStorage.GetItemAsync<string>("location_guid");
+
+        string query = "SELECT * FROM `locations` WHERE guid = @location_guid;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@location_guid", location_guid);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        location_name = reader["name"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/location_settings -> Get_Location_Name", "general_error", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    // Get tenant & location id from database using guid
+    private async Task Get_Tenant_Location_ID()
+    {
+        string location_guid = await localStorage.GetItemAsync<string>("location_guid");
+
+        string query = "SELECT * FROM `tenants` WHERE guid = @tenant_guid;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@tenant_guid", tenant_guid);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        tenant_id = reader["id"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+
+            query = "SELECT * FROM `locations` WHERE guid = @location_guid;";
+
+            command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@location_guid", location_guid);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        location_id = reader["id"].ToString() ?? String.Empty;
+                        description = reader["description"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/location_settings -> Get_Tenant_Location_ID", "general_error", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Get_Groups_Overview()
+    {
+        await Get_Tenant_Location_ID();
+
+        groups_mysql_data = new List<Groups_Entity>();
+
+        string query = "SELECT * FROM `groups` WHERE location_id = @location_id AND tenant_id = @tenant_id;";
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand(query, conn);
+            command = new MySqlCommand(query, conn);
+            command.Parameters.AddWithValue("@tenant_id", tenant_id);
+            command.Parameters.AddWithValue("@location_id", location_id);
+
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        Groups_Entity entity = new Groups_Entity
+                        {
+                            id = reader["id"].ToString() ?? String.Empty,
+                            name = reader["name"].ToString() ?? String.Empty,
+                            date = reader["date"].ToString() ?? String.Empty,
+                            author = reader["author"].ToString() ?? String.Empty,
+                            description = reader["description"].ToString() ?? String.Empty,
+                        };
+
+                        groups_mysql_data.Add(entity);
+                    }
+                }
+            }
+
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Groups_Overview", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+}

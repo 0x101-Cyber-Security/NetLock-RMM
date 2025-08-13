@@ -1,0 +1,171 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Tenants.Dialogs.Group_Management.Add_Group_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+    <MudDialog>
+        <TitleContent>
+            <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+        </TitleContent>
+        <DialogContent>
+
+            <MudTextField Label="Name" T="string" @bind-Value="@group_name" Immediate="@true" />
+            <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
+        </DialogContent>
+
+        <DialogActions>
+            <MudButton Size="Size.Small" OnClick="Cancel">@Localizer["cancel"]</MudButton>
+            <MudButton Size="Size.Small" Disabled="@Form_Valid()" OnClick="@OK" Variant="@Variant.Filled" Color="@Color.Success">@Localizer["confirm"]</MudButton>
+        </DialogActions>
+    </MudDialog>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    
+    private string scncore_username = string.Empty;
+
+    private string group_name = string.Empty;
+    private string description = string.Empty;
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string tenant_id { get; set; }
+    [Parameter] public string location_id { get; set; }
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(group_name))
+            return true;
+        else
+            return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve email from claims
+        scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        if (!String.IsNullOrEmpty(group_name))
+        {
+            bool already_existing = false;
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                string query = "SELECT * FROM `groups` WHERE name = @group_name AND location_id = @location_id AND tenant_id = @tenant_id;";
+
+                await conn.OpenAsync();
+
+                MySqlCommand command = new MySqlCommand();
+                command = new MySqlCommand(query, conn);
+                command.Parameters.AddWithValue("@tenant_id", tenant_id);
+                command.Parameters.AddWithValue("@location_id", location_id);
+                command.Parameters.AddWithValue("@group_name", group_name);
+
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        Logging.Handler.Debug("Policy_Management.Add_Group_Dialog", "HasRows", reader.HasRows.ToString());
+
+                        already_existing = true;
+                    }
+                    else 
+                        Logging.Handler.Debug("Policy_Management.Add_Group_Dialog", "HasRows", reader.HasRows.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Add_Group_Dialog.OK", "", ex.Message);
+            }
+
+            //Add if not existing
+            if(!already_existing)
+            {
+                bool success = false;
+
+                try
+                {
+                    string execute_query = "INSERT INTO `groups` (`tenant_id`, `location_id`, `name`, `date`, `author`, `description`) VALUES (@tenant_id, @location_id, @group_name, @date, @author, @description);";
+
+                    MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                    cmd.Parameters.AddWithValue("@tenant_id", tenant_id);
+                    cmd.Parameters.AddWithValue("@location_id", location_id);
+                    cmd.Parameters.AddWithValue("@group_name", group_name);
+                    cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@author", scncore_username);
+                    cmd.Parameters.AddWithValue("@description", description);
+
+                    cmd.ExecuteNonQuery();
+
+                    success = true;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/location_settings -> Add_Group_Dialog.OK", "Result", ex.ToString());
+                }
+                finally
+                {
+                    await conn.CloseAsync();
+                }
+
+                if (success)
+                {
+                    this.Snackbar.Add(Localizer["successfully_added"], Severity.Success);
+
+                    Thread.Sleep(1000);
+                    NavigationManager.Refresh(true);
+                }
+                else
+                {
+                    this.Snackbar.Add(Localizer["adding_failed"], Severity.Error);
+                }
+            }
+            else //Already existing
+            {
+                this.Snackbar.Add(Localizer["name_already_in_use"], Severity.Warning);
+            }
+
+            MudDialog.Close(DialogResult.Ok("success"));
+        }        
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

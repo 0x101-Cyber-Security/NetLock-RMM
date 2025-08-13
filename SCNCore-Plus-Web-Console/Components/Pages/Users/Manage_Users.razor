@@ -1,0 +1,517 @@
+﻿@page "/users"
+
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using OfficeOpenXml;
+@using System.Xml.Serialization;
+@using System.Text;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
+@using Microsoft.AspNetCore.DataProtection;
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Users.Manage_Users> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .selected-row-light {
+        background-color: lightgray;
+    }
+
+    .selected-row-dark {
+        background-color: #141414;
+    }
+
+    .custom-expansion-panel {
+        background-color: transparent;
+    }
+
+    .dialog-blurring {
+        backdrop-filter: blur(10px);
+    }
+
+    .mud-table-cell-custom-group {
+        font-weight: 500;
+    }
+
+    .mud-table-cell-custom-group-footer {
+        padding-bottom: 50px;
+        text-align: right;
+    }
+
+    @@media only screen and (max-width: 768px) {
+        .desktop-icon {
+            display: none;
+        }
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+
+        @if (permissions_users_enabled)
+        {
+            <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
+
+            @if (permissions_users_add)
+            {
+                <MudButton Class="mt-5" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Add" OnClick="@Add_User_Dialog">@Localizer["add"]</MudButton>
+            }
+
+            @if (permissions_users_manage)
+            {
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" @onclick="async () => { await Update_Selected_User(users_selectedRowContent_username); }" Disabled="(String.IsNullOrEmpty(users_selectedRowContent_username))" >@Localizer["manage"]</MudButton>
+            }
+            
+            <MudTooltip Text="@Localizer["export_data"]">
+                <MudIconButton Class="ml-2 mt-5 mr-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Table_Dialog"></MudIconButton>
+            </MudTooltip>
+
+            <MudTable Class="mt-5" Height="65vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@users_mysql_data" Filter="new Func<Users_Entity, bool>(Users_Table_Filter_Func)">
+                <ToolBarContent>
+                    <MudTextField @bind-Value="users_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                </ToolBarContent>
+                <HeaderContent>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.username)" style="white-space: nowrap;">@Localizer["username"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.role)" style="white-space: nowrap;">@Localizer["role"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.mail)" style="white-space: nowrap;">@Localizer["mail_address"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.phone)" style="white-space: nowrap;">Phone</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.last_login)" style="white-space: nowrap;">@Localizer["last_login"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.ip_address)" style="white-space: nowrap;">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
+                    <MudTh><MudTableSortLabel SortBy="new Func<Users_Entity, object>(x => x.two_factor_enabled)" style="white-space: nowrap;">@Localizer["2factor"]</MudTableSortLabel></MudTh>
+                </HeaderContent>
+                <RowTemplate Context="users_row">
+
+                    <MudTd DataLabel="@Localizer["username"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Abc" Size="Size.Small" />&nbsp;@users_row.username
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["role"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.SupervisorAccount" Size="Size.Small" />&nbsp;@users_row.role
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["mail_address"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Mail" Size="Size.Small" />&nbsp;@users_row.mail
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="Phone" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Phone" Size="Size.Small" />&nbsp;@users_row.phone
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["last_login"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" />&nbsp;@users_row.last_login
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["ip_address"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" />&nbsp;@users_row.ip_address
+                        </span>
+                    </MudTd>
+
+                    <MudTd DataLabel="@Localizer["2factor"]" @onclick="() => Users_RowClickHandler(users_row)" @ondblclick="() => Users_RowDblClickHandler(users_row)" class="@Users_GetRowClass(users_row)" style="white-space: nowrap;">
+                        <span style="display: flex; align-items: center;">
+                            <MudIcon Icon="@Icons.Material.Filled.Shield" Size="Size.Small" />&nbsp;@users_row.two_factor_enabled
+                        </span>
+                    </MudTd>
+
+                </RowTemplate>
+                <PagerContent>
+                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                </PagerContent>
+            </MudTable>
+        }
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    #region Permissions System
+
+    private bool permissions_users_enabled = false;
+    private bool permissions_users_add = false;
+    private bool permissions_users_manage = false;
+    private bool permissions_users_edit = false;
+    private bool permissions_users_delete = false;
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            string scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_users_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "users_enabled");
+            permissions_users_add = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "users_add");
+            permissions_users_manage = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "users_manage");
+            permissions_users_edit = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "users_edit");
+			permissions_users_delete = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "users_delete");
+
+            if (!permissions_users_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    private bool _isDarkMode;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        if (!await Permissions())
+            return;
+
+        await Get_Users();
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        StateHasChanged();
+    }
+
+    public List<Users_Entity> users_mysql_data;
+
+    public class Users_Entity
+    {
+        public string username { get; set; } = String.Empty;
+        public string mail { get; set; } = String.Empty;
+        public string phone { get; set; } = String.Empty;
+        public string last_login { get; set; } = String.Empty;
+        public string ip_address { get; set; } = String.Empty;
+        public string role { get; set; } = String.Empty;
+        public string two_factor_enabled { get; set; } = String.Empty;
+    }
+
+    private string users_table_view_port = "70vh";
+    private string users_table_sorted_column;
+    private string users_table_search_string = "";
+
+    private bool Users_Table_Filter_Func(Users_Entity row)
+    {
+        if (string.IsNullOrEmpty(users_table_search_string))
+            return true;
+
+        //Search logic for each column
+        return row.username.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.mail.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.phone.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.last_login.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.ip_address.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.role.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+               row.two_factor_enabled.Contains(users_table_search_string, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string users_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private string users_selectedRowContent_username = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void Users_RowClickHandler(Users_Entity row)
+    {
+        users_selectedRowContent_username = row.username;
+    }
+
+    private async void Users_RowDblClickHandler(Users_Entity row)
+    {
+        users_selectedRowContent_username = row.username;
+
+        await Update_Selected_User(users_selectedRowContent_username);
+    }
+
+    private string Users_GetRowClass(Users_Entity row)
+    {
+        return row.username == users_selectedRowContent_username ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private async Task Get_Users()
+    {
+        users_mysql_data = new List<Users_Entity>();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM accounts;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        //convert computable to human readable
+                        string two_factor_enabled_converted = String.Empty;
+
+                        if (reader["two_factor_enabled"].ToString() == "0")
+                            two_factor_enabled_converted = Localizer["deactivated"];
+                        else if (reader["two_factor_enabled"].ToString() == "1")
+                            two_factor_enabled_converted = Localizer["activated"];
+
+                        Users_Entity entity = new Users_Entity
+                            {
+                                username = reader["username"].ToString() ?? String.Empty,
+                                mail = reader["mail"].ToString() ?? String.Empty,
+                                phone = reader["phone"].ToString() ?? String.Empty,
+                                last_login = reader["last_login"].ToString() ?? String.Empty,
+                                ip_address = reader["ip_address"].ToString() ?? String.Empty,
+                                role = reader["role"].ToString() ?? String.Empty,
+                                two_factor_enabled = two_factor_enabled_converted,
+                            };
+
+                        users_mysql_data.Add(entity);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_User_Overview", ex.ToString());
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private bool users_add_dialog_open = false;
+
+    private async Task Add_User_Dialog()
+    {
+        if (users_add_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        users_add_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Users.Dialogs.Add_User_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        users_add_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/user_settings -> Add_User_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            await Get_Users();
+        }
+    }
+
+    private async Task Update_Selected_User(string username)
+    {
+        await localStorage.SetItemAsync("temp_username", username);
+
+        NavigationManager.NavigateTo("/user_settings");
+    }
+
+    #region Data_Export
+    private async Task Trigger_Export_Table_Dialog()
+    {
+        await Export_Table_Dialog("users");
+    }
+
+    private bool export_table_dialog_open = false;
+
+    private async Task Export_Table_Dialog(string type)
+    {
+        if (export_table_dialog_open)
+            return;
+
+        var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+        export_table_dialog_open = true;
+
+        var result = await this.DialogService.Show<Shared.Export_Data_Dialog>(string.Empty, new DialogParameters(), options).Result;
+
+        export_table_dialog_open = false;
+
+        if (result != null && result.Data != null)
+        {
+            if (result.Data.ToString() == "JSON")
+                await Export_Data_Json(type);
+            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
+                await Export_Data_Spreadsheet(type);
+            else if (result.Data.ToString() == "HTML")
+                await Export_Data_HTML(type);
+        }
+    }
+
+    private async Task Export_Data_Json(string type)
+    {
+        try
+        {
+            string jsonContent = String.Empty;
+
+            // Erstellen eines JSON-Strings aus den MudTable-Einträgen
+            if (type == "users")
+                jsonContent = JsonSerializer.Serialize(users_mysql_data, new JsonSerializerOptions { WriteIndented = true });
+
+            // Aufruf der JavaScript-Funktion für den Export als .txt
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.json", jsonContent);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_users -> Export_Data_Json", "", ex.Message);
+        }
+    }
+
+    public async Task Export_Data_HTML(string type)
+    {
+        try
+        {
+            StringBuilder htmlBuilder = new StringBuilder();
+
+            if (type == "users")
+            {
+                // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                htmlBuilder.Append("<table border='1'><tr>");
+                foreach (var property in users_mysql_data.First().GetType().GetProperties())
+                {
+                    htmlBuilder.Append($"<th>{property.Name}</th>");
+                }
+                htmlBuilder.Append("</tr>");
+
+                // Baue die Tabelleneinträge basierend auf den Daten
+                foreach (var entry in users_mysql_data)
+                {
+                    htmlBuilder.Append("<tr>");
+                    foreach (var property in entry.GetType().GetProperties())
+                    {
+                        htmlBuilder.Append($"<td>{property.GetValue(entry)}</td>");
+                    }
+                    htmlBuilder.Append("</tr>");
+                }
+            }
+
+            htmlBuilder.Append("</table>");
+
+            string htmlContent = htmlBuilder.ToString();
+
+            // Hier wird JavaScript-Interop verwendet, um den HTML-Inhalt herunterzuladen
+            await JSRuntime.InvokeVoidAsync("exportToTxt", $"{type}.html", htmlContent, "text/html");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_users -> Export_Data_HTML", "", ex.Message);
+        }
+    }
+
+    private async Task Export_Data_Spreadsheet(string type)
+    {
+        try
+        {
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
+
+                if (type == "users")
+                {
+                    if (users_mysql_data.Count > 0)
+                    {
+                        int headerRow = 1;
+
+                        // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
+                        int columnIndex = 1;
+                        foreach (var property in users_mysql_data.First().GetType().GetProperties())
+                        {
+                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
+                            columnIndex++;
+                        }
+
+                        int dataRow = headerRow + 1;
+
+                        // Baue die Tabelleneinträge basierend auf den Daten
+                        foreach (var entry in users_mysql_data)
+                        {
+                            columnIndex = 1;
+                            foreach (var property in entry.GetType().GetProperties())
+                            {
+                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
+                                columnIndex++;
+                            }
+
+                            dataRow++;
+                        }
+                    }
+                }
+
+                var stream = new MemoryStream(package.GetAsByteArray());
+
+                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
+                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/manage_users -> Export_Data_Spreadsheet", "", ex.Message);
+        }
+    }
+    #endregion
+    
+}

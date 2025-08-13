@@ -1,0 +1,155 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Pages.Policies.Dialogs.Add_Policy_Dialog> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">@Localizer["title"]</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Name" T="string" @bind-Value="@policy_name" Immediate="@true" />
+        <MudTextField Label="@Localizer["description"]" T="string" @bind-Value="@description" Immediate="@true" />
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton OnClick="Cancel">@Localizer["cancel"]</MudButton>
+
+        <MudButton Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" OnClick="@OK" Disabled="@Form_Valid()">@Localizer["confirm"]</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+	private string scncore_username = string.Empty;
+
+    private string policy_name = string.Empty;
+    private string description = string.Empty;
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(policy_name))
+            return true;
+        else
+            return false;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve email from claims
+        scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+    }
+
+    private async Task OK()
+    {
+        if (!String.IsNullOrEmpty(policy_name))
+        {
+            //Check if policy is already existing
+            bool already_existing = false;
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand command = new MySqlCommand("SELECT * FROM policies WHERE policy_name = @policy_name;", conn);
+                command.Parameters.AddWithValue("@policy_name", policy_name);
+
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        Logging.Handler.Debug("Policy_Management.Add_Policy_Dialog", "HasRows", reader.HasRows.ToString());
+
+                        already_existing = true;
+                    }
+                    else 
+                        Logging.Handler.Debug("Policy_Management.Add_Policy_Dialog", "HasRows", reader.HasRows.ToString());
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Policy_Management.Add_Policy_Dialog.OK", "", ex.Message);
+            }
+
+            //Add if not existing
+            bool success = false;
+
+            if(already_existing == false)
+            {
+                try
+                {
+
+                    string execute_query = "INSERT INTO `policies` (`name`, `date`, `author`, `description`) VALUES (@name, @date, @author, @description);";
+
+                    MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+
+                    cmd.Parameters.AddWithValue("@name", policy_name);
+                    cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    cmd.Parameters.AddWithValue("@author", scncore_username);
+                    cmd.Parameters.AddWithValue("@description", await Base64.Handler.Encode(description));
+                    cmd.Parameters.AddWithValue("@content", null);
+
+                    cmd.ExecuteNonQuery();
+
+                    success = true;
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("Policy_Management.Add_Policy_Dialog", "Result", ex.ToString());
+                    success = false;
+                }
+                finally
+                {
+                    await conn.CloseAsync();
+                }
+
+                if (success)
+                {
+                    this.Snackbar.Configuration.ShowCloseIcon = true;
+                    this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                    this.Snackbar.Add(Localizer["successful"], Severity.Success);
+                }
+                else
+                {
+                    this.Snackbar.Configuration.ShowCloseIcon = true;
+                    this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                    this.Snackbar.Add(Localizer["error_occurred"], Severity.Error);
+                }
+            }
+            else //Already existing
+            {
+                this.Snackbar.Configuration.ShowCloseIcon = true;
+                this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+                this.Snackbar.Add(Localizer["name_already_in_use"], Severity.Warning);
+            }
+
+            this.MudDialog.Close(DialogResult.Ok(String.Empty));
+            this.MudDialog.Close(DialogResult.Cancel());
+        }        
+    }
+    
+    private void Cancel() => MudDialog.Cancel();
+}

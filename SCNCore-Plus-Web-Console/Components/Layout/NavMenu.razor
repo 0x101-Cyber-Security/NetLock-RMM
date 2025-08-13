@@ -1,0 +1,669 @@
+﻿@using MySqlConnector
+@using System.Data
+@using System.Data.Common
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject IStringLocalizer<Layout.NavMenu> Localizer
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView>
+    <Authorized>
+
+        <MudNavMenu>
+
+            @{
+                if (permissions_dashboard_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.Home" Href="/dashboard">Dashboard</MudNavLink>
+                }
+            }
+
+            <!-- Add tenants -->
+            <MudNavGroup MaxHeight="10000" HideExpandIcon="true" Icon="@Icons.Material.Filled.FolderShared" Title="@Localizer["tenants"]" Expanded="true">
+
+                @{
+                    if (permissions_tenants_enabled)
+                    {
+                        <MudNavLink Icon="@Icons.Material.Filled.ManageAccounts" Href="/tenants">@Localizer["manage"]</MudNavLink>
+                    }
+                }
+
+
+                @{
+					if (tenants_full_access)
+					{
+                        <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.Groups" Title="@Localizer["all_devices"]" Expanded="true">
+                            @{
+                                if (permissions_devices_authorized_enabled)
+                                {
+                                    <MudNavLink Icon="@Icons.Material.Filled.DesktopWindows" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/devices"))">@Localizer["authorized"]</MudNavLink>
+                                }
+
+                                if (permissions_devices_unauthorized_enabled)
+                                {
+                                    <MudNavLink Icon="@Icons.Material.Filled.DesktopAccessDisabled" OnClick="@(async () => await Update_Selected_Tenant("all", "all", true, "/unauthorized_devices"))">@Localizer["unauthorized"]</MudNavLink>
+                                }
+                            }
+
+                        </MudNavGroup>
+                    }
+                }
+
+                @{
+                    HashSet<string> processedTenants = new HashSet<string>();
+
+                    @foreach (var tenant in tenant_list)
+                    {
+                        // Überprüfe, ob dieser tenant_name bereits verarbeitet wurde
+                        if (!processedTenants.Contains(tenant.guid))
+                        {
+                            <!-- Tenants -->
+                            <MudNavGroup HideExpandIcon="false" Icon="@Icons.Material.Filled.Person" @onclick="@(async () => await Update_Selected_Tenant(tenant.guid, tenant.name, false, "/tenant_settings"))" Title="@(tenant.name)" Expanded="false">
+
+                                <!-- Locations -->
+                                @foreach (var location in locations_list.Where(loc => loc.tenant_name == tenant.name).DistinctBy(loc => loc.guid))
+                                {
+                                    <MudNavGroup HideExpandIcon="true" Icon="@Icons.Material.Filled.LocationCity" Title="@(location.name)" Expanded="true">
+
+                                        @{
+                                            if (permissions_devices_authorized_enabled)
+                                            {
+                                                <MudNavLink Icon="@Icons.Material.Filled.DesktopWindows" OnClick="@(async () => await Update_Selected_Group(tenant.guid, location.guid, location.name, "all", true, "/devices"))">@Localizer["authorized"]</MudNavLink>
+
+                                            }
+
+                                            if (permissions_devices_unauthorized_enabled)
+                                            {
+                                                <MudNavLink Icon="@Icons.Material.Filled.DesktopAccessDisabled" OnClick="@(async () => await Update_Selected_Group(tenant.guid, location.guid, location.name, "all", true, "/unauthorized_devices"))">@Localizer["unauthorized"]</MudNavLink>
+                                            }
+                                        }
+
+                                        <!-- Groups -->
+                                        @foreach (string group_name in groups_table.AsEnumerable().Where(row => row.Field<string>("tenant_name") == tenant.name && row.Field<string>("location_name") == location.name).Select(row => row.Field<string>("group_name")).Distinct())
+                                        {
+                                            <MudNavLink Icon="@Icons.Material.Filled.ArrowRight" OnClick="@(async () => await Update_Selected_Group(tenant.guid, location.guid, location.name, group_name, true, "/devices"))">@group_name</MudNavLink>
+                                        }
+
+                                    </MudNavGroup>
+                                }
+
+                            </MudNavGroup>
+
+                            // Add tenant to hashset to prevent duplicates
+                            processedTenants.Add(tenant.guid);
+                        }
+                    }
+
+                }
+
+            </MudNavGroup>
+
+            <MudNavLink Disabled="true"></MudNavLink>
+            <MudNavLink Disabled="true"></MudNavLink>
+
+            @{
+                if (permissions_automation_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.AutoMode" Href="/automations">@Localizer["automations"]</MudNavLink>
+                }
+            }
+
+            <!-- Display policies -->
+            @{
+                if (permissions_policies_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.LocalPolice" Href="/policies">@Localizer["policies"]</MudNavLink>
+                }
+            }
+
+            @*<MudNavGroup Icon="@Icons.Material.Filled.Archive" Title="Sammlung" Expanded="true">
+
+            <MudNavGroup Icon="@Icons.Custom.Brands.MicrosoftWindows" Title="Windows" Expanded="true">
+            @foreach (var policy in policy_table.AsEnumerable()
+            .Where(row => row.Field<string>("type") == "Windows") // Filter nach tenant_name
+            .Select(row => row.Field<string>("policy_name"))
+            .Distinct())
+            {
+            <MudNavLink Icon="@Icons.Material.Filled.Policy" OnClick="@(() => Update_Selected_Policy(@policy))">@policy</MudNavLink>
+            }
+            </MudNavGroup>
+
+            </MudNavGroup>*@
+
+            <!-- Display rule sets -->
+            @{
+                if (permissions_collections_enabled)
+                {
+                    <MudNavGroup Icon="@Icons.Material.Filled.Folder" Title="@Localizer["collections"]" Expanded="true">
+
+                        @{
+                            if (collections_scripts_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.Code" Href="/manage_scripts">@Localizer["scripts"]</MudNavLink>
+                            }
+
+                            if (collections_jobs_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.Task" Href="/manage_jobs">Jobs</MudNavLink>
+                            }
+
+                            if (collections_sensors_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.Sensors" Href="/manage_sensors">@Localizer["sensors"]</MudNavLink>
+                            }
+
+                            if (collections_antivirus_controlled_folder_access_enabled)
+                            {
+                                @*<MudNavLink Icon="@Icons.Material.Filled.RuleFolder" Href="/controlled_folder_access_manage_rulesets">@Localizer["controlled_folder_access"]</MudNavLink>*@
+                            }
+
+                            if (collections_files_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.FileCopy" Href="/manage_files">@Localizer["files"]</MudNavLink>
+                            }
+
+                        }
+
+                    </MudNavGroup>
+                }
+            }
+
+            <MudNavLink Disabled="true"></MudNavLink>
+            <MudNavLink Disabled="true"></MudNavLink>
+
+            @{
+                if (permissions_events_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.TextSnippet" Href="/events">@Localizer["events"]</MudNavLink>
+                }
+            }
+
+            <MudNavLink Disabled="true"></MudNavLink>
+            <MudNavLink Disabled="true"></MudNavLink>
+
+            @{
+                if (permissions_users_enabled)
+                {
+                    <MudNavLink Icon="@Icons.Material.Filled.Group" Href="/users">@Localizer["users"]</MudNavLink>
+                }
+            }
+
+            <MudNavLink Disabled="true"></MudNavLink>
+            <MudNavLink Disabled="true"></MudNavLink>
+
+            @{
+                if (permissions_settings_enabled)
+                {
+                    <MudNavGroup Icon="@Icons.Material.Filled.Settings" Title="@Localizer["settings"]" Expanded="false">
+                        @{
+                            if (permissions_settings_notifications_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.Notifications" Href="/manage_notifications">@Localizer["notifications"]</MudNavLink>
+                            }
+
+                            if (permissions_settings_system_enabled)
+                            {
+                                <MudNavLink Icon="@Icons.Material.Filled.SettingsEthernet" Href="/system">System</MudNavLink>
+                            }
+                        }
+
+                    </MudNavGroup>
+                }
+            }
+
+        </MudNavMenu>
+
+    </Authorized>
+
+</AuthorizeView>
+
+@code
+{
+    #region Permissions System
+    private string permissions_json = String.Empty;
+    private string permissions_tenants_json = String.Empty;
+
+    private bool permissions_dashboard_enabled = false;
+    private bool permissions_devices_authorized_enabled = false;
+    private bool permissions_devices_unauthorized_enabled = false;
+    private bool permissions_tenants_enabled = false;
+    private bool permissions_automation_enabled = false;
+    private bool permissions_policies_enabled = false;
+    private bool permissions_collections_enabled = false;
+    private bool collections_antivirus_controlled_folder_access_enabled = false;
+    private bool collections_sensors_enabled = false;
+    private bool collections_scripts_enabled = false;
+    private bool collections_jobs_enabled = false;
+    private bool collections_files_enabled = false;
+    private bool permissions_events_enabled = false;
+    private bool permissions_users_enabled = false;
+    private bool permissions_settings_enabled = false;
+    private bool permissions_settings_notifications_enabled = false;
+    private bool permissions_settings_system_enabled = false;
+    private bool permissions_settings_protocols_enabled = false;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+	public bool tenants_full_access = false; // If the user has full access to all tenants, this will be true.
+
+    public class Permissions_Tenants_Activation_State
+    {
+        public string id { get; set; } = String.Empty;
+    }
+
+    bool expanded = true;
+
+    bool policies_expanded_root = false;
+    bool policies_expanded_collection = false;
+    bool policies_expanded_windows = false;
+
+    public class Tenant
+    {
+        public string name { get; set; }
+        public string guid { get; set; }
+    }
+
+    public class Location
+    {
+        public string name { get; set; }
+        public string tenant_name { get; set; }
+        public string guid { get; set; }
+    }
+
+    public static List<Tenant> tenant_list = new List<Tenant> { };
+    public static List<Location> locations_list = new List<Location> { };
+
+    //private List<string> tenant_list = new List<string> { };
+    public DataTable clients_table = new DataTable();
+    public DataTable location_table = new DataTable();
+    public DataTable groups_table = new DataTable();
+    public DataTable policy_table = new DataTable();
+
+    public string selected_tenant = "";
+    public string selected_admin = "";
+    public string selected_client = "";
+
+    private List<string> admin_list = new List<string> { };
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            string scncore_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            // Load other permissions here
+            permissions_dashboard_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "dashboard_enabled");
+            permissions_devices_authorized_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_authorized_enabled");
+            permissions_devices_unauthorized_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_tenants_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_automation_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_policies_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_collections_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            collections_antivirus_controlled_folder_access_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            collections_sensors_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            collections_scripts_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            collections_jobs_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            collections_files_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_events_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_users_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_settings_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_settings_notifications_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_settings_system_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+            permissions_settings_protocols_enabled = await Classes.Authentication.Permissions.Verify_Permission(scncore_username, "devices_unauthorized_enabled");
+			permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(scncore_username, false);
+            tenants_full_access = await Classes.Authentication.Permissions.Verify_Tenants_Full_Access(scncore_username);
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    #endregion
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        //Create clients table
+        clients_table.Columns.Clear();
+        clients_table.Columns.Add("tenant_name");
+        clients_table.Columns.Add("group_name");
+        clients_table.Columns.Add("client_name");
+
+        //Create location table
+        location_table.Columns.Clear();
+        location_table.Columns.Add("tenant_name");
+        location_table.Columns.Add("location_name");
+        location_table.Columns.Add("location_guid");
+
+        //Create groups table
+        groups_table.Columns.Clear();
+        groups_table.Columns.Add("tenant_name");
+        groups_table.Columns.Add("location_name");
+        groups_table.Columns.Add("group_name");
+
+        //Create policy table
+        policy_table.Columns.Clear();
+        policy_table.Columns.Add("policy_name");
+        policy_table.Columns.Add("type");
+
+        selected_tenant = await localStorage.GetItemAsync<string>("tenant_name");
+
+        if (!await Permissions())
+            return;
+
+        await Get_Admins();
+        await Get_Tenants();
+        await Get_Locations();
+        await Get_Groups();
+
+        await Get_Devices();
+
+        StateHasChanged();
+    }
+
+    private async Task Update_Selected_Admin(string admin_name)
+    {
+        await localStorage.SetItemAsync("admin_name", admin_name);
+
+        selected_admin = admin_name;
+        NavigationManager.NavigateTo("/");
+        NavigationManager.NavigateTo("/admin_settings");
+    }
+
+    private async Task Update_Selected_Tenant(string tenant_guid, string tenant_name, bool redirect, string path)
+    {
+        string current_url = NavigationManager.Uri;
+        string old_tenant = selected_tenant;
+
+        await localStorage.SetItemAsync("tenant_guid", tenant_guid);
+        await localStorage.SetItemAsync("tenant_name", tenant_name);
+
+        selected_tenant = tenant_guid;
+
+        if (redirect)
+            Redirect(path);
+    }
+
+    private async Task Update_Selected_Location(string location_name, bool redirect, string path)
+    {
+        string current_url = NavigationManager.Uri;
+        string old_tenant = selected_tenant;
+
+        await localStorage.SetItemAsync("location_name", location_name);
+
+        if (redirect)
+            Redirect(path);
+    }
+
+    private async Task Update_Selected_Group(string tenant_guid, string location_guid, string location_name, string group_name, bool redirect, string path)
+    {
+        Logging.Handler.Debug("NavMenu -> Update_Selected_Group", "tenant_guid", tenant_guid);
+        Logging.Handler.Debug("NavMenu -> Update_Selected_Group", "location_name", location_name);
+        Logging.Handler.Debug("NavMenu -> Update_Selected_Group", "group_name", group_name);
+
+        await localStorage.SetItemAsync("location_name", location_name);
+        await localStorage.SetItemAsync("location_guid", location_guid);
+        await localStorage.SetItemAsync("group_name", group_name);
+
+        if (redirect)
+            Redirect(path);
+    }
+
+    private async Task Update_Selected_Policy(string policy_name)
+    {
+        await localStorage.SetItemAsync("policy_name", policy_name);
+
+        Redirect("/policy_settings");
+    }
+
+    private async Task Get_Admins()
+    {
+        admin_list.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM accounts;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                    admin_list.Add(reader.GetString("username"));
+            }
+            reader.Close();
+
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Admins_Async", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Get_Tenants()
+    {
+        tenant_list.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants ORDER BY name ASC;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (reader.Read())
+                {
+                    Logging.Handler.Debug("NavMenu -> Get_Tenants", "id", reader.GetInt32("id").ToString());
+
+                    if (permissions_tenants_list.Contains(reader.GetInt32("id").ToString()))
+                    {
+                        tenant_list.Add(new Tenant { name = reader.GetString("name"), guid = reader.GetString("guid") });
+                    }
+                }
+            }
+
+            await reader.CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Tenants", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    public async Task Get_Locations()
+    {
+        location_table.Rows.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `locations`;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                {
+                    string tenant_name = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM tenants WHERE id = " + reader["tenant_id"].ToString() + ";", "name");
+                    locations_list.Add(new Location { name = reader.GetString("name"), tenant_name = tenant_name ?? String.Empty, guid = reader.GetString("guid") });
+
+                    location_table.Rows.Add(reader["name"].ToString() ?? String.Empty, tenant_name ?? String.Empty, reader["guid"].ToString());
+                }
+            }
+            reader.Close();
+
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Locations", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    public async Task Get_Groups()
+    {
+        groups_table.Rows.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `groups`;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                {
+                    string tenant_name = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM tenants WHERE id = " + reader["tenant_id"].ToString() + ";", "name");
+                    string location_name = await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM locations WHERE id = " + reader["location_id"].ToString() + ";", "name");
+                    groups_table.Rows.Add(tenant_name ?? String.Empty, location_name ?? String.Empty, reader["name"].ToString() ?? String.Empty);
+                }
+            }
+            reader.Close();
+
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Groups", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    public async Task Get_Devices()
+    {
+        clients_table.Rows.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM devices;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                    clients_table.Rows.Add(reader["tenant_name"].ToString() ?? String.Empty, reader["group_name"].ToString() ?? String.Empty, reader["device_name"].ToString() ?? String.Empty);
+            }
+            reader.Close();
+
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Devices_Async", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private async Task Get_Policies()
+    {
+        policy_table.Rows.Clear();
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM policies;", conn);
+            DbDataReader reader = await command.ExecuteReaderAsync();
+
+            if (reader.HasRows)
+            {
+                while (await reader.ReadAsync())
+                    policy_table.Rows.Add(reader["policy_name"].ToString() ?? String.Empty, reader["type"].ToString());
+            }
+            reader.Close();
+
+            conn.Close();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("class", "Get_Policies", ex.Message);
+        }
+        finally
+        {
+            conn.Close();
+        }
+    }
+
+    private void Redirect(string path)
+    {
+        NavigationManager.NavigateTo(Application_Paths.redirect_path);
+        NavigationManager.NavigateTo(path);
+    }
+}

@@ -1,0 +1,80 @@
+﻿@using System.Text.RegularExpressions
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="FirstInput" Label="GitHub URL Example: https://github.com/scncore-plus/scripts/blob/main/scripts/example.ps1" Variant="Variant.Filled" Immediate="true" />
+
+        @if (String.IsNullOrEmpty(FirstInput))
+        {
+            <MudText Class="mt-2">If the script is present in our collection, it will be updated. Otherwise it will be imported.</MudText>
+        }
+
+        @{
+			if (isValidUrl)
+			{
+			    <MudText Class="mt-2" Color="Color.Success">Valid URL</MudText>
+			}
+			else if (!String.IsNullOrEmpty(FirstInput))
+			{
+			    <MudText Class="mt-2" Color="Color.Error">Invalid URL</MudText>
+			}
+        }
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Cancel" Color="Color.Default" Size="Size.Small">Cancel</MudButton>
+        <MudButton OnClick="@Submit" Color="Color.Success" Variant="Variant.Filled" Size="Size.Small" Disabled="@(String.IsNullOrEmpty(FirstInput) || Check_Valid_Url())">Import</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    public string FirstInput { get; set; } = string.Empty;
+
+    private bool isValidUrl = false;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+    }
+
+    private bool Check_Valid_Url()
+    {
+        // Check if the URL is a valid GitHub repository url using regex
+        string pattern = @"^https:\/\/github\.com\/[a-zA-Z0-9._-]+\/[a-zA-Z0-9._-]+\/blob\/[a-zA-Z0-9._-]+\/[\w\-\.\/]+$";
+
+        if (Regex.IsMatch(FirstInput, pattern))
+        {
+            isValidUrl = true;
+            return false;
+		}
+        else
+		{
+			isValidUrl = false;
+			return true;
+		}
+    }
+
+    void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(FirstInput));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

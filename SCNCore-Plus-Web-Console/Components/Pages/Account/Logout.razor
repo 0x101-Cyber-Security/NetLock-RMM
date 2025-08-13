@@ -1,0 +1,54 @@
+﻿@page "/logout"
+
+@using Microsoft.AspNetCore.Authentication
+@using SCNCore_Plus_Web_Console.Classes.Authentication
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject ProtectedSessionStorage SessionStorage
+
+<h3>Logout</h3>
+
+@code {
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        try
+        {
+            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider); // not required if injecting it
+            await sessionStorage.DeleteAsync("SessionToken");
+
+            // Log out and reset claims
+            var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
+            await customAuthStateProvider.UpdateAuthentificationState(null, true);
+
+            // Weiterleiten zur Login-Seite
+            NavigationManager.NavigateTo("/login", true);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/logout", "AfterInitializedAsync", ex.ToString());
+            NavigationManager.NavigateTo("/login", true);
+        }
+    }
+}
