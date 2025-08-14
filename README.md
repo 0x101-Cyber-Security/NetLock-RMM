@@ -35,7 +35,13 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 
 ### 🛠️ **Powerful Remote Tools**
 - **Real-time remote shell**, file browser, task manager, and service manager.
-- **Remote control** and support that’s as intuitive as TeamViewer.
+- **Remote screen control (windows)** and support that’s as intuitive as TeamViewer.
+  - Full support for session switching and display switching
+  - Unattended access
+  - Ctrl + Alt + Del support for elevated access
+  - Built-in session recording
+  - Send input as keystrokes, ideal for automating password entry
+  - Mobile support (wip)    
 
 ### 📁 **Integrated File Server**
 - Host your favorite tools directly within NetLock RMM and embed them into your scripts.
