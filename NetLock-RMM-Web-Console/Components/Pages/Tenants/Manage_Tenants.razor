@@ -2,7 +2,6 @@
 @using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
-@using OfficeOpenXml;
 @using System.Xml.Serialization;
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -449,8 +448,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json();
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet();
             else if (result.Data.ToString() == "XML")
                 await Export_Data_XML();
             else if (result.Data.ToString() == "HTML")
@@ -551,45 +548,6 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("Tenant_Management.Manage_Tenants", "Export_Data_HTML", ex.Message);
-        }
-    }
-
-    private async Task Export_Data_Spreadsheet()
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                int headerRow = 1;
-                worksheet.Cells[headerRow, 1].Value = "Name";
-                worksheet.Cells[headerRow, 2].Value = "company";
-                worksheet.Cells[headerRow, 3].Value = "created";
-                worksheet.Cells[headerRow, 4].Value = "author";
-                worksheet.Cells[headerRow, 5].Value = "description";
-
-                int dataRow = headerRow + 1;
-                foreach (var entry in tenants_mysql_data)
-                {
-                    worksheet.Cells[dataRow, 1].Value = entry.tenant_name;
-                    worksheet.Cells[dataRow, 2].Value = entry.company;
-                    worksheet.Cells[dataRow, 3].Value = entry.date;
-                    worksheet.Cells[dataRow, 4].Value = entry.author;
-                    worksheet.Cells[dataRow, 5].Value = entry.description;
-
-                    dataRow++;
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", "tenants.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("Tenant_Management.Manage_Tenants", "Export_Data_Spreadsheet", ex.Message);
         }
     }
 

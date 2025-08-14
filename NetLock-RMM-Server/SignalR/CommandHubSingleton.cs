@@ -28,24 +28,53 @@ namespace NetLock_RMM_Server.SignalR
         // Example method to interact with dictionaries
         public void AddClientConnection(string clientId, string identity)
         {
-            _clientConnections.TryAdd(clientId, identity);
+            try
+            {
+                _clientConnections.TryAdd(clientId, identity);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("CommandHubSingleton", "AddClientConnection", ex.ToString());
+            }
         }
 
         public void RemoveClientConnection(string clientId)
         {
-            _clientConnections.TryRemove(clientId, out _);
+            try
+            {
+                _clientConnections.TryRemove(clientId, out _);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("CommandHubSingleton", "RemoveClientConnection", ex.ToString());
+            }
         }
 
         // Add admin command to dictionary
         public void AddAdminCommand(string responseId, string command)
         {
-            _adminCommands.TryAdd(responseId, command);
+            try
+            {
+                _adminCommands.TryAdd(responseId, command);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("CommandHubSingleton", "AddAdminCommand", ex.ToString());
+            }
         }
 
         // Remove admin command from dictionary
         public bool RemoveAdminCommand(string responseId)
         {
-            return _adminCommands.TryRemove(responseId, out _);
+            try
+            {
+                return _adminCommands.TryRemove(responseId, out _);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("CommandHubSingleton", "RemoveAdminCommand", ex.ToString());
+                return false;
+            }
         }
 
         public void Initialize(IHubContext<CommandHub> hubContext)
@@ -56,13 +85,20 @@ namespace NetLock_RMM_Server.SignalR
         // Get admin identity from command
         public string GetAdminIdentity(string commandId)
         {
-            if (_adminCommands.TryGetValue(commandId, out string identity))
+            try
             {
-                return identity;
+                if (_adminCommands.TryGetValue(commandId, out string identity))
+                {
+                    return identity;
+                }
+
+                return string.Empty;
             }
-
-            return string.Empty;
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("CommandHubSingleton", "GetAdminIdentity", ex.ToString());
+                return string.Empty;
+            }
         }
-
     }
 }

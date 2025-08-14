@@ -25,6 +25,7 @@ namespace Global.Initialization
                 GC.WaitForPendingFinalizers();
 
                 //Delete Data DB
+                /*
                 while (File.Exists(data_db_path))
                 {
                     try
@@ -40,8 +41,56 @@ namespace Global.Initialization
 
                     Thread.Sleep(500);
                 }
+                */
 
-                Thread.Sleep(2500);
+                if (File.Exists(data_db_path))
+                {
+                    // Drop all tables in the existing database
+                    using (var conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
+                    {
+                        conn.Open();
+
+                        // Query alle Tabellen ermitteln
+                        var getTablesCmd = conn.CreateCommand();
+                        getTablesCmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table';";
+
+                        var tables = new List<string>();
+                        using (var reader = getTablesCmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                tables.Add(reader.GetString(0));
+                            }
+                        }
+
+                        // Tabellen droppen
+                        foreach (var table in tables)
+                        {
+                            if (table == "sqlite_sequence") // Diese Systemtabelle nicht droppen
+                                continue;
+
+                            var dropCmd = conn.CreateCommand();
+                            dropCmd.CommandText = $"DROP TABLE IF EXISTS {table};";
+                            dropCmd.ExecuteNonQuery();
+                        }
+                    }
+
+                    Logging.Debug("Initialization.Database.NetLock_Data_Setup", "check_db", "All tables dropped.");
+
+                    // Shrink the database file
+                    using (var conn = new SqliteConnection(Application_Settings.NetLock_Data_Database_String))
+                    {
+                        conn.Open();
+                        var vacuumCmd = conn.CreateCommand();
+                        vacuumCmd.CommandText = "VACUUM;";
+                        vacuumCmd.ExecuteNonQuery();
+                    }
+
+                    Logging.Debug("Initialization.Database.NetLock_Data_Setup", "check_db", "Database file shrunk.");
+
+                    // Wait for a moment to ensure the database file is relieved from any locks
+                    Thread.Sleep(2500);
+                }
 
                 //Create Data DB
                 try
@@ -184,8 +233,6 @@ namespace Global.Initialization
                 if (!File.Exists(report_db_path))
                 {
                     Logging.Debug("Database_Setup", "create_db (events)", "DB created.");
-
-                    Thread.Sleep(2500);
 
                     using (SqliteConnection db_conn = new SqliteConnection(Application_Settings.NetLock_Events_Database_String))
                     {

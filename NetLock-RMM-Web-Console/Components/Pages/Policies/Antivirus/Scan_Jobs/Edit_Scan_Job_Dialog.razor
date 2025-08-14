@@ -3,7 +3,6 @@
 @using System.Text.Json;
 @using System.Text.Json.Nodes;
 @using System.Text;
-@using OfficeOpenXml;
 @using System.Security.Claims
 
 @inject NavigationManager NavigationManager
@@ -775,8 +774,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json(type);
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet(type);
             else if (result.Data.ToString() == "HTML")
                 await Export_Data_HTML(type);
         }
@@ -839,57 +836,6 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard", "Export_Data_HTML", ex.ToString());
-        }
-    }
-
-    private async Task Export_Data_Spreadsheet(string type)
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                if (type == "events")
-                {
-                    if (antivirus_scan_job_directories_mysql_data.Count > 0)
-                    {
-                        int headerRow = 1;
-
-                        // Build the table header based on the properties of the data class
-                        int columnIndex = 1;
-                        foreach (var property in antivirus_scan_job_directories_mysql_data.First().GetType().GetProperties())
-                        {
-                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
-                            columnIndex++;
-                        }
-
-                        int dataRow = headerRow + 1;
-
-                        // Build the table entries based on the data
-                        foreach (var entry in antivirus_scan_job_directories_mysql_data)
-                        {
-                            columnIndex = 1;
-                            foreach (var property in entry.GetType().GetProperties())
-                            {
-                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
-                                columnIndex++;
-                            }
-
-                            dataRow++;
-                        }
-                    }
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // JavaScript interop is used here to download the file
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/dashboard", "Export_Data_Spreadsheet", ex.ToString());
         }
     }
 

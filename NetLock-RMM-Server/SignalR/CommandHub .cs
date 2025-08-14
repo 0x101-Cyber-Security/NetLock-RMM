@@ -109,6 +109,22 @@ namespace NetLock_RMM_Server.SignalR
                 {
                     decodedIdentityJson = Uri.UnescapeDataString(deviceIdentityEncoded);
                     Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", "Device identity: " + decodedIdentityJson);
+
+                    var deviceIdentity = JsonSerializer.Deserialize<Device_Identity>(decodedIdentityJson);
+
+                    // If the device is already in the connection list, we should find it here
+                    string deviceClientId = await Get_Device_ClientId(deviceIdentity.device_name, deviceIdentity.location_guid, deviceIdentity.tenant_guid);
+
+                    // If ^ is the case, we should remove the old device from the connected clients to avoid duplicates
+                    if (!String.IsNullOrEmpty(deviceClientId))
+                    {
+                        Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", "Old device found in the connected list. Remove it.");
+
+                        // Remove the old device from the connected clients
+                        CommandHubSingleton.Instance.RemoveClientConnection(deviceClientId);
+                        
+                        Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", "Old device removed from the connected clients.");
+                    }
                 }
                 else if (!string.IsNullOrEmpty(adminIdentityEncoded))
                 {

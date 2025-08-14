@@ -79,6 +79,26 @@ else
 if (!String.IsNullOrEmpty(publicOverrideUrl))
     Web_Console.publicOverrideUrl = publicOverrideUrl;
 
+// Cloud instances use the remote server connection string for agent configuration as its fixed and allows easier onboarding for customers
+if (Members_Portal.cloud_enabled)
+{
+    //(?<= https ?:\/\/)([a - zA - Z0 - 9\-\.] +):(\d +)
+    // Use regex to extract the server and port from the publicOverrideUrl
+    var match = System.Text.RegularExpressions.Regex.Match(publicOverrideUrl, @"^(https?://)?([^:/]+)(?::(\d+))?");
+
+    if (match.Success)
+    {
+        var server = match.Groups[2].Value;
+        var port = match.Groups[3].Success ? match.Groups[3].Value : "443"; // Default to 443 if no port is specified
+
+        Web_Console.agentConfigurationConnectionString = $"{server}:{port}";
+    }
+    else
+    {
+        Console.WriteLine("Invalid publicOverrideUrl format. Using default remote server configuration.");
+    }
+}
+
 // Title
 Web_Console.title = builder.Configuration.GetValue<string>("Webinterface:Title", "NetLock RMM");
 
@@ -88,7 +108,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START da198fa0-69a5-4630-80cf-184a79799b5b //OSSCH_END
+//OSSCH_START 9e2e37be-3891-48e9-8422-813ca3dbd9f4 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -167,6 +187,10 @@ Console.WriteLine("[Webinterface]");
 Console.WriteLine($"Language: {language}");
 Console.WriteLine($"Title: {Web_Console.title}");
 Console.WriteLine($"Public Override Domain: {Web_Console.publicOverrideUrl}");
+
+if (Members_Portal.cloud_enabled)
+    Console.WriteLine($"Agent Configuration Connection String: {Web_Console.agentConfigurationConnectionString}");
+Console.WriteLine(Environment.NewLine);
 
 // Logging
 Console.WriteLine("[Logging]");
@@ -488,7 +512,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 732debd0-7b4e-42f3-9220-c20536081d1c //OSSCH_END
+//OSSCH_START d7d1aa80-84fe-4e71-8ba5-f9374658c00d //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 

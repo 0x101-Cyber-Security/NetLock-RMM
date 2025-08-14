@@ -2,6 +2,7 @@
 @using System.Data.Common;
 @using System.Text.Json;
 @using System.Security.Claims
+@using System.Net.Mail;
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -26,10 +27,16 @@
             <DialogContent>
                 <MudText>@Localizer["note"]</MudText>
                 <MudTextField Label="@Localizer["username"]" T="string" @bind-Value="@smtp.username" Immediate="@true" />
+                
+                @if (!IsValidEmail(smtp.username))
+                {
+                    <MudTextField Label="From address" T="string" @bind-Value="@fromAddress" Immediate="true" />
+                }
+
+                <MudCheckBox Color="Color.Primary" T="bool" @bind-Value="@smtp.ssl">SSL/TLS</MudCheckBox>
                 <MudTextField Label="@Localizer["password"]" InputType="@PasswordInput" @bind-Value="@smtp.password" Adornment="Adornment.End" AdornmentIcon="@PasswordInputIcon" OnAdornmentClick="Show_Password" AdornmentAriaLabel="@Localizer["display_password"]" Immediate="@true" />
                 <MudTextField Label="Server" T="string" @bind-Value="@smtp.server" Immediate="@true" />
                 <MudTextField Label="Port" T="string" @bind-Value="@smtp.port" Immediate="@true" />
-                <MudCheckBox Color="Color.Primary" T="bool" @bind-Value="@smtp.ssl">SSL/TLS</MudCheckBox>
                 <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Info" OnClick="@Test_Smtp" Disabled="@Form_Valid()">@Localizer["test"]</MudButton>
 
             </DialogContent>
@@ -51,6 +58,7 @@
     bool smtp_invalid = true;
 
     public Smtp_Settings smtp = new Smtp_Settings();
+    private string fromAddress = String.Empty;
 
     public class Smtp_Settings
     {
@@ -157,7 +165,7 @@
         this.Snackbar.Configuration.ShowCloseIcon = true;
         this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
-        string result = await Classes.Helper.Notifications.Smtp.Test_Smtp(smtp.username, smtp.password, smtp.server, Convert.ToInt32(smtp.port), smtp.ssl);
+        string result = await Classes.Helper.Notifications.Smtp.Test_Smtp(smtp.username, smtp.password, smtp.server, Convert.ToInt32(smtp.port), smtp.ssl, fromAddress);
 
         if (result == "success")
         {
@@ -168,6 +176,19 @@
         {
             smtp_invalid = true;
             this.Snackbar.Add(Localizer["test_failed"] + " " + result, Severity.Error);
+        }
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new MailAddress(email);
+            return true;
+        }
+        catch
+        {
+            return false;
         }
     }
 

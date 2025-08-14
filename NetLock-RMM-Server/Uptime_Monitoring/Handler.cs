@@ -23,9 +23,6 @@ namespace NetLock_RMM_Server.Uptime_Monitoring
 
             try
             {
-                // Check own application runtime to
-
-
                 // Extract device_name, location_name & tenant_name from JSON
                 Logging.Handler.Debug("Uptime_Monitoring.Handler.Do", "identityJson", identityJson);
 

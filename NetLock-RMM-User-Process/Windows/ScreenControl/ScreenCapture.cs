@@ -58,29 +58,46 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
                 Console.WriteLine("screenWidth: " + screenWidth);
                 Console.WriteLine("screenHeight: " + screenHeight);
 
-                // Bitmap anlegen und per BitBlt füllen
-                Bitmap bmp = CaptureWithBitBlt(monitorRect);
+                using Bitmap bmp = CaptureWithBitBlt(monitorRect);
 
-                // Qualität anpassen, damit Größe <= maxFileSizeKB
-                int quality = 90;
-                byte[] jpegBytes;
+                // JPEG-Qualität per Binärsuche bestimmen
+                int minQ = 10, maxQ = 90;
+                byte[] bestBytes = null;
+                int bestQuality = minQ;
 
-                while (true)
+                while (minQ <= maxQ)
                 {
-                    jpegBytes = EncodeJpeg(bmp, quality);
-                    if (jpegBytes.Length <= maxFileSizeKB * 1024 || quality <= 10)
-                        break;
-                    quality -= 5; // Qualität schrittweise reduzieren
+                    int midQ = (minQ + maxQ) / 2;
+                    using var ms = new MemoryStream();
+                    using var encoderParams = CreateEncoderParams(midQ);
+
+                    bmp.Save(ms, jpegEncoder, encoderParams);
+                    var currentBytes = ms.ToArray();
+
+                    if (currentBytes.Length <= maxFileSizeKB * 1024)
+                    {
+                        bestBytes = currentBytes;
+                        bestQuality = midQ;
+                        minQ = midQ + 1; // Versuche höhere Qualität
+                    }
+                    else
+                    {
+                        maxQ = midQ - 1; // Zu groß
+                    }
                 }
 
-                // Optional speichern (Debug)
-                /*string filePath = Path.Combine("C:\\temp", $"screenshot_{screenIndex}.jpg");
+                if (bestBytes == null)
+                    throw new Exception("Unable to compress image under max size limit.");
+
+                // Optional Debug-Speichern
+                /*
+                string filePath = Path.Combine("C:\\temp", $"screenshot_{screenIndex}.jpg");
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                await File.WriteAllBytesAsync(filePath, jpegBytes);
-                
-                Console.WriteLine($"Screenshot saved to: {filePath} ({jpegBytes.Length / 1024} KB, Quality: {quality}%)");
+                await File.WriteAllBytesAsync(filePath, bestBytes);
+                Console.WriteLine($"Screenshot saved to: {filePath} ({bestBytes.Length / 1024} KB, Quality: {bestQuality}%)");
                 */
-                return Convert.ToBase64String(jpegBytes);
+
+                return Convert.ToBase64String(bestBytes);
             }
             catch (Exception ex)
             {
@@ -89,6 +106,14 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
             }
         }
 
+        private static readonly ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageDecoders().First(c => c.FormatID == ImageFormat.Jpeg.Guid);
+
+        private static EncoderParameters CreateEncoderParams(int quality)
+        {
+            var p = new EncoderParameters(1);
+            p.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+            return p;
+        }
 
         public static Bitmap CaptureWithBitBlt(Rect monitorRect)
         {
@@ -111,12 +136,12 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
         private static byte[] EncodeJpeg(Bitmap bmp, int quality)
         {
             using var ms = new MemoryStream();
-            var encoder = GetEncoder(ImageFormat.Jpeg);
-            var encoderParams = new EncoderParameters(1);
+            using var encoderParams = new EncoderParameters(1);
             encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-            bmp.Save(ms, encoder, encoderParams);
+            bmp.Save(ms, jpegEncoder, encoderParams);
             return ms.ToArray();
         }
+
 
 
         private static ImageCodecInfo GetEncoder(ImageFormat format)

@@ -315,7 +315,7 @@ namespace Global.Device_Information
                     double uptimeSeconds = double.Parse(parts[0]);
 
                     // Calculate the last boot time
-                    DateTime lastBootTime = DateTime.UtcNow.Subtract(TimeSpan.FromSeconds(uptimeSeconds));
+                    DateTime lastBootTime = DateTime.Now.Subtract(TimeSpan.FromSeconds(uptimeSeconds));
 
                     // Format the last boot time
                     string formattedBootTime = lastBootTime.ToString("dd.MM.yyyy HH:mm:ss");
@@ -371,47 +371,10 @@ namespace Global.Device_Information
                 {
                     try
                     {
-                        // 1) Query all LogonSessions with LogonType=2 (Interactive)
-                        var sessionQuery = new ManagementObjectSearcher("root\\CIMV2", "SELECT LogonId, StartTime FROM Win32_LogonSession WHERE LogonType = 2");
+                        lastLoggedOnUser = UserSessionHelper.GetActiveUser();
 
-                        var sessions = sessionQuery.Get().Cast<ManagementObject>().Select(obj =>
-                            {
-                                var id = obj["LogonId"]?.ToString();
-                                var start = obj["StartTime"]?.ToString();
-                                DateTime startTime = ManagementDateTimeConverter.ToDateTime(start);
-                                return new { LogonId = id, StartTime = startTime };
-                            }).ToList();
-
-                        if (!sessions.Any())
-                            return "-";
-
-                        // 2) Determine the associated Win32_Account for each session (via Win32_LoggedOnUser)
-                        var users = sessions.Select(sess =>
-                        {
-                            string query = $"ASSOCIATORS OF {{Win32_LogonSession.LogonId='{sess.LogonId}'}} WHERE AssocClass=Win32_LoggedOnUser Role=Dependent";
-                            var assoc = new ManagementObjectSearcher("root\\CIMV2", query).Get().Cast<ManagementObject>().FirstOrDefault();
-
-                            if (assoc == null)
-                                return null;
-
-                            // Domain\UserName
-                            string domain = assoc["Domain"]?.ToString();
-                            string name = assoc["Name"]?.ToString();
-                            
-                            return new
-                            {
-                                User = string.IsNullOrEmpty(domain) ? name : $"{domain}\\{name}",
-                                sess.StartTime
-                            };
-                        }).Where(x => x != null).ToList();
-
-                        if (!users.Any())
-                            return "-";
-
-                        // 3) Sort by StartTime and return the most recent
-                        var latest = users.OrderByDescending(x => x.StartTime).First();
-
-                        lastLoggedOnUser = latest.User;
+                        if (string.IsNullOrEmpty(lastLoggedOnUser))
+                            lastLoggedOnUser = "-";
                     }
                     catch (Exception ex)
                     {

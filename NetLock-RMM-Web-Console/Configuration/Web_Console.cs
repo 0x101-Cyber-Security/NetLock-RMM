@@ -7,5 +7,6 @@
         public static bool loggingEnabled = false;
         public static string token_service_secret_key = String.Empty; // generated on startup
         public static string publicOverrideUrl = String.Empty; // used to override the public URL for the web console, useful for reverse proxies or load balancers
+        public static string agentConfigurationConnectionString = String.Empty; // used for cloud instances to 
     }
 }

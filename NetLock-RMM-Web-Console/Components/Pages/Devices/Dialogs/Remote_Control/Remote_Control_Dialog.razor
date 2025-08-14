@@ -1,7 +1,6 @@
 @using MySqlConnector
 @using System.Data.Common
 @using System.Text.Json
-@using OfficeOpenXml
 @using System.Xml.Serialization
 @using System.Text
 @using System.Text.RegularExpressions
@@ -575,12 +574,12 @@
                         // Set the image source
                         this.imageSrc = imageSrc;
 
-                        Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
+                        //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START 56833560-38e2-4eb7-ba41-6799653f9f90 //OSSCH_END
+                        //OSSCH_START 61d44acd-8c73-4991-a5fe-20174c4fe9d7 //OSSCH_END
                         // Check if the image is rendered correctly
-                        if (imageSrc.Length == 22) // 22 = empty image
+                        if (imageSrc.Length == 20063) // 22 = empty image
                         {
                             rendered = false;
                             remoteScreenFetchTries++;
@@ -1196,7 +1195,7 @@
         string command_type = "2"; // 2 is default = keyboard input
         string clipboardContent = String.Empty;
 
-        Console.WriteLine(DateTime.Now + ": Remote_Keyboard_Input: " + key_code + " simulate: " + simulate);
+        //Console.WriteLine(DateTime.Now + ": Remote_Keyboard_Input: " + key_code + " simulate: " + simulate);
 
         if (simulate)
         {
@@ -1318,7 +1317,7 @@
         recordSession = false;
 
         // Create the new gif
-        GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
+        //GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
 
         loading_overlay = false;
         StateHasChanged();
@@ -1502,7 +1501,7 @@
             return;
 
         // Debug-Ausgabe
-        Console.WriteLine($"Key: {e.Key}, Code: {e.Code}, Ctrl: {e.CtrlKey}, Shift: {e.ShiftKey}, Alt: {e.AltKey}");
+        //Console.WriteLine($"Key: {e.Key}, Code: {e.Code}, Ctrl: {e.CtrlKey}, Shift: {e.ShiftKey}, Alt: {e.AltKey}");
 
         // Prüfen, ob Modifier verwendet wurden
         bool hasModifier = e.CtrlKey || e.ShiftKey || e.AltKey || e.MetaKey;
@@ -1532,7 +1531,7 @@
             input = input.ToLower();
         }
 
-        Console.WriteLine($"Send: {input}");
+        //Console.WriteLine($"Send: {input}");
 
         await Remote_Keyboard_Input(input, false);
     }
@@ -1578,7 +1577,7 @@
     /// </summary>
     private string NormalizeKey(string key, bool shiftPressed)
     {
-        Console.WriteLine("NormalizeKey: " + key);
+        //Console.WriteLine("NormalizeKey: " + key);
 
         if (string.IsNullOrEmpty(key))
             return "";

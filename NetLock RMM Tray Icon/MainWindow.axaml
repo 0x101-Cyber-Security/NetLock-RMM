@@ -1,0 +1,78 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetLock_RMM_Tray_Icon.MainWindow"
+        Title="NetLock Chat"
+        Width="800" Height="475"
+        CanResize="False"
+        MinWidth="500" MinHeight="400"
+        Background="#F4F5F7"
+        >
+
+	<DockPanel LastChildFill="True" Margin="20">
+
+		<!-- Kopfzeile -->
+		<TextBlock DockPanel.Dock="Top"
+                   Text="NetLock RMM Chat"
+                   FontSize="24"
+                   FontWeight="SemiBold"
+                   Foreground="#333"
+                   Margin="0,0,0,10" />
+
+		<!-- Chatverlauf -->
+		<Border DockPanel.Dock="Top"
+                Height="340"
+                CornerRadius="12"
+                Background="White"
+                Padding="10"
+                Margin="0,0,0,10"
+                >
+			<!-- DropShadowEffect nicht verfügbar in Avalonia, deshalb weggelassen -->
+			<ScrollViewer x:Name="ChatScrollViewer"
+                          VerticalScrollBarVisibility="Auto">
+				<StackPanel x:Name="ChatMessagesPanel"
+                            Spacing="6"/>
+			</ScrollViewer>
+		</Border>
+
+		<!-- Eingabebereich -->
+		<Border DockPanel.Dock="Bottom"
+                Background="White"
+                CornerRadius="12"
+                Padding="8"
+                >
+			<!-- DropShadowEffect nicht verfügbar, entfernt -->
+			<Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
+				<TextBox x:Name="MessageTextBox"
+                         Grid.Column="0"
+                         Margin="0,0,8,0"
+                         Height="36"
+                         Watermark="Nachricht eingeben..."
+                         VerticalContentAlignment="Center"
+                         Background="#F0F2F5"
+                         BorderBrush="#DDD"
+                         CornerRadius="8"/>
+				<Button x:Name="SendButton"
+                        Grid.Column="1"
+                        Content="Senden"
+                        Width="100" Height="36"
+                        Background="#3B82F6"
+                        Foreground="White"
+                        FontWeight="SemiBold"
+                        BorderBrush="#3B82F6"
+                        CornerRadius="8">
+					<Button.Styles>
+						<Style Selector="Button:hover">
+							<Setter Property="Background" Value="#2563EB"/>
+							<Setter Property="BorderBrush" Value="#2563EB"/>
+						</Style>
+						<Style Selector="Button:pressed">
+							<Setter Property="Background" Value="#1E40AF"/>
+							<Setter Property="BorderBrush" Value="#1E40AF"/>
+						</Style>
+					</Button.Styles>
+				</Button>
+			</Grid>
+		</Border>
+
+	</DockPanel>
+</Window>

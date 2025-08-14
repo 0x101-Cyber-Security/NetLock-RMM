@@ -1,7 +1,6 @@
 ﻿@using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
-@using OfficeOpenXml;
 
 @inject NavigationManager NavigationManager
 @inject ILocalStorageService localStorage
@@ -17,7 +16,6 @@
         <MudText Typo="Typo.body1">@Localizer["text"]</MudText>
         <MudSelect T="string" @bind-Value=this.type Label="@Localizer["file_format"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
             <MudSelectItem Value="@("JSON")" />
-            <MudSelectItem Value="@("Spreadsheet (.xlsx)")" />
             <MudSelectItem Value="@("HTML")" />
         </MudSelect>
     </DialogContent>

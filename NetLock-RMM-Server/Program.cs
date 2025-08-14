@@ -91,6 +91,7 @@ if (membersPortal.Enabled)
 Console.WriteLine("OS: " + RuntimeInformation.OSDescription);
 Console.WriteLine("Architecture: " + RuntimeInformation.OSArchitecture);
 Console.WriteLine("Framework: " + RuntimeInformation.FrameworkDescription);
+Console.WriteLine("Server started at: " + NetLock_RMM_Server.Configuration.Server.serverStartTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture));
 Console.WriteLine(Environment.NewLine);
 
 // Output version
@@ -283,7 +284,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 547c1960-c4cb-40c7-ad23-3ae77a192595 //OSSCH_END
+        //OSSCH_START c315f156-62c8-49a5-9c33-9f50f3684f8a //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1382,7 +1383,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 487afad8-03cb-4576-9b72-60dc5ccd7458 //OSSCH_END
+    //OSSCH_START ab7d3f12-ec94-41f1-a5e5-0208ec95593d //OSSCH_END
 }
 
 /*

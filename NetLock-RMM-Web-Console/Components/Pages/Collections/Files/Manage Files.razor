@@ -4,7 +4,6 @@
 @using System.Data.Common;
 @using System.Text.Json;
 @using System.Text.Json.Nodes;
-@using OfficeOpenXml;
 @using System.Xml.Serialization;
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -147,6 +146,8 @@
                                             }
 
                                             <MudMenuItem @onclick="async () => { await Download_File(files_row.guid, true, files_row.password); }">@Localizer["download"]</MudMenuItem>
+                                            <MudMenuItem @onclick="async () => { await CopyToClipboard(files_row.name); }">Copy filename</MudMenuItem>
+                                            <MudMenuItem @onclick="async () => { await CopyToClipboard(files_row.path, files_row.name); }">Copy filepath</MudMenuItem>
                                         }
                                     }
                                 </ChildContent>
@@ -629,7 +630,7 @@
         Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
         string url = String.Empty;
-        
+
         if (_private)
         {
             if(!String.IsNullOrEmpty(Configuration.Web_Console.publicOverrideUrl))
@@ -646,6 +647,14 @@
         }
 
         await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", url);
+
+        Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
+    }
+
+    private async Task CopyToClipboard(params string[] contents)
+    {
+        var combinedContent = string.Join("\n", contents.Where(c => !string.IsNullOrWhiteSpace(c)));
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", combinedContent);
 
         Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
     }
@@ -1018,8 +1027,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json(type);
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet(type);
             else if (result.Data.ToString() == "HTML")
                 await Export_Data_HTML(type);
         }
@@ -1085,55 +1092,5 @@
         }
     }
 
-    private async Task Export_Data_Spreadsheet(string type)
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                if (type == "files")
-                {
-                    if (files_mysql_data.Count > 0)
-                    {
-                        int headerRow = 1;
-
-                        // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
-                        int columnIndex = 1;
-                        foreach (var property in files_mysql_data.First().GetType().GetProperties())
-                        {
-                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
-                            columnIndex++;
-                        }
-
-                        int dataRow = headerRow + 1;
-
-                        // Baue die Tabelleneinträge basierend auf den Daten
-                        foreach (var entry in files_mysql_data)
-                        {
-                            columnIndex = 1;
-                            foreach (var property in entry.GetType().GetProperties())
-                            {
-                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
-                                columnIndex++;
-                            }
-
-                            dataRow++;
-                        }
-                    }
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // Hier wird JavaFile-Interop verwendet, um die Datei herunterzuladen
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/manage_files -> Export_Data_Spreadsheet", "", ex.Message);
-        }
-    }
     #endregion
 }

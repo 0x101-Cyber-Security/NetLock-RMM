@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.JSInterop;
 using MudBlazor;
 using MySqlConnector;
-using OfficeOpenXml;
 
 namespace NetLock_RMM_Web_Console.Components.Pages.Collections.Scripts
 {
@@ -370,8 +369,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Collections.Scripts
             {
                 if (result.Data.ToString() == "JSON")
                     await Export_Data_Json(type);
-                else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                    await Export_Data_Spreadsheet(type);
                 else if (result.Data.ToString() == "HTML")
                     await Export_Data_HTML(type);
             }
@@ -437,56 +434,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Collections.Scripts
             }
         }
 
-        private async Task Export_Data_Spreadsheet(string type)
-        {
-            try
-            {
-                using (var package = new ExcelPackage())
-                {
-                    var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                    if (type == "scripts")
-                    {
-                        if (scripts_mysql_data.Count > 0)
-                        {
-                            int headerRow = 1;
-
-                            // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
-                            int columnIndex = 1;
-                            foreach (var property in scripts_mysql_data.First().GetType().GetProperties())
-                            {
-                                worksheet.Cells[headerRow, columnIndex].Value = property.Name;
-                                columnIndex++;
-                            }
-
-                            int dataRow = headerRow + 1;
-
-                            // Baue die Tabelleneinträge basierend auf den Daten
-                            foreach (var entry in scripts_mysql_data)
-                            {
-                                columnIndex = 1;
-                                foreach (var property in entry.GetType().GetProperties())
-                                {
-                                    worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
-                                    columnIndex++;
-                                }
-
-                                dataRow++;
-                            }
-                        }
-                    }
-
-                    var stream = new MemoryStream(package.GetAsByteArray());
-
-                    // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
-                    await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
-                }
-            }
-            catch (Exception ex)
-            {
-                Logging.Handler.Error("/manage_scripts -> Export_Data_Spreadsheet", "", ex.Message);
-            }
-        }
         #endregion
     }
 }

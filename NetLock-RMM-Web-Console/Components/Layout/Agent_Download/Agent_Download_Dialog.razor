@@ -53,11 +53,16 @@
                     </MudTooltip>
                 </div>
 
+                @if (!Configuration.Members_Portal.cloud_enabled)
+                {
+                }
+
                 <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
                 <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
                 <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
                 <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
                 <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+
 
                 <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Immediate="true" Required="true" RequiredError="@Localizer["required"]">
                     @{
@@ -166,6 +171,17 @@
         }
 
         await Get_Configurations();
+
+        // If cloud, set the default servers
+        if (Configuration.Members_Portal.cloud_enabled)
+        {
+            communication_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            remote_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            update_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            trust_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            file_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+        }
+
         StateHasChanged();
     }
 
@@ -704,7 +720,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START 44f92f7d-2ffc-47bb-9f3c-8f961cfbe32d //OSSCH_END
+    //OSSCH_START 3da15b00-d59f-49fb-9cc5-19f742417dbe //OSSCH_END
 
     private async Task Download_Installer_Popup()
     {

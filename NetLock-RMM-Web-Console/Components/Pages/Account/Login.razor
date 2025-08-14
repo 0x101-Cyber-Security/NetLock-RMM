@@ -119,8 +119,13 @@
                                 else if (auth_status == 0 && two_factor_state == 1) //2f setup mode
                                 {
                                     <MudText Class="mt-2">Two-Factor Authentification had been enabled for your account. Please set it up with your favorite 2factor app.</MudText>
-                                    <MudImage Src="@two_factor_qrCodeImageUrl" Alt="QR code" Style="width: 150px; height: 150px;" Class="mt-2" />
-                                    <MudText Class="mt-2">Scan the QR code with your Authenticator app or enter the following code manually: @two_factor_manualEntrySetupCode</MudText>
+
+                                    <div style="display: flex; justify-content: center; align-items: center;">
+                                        <MudImage Src="@two_factor_qrCodeImageUrl"
+                                                  Alt="QR code"
+                                                  Style="width: 150px; height: 150px; object-fit: contain;"
+                                                  Class="mt-5" />
+                                    </div>
 
                                     <MudTextField @bind-Value="@two_factor_codeInput" Label="@Localizer["2factor_verification_code"]" Required="true" RequiredError="@Localizer["required"]" Immediate="true" />
 
@@ -468,7 +473,7 @@
     {
         Logging.Handler.Debug("/login -> Two_Factor_Authentification_Setup", "requested for user", "username: " + username + " role: " + role);
 
-        SetupCode setupInfo = tfa.GenerateSetupCode("NetLock RMM - Instance", username, two_factor_account_secret_key, false, 1);
+        SetupCode setupInfo = tfa.GenerateSetupCode("NetLock RMM - Instance", username, two_factor_account_secret_key, false, 3);
         two_factor_qrCodeImageUrl = setupInfo.QrCodeSetupImageUrl;
         two_factor_manualEntrySetupCode = setupInfo.ManualEntryKey;
 

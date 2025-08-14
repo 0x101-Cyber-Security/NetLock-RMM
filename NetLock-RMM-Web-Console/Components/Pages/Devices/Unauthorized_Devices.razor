@@ -2,7 +2,6 @@
 @using MySqlConnector;
 @using System.Data.Common;
 @using System.Text.Json;
-@using OfficeOpenXml;
 @using System.Xml.Serialization;
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
@@ -701,8 +700,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json();
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet();
             else if (result.Data.ToString() == "XML")
                 await Export_Data_XML();
             else if (result.Data.ToString() == "HTML")
@@ -816,53 +813,5 @@
         }
     }
 
-    private async Task Export_Data_Spreadsheet()
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                int headerRow = 1;
-                worksheet.Cells[headerRow, 1].Value = "Gerät";
-                worksheet.Cells[headerRow, 2].Value = "Mandant";
-                worksheet.Cells[headerRow, 3].Value = "Standort";
-                worksheet.Cells[headerRow, 4].Value = "Gruppe";
-                worksheet.Cells[headerRow, 5].Value = "Agenten Version";
-                worksheet.Cells[headerRow, 6].Value = "Letzter Kontakt";
-                worksheet.Cells[headerRow, 7].Value = "IP-Addresse";
-                worksheet.Cells[headerRow, 8].Value = "Betriebssystem";
-                worksheet.Cells[headerRow, 9].Value = "Domäne";
-                worksheet.Cells[headerRow, 10].Value = "Antivirus Lösung";
-
-                int dataRow = headerRow + 1;
-                foreach (var entry in mysql_data)
-                {
-                    worksheet.Cells[dataRow, 1].Value = entry.device_name;
-                    worksheet.Cells[dataRow, 2].Value = entry.tenant_name;
-                    worksheet.Cells[dataRow, 3].Value = entry.location_name;
-                    worksheet.Cells[dataRow, 4].Value = entry.group_name;
-                    worksheet.Cells[dataRow, 5].Value = entry.agent_version;
-                    worksheet.Cells[dataRow, 6].Value = entry.last_access;
-                    worksheet.Cells[dataRow, 7].Value = entry.ip_address;
-                    worksheet.Cells[dataRow, 8].Value = entry.operating_system;
-                    worksheet.Cells[dataRow, 9].Value = entry.domain;
-                    worksheet.Cells[dataRow, 10].Value = entry.antivirus_solution;
-
-                    dataRow++;
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // Hier wird JavaScript-Interop verwendet, um die Datei herunterzuladen
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", "devices.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("System_Logs", "Export_Data_Spreadsheet", ex.Message);
-        }
-    }
     #endregion
 }

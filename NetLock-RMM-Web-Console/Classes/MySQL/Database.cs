@@ -434,6 +434,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         private static string upgrade_script_2_5_1_3_to_2_5_1_6 = "QUxURVIgVEFCTEUgYGRldmljZXNgIEFERCBDT0xVTU4gYGxhc3RfYWN0aXZlX3VzZXJgIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBgdXB0aW1lX21vbml0b3JpbmdfZW5hYmxlZGA7";
         private static string upgrade_script_2_5_1_6_to_2_5_2_2 = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09MVU1OIHVwZGF0ZV9wZW5kaW5nIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGxhc3RfYWN0aXZlX3VzZXI7DQpBTFRFUiBUQUJMRSBkZXZpY2VzIEFERCBDT0xVTU4gdXBkYXRlX3N0YXJ0ZWQgREFURVRJTUUgTlVMTCBERUZBVUxUICcyMDAwLTAxLTAxIDAwOjAwOjAwJyBBRlRFUiB1cGRhdGVfcGVuZGluZzs=";
         private static string upgrade_script_2_5_1_6_to_2_5_2_2v2 = "QUxURVIgVEFCTEUgc2V0dGluZ3MgQ0hBTkdFIENPTFVNTiBhZ2VudF91cGRhdGVzX2VuYWJsZWQgYWdlbnRfdXBkYXRlc193aW5kb3dzX2VuYWJsZWQgSU5UIE5VTEwgREVGQVVMVCAnMCcgQUZURVIgcGFja2FnZV9wcm92aWRlcl91cmwsIEFERCBDT0xVTU4gYWdlbnRfdXBkYXRlc19saW51eF9lbmFibGVkIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGFnZW50X3VwZGF0ZXNfd2luZG93c19lbmFibGVkLCBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWFjb3NfZW5hYmxlZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBhZ2VudF91cGRhdGVzX2xpbnV4X2VuYWJsZWQ7DQpBTFRFUiBUQUJMRSBzZXR0aW5ncyBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWF4X2NvbmN1cnJlbnRfdXBkYXRlcyBJTlQgTlVMTCBERUZBVUxUICc1JyBBRlRFUiBhZ2VudF91cGRhdGVzX21hY29zX2VuYWJsZWQ7";
+        private static string upgrade_script_2_5_1_6_to_2_5_2_2c = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBjaGFuZ2Vsb2dfcmVhZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiByZW1vdGVfc2Vzc2lvbl90b2tlbjs=";
 
 
         // Execute installation SQL script
@@ -598,6 +599,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             scripts.Add(upgrade_script_2_5_1_3_to_2_5_1_6);
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2);
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2v2);
+            scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2c);
 
             // Disabled due to testing...
 
@@ -631,10 +633,18 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         }
 
         // Update DB version
-
         public static async Task Update_DB_Version()
         {
+            // Check if the database version is different from the current application version
+            if (Application_Settings.db_version == await Classes.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "db_version"))
+            {
+                Logging.Handler.Debug("Classes.MySQL.Database", "Update_DB_Version", "Database version is already up to date.");
+                return;
+            }
+
             await Classes.MySQL.Handler.Execute_Command("UPDATE settings SET db_version = '" + Application_Settings.db_version + "';");
+            
+            await Classes.MySQL.Handler.Execute_Command("UPDATE accounts SET changelog_read = '0';");
         }
 
         public static List<Sensors_Entity> sensors_mysql_data;
@@ -766,7 +776,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
 
         public static async Task EnforceCloudSettings() // Preventing data flood on our side, needs to be adjusted on server side too in the future
         {
-            string query = "UPDATE settings SET cleanup_applications_drivers_history_enabled = 1, cleanup_applications_drivers_history_days = 1, cleanup_applications_installed_history_enabled = 1, cleanup_applications_installed_history_days = 1, cleanup_applications_logon_history_enabled = 1, cleanup_applications_logon_history_days = 1, cleanup_applications_scheduled_tasks_history_enabled = 1, cleanup_applications_scheduled_tasks_history_days = 1, cleanup_applications_services_history_enabled = 1, cleanup_applications_services_history_days = 1, cleanup_device_information_antivirus_products_history_enabled = 1, cleanup_device_information_antivirus_products_history_days = 1, cleanup_device_information_cpu_history_enabled = 1, cleanup_device_information_cpu_history_days = 1, cleanup_device_information_cronjobs_history_enabled = 1, cleanup_device_information_cronjobs_history_days = 1, cleanup_device_information_disks_history_enabled = 1, cleanup_device_information_disks_history_days = 1, cleanup_device_information_general_history_enabled = 1, cleanup_device_information_general_history_days = 1, cleanup_device_information_history_enabled = 1, cleanup_device_information_history_days = 1, cleanup_device_information_network_adapters_history_enabled = 1, cleanup_device_information_network_adapters_history_days = 1, cleanup_device_information_ram_history_enabled = 1, cleanup_device_information_ram_history_days = 1, cleanup_device_information_task_manager_history_enabled = 1, cleanup_device_information_task_manager_history_days = 1, cleanup_events_history_enabled = 0;";
+            string query = "UPDATE settings SET agent_updates_windows_enabled = 0, agent_updates_linux_enabled = 0, agent_updates_macos_enabled = 0, cleanup_applications_drivers_history_enabled = 1, cleanup_applications_drivers_history_days = 1, cleanup_applications_installed_history_enabled = 1, cleanup_applications_installed_history_days = 1, cleanup_applications_logon_history_enabled = 1, cleanup_applications_logon_history_days = 1, cleanup_applications_scheduled_tasks_history_enabled = 1, cleanup_applications_scheduled_tasks_history_days = 1, cleanup_applications_services_history_enabled = 1, cleanup_applications_services_history_days = 1, cleanup_device_information_antivirus_products_history_enabled = 1, cleanup_device_information_antivirus_products_history_days = 1, cleanup_device_information_cpu_history_enabled = 1, cleanup_device_information_cpu_history_days = 1, cleanup_device_information_cronjobs_history_enabled = 1, cleanup_device_information_cronjobs_history_days = 1, cleanup_device_information_disks_history_enabled = 1, cleanup_device_information_disks_history_days = 1, cleanup_device_information_general_history_enabled = 1, cleanup_device_information_general_history_days = 1, cleanup_device_information_history_enabled = 1, cleanup_device_information_history_days = 1, cleanup_device_information_network_adapters_history_enabled = 1, cleanup_device_information_network_adapters_history_days = 1, cleanup_device_information_ram_history_enabled = 1, cleanup_device_information_ram_history_days = 1, cleanup_device_information_task_manager_history_enabled = 1, cleanup_device_information_task_manager_history_days = 1, cleanup_events_history_enabled = 0;";
 
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 

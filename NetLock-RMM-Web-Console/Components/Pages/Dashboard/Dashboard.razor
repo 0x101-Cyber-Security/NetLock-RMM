@@ -8,7 +8,6 @@
 @using System.Text.Json
 @using System.Text.Json.Nodes
 @using System.Text
-@using OfficeOpenXml
 @using System.Security.Claims
 
 @inject NavigationManager NavigationManager
@@ -517,6 +516,7 @@
 
     private bool _isDarkMode;
 
+    private string netlock_username = String.Empty;
     private bool permissions_dashboard_enabled = false;
     public static List<string> permissions_tenants_list = new List<string> { };
 
@@ -533,7 +533,7 @@
             if (user?.Identity is not { IsAuthenticated: true })
                 logout = true;
 
-            string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
 
             permissions_dashboard_enabled = await Classes.Authentication.Permissions.Verify_Permission(user.FindFirst(ClaimTypes.Email)?.Value, "dashboard_enabled");
             permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
@@ -544,18 +544,18 @@
             if (logout) // Redirect to the login page
             {
                 NavigationManager.NavigateTo("/logout", true);
-				return false;
+                return false;
             }
 
             // Load other permissions here
 
             // All fine? Nice.
-			return true;
+            return true;
         }
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
-			return false;
+            return false;
         }
     }
 
@@ -578,7 +578,7 @@
             return;
 
         loading_overlay = true;
-		StateHasChanged();
+        StateHasChanged();
 
         _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
@@ -594,6 +594,7 @@
         StateHasChanged();
 
         await Check_Member_Ship_Reminder();
+        await ShowChangelogDialog();
     }
 
     private async Task Check_Member_Ship_Reminder()
@@ -854,7 +855,7 @@
                         if (!permissions_tenants_list.Contains(device_tenant_id))
                             continue; // Skip this event if the tenant is not in the permissions list
 
-              
+
                         Events_Table entity = new Events_Table //Create the entity
                             {
                                 id = reader["id"].ToString() ?? String.Empty,
@@ -970,7 +971,7 @@
 
             MySqlCommand command = new MySqlCommand(query, conn);
             command = new MySqlCommand(query, conn);
-            
+
             Logging.Handler.Debug("/dashboard -> Accounts_Load", "MySQL_Prepared_Query", query); //Output prepared query
 
             using (DbDataReader reader = await command.ExecuteReaderAsync())
@@ -1105,6 +1106,81 @@
 
     #endregion
 
+    #region Changelog
+
+    // Changelog dialog
+    private async Task ShowChangelogDialog()
+    {
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM accounts WHERE username = @netlock_username AND changelog_read = 0;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+            Logging.Handler.Debug("ShowChangelogDialog", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (!reader.HasRows)
+                {
+                    Logging.Handler.Debug("ShowChangelogDialog", "MySQL_Query", "No new changelog entries found for user: " + netlock_username);
+                    return; // No new changelog entries, exit the method
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("ShowChangelogDialog", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        // Show the changelog dialog
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackgroundClass = "dialog-blurring",
+        };
+
+        var result = await DialogService.Show<Shared.Changelog>(string.Empty, options).Result;
+
+        if (result.Canceled)
+            return;
+
+        // If the dialog was closed with OK, update the changelog_read status
+        try
+        {
+            MySqlConnection updateConn = new MySqlConnection(Configuration.MySQL.Connection_String);
+            
+            await updateConn.OpenAsync();
+            
+            string updateQuery = "UPDATE accounts SET changelog_read = 1 WHERE username = @username;";
+            
+            MySqlCommand updateCmd = new MySqlCommand(updateQuery, updateConn);
+            updateCmd.Parameters.AddWithValue("@username", netlock_username);
+            
+            await updateCmd.ExecuteNonQueryAsync();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Changelog_Dialog", "Error updating changelog_read status", ex.ToString());
+        }
+
+        Logging.Handler.Debug("/MainLayout -> Changelog_Dialog", "Result", result.Data.ToString());
+    }
+
+    #endregion
+
     #region Data Export
 
     private async Task Show_Export_Table_Dialog(string type)
@@ -1123,8 +1199,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json(type);
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet(type);
             else if (result.Data.ToString() == "HTML")
                 await Export_Data_HTML(type);
         }
@@ -1187,57 +1261,6 @@
         catch (Exception ex)
         {
             Logging.Handler.Error("/dashboard", "Export_Data_HTML", ex.ToString());
-        }
-    }
-
-    private async Task Export_Data_Spreadsheet(string type)
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                if (type == "events")
-                {
-                    if (events_mysql_data.Count > 0)
-                    {
-                        int headerRow = 1;
-
-                        // Build the table header based on the properties of the data class
-                        int columnIndex = 1;
-                        foreach (var property in events_mysql_data.First().GetType().GetProperties())
-                        {
-                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
-                            columnIndex++;
-                        }
-
-                        int dataRow = headerRow + 1;
-
-                        // Build the table entries based on the data
-                        foreach (var entry in events_mysql_data)
-                        {
-                            columnIndex = 1;
-                            foreach (var property in entry.GetType().GetProperties())
-                            {
-                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
-                                columnIndex++;
-                            }
-
-                            dataRow++;
-                        }
-                    }
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // JavaScript interop is used here to download the file
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/dashboard", "Export_Data_Spreadsheet", ex.ToString());
         }
     }
 

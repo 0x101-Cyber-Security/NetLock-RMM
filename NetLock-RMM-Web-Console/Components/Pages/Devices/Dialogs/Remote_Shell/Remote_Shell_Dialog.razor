@@ -1,7 +1,6 @@
 ﻿@using MySqlConnector
 @using System.Data.Common
 @using System.Text.Json
-@using OfficeOpenXml
 @using System.Xml.Serialization
 @using System.Text
 @using System.Text.RegularExpressions
@@ -54,14 +53,39 @@
 
         <MudText Class="mt-3" Typo="Typo.h6">@Localizer["input"]</MudText>
 
-        <MudSelect Class="mb-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(!remote_server_client_setup || loading_overlay)">
+        @if (!expanded)
+        {
+            <MudTextField Class="mt-3" T="string" @bind-Value="@remote_shell_powershell_code" Label="" Lines="1" Required="true" Immediate="@true" @onkeydown="Enter" />
+        }
+
+        <MudSelect Class="mt-3" T="string" @bind-Value="collection_script_name" @bind-Value:after="async () => await Get_Script(collection_script_name)" Label="Templates" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="@(!remote_server_client_setup || loading_overlay)">
             @foreach (var s in scripts)
             {
                 <MudSelectItem Value="@s" />
             }
         </MudSelect>
 
-        <StandaloneCodeEditor Id="remote_shell-editor" CssClass="monaco-editor" @ref="remote_shell_command_editor" ConstructionOptions="Remote_Shell_Editor_Construction_Options" OnDidChangeModelContent="Remote_Shell_Editor_Handle_Input" OnKeyDown="Remote_Keyboard_Enter" />
+        <MudExpansionPanel Class="mt-3 custom-expansion-panel" @bind-Expanded="@expanded" Text="Expand">
+            <TitleContent>
+                <div class="d-flex">
+
+                    @if (expanded)
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowCircleUp" class="mr-3"></MudIcon>
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.ArrowCircleDown" class="mr-3"></MudIcon>
+                    }
+
+                    <MudText>Expand</MudText>
+                </div>
+            </TitleContent>
+
+            <ChildContent>
+                <StandaloneCodeEditor Id="remote_shell-editor" CssClass="monaco-editor" @ref="remote_shell_command_editor" ConstructionOptions="Remote_Shell_Editor_Construction_Options" OnDidChangeModelContent="Remote_Shell_Editor_Handle_Input" OnKeyDown="Remote_Keyboard_Enter" />
+            </ChildContent>
+        </MudExpansionPanel>
 
         @{
             if (loading_overlay)
@@ -99,6 +123,7 @@
     private string netlock_username = String.Empty;
     private string token = String.Empty;
     private bool loading_overlay = false;
+    private bool expanded = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -243,6 +268,15 @@
         if (remote_server_client_setup)
         {
             if (e.CtrlKey && e.Code == "Enter" && !String.IsNullOrEmpty(remote_shell_powershell_code) && !Regex.IsMatch(remote_shell_powershell_code, @"^\s*$"))
+                await Remote_Shell_Send_Command(remote_shell_powershell_code, remote_shell_wait_response);
+        }
+    }
+
+    private async Task Enter(KeyboardEventArgs e)
+    {
+        if (remote_server_client_setup)
+        {
+            if (e.Code == "Enter" && !String.IsNullOrEmpty(remote_shell_powershell_code) && !Regex.IsMatch(remote_shell_powershell_code, @"^\s*$"))
                 await Remote_Shell_Send_Command(remote_shell_powershell_code, remote_shell_wait_response);
         }
     }

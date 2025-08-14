@@ -3,7 +3,6 @@
 @using System.Data.Common;
 @using System.Text.Json;
 @using System.Text.Json.Nodes;
-@using OfficeOpenXml;
 @using System.Xml.Serialization;
 @using System.Text;
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
@@ -476,8 +475,6 @@
         {
             if (result.Data.ToString() == "JSON")
                 await Export_Data_Json(type);
-            else if (result.Data.ToString() == "Spreadsheet (.xlsx)")
-                await Export_Data_Spreadsheet(type);
             else if (result.Data.ToString() == "HTML")
                 await Export_Data_HTML(type);
         }
@@ -543,55 +540,5 @@
         }
     }
 
-    private async Task Export_Data_Spreadsheet(string type)
-    {
-        try
-        {
-            using (var package = new ExcelPackage())
-            {
-                var worksheet = package.Workbook.Worksheets.Add("Sheet1");
-
-                if (type == "jobs")
-                {
-                    if (jobs_mysql_data.Count > 0)
-                    {
-                        int headerRow = 1;
-
-                        // Baue den Tabellenkopf basierend auf den Eigenschaften der Datenklasse
-                        int columnIndex = 1;
-                        foreach (var property in jobs_mysql_data.First().GetType().GetProperties())
-                        {
-                            worksheet.Cells[headerRow, columnIndex].Value = property.Name;
-                            columnIndex++;
-                        }
-
-                        int dataRow = headerRow + 1;
-
-                        // Baue die Tabelleneinträge basierend auf den Daten
-                        foreach (var entry in jobs_mysql_data)
-                        {
-                            columnIndex = 1;
-                            foreach (var property in entry.GetType().GetProperties())
-                            {
-                                worksheet.Cells[dataRow, columnIndex].Value = property.GetValue(entry);
-                                columnIndex++;
-                            }
-
-                            dataRow++;
-                        }
-                    }
-                }
-
-                var stream = new MemoryStream(package.GetAsByteArray());
-
-                // Hier wird JavaJob-Interop verwendet, um die Datei herunterzuladen
-                await JSRuntime.InvokeVoidAsync("saveAsSpreadSheet", $"{type}.xlsx", Convert.ToBase64String(stream.ToArray()));
-            }
-        }
-        catch (Exception ex)
-        {
-            Logging.Handler.Error("/manage_jobs -> Export_Data_Spreadsheet", "", ex.Message);
-        }
-    }
     #endregion
 }

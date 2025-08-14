@@ -1,0 +1,128 @@
+﻿@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using System.Text.Json.Nodes;
+@using Markdig;
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+
+<style>
+.markdown-body {
+    white-space: normal;
+    line-height: 1.6;
+    font-size: 1rem;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3 {
+    margin-top: 1em;
+    margin-bottom: 0.5em;
+}
+
+.markdown-body p {
+    margin: 0.5em 0;
+}
+
+.markdown-body ul, .markdown-body ol {
+    padding-left: 2em;
+}
+
+.markdown-body code {
+    background-color: #f5f5f5;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.markdown-body pre {
+    background-color: #f5f5f5;
+    padding: 1em;
+    overflow-x: auto;
+    border-radius: 4px;
+}
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h5">News & Changelogs</MudText>
+    </TitleContent>
+
+    <DialogContent>
+        <MudPaper Class="markdown-body" Style="padding: 1rem;">
+            @((MarkupString)currentChangelogHtml)
+        </MudPaper>
+
+        <MudText Typo="Typo.h5" Class="mt-5">Previously</MudText>
+
+        @foreach (var changelog in changelogs)
+        {
+            <MudExpansionPanel Class="mt-3" Expanded="false">
+                <TitleContent>
+                    <div class="d-flex">
+                        <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                        <MudText Typo="Typo.body1">@changelog.Key</MudText>
+                    </div>
+                </TitleContent>
+
+                <ChildContent>
+                    <div class="markdown-body">
+                        @((MarkupString)Markdown.ToHtml(changelog.Value))
+                    </div>
+                </ChildContent>
+            </MudExpansionPanel>
+        }
+    </DialogContent>
+
+    <DialogActions>
+        <MudButton Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" OnClick="OK">Close</MudButton>
+    </DialogActions>
+</MudDialog>
+
+
+@code {
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    
+    private Dictionary<string, string> changelogs = new();
+    private string currentChangelogHtml = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Always the latest changelog on top
+        changelogs.Add("2.5.2.5: Smaller changes & fixes", await Base64.Handler.Decode(Changelogs.v2525));
+        changelogs.Add("2.5.2.4c: File server extensions & fixes", await Base64.Handler.Decode(Changelogs.v2524c));
+        changelogs.Add("2.5.2.2: Remote Screen Control for Windows, ARM64 Support, Auto Updates, and More", await Base64.Handler.Decode(Changelogs.v2524b));
+
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .UseBootstrap()
+            .UsePipeTables()
+            .UseAutoLinks()
+            .UseEmojiAndSmiley()
+            .UseFigures()
+            .UseTaskLists()
+            .UseAutoIdentifiers()
+            .UseYamlFrontMatter()
+            .Build();
+
+        currentChangelogHtml = Markdown.ToHtml(await Base64.Handler.Decode(Changelogs.v2525), pipeline); // Current changelog
+    }
+
+    private void OK()
+    {
+        try
+        {
+            MudDialog.Close(DialogResult.Ok(true));
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Check_Member_Ship_Reminder", "Error", ex.ToString());
+        }
+
+        MudDialog.Close(DialogResult.Ok(true));
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

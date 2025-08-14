@@ -27,14 +27,14 @@
     <PackageReference Include="LettuceEncrypt" Version="1.3.3" />
     <PackageReference Include="LLamaSharp" Version="0.24.0" />
     <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.24.0" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.5" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.8" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.2" />
-    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.5" />
-    <PackageReference Include="System.Management" Version="9.0.5" />
-    <PackageReference Include="Telegram.Bot" Version="22.5.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
+    <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="9.0.8" />
+    <PackageReference Include="System.Management" Version="9.0.8" />
+    <PackageReference Include="Telegram.Bot" Version="22.6.0" />
   </ItemGroup>
 
   <ItemGroup>

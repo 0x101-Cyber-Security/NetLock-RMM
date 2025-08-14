@@ -2,7 +2,6 @@
 @using MySqlConnector
 @using System.Data.Common
 @using System.Text.Json
-@using OfficeOpenXml
 @using System.Xml.Serialization
 @using System.Text
 @using System.Text.RegularExpressions
@@ -84,7 +83,9 @@
         75% { transform: rotate(15deg); }
         100% { transform: rotate(0deg); }
     }
+
 </style>
+
 
 <MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
     <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
@@ -1539,15 +1540,16 @@
                                             @{
                                                 try
                                                 {
-                                                    <div style="display: flex; flex-wrap: wrap; gap: 90px; justify-content: flex-start; align-items: center;">
+                                                    <div>
                                                         @foreach (var disk in device_information_disks_list)
                                                         {
                                                             try
                                                             {
                                                                 string letter = disk.letter;
                                                                 string label = disk.label;
-                                                                string capacity = disk.capacity.Replace(",", "."); // Sicherstellen, dass das Dezimaltrennzeichen korrekt ist
-                                                                string usage = disk.usage.Replace(",", "."); // Sicherstellen, dass das Dezimaltrennzeichen korrekt ist
+                                                                string capacity = disk.capacity.Replace(",", "."); 
+                                                                string usage = disk.usage.Replace(",", ".");
+
                                                                 string model = String.IsNullOrEmpty(disk.model) ? "N/A" : disk.model;
                                                                 string firmware_revision = disk.firmware_revision;
                                                                 string serial_number = disk.serial_number;
@@ -1556,75 +1558,58 @@
                                                                 string drive_format = disk.drive_format;
                                                                 string drive_ready = disk.drive_ready;
 
-                                                                // Drive type (Removable = 0, Fixed = 1, Network = 2, CDRom = 3, Ram = 4, Unknown = 5)
-                                                                if (drive_type == "0")
-                                                                    drive_type = Localizer["removable"];
-                                                                else if (drive_type == "1")
-                                                                    drive_type = Localizer["fixed"];
-                                                                else if (drive_type == "2")
-                                                                    drive_type = Localizer["network"];
-                                                                else if (drive_type == "5")
-                                                                    drive_type = Localizer["unknown"];
+                                                                if (drive_type == "0") drive_type = Localizer["removable"];
+                                                                else if (drive_type == "1") drive_type = Localizer["fixed"];
+                                                                else if (drive_type == "2") drive_type = Localizer["network"];
+                                                                else if (drive_type == "5") drive_type = Localizer["unknown"];
 
-                                                                // Convert drive_ready to human readable
-                                                                if (drive_ready == "True")
-                                                                    drive_ready = Localizer["yes"];
-                                                                else
-                                                                    drive_ready = Localizer["no"];
+                                                                drive_ready = drive_ready == "True" ? Localizer["yes"] : Localizer["no"];
 
-                                                                double capacityGB = Math.Round(double.Parse(capacity), 2);
-                                                                double usagePercentage = double.Parse(usage);
+                                                                double capacityGB = Math.Round(double.Parse(capacity, CultureInfo.InvariantCulture), 2);
+                                                                double usagePercentage = double.Parse(usage, CultureInfo.InvariantCulture);
                                                                 double usedSpaceGB = Math.Round((capacityGB * usagePercentage) / 100, 2);
                                                                 double freeSpaceGB = Math.Round(capacityGB - usedSpaceGB, 2);
+
+                                                                // Check if usage is above 1%. If not, dont continue
+                                                                //if (usagePercentage < 1) continue;
 
                                                                 usedSpaceGB = Math.Truncate(usedSpaceGB * 100) / 100;
                                                                 freeSpaceGB = Math.Truncate(freeSpaceGB * 100) / 100;
 
-                                                                double[] data = { freeSpaceGB, usedSpaceGB };
+                                                                // Color-Thresholds: <=50 = Success, 50..80 = Warning, >85 = Error
+                                                                Color progressColor;
+                                                                if (usagePercentage <= 50) progressColor = Color.Info;
+                                                                else if (usagePercentage <= 85) progressColor = Color.Warning;
+                                                                else progressColor = Color.Error;
 
-                                                                string[] driveLabels = { Localizer["free"] + $": {freeSpaceGB} (GB)", Localizer["occupied"] + $": {usedSpaceGB} (GB)" };
+                                                                <MudPaper Class="mt-3" Elevation="0">
+                                                                
+                                                                @if (platform == "Windows")
+                                                                {
+                                                                    <MudText Class="ml-2" Typo="Typo.h6">@letter (@label)</MudText>
+                                                                }
+                                                                else
+                                                                {
+                                                                    <MudText Class="ml-2" Typo="Typo.h6">@letter</MudText>
+                                                                }
 
-                                                                <div class="ml-2">
+                                                                <MudText Class="ml-2" Typo="Typo.body2">Capacity: @capacityGB.ToString("N0", CultureInfo.InvariantCulture) GB</MudText>
 
-                                                                    @if (platform == "Linux" || platform == "MacOS")
-                                                                    {
-                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["Name"]: @letter</MudText>
-                                                                    }
+                                                                <MudProgressLinear Class="mt-2 ml-2 mr-2" Value="@(usagePercentage)" BufferValue="100" Striped="false" Rounded="true" Color="@progressColor"><MudText Typo="Typo.body1">@Math.Round(usagePercentage) %</MudText></MudProgressLinear>
+
+                                                                <div class="d-flex" style="justify-content:space-between; margin-top:8px; font-size:0.88rem; color:var(--mud-palette-text-secondary);">
+                                                                    <div class="ml-2">Used: @usedSpaceGB (GB)</div>
+                                                                        <div class="mr-2">@Localizer["free"]: @freeSpaceGB (GB)</div>
+                                                                    </div>
 
                                                                     @if (platform == "Windows")
                                                                     {
-                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["model"]: @model</MudText>
-                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["firmware_revision"]: @firmware_revision</MudText>
-                                                                        <MudText Typo="Typo.body1">&nbsp;@Localizer["serial_number"]: @serial_number</MudText>
-                                                                        <MudText Typo="Typo.body1">&nbsp;Interface: @interface_type</MudText>
+                                                                        <div class="ml-2">@Localizer["model"]: @model</div>
                                                                     }
-
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["type"]: @drive_type</MudText>
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["file_system"]: @drive_format</MudText>
-                                                                    <MudText Typo="Typo.body1">&nbsp;@Localizer["ready"]: @drive_ready</MudText>
-
-                                                                    @if (platform == "Linux" || platform == "MacOS")
-                                                                    {
-                                                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="265px" InputData="@data" InputLabels="@driveLabels" ChartOptions="drive_chart_options">
-                                                                            <CustomGraphics>
-                                                                                <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="30">@capacityGB.ToString() (GB)</text>
-                                                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="20">@Localizer["occupied"]: @usage (%)</text>
-                                                                            </CustomGraphics>
-                                                                        </MudChart>
-                                                                    }
-                                                                    else
-                                                                    {
-                                                                        <MudChart ChartType="MudBlazor.ChartType.Donut" Width="265px" InputData="@data" InputLabels="@driveLabels" ChartOptions="drive_chart_options">
-                                                                            <CustomGraphics>
-                                                                                <text class="donut-inner-text" x="50%" y="30%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="15">@letter</text>
-                                                                                <text class="donut-inner-text" x="50%" y="40%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="15">(@label)</text>
-                                                                                <text class="donut-inner-text" x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="25">@capacityGB.ToString() (GB)</text>
-                                                                                <text class="donut-inner-text" x="50%" y="60%" dominant-baseline="middle" text-anchor="middle" fill="@((_isDarkMode ? "white" : "black"))" font-family="Helvetica" font-size="15">@Localizer["occupied"]: @usage (%)</text>
-                                                                            </CustomGraphics>
-                                                                        </MudChart>
-                                                                    }
-                                                      
-                                                                </div>
+                                                                    <div class="ml-2">@Localizer["type"]: @drive_type</div>
+                                                                    <div class="ml-2">@Localizer["file_system"]: @drive_format</div>
+                                                                    <div class="ml-2">@Localizer["ready"]: @drive_ready</div>
+                                                                </MudPaper>
                                                             }
                                                             catch (Exception ex)
                                                             {

@@ -489,6 +489,7 @@
     private async Task Get_Tenants()
     {
         tenant_list.Clear();
+        
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -526,6 +527,7 @@
 
     public async Task Get_Locations()
     {
+        locations_list.Clear();
         location_table.Rows.Clear();
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
@@ -547,9 +549,9 @@
                     location_table.Rows.Add(reader["name"].ToString() ?? String.Empty, tenant_name ?? String.Empty, reader["guid"].ToString());
                 }
             }
-            reader.Close();
+            await reader.CloseAsync();
 
-            conn.Close();
+            await conn.CloseAsync();
         }
         catch (Exception ex)
         {
@@ -557,7 +559,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
     }
 

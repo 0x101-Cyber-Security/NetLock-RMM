@@ -92,10 +92,12 @@ namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
             }
         }
 
-        public static async Task<string> Test_Smtp(string username, string password, string server, int port, bool ssl)
+        public static async Task<string> Test_Smtp(string username, string password, string server, int port, bool ssl, string from)
         {
             try
             {
+                from = from ?? username; // fallback to username if from is null
+
                 using (SmtpClient smtpClient = new SmtpClient(server, port))
                 {
                     // Setze die Anmeldeinformationen für den SMTP-Server
@@ -108,7 +110,7 @@ namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
                     using (MailMessage mailMessage = new MailMessage())
                     {
                         // Setze Absender, Empfänger, Betreff und Nachrichtentext
-                        mailMessage.From = new MailAddress("Alerts | NetLock <" + username + ">");
+                        mailMessage.From = new MailAddress(from, "Alerts | NetLock");
                         mailMessage.To.Add(username); // Füge hier die Empfänger-E-Mail-Adresse hinzu
                         mailMessage.Subject = "NetLock - Test Alert";
                         mailMessage.Body = "Test erfolgreich.";
