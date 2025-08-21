@@ -161,7 +161,7 @@ namespace NetLock_RMM_Server.SignalR
                 await Uptime_Monitoring.Handler.Do(identityJson, false);
 
                 // Remove the client from the data structure when it logs out
-                CommandHubSingleton.Instance._clientConnections.TryRemove(clientId, out _);
+                CommandHubSingleton.Instance.RemoveClientConnection(clientId);
 
                 // Remove the client from the admin commands dictionary
                 foreach (var adminCommand in CommandHubSingleton.Instance._adminCommands)

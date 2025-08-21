@@ -222,6 +222,61 @@ window.fallbackSetClipboard = async function (text) {
     }
 };
 
+window.remoteScreen = {
+    /**
+     * Check if an image (dataUrl or url) is effectively "blank/black".
+     * options:
+     *  - sampleSize: downscale canvas to sampleSize x sampleSize (default 64)
+     *  - brightnessThreshold: brightness below this is considered "dark" (0-255, default 16)
+     *  - pctThreshold: proportion of pixels that must be dark to treat image as blank (0..1, default 0.99)
+     */
+    isBlankImage: function (dataUrl, options) {
+        options = options || {};
+        var sampleSize = options.sampleSize || 64;
+        var brightnessThreshold = options.brightnessThreshold || 16;
+        var pctThreshold = typeof options.pctThreshold === 'number' ? options.pctThreshold : 0.99;
+
+        return new Promise(function (resolve) {
+            if (!dataUrl) { resolve(true); return; }
+
+            var img = new Image();
+            // If you load external URLs, beware of CORS; data URLs are fine.
+            img.crossOrigin = 'anonymous';
+            img.onload = function () {
+                // create small canvas to sample
+                var w = sampleSize, h = sampleSize;
+                var canvas = document.createElement('canvas');
+                canvas.width = w; canvas.height = h;
+                var ctx = canvas.getContext('2d');
+                try {
+                    ctx.drawImage(img, 0, 0, w, h);
+                    var imgd = ctx.getImageData(0, 0, w, h).data;
+                } catch (e) {
+                    // CORS or other drawing error - treat as non-blank to avoid false positives (or true, depending on your preference)
+                    resolve(false);
+                    return;
+                }
+
+                var dark = 0;
+                var total = w * h;
+                for (var i = 0; i < imgd.length; i += 4) {
+                    var r = imgd[i], g = imgd[i + 1], b = imgd[i + 2], a = imgd[i + 3];
+                    // If mostly transparent, count as dark
+                    if (a < 10) { dark++; continue; }
+                    // luminance (perceptual)
+                    var lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                    if (lum <= brightnessThreshold) dark++;
+                }
+                resolve((dark / total) >= pctThreshold);
+            };
+            img.onerror = function () {
+                // loading failed - treat as blank/no-output
+                resolve(true);
+            };
+            img.src = dataUrl;
+        });
+    }
+};
 
 
 // JavaScript function for capturing the mouse position

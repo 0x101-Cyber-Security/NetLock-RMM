@@ -27,9 +27,10 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
         private static extern bool BitBlt(nint hdcDest, int nXDest, int nYDest, int nWidth, int nHeight, nint hdcSrc, int nXSrc, int nYSrc, CopyPixelOperation dwRop);
 
         // Method to capture the screen and return it as a Base64 string
-        public static async Task<string> CaptureScreenToBase64(int screenIndex, int maxFileSizeKB = 100)
+        public static async Task<string> CaptureScreenToBase64(int screenIndex, int maxFileSizeKB = 150)
         {
             Console.WriteLine("Capturing screen index: " + screenIndex);
+
             try
             {
                 // Monitorbereich ermitteln
@@ -58,13 +59,23 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
                 Console.WriteLine("screenWidth: " + screenWidth);
                 Console.WriteLine("screenHeight: " + screenHeight);
 
-                using Bitmap bmp = CaptureWithBitBlt(monitorRect);
+                using Bitmap original = CaptureWithBitBlt(monitorRect);
+
+                Bitmap bmp = original;
+
+                // Falls größer als FullHD -> automatisch runterskalieren
+                /*if (screenWidth > 1920 || screenHeight > 1080)
+                {
+                    bmp = ResizeBitmap(original, 1920, 1080);
+                    Console.WriteLine($"Resized screenshot to {bmp.Width}x{bmp.Height}");
+                }*/
 
                 // JPEG-Qualität per Binärsuche bestimmen
                 int minQ = 10, maxQ = 90;
                 byte[] bestBytes = null;
                 int bestQuality = minQ;
 
+                // Auto determine quality
                 while (minQ <= maxQ)
                 {
                     int midQ = (minQ + maxQ) / 2;
@@ -78,24 +89,19 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
                     {
                         bestBytes = currentBytes;
                         bestQuality = midQ;
-                        minQ = midQ + 1; // Versuche höhere Qualität
+                        minQ = midQ + 1; // try higher quality
                     }
                     else
                     {
-                        maxQ = midQ - 1; // Zu groß
+                        maxQ = midQ - 1; // to big
                     }
                 }
 
                 if (bestBytes == null)
-                    throw new Exception("Unable to compress image under max size limit.");
-
-                // Optional Debug-Speichern
-                /*
-                string filePath = Path.Combine("C:\\temp", $"screenshot_{screenIndex}.jpg");
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath));
-                await File.WriteAllBytesAsync(filePath, bestBytes);
-                Console.WriteLine($"Screenshot saved to: {filePath} ({bestBytes.Length / 1024} KB, Quality: {bestQuality}%)");
-                */
+                {
+                    Console.WriteLine("Frame konnte nicht unter Limit komprimiert werden, übersprungen.");
+                    return null;
+                }
 
                 return Convert.ToBase64String(bestBytes);
             }
@@ -106,7 +112,8 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
             }
         }
 
-        private static readonly ImageCodecInfo jpegEncoder = ImageCodecInfo.GetImageDecoders().First(c => c.FormatID == ImageFormat.Jpeg.Guid);
+        private static readonly ImageCodecInfo jpegEncoder =
+            ImageCodecInfo.GetImageDecoders().First(c => c.FormatID == ImageFormat.Jpeg.Guid);
 
         private static EncoderParameters CreateEncoderParams(int quality)
         {
@@ -133,21 +140,30 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
             return bmp;
         }
 
-        private static byte[] EncodeJpeg(Bitmap bmp, int quality)
+        private static Bitmap ResizeBitmap(Bitmap source, int maxWidth, int maxHeight)
         {
-            using var ms = new MemoryStream();
-            using var encoderParams = new EncoderParameters(1);
-            encoderParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-            bmp.Save(ms, jpegEncoder, encoderParams);
-            return ms.ToArray();
+            double ratioX = (double)maxWidth / source.Width;
+            double ratioY = (double)maxHeight / source.Height;
+            double ratio = Math.Min(ratioX, ratioY);
+
+            int newWidth = (int)(source.Width * ratio);
+            int newHeight = (int)(source.Height * ratio);
+
+            // Verwende 24bpp, spart Speicher und CPU bei JPEG
+            var dest = new Bitmap(newWidth, newHeight, PixelFormat.Format24bppRgb);
+
+            using var g = Graphics.FromImage(dest);
+            // Performance-orientierte Einstellungen
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighSpeed;
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.Bilinear; // deutlich schneller als HighQualityBicubic
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.None;
+            g.PixelOffsetMode = System.Drawing.Drawing2D.PixelOffsetMode.HighSpeed;
+
+            g.DrawImage(source, 0, 0, newWidth, newHeight);
+            return dest;
         }
 
-
-
-        private static ImageCodecInfo GetEncoder(ImageFormat format)
-        {
-            return ImageCodecInfo.GetImageDecoders().First(c => c.FormatID == format.Guid);
-        }
 
         // Delegate to process each monitor
         private delegate bool MonitorEnumDelegate(nint hMonitor, nint hdcMonitor, ref Rect lprcMonitor, nint dwData);

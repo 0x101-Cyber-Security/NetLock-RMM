@@ -91,6 +91,7 @@
     protected override async Task OnInitializedAsync()
     {
         // Always the latest changelog on top
+        changelogs.Add("2.5.2.6: Remote screen control fixed", await Base64.Handler.Decode(Changelogs.v2526));
         changelogs.Add("2.5.2.5: Smaller changes & fixes", await Base64.Handler.Decode(Changelogs.v2525));
         changelogs.Add("2.5.2.4c: File server extensions & fixes", await Base64.Handler.Decode(Changelogs.v2524c));
         changelogs.Add("2.5.2.2: Remote Screen Control for Windows, ARM64 Support, Auto Updates, and More", await Base64.Handler.Decode(Changelogs.v2524b));
@@ -107,7 +108,7 @@
             .UseYamlFrontMatter()
             .Build();
 
-        currentChangelogHtml = Markdown.ToHtml(await Base64.Handler.Decode(Changelogs.v2525), pipeline); // Current changelog
+        currentChangelogHtml = Markdown.ToHtml(await Base64.Handler.Decode(Changelogs.v2526), pipeline); // Current changelog
     }
 
     private void OK()

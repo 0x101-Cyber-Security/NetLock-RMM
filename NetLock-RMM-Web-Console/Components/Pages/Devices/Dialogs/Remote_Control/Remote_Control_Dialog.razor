@@ -29,27 +29,27 @@
 <style>
 
     .image-wrapper {
-    display: flex;              
-    justify-content: center;
-    align-items: center;
-    outline: none;
-    border: 2px solid transparent;
-    padding: 12px;
-    border-radius: 12px;
-    box-sizing: border-box;
-    background-color: #1e1e1e;
-    overflow: auto;
-    width: 100%;
-    height: 80vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        outline: none;
+        border: 2px solid transparent;
+        padding: 12px;
+        border-radius: 12px;
+        box-sizing: border-box;
+        background-color: #1e1e1e;
+        overflow: auto;
+        width: 100%;
+        height: 80vh;
     }
 
     .interactive-image {
-    max-width: 90vw;
-    max-height: 90vh;
-    height: auto;
-    border-radius: 12px;
-    user-select: none;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        max-width: 90vw;
+        max-height: 90vh;
+        height: auto;
+        border-radius: 12px;
+        user-select: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
 </style>
@@ -95,7 +95,7 @@
                         <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Warning" Indeterminate="true">
                             <MudText Typo="Typo.body1">The device is not connected to the NetLock RMM backend. Waiting for it to come back.</MudText>
                         </MudProgressLinear>
-                    } 
+                    }
                     else if (users.Count() == 0)
                     {
                         <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
@@ -123,7 +123,7 @@
                             <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background. Please wait.</MudText>
                         </MudProgressLinear>
 
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true"  OnClick="Remote_Get_Users" >Fetch users</MudButton>
+                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true" OnClick="Remote_Get_Users">Fetch users</MudButton>
 
                         <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
@@ -140,13 +140,13 @@
                     {
                         <!-- UI bar with MudSelects and Zoom -->
                         <div style="
-                            display: flex;
-                            align-items: center;
-                            flex-wrap: wrap;
-                            gap: 0.5rem;  /* Abstand zwischen Buttons */
-                            justify-content: flex-start; /* Buttons linksbündig */
-                            padding: 0.25rem;
-                        ">
+                                        display: flex;
+                                        align-items: center;
+                                        flex-wrap: wrap;
+                                        gap: 0.5rem;  /* Abstand zwischen Buttons */
+                                        justify-content: flex-start; /* Buttons linksbündig */
+                                        padding: 0.25rem;
+                                    ">
 
                             <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
                                 @foreach (string user in users)
@@ -176,7 +176,7 @@
                                     foreach (int screen in screens)
                                     {
                                         <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.ScreenshotMonitor" Size="Size.Small" Variant="Variant.Filled" Color="Color.Info" OnClick="() => { screen_index = screen.ToString(); Remote_Refresh_Screen(); }" Title="@(screen)" />
-                                    }                                    
+                                    }
                                 }
                             }
 
@@ -212,7 +212,7 @@
                                 </MudTooltip>
                             }
 
-                            @if(permissions_devices_remote_file_browser)
+                            @if (permissions_devices_remote_file_browser)
                             {
                                 <MudTooltip Text="Open remote file browser">
                                     <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FolderOpen" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="Remote_File_Browser_Dialog"></MudIconButton>
@@ -259,22 +259,22 @@
 
                         <!-- Image area separate and scrollable -->
                         <div id="image-container"
-                        class="image-wrapper"
-                        tabindex="0"
-                        @onkeydown="HandleKeyDown"
-                        @onblur="HandleBlur"
-                        @onfocus="HandleFocus">
+                             class="image-wrapper"
+                             tabindex="0"
+                             @onkeydown="HandleKeyDown"
+                             @onblur="HandleBlur"
+                             @onfocus="HandleFocus">
 
                             <img src="@imageSrc"
-                            alt="Bild"
-                            draggable="false"
-                            class="interactive-image"
-                            style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
-                            @ref="imageRef"
-                            @oncontextmenu="PreventAndHandleRightClick"
-                            @onmousedown="StartDrag"
-                            @onmouseup="EndDrag"
-                            @onmousemove="OnMouseMove" />
+                                 alt="Bild"
+                                 draggable="false"
+                                 class="interactive-image"
+                                 style="transform: scale(@zoomLevel); transform-origin: center; transition: transform 0.2s ease;"
+                                 @ref="imageRef"
+                                 @oncontextmenu="PreventAndHandleRightClick"
+                                 @onmousedown="StartDrag"
+                                 @onmouseup="EndDrag"
+                                 @onmousemove="OnMouseMove" />
                         </div>
 
                     }
@@ -833,34 +833,34 @@
         {
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    token = token
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 5, // remote control
-                    wait_response = true,
-                    command = "0", // Will be converted to type at client side | 5 = check connection on backend
-                    remote_control_username = user, // refresh screen
-                    remote_control_screen_index = screen_index, // refresh screen
-                    remote_control_mouse_xyz = "0, 0", // refresh screen
-                };
+            {
+                type = 5, // remote control
+                wait_response = true,
+                command = "0", // Will be converted to type at client side | 5 = check connection on backend
+                remote_control_username = user, // refresh screen
+                remote_control_screen_index = screen_index, // refresh screen
+                remote_control_mouse_xyz = "0, 0", // refresh screen
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialization of the object
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -903,33 +903,33 @@
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
             {
-                    token = token
+                token = token
             };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 4, // remote control
-                    wait_response = true,
-                    command = "3", // Will be converted to type at client side | 3 = get screen indexes
-                    remote_control_username = user, // refresh screen
-                    remote_control_screen_index = screen_index, // refresh screen
-                    remote_control_mouse_xyz = "0, 0", // refresh screen
-                };
+            {
+                type = 4, // remote control
+                wait_response = true,
+                command = "3", // Will be converted to type at client side | 3 = get screen indexes
+                remote_control_username = user, // refresh screen
+                remote_control_screen_index = screen_index, // refresh screen
+                remote_control_mouse_xyz = "0, 0", // refresh screen
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialization of the object
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -961,39 +961,39 @@
     }
 
     private async Task Remote_Get_Users()
-    {    
+    {
         try
         {
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    token = token
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 4, // remote control
-                    wait_response = true,
-                    command = "4", // Will be converted to type at client side | 4 = get users
-                    remote_control_username = String.Empty, // refresh screen
-                    remote_control_screen_index = screen_index, // refresh screen
-                    remote_control_mouse_xyz = "0, 0", // refresh screen
-                };
+            {
+                type = 4, // remote control
+                wait_response = true,
+                command = "4", // Will be converted to type at client side | 4 = get users
+                remote_control_username = String.Empty, // refresh screen
+                remote_control_screen_index = screen_index, // refresh screen
+                remote_control_mouse_xyz = "0, 0", // refresh screen
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialization of the object
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -1034,34 +1034,34 @@
         {
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    token = token
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 4, // remote control
-                    wait_response = true,
-                    command = "0", // Will be converted to type at client side | 0 = refresh screen
-                    remote_control_username = user, // refresh screen
-                    remote_control_screen_index = screen_index, // refresh screen
-                    remote_control_mouse_xyz = "0, 0", // refresh screen
-                };
+            {
+                type = 4, // remote control
+                wait_response = true,
+                command = "0", // Will be converted to type at client side | 0 = refresh screen
+                remote_control_username = user, // refresh screen
+                remote_control_screen_index = screen_index, // refresh screen
+                remote_control_mouse_xyz = "0, 0", // refresh screen
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialization of the object
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -1103,35 +1103,35 @@
         {
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    token = token
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 4, // remote control
-                    wait_response = true,
-                    command = "1", // Will be converted to type at client side | 1 = mouse action
-                    remote_control_username = user,
-                    remote_control_screen_index = screen_index,
-                    remote_control_mouse_action = actionType, // now fully dynamic
-                    remote_control_mouse_xyz = x + "," + y,
-                };
+            {
+                type = 4, // remote control
+                wait_response = true,
+                command = "1", // Will be converted to type at client side | 1 = mouse action
+                remote_control_username = user,
+                remote_control_screen_index = screen_index,
+                remote_control_mouse_action = actionType, // now fully dynamic
+                remote_control_mouse_xyz = x + "," + y,
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialize and send
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -1224,37 +1224,37 @@
         {
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
-                {
-                    token = token
-                };
+            {
+                token = token
+            };
 
             var targetDevice = new Remote_Target_Device
-                {
-                    device_id = device_id,
-                    device_name = device_name,
-                    tenant_guid = tenant_guid,
-                    location_guid = location_guid
-                };
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
 
             var command = new Remote_Command
-                {
-                    type = 4, // remote control
-                    wait_response = true, 
-                    command = command_type, // Will be converted to type at client side | 1 = mouse click | 2 = keyboard input
-                    remote_control_username = user, // Target user
-                    remote_control_screen_index = "0", // Screen index
-                    remote_control_mouse_action = "0", // 0 = left click, 1 = right click
-                //remote_control_mouse_xyz = x + "," + y, // refresh screen
-                    remote_control_keyboard_input = key_code, // refresh screen
-                    remote_control_keyboard_content = clipboardContent, // refresh screen
-                };
+            {
+                type = 4, // remote control
+                wait_response = true,
+                command = command_type, // Will be converted to type at client side | 1 = mouse click | 2 = keyboard input
+                remote_control_username = user, // Target user
+                remote_control_screen_index = "0", // Screen index
+                remote_control_mouse_action = "0", // 0 = left click, 1 = right click
+                                                   //remote_control_mouse_xyz = x + "," + y, // refresh screen
+                remote_control_keyboard_input = key_code, // refresh screen
+                remote_control_keyboard_content = clipboardContent, // refresh screen
+            };
 
             var rootObject = new Remote_Root_Object
-                {
-                    admin_identity = adminIdentity,
-                    target_device = targetDevice,
-                    command = command
-                };
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
 
             // Serialization of the object
             string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
@@ -1290,7 +1290,7 @@
         await JSRuntime.InvokeVoidAsync("toggleFullScreen", "image-container");
     }
 
-    #region RemoteScreenZoom 
+    #region RemoteScreenZoom
     private double zoomLevel = 1.0;
 
     private void SetZoom(double zoom)
@@ -1692,42 +1692,42 @@
 
     private async Task Remote_File_Browser_Dialog()
     {
-    if (remote_file_browser_dialog_open)
-        return;
+        if (remote_file_browser_dialog_open)
+            return;
 
-    // Stop screen sharing for better performance
-    await Remote_Screen_Refresh_Timer_Stop();
+        // Stop screen sharing for better performance
+        await Remote_Screen_Refresh_Timer_Stop();
 
-    string platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
+        string platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
 
-    var options = new DialogOptions
-            {
-                CloseButton = true,
-                FullWidth = true,
-                MaxWidth = MaxWidth.ExtraLarge,
-                BackgroundClass = "dialog-blurring",
-            };
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            BackgroundClass = "dialog-blurring",
+        };
 
-    DialogParameters parameters = new DialogParameters();
-    parameters.Add("device_id", device_id);
-    parameters.Add("device_name", device_name);
-    parameters.Add("tenant_guid", tenant_guid);
-    parameters.Add("location_guid", location_guid);
-    parameters.Add("platform", platform);
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("device_id", device_id);
+        parameters.Add("device_name", device_name);
+        parameters.Add("tenant_guid", tenant_guid);
+        parameters.Add("location_guid", location_guid);
+        parameters.Add("platform", platform);
 
-    remote_file_browser_dialog_open = true;
+        remote_file_browser_dialog_open = true;
 
-    var result = await DialogService.Show<Pages.Devices.Dialogs.Remote_File_Browser.File_Browser_Dialog>(string.Empty, parameters, options).Result;
+        var result = await DialogService.Show<Pages.Devices.Dialogs.Remote_File_Browser.File_Browser_Dialog>(string.Empty, parameters, options).Result;
 
-    remote_file_browser_dialog_open = false;
+        remote_file_browser_dialog_open = false;
 
-    // Restart the screen refresh timer
-    await Remote_Screen_Refresh_Timer_Setup();
+        // Restart the screen refresh timer
+        await Remote_Screen_Refresh_Timer_Setup();
 
-    if (result.Canceled)
-        return;
+        if (result.Canceled)
+            return;
 
-    Logging.Handler.Debug("/devices -> Remote_Shell_Dialog", "Result", result.Data.ToString());
+        Logging.Handler.Debug("/devices -> Remote_Shell_Dialog", "Result", result.Data.ToString());
     }
 
     #endregion
@@ -1745,12 +1745,12 @@
         await Remote_Screen_Refresh_Timer_Stop();
 
         var options = new DialogOptions
-                {
-                    CloseButton = true,
-                    FullWidth = true,
-                    MaxWidth = MaxWidth.ExtraLarge,
-                    BackgroundClass = "dialog-blurring",
-                };
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraLarge,
+            BackgroundClass = "dialog-blurring",
+        };
 
         DialogParameters parameters = new DialogParameters();
         parameters.Add("device_id", device_id);
@@ -1806,9 +1806,9 @@
             Logging.Handler.Error("/dashboard -> Dispose", "Error during disposal", ex.ToString());
         }
         finally
-		{
-			loading_overlay = false;
-			StateHasChanged();
-		}
+        {
+            loading_overlay = false;
+            StateHasChanged();
+        }
     }
 }

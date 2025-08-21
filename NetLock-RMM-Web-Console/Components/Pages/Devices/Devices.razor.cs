@@ -252,7 +252,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
                    row.operating_system.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                    row.domain.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                    row.antivirus_solution.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
-                   row.firewall_status.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase);
+                   row.firewall_status.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   row.last_active_user.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase);
         }
 
         private string devices_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert

@@ -284,7 +284,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START c315f156-62c8-49a5-9c33-9f50f3684f8a //OSSCH_END
+        //OSSCH_START 35579233-3ae1-4582-874f-53342c3dd1dc //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1383,7 +1383,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START ab7d3f12-ec94-41f1-a5e5-0208ec95593d //OSSCH_END
+    //OSSCH_START 5e900c26-b0d8-4984-a912-7e8c9b06229d //OSSCH_END
 }
 
 /*
@@ -1487,7 +1487,7 @@ if (role_remote)
             // Verify the device
             string device_status = await Authentification.Verify_Device(json, ip_address_external, true);
 
-            // Check if the device is authorized, synced, or not synced. If so, get the policy
+            // Check if the device is authorized, synced, or not synced
             if (device_status == "authorized" || device_status == "synced" || device_status == "not_synced")
             {
                 string responseId = string.Empty;

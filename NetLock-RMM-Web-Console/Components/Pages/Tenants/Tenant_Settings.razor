@@ -422,7 +422,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
     }
 
@@ -436,7 +436,9 @@
         {
             await conn.OpenAsync();
 
-            MySqlCommand command = new MySqlCommand("SELECT * FROM `locations` WHERE tenant_id = '" + id + "';", conn);
+            MySqlCommand command = new MySqlCommand("SELECT * FROM `locations` WHERE tenant_id = @tenant_id;", conn);
+            command.Parameters.AddWithValue("@tenant_id", id);
+
             using (DbDataReader reader = await command.ExecuteReaderAsync())
             {
                 if (reader.HasRows)
@@ -465,7 +467,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
     }
 

@@ -127,6 +127,8 @@
                                                   Class="mt-5" />
                                     </div>
 
+                                    <MudText Class="mt-2">Scan the QR code with your Authenticator app or enter the following code manually: @two_factor_manualEntrySetupCode</MudText>
+
                                     <MudTextField @bind-Value="@two_factor_codeInput" Label="@Localizer["2factor_verification_code"]" Required="true" RequiredError="@Localizer["required"]" Immediate="true" />
 
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="@Two_Factor_Authentification_VerifyCode">@Localizer["verificate"]</MudButton>
