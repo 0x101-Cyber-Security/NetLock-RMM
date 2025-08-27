@@ -69,7 +69,76 @@
     object-fit: cover;
     z-index: -1; /* Video bleibt hinter anderen Inhalten */
     }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    .animated-text {
+        animation: pulse 2s infinite ease-in-out;
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    .wave-emoji {
+        display: inline-block;
+        animation: wave 2s infinite;
+        transform-origin: 70% 70%;
+    }
+
+    @@keyframes wave {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        15% {
+            transform: rotate(15deg);
+        }
+
+        30% {
+            transform: rotate(-10deg);
+        }
+
+        45% {
+            transform: rotate(15deg);
+        }
+
+        60% {
+            transform: rotate(-10deg);
+        }
+
+        75% {
+            transform: rotate(15deg);
+        }
+
+        100% {
+            transform: rotate(0deg);
+        }
+    }
 </style>
+
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
+</MudOverlay>
 
 <AuthorizeView>
     <NotAuthorized>
@@ -179,12 +248,58 @@
                     </MudCardContent>
                 </MudCard>
             </MudContainer>
+
+            <MudText Class="mt-10" Typo="Typo.h5" Align="Align.Center">"@funFact"</MudText>
+
         </MudLayout>
 
     </NotAuthorized>
 </AuthorizeView>
 
 @code {
+
+    private string netlock_username = String.Empty;
+    private bool permissions_dashboard_enabled = false;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_dashboard_enabled = await Classes.Authentication.Permissions.Verify_Permission(user.FindFirst(ClaimTypes.Email)?.Value, "dashboard_enabled");
+            permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+
+            if (!permissions_dashboard_enabled)
+                logout = true;
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // Load other permissions here
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -211,8 +326,16 @@
             return;
         }
 
+        loading_overlay = true;
+        StateHasChanged();
+
+        funFact = await Classes.Miscellaneous.FunFacts.GetRandomFact();
+
+        loading_overlay = false;
         StateHasChanged();
     }
+
+    private bool loading_overlay = false;
 
     private string username = String.Empty;
     private string password = String.Empty;
@@ -241,6 +364,7 @@
 
     private int invalid_count = 0;
 
+    private string funFact = String.Empty;
 
     private async Task Enter(KeyboardEventArgs e)
     {
@@ -415,7 +539,12 @@
 
 			//Snackbar.Add("Welcome back! :)", Severity.Success);
 
-            NavigationManager.NavigateTo("/dashboard", true);
+            await Permissions();
+
+            if (permissions_dashboard_enabled)
+                NavigationManager.NavigateTo("/dashboard", true);
+            else if (!permissions_dashboard_enabled)
+                NavigationManager.NavigateTo("/home", true);
         }
         catch (Exception ex)
         {

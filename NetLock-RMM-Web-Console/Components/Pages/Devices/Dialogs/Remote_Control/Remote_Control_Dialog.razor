@@ -71,18 +71,6 @@
 
         <MudPaper>
             @{
-                if (!Configuration.Members_Portal.isCodeSigned)
-                {
-                    <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Error">
-                        Your version of NetLock RMM is not code signed. Code signing is only included in the Pro & Cloud membership. This may cause limitations such as restricted access to privileged processes (UAC).
-                        <br />
-                        For more information, see:
-                        <MudLink Href="https://docs.netlockrmm.com/en/web-console/remote-screen-control" Target="_blank">
-                            https://docs.netlockrmm.com/en/web-console/remote-screen-control
-                        </MudLink>
-                    </MudAlert>
-                }
-
                 if (remote_server_client_setup)
                 {
                     @if (!refresh_screen_timer_running)
@@ -577,7 +565,7 @@
                         //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START 61d44acd-8c73-4991-a5fe-20174c4fe9d7 //OSSCH_END
+                        //OSSCH_START 04bbfe4f-8b5a-4167-80b9-60dc016601e2 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 20063) // 22 = empty image
                         {

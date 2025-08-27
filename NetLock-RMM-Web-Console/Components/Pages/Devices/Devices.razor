@@ -309,7 +309,7 @@
                             <div class="d-flex flex-column flex-md-row align-items-center">
                                 @if (permissions_devices_deauthorize)
                                 {
-                                    <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Warning" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DesktopAccessDisabled" @onclick="async () => { await Deauthorize_Device(notes_device_id); }">@Localizer["unauthorize"]</MudButton>
+                                    <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.DesktopAccessDisabled" @onclick="async () => { await Deauthorize_Device(notes_device_id); }">@Localizer["unauthorize"]</MudButton>
 
                                     @if (permissions_devices_move)
                                     {
@@ -328,12 +328,11 @@
 
                                     @if (permissions_devices_remote_control && platform == "Windows")
                                     {
-                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Monitor" OnClick="Remote_Control_Dialog">Remote Control</MudButton>
+                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Monitor" OnClick="Remote_Control_Dialog">Remote Screen Control</MudButton>
                                     }
                                 }
                             </div>
-
-
+                                
                             <MudTabs KeepPanelsAlive=true Class="mt-2" Elevation="4" Rounded="false" Color="@Color.Default">
                                 
                             @if (permissions_devices_general)

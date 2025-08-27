@@ -1,0 +1,236 @@
+﻿@page "/home"
+
+@using MySqlConnector
+@using System.Data
+@using System.Data.Common
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using System.Text
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
+</MudOverlay>
+
+<AuthorizeView>
+    <Authorized>
+
+        <MudText Class="ml-3 mb-3" Typo="Typo.h5">Hello @firstName!</MudText>
+
+        <MudPaper>
+            <MudCardContent Class="p-5">
+                <!-- Header -->
+                <MudText Typo="Typo.h6" Class="text-center">Profile Information</MudText>
+
+                <MudForm>
+
+                    <!-- Personal Information Fields -->
+                    <MudGrid Class="mb-0">
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Username" @bind-Value="netlock_username" Disabled="true" FullWidth="true" Immediate="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="First Name" @bind-Value="firstName" Disabled="false" FullWidth="true" Immediate="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="Last Name" @bind-Value="lastName" Disabled="false" FullWidth="true" Immediate="true" />
+                        </MudItem>
+                        <MudItem xs="12" sm="6">
+                            <MudTextField Label="E-Mail" @bind-Value="email" Disabled="false" FullWidth="true" Immediate="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudTextField Label="Phone" @bind-Value="phone" Disabled="false" FullWidth="true" Immediate="true" />
+                        </MudItem>
+                    </MudGrid>
+
+                    <MudSelect Class="ml-2 mt-3 mb-2" T="string" @bind-Value="role" Label="Your role" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Disabled="true" >
+                        <MudSelectItem Value="@("Administrator")" />
+                        <MudSelectItem Value="@("Moderator")" />
+                        <MudSelectItem Value="@("Customer")" />
+                    </MudSelect>
+
+                    <!-- Save Button -->
+                    <MudButton Class="mt-4" OnClick="UpdateProfile" Variant="Variant.Filled" Color="Color.Default" FullWidth="true">Update</MudButton>
+
+                </MudForm>
+            </MudCardContent>
+
+        </MudPaper>
+
+        <MudText Class="mt-10" Typo="Typo.h5" Align="Align.Center">"@funFact"</MudText>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    private bool loading_overlay = false;
+
+    private bool _isDarkMode;
+
+    private string netlock_username = String.Empty;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        loading_overlay = true;
+        StateHasChanged();
+
+        if (!await Permissions())
+            return;
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await LoadProfile();
+
+        funFact = await Classes.Miscellaneous.FunFacts.GetRandomFact();
+
+        loading_overlay = false;
+        StateHasChanged();
+    }
+
+    private string firstName = String.Empty;
+    private string lastName = String.Empty;
+    private string email = String.Empty;
+    private string phone = String.Empty;
+    private string role = String.Empty;
+
+    private string funFact = String.Empty;
+
+    private async Task LoadProfile()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM accounts WHERE username = @netlock_username;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+            Logging.Handler.Debug("Example", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        email = reader["mail"].ToString() ?? String.Empty;
+                        firstName = reader["first_name"].ToString() ?? String.Empty;
+                        lastName = reader["last_name"].ToString() ?? String.Empty;
+                        phone = reader["phone"].ToString() ?? String.Empty;
+                        role = reader["role"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Example", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        string query = "UPDATE accounts SET first_name = @first_name, last_name = @last_name, phone = @phone, mail = @mail WHERE username = @netlock_username;";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@first_name", firstName);
+            cmd.Parameters.AddWithValue("@last_name", lastName);
+            cmd.Parameters.AddWithValue("@phone", phone);
+            cmd.Parameters.AddWithValue("@mail", email);
+            cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+            Logging.Handler.Debug("UpdateProfile", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+
+            Snackbar.Add("Saved.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("UpdateProfile", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+}

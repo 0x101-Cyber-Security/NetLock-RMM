@@ -140,6 +140,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
+            await JSRuntime.InvokeVoidAsync("makeColumnsSortable", tableId, DotNetObjectReference.Create(this));
+
             disabled = true;
 
             devices_table_view_port = "70vh";
@@ -193,6 +195,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         private string device_table_search_string = "";
         private int events_rows_per_page = 25;
         private static string date = String.Empty;
+        private string tableId = "devicesTable";
 
         private string tenant_id = String.Empty;
         private string location_id = String.Empty;
@@ -351,6 +354,21 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         //Deauthorize device
         private async Task Deauthorize_Device(string device_id)
         {
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Small,
+                BackgroundClass = "dialog-blurring",
+            };
+
+            bool? dialog_result = await DialogService.ShowMessageBox(Localizer["warning"], "Are you sure you want to withdraw the authorization of this device?", yesText: Localizer["confirm"], cancelText: Localizer["cancel"], options: options);
+
+            bool state = Convert.ToBoolean(dialog_result == null ? "false" : "true");
+
+            if (!state)
+                return;
+
             this.Snackbar.Configuration.ShowCloseIcon = true;
             this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 

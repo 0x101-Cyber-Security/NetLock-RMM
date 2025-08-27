@@ -17,9 +17,18 @@ namespace _x101.HWID_System
         {
             if (OperatingSystem.IsWindows())
             {
-                var cpuId = CpuId.GetCpuId();
-                var windowsId = WindowsId.GetWindowsId();
-                HW_UID = windowsId + cpuId;
+                // Check if x64 or arm64
+                if (RuntimeInformation.ProcessArchitecture.Equals(Architecture.X64))
+                {
+                    var cpuId = CpuId.GetCpuId();
+                    var windowsId = WindowsId.GetWindowsId();
+                    HW_UID = windowsId + cpuId;
+                }
+                else if (RuntimeInformation.ProcessArchitecture.Equals(Architecture.Arm64))
+                {
+                    var windowsId = WindowsId.GetWindowsId();
+                    HW_UID = windowsId;
+                }
             }
             else if (OperatingSystem.IsLinux())
             {

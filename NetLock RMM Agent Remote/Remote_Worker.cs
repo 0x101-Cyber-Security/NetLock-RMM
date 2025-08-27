@@ -270,19 +270,36 @@ namespace NetLock_RMM_Agent_Remote
             }
         }
 
+        private readonly SemaphoreSlim _signalRConnectionLock = new SemaphoreSlim(1, 1);
+        private bool _signalRConnecting = false;
+
         private async Task Remote_Server_Check_Connection_Status()
         {
             try
             {
                 if (!string.IsNullOrEmpty(device_identity))
                 {
-                    if (!remote_server_client_setup || remote_server_client == null || remote_server_client.State == HubConnectionState.Disconnected)
+                    // Prevents multiple simultaneous connection attempts (in place to test remote screen control keyboard ghosting) https://github.com/0x101-Cyber-Security/NetLock-RMM/issues/89
+                    await _signalRConnectionLock.WaitAsync();
+                    try
                     {
-                        await Setup_SignalR();
+                        if (_signalRConnecting)
+                            return;
+
+                        if (!remote_server_client_setup || remote_server_client == null || remote_server_client.State == HubConnectionState.Disconnected)
+                        {
+                            _signalRConnecting = true;
+                            await Setup_SignalR();
+                        }
+                        else if (remote_server_client.State == HubConnectionState.Connected)
+                        {
+                            Logging.Debug("Service.Check_Connection_Status", "Remote server connection is already active.", "");
+                        }
                     }
-                    else if (remote_server_client.State == HubConnectionState.Connected)
+                    finally
                     {
-                        Logging.Debug("Service.Check_Connection_Status", "Remote server connection is already active.", "");
+                        _signalRConnecting = false;
+                        _signalRConnectionLock.Release();
                     }
                 }
             }
@@ -314,8 +331,11 @@ namespace NetLock_RMM_Agent_Remote
                 Device_Identity device_identity_object = JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
 
                 if (remote_server_client != null)
+                {
                     await remote_server_client.DisposeAsync();
-
+                    remote_server_client = null;
+                }
+                
                 remote_server_client = new HubConnectionBuilder()
                 .WithUrl(remote_server_url, options =>
                 {
@@ -354,7 +374,7 @@ namespace NetLock_RMM_Agent_Remote
 
                     // Deserialisation of the entire JSON string
                     Command_Entity command_object = JsonSerializer.Deserialize<Command_Entity>(command);
-                    // Example: If the type is 0, execute the powershell code and send the response back to the remote server if wait_response is true
+                    // Example: If the type is 0, execute the powershell code and send the response back to the remote server if wait_response = true
 
                     string result = string.Empty;
 

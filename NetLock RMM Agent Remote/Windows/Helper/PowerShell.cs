@@ -42,7 +42,7 @@ namespace Windows.Helper
             }
         }
 
-        public static string Execute_Script(string type, string script)
+        public static string Execute_Script(string type, string script) // script must be base64 encoded
         {
             try
             {
@@ -56,32 +56,17 @@ namespace Windows.Helper
                     return "-";
                 }
 
-                // Decode script from Base64
-                byte[] script_data = Convert.FromBase64String(script);
-                string decoded_script = Encoding.UTF8.GetString(script_data);
-
-                // Normalize line endings to Windows style (optional)
-                decoded_script = decoded_script.Replace("\r\n", "\n").Replace("\n", "\r\n");
-
                 using Process cmd_process = new Process();
 
                 cmd_process.StartInfo.FileName = "powershell.exe";
-                // -Command - reads the script from StandardInput
-                cmd_process.StartInfo.Arguments = "-ExecutionPolicy Bypass -Command -";
+                cmd_process.StartInfo.Arguments = $"-ExecutionPolicy Bypass -EncodedCommand {script}";
 
                 cmd_process.StartInfo.UseShellExecute = false;
-                cmd_process.StartInfo.RedirectStandardInput = true;
                 cmd_process.StartInfo.RedirectStandardOutput = true;
                 cmd_process.StartInfo.RedirectStandardError = true;
                 cmd_process.StartInfo.CreateNoWindow = true;
 
                 cmd_process.Start();
-
-                // Skript per StandardInput an PowerShell senden
-                using (StreamWriter writer = cmd_process.StandardInput)
-                {
-                    writer.Write(decoded_script);
-                }
 
                 // Read output and error (blocking until process ends)
                 string output = cmd_process.StandardOutput.ReadToEnd();

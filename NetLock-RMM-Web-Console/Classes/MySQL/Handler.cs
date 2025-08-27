@@ -119,11 +119,11 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             catch (Exception ex)
             {
                 Logging.Handler.Error("Classes.MySQL.Handler.Quick_Reader", $"query: {query} item: {item}", ex.Message);
-                conn.Close();
+                await conn.CloseAsync();
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
 
             return string.Join(",", results);
