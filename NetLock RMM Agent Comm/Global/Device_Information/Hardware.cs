@@ -341,7 +341,17 @@ namespace Global.Device_Information
                 }
             }
 
-            return cpu_information_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.cpuInformationJson == cpu_information_json)
+            {
+                Logging.Device_Information("Device_Information.Hardware.CPU_Information", "No changes in CPU information detected.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.cpuInformationJson = cpu_information_json;
+                return cpu_information_json;
+            }
         }
 
         // Helper function to safely convert cache size
@@ -859,9 +869,17 @@ namespace Global.Device_Information
                 }
             }
 
-
-
-            return ram_information_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.ramInformationJson == ram_information_json)
+            {
+                Logging.Device_Information("Device_Information.Hardware.RAM_Information", "No changes in RAM information detected.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.ramInformationJson = ram_information_json;
+                return ram_information_json;
+            }
         }
 
         public static int RAM_Usage()
@@ -1333,7 +1351,17 @@ foreach (var diskObj in allDisks)
                 return "[]";
             }
 
-            return disks_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.disksJson == disks_json)
+            {
+                Logging.Device_Information("Device_Information.Hardware.Disks", "No changes in disk information detected.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.disksJson = disks_json;
+                return disks_json;
+            }
         }
 
         public static string RAM_Total()

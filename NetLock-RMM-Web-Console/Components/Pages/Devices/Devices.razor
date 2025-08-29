@@ -137,7 +137,8 @@
                             <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
                         </ToolBarContent>
                         <HeaderContent>
-                                    <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_active_user)">Last active user</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
@@ -146,7 +147,6 @@
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
-                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_active_user)">Last active user</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.firewall_status)">@Localizer["firewall"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.antivirus_solution)">@Localizer["antivirus_solution"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;">
@@ -188,6 +188,12 @@
                                 </MudTd>
                         }
 
+
+                                            <MudTd DataLabel="Last active user" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                                <span style="display: flex; align-items: center;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_active_user
+                                                </span>
+                                            </MudTd>
 
 
                                             <MudTd DataLabel="@Localizer["tenant"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
@@ -235,12 +241,6 @@
                                             <MudTd DataLabel="@Localizer["domain"]" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                                 <span style="display: flex; align-items: center;">
                                                     <MudIcon Icon="@Icons.Material.Filled.Domain" Size="Size.Small" class="desktop-icon" />&nbsp;@row.domain
-                                                </span>
-                                            </MudTd>
-
-                                            <MudTd DataLabel="Last active user" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
-                                                <span style="display: flex; align-items: center;">
-                                                    <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_active_user
                                                 </span>
                                             </MudTd>
 
@@ -337,6 +337,89 @@
                                 
                             @if (permissions_devices_general)
                             {
+
+                                    <MudPaper>
+
+                                     <MudExpansionPanel Class="custom-expansion-panel" @bind-Expanded="notes_expanded">
+                                            <TitleContent>
+                                                <div class="d-flex">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Notes" class="mr-3"></MudIcon>
+                                                    <MudText>Notes</MudText>
+                                                </div>
+                                            </TitleContent>
+                                            <ChildContent>
+
+                                        <MudTextField Class="ml-2 mr-2" T="string" Lines="10" Variant="Variant.Outlined" @bind-Text="notes_string" Disabled="@notes_disabled" />
+                                        <MudButton Class="mt-2 ml-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Notes_Save" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save">@Localizer["save"]</MudButton>
+                                        <MudButton Class="mt-2 ml-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Notes_Edit_Form" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit">@Localizer["edit"]</MudButton>
+
+                                        <MudExpansionPanel Class="mt-2 custom-expansion-panel" @bind-Expanded="device_information_notes_history_expanded" @bind-Expanded:after="async () => { await Device_Information_Notes_History_Table_Submit_Picker(); }">
+                                            <TitleContent>
+                                                <div class="d-flex">
+                                                    <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
+                                                    <MudText>@Localizer["history"]</MudText>
+                                                </div>
+                                            </TitleContent>
+
+                                            <ChildContent>
+
+                                                <div style="display: flex; align-items: center;">
+                                                    <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="device_information_notes_history_table_picker" @bind-DateRange="device_information_notes_history_table_dateRange">
+                                                        <PickerActions Context="pickerActionsContext">
+                                                            <MudButton Class="mr-auto align-self-start" OnClick="@(() => device_information_notes_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
+                                                            <MudButton OnClick="@(() => device_information_notes_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
+                                                            <MudButton Color="Color.Primary" @onclick="async () => { await Device_Information_Notes_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
+                                                        </PickerActions>
+                                                    </MudDateRangePicker>
+
+                                                    <MudTooltip Text="@Localizer["export_data"]">
+                                                        <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Notes_History_Table_Dialog"></MudIconButton>
+                                                    </MudTooltip>
+                                                </div>
+
+                                                <MudTable Class="mt-5" Height="25vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@device_information_notes_history_mysql_data" Filter="new Func<Device_Information_Notes_History_Entity, bool>(Device_Information_Notes_History_Table_Filter_Func)">
+                                                    <ToolBarContent>
+                                                        <MudTextField @bind-Value="device_information_notes_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                                    </ToolBarContent>
+                                                    <HeaderContent>
+                                                        <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.date))" style="white-space: nowrap;">@Localizer["date"]</MudTh>
+                                                        <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.author))" style="white-space: nowrap;">@Localizer["author"]</MudTh>
+                                                        <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.note))" style="white-space: nowrap;">@Localizer["notes"]</MudTh>
+                                                    </HeaderContent>
+                                                    <RowTemplate Context="device_information_notes_history_row">
+
+                                                        <MudTd DataLabel="@Localizer["date"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
+                                                            <span style="display: flex; align-items: center;">
+                                                                &nbsp;@device_information_notes_history_row.date
+                                                            </span>
+                                                        </MudTd>
+
+                                                        <MudTd DataLabel="@Localizer["author"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
+                                                            <span style="display: flex; align-items: center;">
+                                                                &nbsp;@device_information_notes_history_row.author
+                                                            </span>
+                                                        </MudTd>
+
+                                                        <MudTd DataLabel="@Localizer["note"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
+                                                            <span style="display: flex; align-items: center;">
+                                                                &nbsp;@device_information_notes_history_row.note
+                                                            </span>
+                                                        </MudTd>
+
+                                                    </RowTemplate>
+                                                    <PagerContent>
+                                                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                                    </PagerContent>
+                                                </MudTable>
+                                            </ChildContent>
+                                        </MudExpansionPanel>
+                                            
+                                            </ChildContent>
+
+                                    </MudExpansionPanel>
+
+                                    </MudPaper>
+                                   
                                     <MudTabPanel Text="@Localizer["general"]">
                                         <MudPaper>
                                             <MudText Class="ml-2" Typo="Typo.h6">Agent</MudText>
@@ -1899,75 +1982,6 @@
 
                                         </MudPaper>
                                         }
-
-                                        <MudPaper Class="mt-5">
-                                            <MudText Class="ml-2" Typo="Typo.h6">@Localizer["notes"]</MudText>
-                                            <MudTextField Class="ml-2 mr-2" T="string" Lines="10" Variant="Variant.Outlined" @bind-Text="notes_string" Disabled="@notes_disabled" />
-                                            <MudButton Class="mt-2 ml-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Notes_Save" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save">@Localizer["save"]</MudButton>
-                                            <MudButton Class="mt-2 ml-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Notes_Edit_Form" Color="Color.Default" StartIcon="@Icons.Material.Filled.Edit">@Localizer["edit"]</MudButton>
-
-                                            <MudExpansionPanel Class="mt-2 custom-expansion-panel" @bind-Expanded="device_information_notes_history_expanded" @bind-Expanded:after="async () => { await Device_Information_Notes_History_Table_Submit_Picker(); }">
-                                                <TitleContent>
-                                                    <div class="d-flex">
-                                                        <MudIcon Icon="@Icons.Material.Filled.History" class="mr-3"></MudIcon>
-                                                        <MudText>@Localizer["history"]</MudText>
-                                                    </div>
-                                                </TitleContent>
-
-                                                <ChildContent>
-
-                                                    <div style="display: flex; align-items: center;">
-                                                        <MudDateRangePicker PickerVariant="PickerVariant.Dialog" Label="@Localizer["time_span"]" @ref="device_information_notes_history_table_picker" @bind-DateRange="device_information_notes_history_table_dateRange">
-                                                            <PickerActions Context="pickerActionsContext">
-                                                                <MudButton Class="mr-auto align-self-start" OnClick="@(() => device_information_notes_history_table_picker.ClearAsync())">@Localizer["reset"]</MudButton>
-                                                                <MudButton OnClick="@(() => device_information_notes_history_table_picker.CloseAsync(false))">@Localizer["cancel"]</MudButton>
-                                                                <MudButton Color="Color.Primary" @onclick="async () => { await Device_Information_Notes_History_Table_Submit_Picker(); }">@Localizer["confirm"]</MudButton>
-                                                            </PickerActions>
-                                                        </MudDateRangePicker>
-
-                                                        <MudTooltip Text="@Localizer["export_data"]">
-                                                            <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Notes_History_Table_Dialog"></MudIconButton>
-                                                        </MudTooltip>
-                                                    </div>
-
-                                                    <MudTable Class="mt-5" Height="25vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@device_information_notes_history_mysql_data" Filter="new Func<Device_Information_Notes_History_Entity, bool>(Device_Information_Notes_History_Table_Filter_Func)">
-                                                        <ToolBarContent>
-                                                            <MudTextField @bind-Value="device_information_notes_history_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
-                                                        </ToolBarContent>
-                                                        <HeaderContent>
-                                                            <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.date))" style="white-space: nowrap;">@Localizer["date"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.author))" style="white-space: nowrap;">@Localizer["author"]</MudTh>
-                                                            <MudTh Sortable="true" @onclick="() => device_information_notes_history_table_sorted_column = (nameof(Device_Information_Notes_History_Entity.note))" style="white-space: nowrap;">@Localizer["notes"]</MudTh>
-                                                        </HeaderContent>
-                                                        <RowTemplate Context="device_information_notes_history_row">
-
-                                                            <MudTd DataLabel="@Localizer["date"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@device_information_notes_history_row.date
-                                                                </span>
-                                                            </MudTd>
-
-                                                            <MudTd DataLabel="@Localizer["author"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@device_information_notes_history_row.author
-                                                                </span>
-                                                            </MudTd>
-
-                                                            <MudTd DataLabel="@Localizer["note"]" @onclick="() => Device_Information_Notes_History_RowClickHandler(device_information_notes_history_row)" class="@Device_Information_Notes_History_GetRowClass(device_information_notes_history_row)" style="white-space: nowrap;">
-                                                                <span style="display: flex; align-items: center;">
-                                                                    &nbsp;@device_information_notes_history_row.note
-                                                                </span>
-                                                            </MudTd>
-
-                                                        </RowTemplate>
-                                                        <PagerContent>
-                                                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                                        </PagerContent>
-                                                    </MudTable>
-                                                </ChildContent>
-                                            </MudExpansionPanel>
-
-                                        </MudPaper>
 
                                         @*
                                         <MudPaper Class="mt-5">

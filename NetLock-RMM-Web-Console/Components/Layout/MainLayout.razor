@@ -31,14 +31,15 @@
                 <MudText Typo="Typo.h5" Class="ml-3 d-none d-md-flex">@NetLock_RMM_Web_Console.Configuration.Web_Console.title</MudText>
 
                 <!-- Version for larger screens -->
-                <MudText Typo="Typo.body2" Class="px-4 mud-text-secondary d-none d-md-flex">
-                    @Application_Settings.web_console_version
+                <MudText Typo="Typo.body2">
+                    <MudNavLink Icon="@Icons.Material.Filled.NewReleases" Class="px-4 mud-text-secondary d-none d-md-flex" Href="https://github.com/0x101-Cyber-Security/NetLock-RMM/milestone/2" Target="_blank">@Application_Settings.web_console_version</MudNavLink>
                 </MudText>
 
                 <MudSpacer />
 
                 <!-- Normal icon buttons for larger screens -->
                 <div class="d-none d-md-flex">
+                    <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" Href="/home" Title="Home" />
                     <MudIconButton Icon="@Icons.Material.Filled.InstallDesktop" Color="Color.Inherit" Title="Agent Download" OnClick="Agent_Download_Dialog" />
                     <MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="Color.Inherit" OnClick="@DarkModeToggle" />
                     <MudIconButton Href="https://github.com/0x101-Cyber-Security/NetLock-RMM/issues" Target="_blank" Icon="@Icons.Material.Filled.BugReport" Color="Color.Inherit" Title="@Localizer["report_a_bug"]" />

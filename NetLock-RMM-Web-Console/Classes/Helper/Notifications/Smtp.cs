@@ -92,32 +92,34 @@ namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
             }
         }
 
-        public static async Task<string> Test_Smtp(string username, string password, string server, int port, bool ssl, string from)
+        public static async Task<string> Test_Smtp(string username, string password, string server, int port, bool ssl, string from, string toAddress)
         {
             try
             {
                 from = from ?? username; // fallback to username if from is null
 
+                toAddress = toAddress ?? username; // fallback to username if toAddress is null
+
                 using (SmtpClient smtpClient = new SmtpClient(server, port))
                 {
-                    // Setze die Anmeldeinformationen für den SMTP-Server
+                    // Set the login information for the SMTP server
                     smtpClient.Credentials = new NetworkCredential(username, password);
 
-                    // Aktiviere SSL
+                    // Enable SSL
                     smtpClient.EnableSsl = ssl;
 
-                    // Erstelle eine Instanz der MailMessage-Klasse
+                    // Create an instance of the MailMessage class
                     using (MailMessage mailMessage = new MailMessage())
                     {
-                        // Setze Absender, Empfänger, Betreff und Nachrichtentext
+                        // Set sender, recipient, subject and message text
                         mailMessage.From = new MailAddress(from, "Alerts | NetLock");
-                        mailMessage.To.Add(username); // Füge hier die Empfänger-E-Mail-Adresse hinzu
+                        mailMessage.To.Add(toAddress); // Add the recipient e-mail address here
                         mailMessage.Subject = "NetLock - Test Alert";
-                        mailMessage.Body = "Test erfolgreich.";
+                        mailMessage.Body = "Test successful.";
 
                         try
                         {
-                            // Versende die E-Mail
+                            // Send the e-mail
                             await smtpClient.SendMailAsync(mailMessage);
                             return "success";
                         }

@@ -1,17 +1,18 @@
-﻿using System;
+﻿using Global.Helper;
+using NetLock_RMM_Agent_Comm;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Management;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text;
 using System.Text.Json;
-using Global.Helper;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Global.Device_Information
 {
@@ -350,7 +351,18 @@ namespace Global.Device_Information
                 string processes_json = "[" + string.Join("," + Environment.NewLine, processJsonList) + "]";
 
                 Logging.Device_Information("Device_Information.Process_List.Collect", "Collected the following process information.", processes_json);
-                return processes_json;
+
+                // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+                if (Device_Worker.processesJson == processes_json)
+                {
+                    Logging.Device_Information("Device_Information.Process_List.Collect", "No changes in process information detected.", "");
+                    return "-";
+                }
+                else
+                {
+                    Device_Worker.processesJson = processes_json;
+                    return processes_json;
+                }
             }
             catch (Exception ex)
             {

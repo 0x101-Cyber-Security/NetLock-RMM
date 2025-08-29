@@ -435,6 +435,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         private static string upgrade_script_2_5_1_6_to_2_5_2_2 = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09MVU1OIHVwZGF0ZV9wZW5kaW5nIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGxhc3RfYWN0aXZlX3VzZXI7DQpBTFRFUiBUQUJMRSBkZXZpY2VzIEFERCBDT0xVTU4gdXBkYXRlX3N0YXJ0ZWQgREFURVRJTUUgTlVMTCBERUZBVUxUICcyMDAwLTAxLTAxIDAwOjAwOjAwJyBBRlRFUiB1cGRhdGVfcGVuZGluZzs=";
         private static string upgrade_script_2_5_1_6_to_2_5_2_2v2 = "QUxURVIgVEFCTEUgc2V0dGluZ3MgQ0hBTkdFIENPTFVNTiBhZ2VudF91cGRhdGVzX2VuYWJsZWQgYWdlbnRfdXBkYXRlc193aW5kb3dzX2VuYWJsZWQgSU5UIE5VTEwgREVGQVVMVCAnMCcgQUZURVIgcGFja2FnZV9wcm92aWRlcl91cmwsIEFERCBDT0xVTU4gYWdlbnRfdXBkYXRlc19saW51eF9lbmFibGVkIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGFnZW50X3VwZGF0ZXNfd2luZG93c19lbmFibGVkLCBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWFjb3NfZW5hYmxlZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBhZ2VudF91cGRhdGVzX2xpbnV4X2VuYWJsZWQ7DQpBTFRFUiBUQUJMRSBzZXR0aW5ncyBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWF4X2NvbmN1cnJlbnRfdXBkYXRlcyBJTlQgTlVMTCBERUZBVUxUICc1JyBBRlRFUiBhZ2VudF91cGRhdGVzX21hY29zX2VuYWJsZWQ7";
         private static string upgrade_script_2_5_1_6_to_2_5_2_2c = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBjaGFuZ2Vsb2dfcmVhZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiByZW1vdGVfc2Vzc2lvbl90b2tlbjs=";
+        private static string upgrade_script_2_5_2_2c_to_2_5_2_7 = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBmaXJzdF9uYW1lIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBtYWlsLCBBREQgQ09MVU1OIGxhc3RfbmFtZSBWQVJDSEFSKDI1NSkgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgZmlyc3RfbmFtZTs=";
 
 
         // Execute installation SQL script
@@ -600,6 +601,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2);
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2v2);
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2c);
+            scripts.Add(upgrade_script_2_5_2_2c_to_2_5_2_7);
 
             // Disabled due to testing...
 

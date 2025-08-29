@@ -1,38 +1,39 @@
+using Helper;
+using LettuceEncrypt;
+using LLama;
+using LLama.Common;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
-using NetLock_RMM_Server.Agent.Windows;
-using System.Security.Principal;
-using Microsoft.AspNetCore.SignalR;
-using NetLock_RMM_Server.SignalR;
-using System.Net;
-using System;
-using System.Text.Json;
-using static NetLock_RMM_Server.Agent.Windows.Authentification;
-using Microsoft.Extensions.DependencyInjection;
-using NetLock_RMM_Server;
-using NetLock_RMM_Server.Events;
-using Microsoft.Extensions.Primitives;
-using LettuceEncrypt;
-using System.Threading;
-using System.IO;
-using static NetLock_RMM_Server.SignalR.CommandHub;
-using Microsoft.AspNetCore.Builder;
-using LLama.Common;
-using LLama;
 //using NetLock_RMM_Server.LLM;
 using Microsoft.AspNetCore.Mvc;
-using System.Runtime.InteropServices;
-using NetLock_RMM_Server.Configuration;
-using System.Security.Cryptography;
-using NetLock_RMM_Server.Members_Portal;
-using System.Globalization;
-using System.IO.Compression;
 using Microsoft.AspNetCore.Routing.Tree;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileSystemGlobbing.Internal.PatternContexts;
-using System.Reflection;
-using System.Configuration;
+using Microsoft.Extensions.Primitives;
+using NetLock_RMM_Server;
+using NetLock_RMM_Server.Agent.Windows;
 using NetLock_RMM_Server.Background_Services;
+using NetLock_RMM_Server.Configuration;
+using NetLock_RMM_Server.Events;
+using NetLock_RMM_Server.Members_Portal;
+using NetLock_RMM_Server.SignalR;
+using System;
+using System.Configuration;
+using System.Globalization;
+using System.IO;
+using System.IO.Compression;
+using System.Net;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
+using System.Security.Principal;
+using System.Text.Json;
+using System.Threading;
+using static NetLock_RMM_Server.Agent.Windows.Authentification;
+using static NetLock_RMM_Server.SignalR.CommandHub;
 
 NetLock_RMM_Server.Configuration.Server.serverStartTime = DateTime.Now; // Set server start time
 
@@ -284,7 +285,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 23194b09-5f82-487b-89ea-436c52858992 //OSSCH_END
+        //OSSCH_START 03e07d3e-d85f-4cc5-b819-6578531ebbc7 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1383,7 +1384,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 25d0caa8-a0d7-457c-978a-0ce90e5e239b //OSSCH_END
+    //OSSCH_START c9f28d6c-e00f-4801-b9cc-18aa47838f9a //OSSCH_END
 }
 
 /*

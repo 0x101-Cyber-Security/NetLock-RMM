@@ -1,21 +1,22 @@
-﻿using System;
+﻿using Global.Helper;
+using Linux.Helper;
+using MacOS.Helper;
+using NetLock_RMM_Agent_Comm;
+using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using static Global.Online_Mode.Handler;
-using Global.Helper;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Net;
-using Linux.Helper;
-using MacOS.Helper;
 
 namespace Global.Device_Information
 {
@@ -329,7 +330,17 @@ namespace Global.Device_Information
                 return "[]";
             }
 
-            return network_adapters_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.networkAdaptersJson == network_adapters_json)
+            {
+                Logging.Device_Information("Device_Information.Network.Network_Adapter_Information", "No changes in network adapter information detected.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.networkAdaptersJson = network_adapters_json;
+                return network_adapters_json;
+            }
         }
 
         public static bool Ping(string address, int timeout)

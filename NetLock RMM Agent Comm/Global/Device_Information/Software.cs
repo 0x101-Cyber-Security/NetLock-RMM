@@ -1,20 +1,21 @@
-﻿using Microsoft.Win32;
+﻿using Global.Helper;
+using Microsoft.Win32;
+using Microsoft.Win32.TaskScheduler;
+using NetLock_RMM_Agent_Comm;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using System.Xml;
 using System.Xml.Linq;
 using static Global.Online_Mode.Handler;
-using Microsoft.Win32.TaskScheduler;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using Global.Helper;
-using System.Text.Json;
-using System.Xml;
 
 namespace Global.Device_Information
 {
@@ -357,7 +358,17 @@ namespace Global.Device_Information
                 applications_installed_json = "[]";
             }
 
-            return applications_installed_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.applicationsInstalledJson == applications_installed_json)
+            {
+                Logging.Device_Information("Device_Information.Software.Applications_Installed", "No changes detected since last check.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.applicationsInstalledJson = applications_installed_json;
+                return applications_installed_json;
+            }
         }
 
         public static string Applications_Logon()
@@ -400,7 +411,18 @@ namespace Global.Device_Information
                     // Create and log JSON array
                     string applications_logon_json = "[" + string.Join("," + Environment.NewLine, applications_logonJsonList) + "]";
                     Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_logon_json", applications_logon_json);
-                    return applications_logon_json;
+
+                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+                    if (Device_Worker.applicationsLogonJson == applications_logon_json)
+                    {
+                        Logging.Device_Information("Device_Information.Software.Applications_Logon", "No changes detected since last check.", "");
+                        return "-";
+                    }
+                    else
+                    {
+                        Device_Worker.applicationsLogonJson = applications_logon_json;
+                        return applications_logon_json;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -458,7 +480,18 @@ namespace Global.Device_Information
                     // Create and log JSON array
                     string applications_scheduled_tasks_json = "[" + string.Join("," + Environment.NewLine, applications_scheduled_tasksJsonList) + "]";
                     Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "applications_scheduled_tasks_json", applications_scheduled_tasks_json);
-                    return applications_scheduled_tasks_json;
+
+                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+                    if (Device_Worker.applicationsScheduledTasksJson == applications_scheduled_tasks_json)
+                    {
+                        Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "No changes detected since last check.", "");
+                        return "-";
+                    }
+                    else
+                    {
+                        Device_Worker.applicationsScheduledTasksJson = applications_scheduled_tasks_json;
+                        return applications_scheduled_tasks_json;
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -650,8 +683,19 @@ namespace Global.Device_Information
                 }
             }
 
-            return applications_services_json;
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.applicationsServicesJson == applications_services_json)
+            {
+                Logging.Device_Information("Device_Information.Software.Applications_Services", "No changes detected since last check.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.applicationsServicesJson = applications_services_json;
+                return applications_services_json;
+            }
         }
+
         private static string ExtractValueFromPlist(string plistContent, string key)
         {
             var match = Regex.Match(plistContent, $"\"{key}\" => \"([^\"]+)\"");
@@ -721,7 +765,18 @@ namespace Global.Device_Information
                 applications_drivers_json = "[]";
             }
 
-            return applications_drivers_json;
+
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.applicationsDriversJson == applications_drivers_json)
+            {
+                Logging.Device_Information("Device_Information.Software.Applications_Drivers", "No changes detected since last check.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.applicationsDriversJson = applications_drivers_json;
+                return applications_drivers_json;
+            }
         }
 
         public static string Cronjobs()
@@ -790,9 +845,17 @@ namespace Global.Device_Information
                 cronjobsJson = "[]";
             }
 
-            return "[]"; // return empty JSON array till the implementation is done
+            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+            if (Device_Worker.cronjobsJson == cronjobsJson)
+            {
+                Logging.Device_Information("Device_Information.Software.Cronjobs", "No changes detected since last check.", "");
+                return "-";
+            }
+            else
+            {
+                Device_Worker.cronjobsJson = cronjobsJson;
+                return "[]"; // return empty JSON array till the implementation is done
+            }
         }
-
-
     }
 }

@@ -124,6 +124,7 @@
     private string token = String.Empty;
     private bool loading_overlay = false;
     private bool expanded = false;
+    private string platform = String.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -143,6 +144,8 @@
         token = await Classes.Authentication.User.Get_Remote_Session_Token(netlock_username);
 
         await Remote_Setup_SignalR();
+
+        platform = await Classes.MySQL.Handler.Get_Device_Platform(device_id);
 
         //await Remote_Authentificate_Dialog();
         await Get_Scripts();
@@ -236,10 +239,10 @@
             await conn.OpenAsync();
 
             string query = "SELECT * FROM scripts WHERE platform = @platform AND name = @name;";
-            
+
             MySqlCommand cmd = new MySqlCommand(query, conn);
             cmd.Parameters.AddWithValue("@name", name);
-			cmd.Parameters.AddWithValue("@platform", platform);
+            cmd.Parameters.AddWithValue("@platform", platform);
 
             using (DbDataReader reader = await cmd.ExecuteReaderAsync())
             {
@@ -330,7 +333,7 @@
     public async Task Remote_Setup_SignalR()
     {
         this.Snackbar.Configuration.ShowCloseIcon = true;
-		this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
         try
         {
@@ -393,6 +396,11 @@
     {
         try
         {
+            if (platform == "Windows")
+                powershell_code = await Base64.Handler.EncodeUtf16LE(powershell_code);
+            else
+                powershell_code = await Base64.Handler.Encode(powershell_code);
+
             // Create the object
             var adminIdentity = new Remote_Admin_Identity
                 {
@@ -411,7 +419,7 @@
                 {
                     type = 0,
                     wait_response = wait_repsonse,
-                    powershell_code = await Base64.Handler.Encode(powershell_code)
+                    powershell_code = powershell_code
                 };
 
             var rootObject = new Remote_Root_Object

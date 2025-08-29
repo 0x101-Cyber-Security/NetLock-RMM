@@ -30,7 +30,8 @@
                 
                 @if (!IsValidEmail(smtp.username))
                 {
-                    <MudTextField Label="From address" T="string" @bind-Value="@fromAddress" Immediate="true" />
+                    <MudTextField Label="From address" T="string" @bind-Value="@smtp.fromAddress" Immediate="true" />
+                    <MudTextField Label="To address" T="string" @bind-Value="@smtp.toAddress" Immediate="true" />
                 }
 
                 <MudCheckBox Color="Color.Primary" T="bool" @bind-Value="@smtp.ssl">SSL/TLS</MudCheckBox>
@@ -58,11 +59,12 @@
     bool smtp_invalid = true;
 
     public Smtp_Settings smtp = new Smtp_Settings();
-    private string fromAddress = String.Empty;
 
     public class Smtp_Settings
     {
         public string username { get; set; }
+        public string fromAddress { get; set; }
+        public string toAddress { get; set; }
         public string password { get; set; }
         public string server { get; set; }
         public string port { get; set; }
@@ -84,9 +86,9 @@
         await Get_Smtp_Settings();
     }
 
-    bool password_visible;
-    InputType PasswordInput = InputType.Password;
-    string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
+    private bool password_visible;
+    private InputType PasswordInput = InputType.Password;
+    private string PasswordInputIcon = Icons.Material.Filled.VisibilityOff;
 
     private void Show_Password()
     {
@@ -140,7 +142,7 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
         
         //Extract current settings
@@ -149,6 +151,8 @@
             Smtp_Settings temp_smtp_settings = JsonSerializer.Deserialize<Smtp_Settings>(smtp_json);
 
             smtp.username = temp_smtp_settings.username;
+            smtp.fromAddress = temp_smtp_settings.fromAddress;
+            smtp.toAddress = temp_smtp_settings.toAddress;
             smtp.password = temp_smtp_settings.password;
             smtp.server = temp_smtp_settings.server;
             smtp.port = temp_smtp_settings.port;
@@ -165,7 +169,7 @@
         this.Snackbar.Configuration.ShowCloseIcon = true;
         this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
 
-        string result = await Classes.Helper.Notifications.Smtp.Test_Smtp(smtp.username, smtp.password, smtp.server, Convert.ToInt32(smtp.port), smtp.ssl, fromAddress);
+        string result = await Classes.Helper.Notifications.Smtp.Test_Smtp(smtp.username, smtp.password, smtp.server, Convert.ToInt32(smtp.port), smtp.ssl, smtp.fromAddress, smtp.toAddress);
 
         if (result == "success")
         {

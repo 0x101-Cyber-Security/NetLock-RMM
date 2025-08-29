@@ -85,16 +85,3 @@
 window.isMobileDevice = function () {
     return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
 };
-
-window.makeColumnsSortable = (tableId, dotNetObj) => {
-    const el = document.getElementById(tableId);
-    if (!el) return;
-    new Sortable(el.querySelector('thead tr'), {
-        animation: 150,
-        onEnd: function (evt) {
-            const order = [...el.querySelectorAll('th')].map(th => th.getAttribute('data-field'));
-            dotNetObj.invokeMethodAsync('SaveColumnOrder', order);
-        }
-    });
-};
-

@@ -10,6 +10,12 @@ namespace Base64
             return await Task.Run(() => Convert.ToBase64String(data));
         }
 
+        public static async Task<string> EncodeUtf16LE(string content)
+        {
+            byte[] data = Encoding.Unicode.GetBytes(content); // UTF-16 LE statt UTF-8
+            return await Task.Run(() => Convert.ToBase64String(data));
+        }
+
         public static async Task<string> Decode(string encodedContent)
         {
             try

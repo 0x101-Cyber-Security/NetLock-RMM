@@ -59,6 +59,21 @@ namespace NetLock_RMM_Agent_Comm
         public static string tpm = string.Empty;
         public static string last_active_user = string.Empty;
 
+        // Device information - Detailed (we use it to hold a history and make sure we do not send the same information multiple times)
+        public static string processesJson = string.Empty;
+        public static string cpuInformationJson = string.Empty;
+        public static string ramInformationJson = string.Empty;
+        public static string networkAdaptersJson = string.Empty;
+        public static string disksJson = string.Empty;
+        public static string antivirusProductsJson = string.Empty;
+        public static string applicationsInstalledJson = string.Empty;
+        public static string applicationsLogonJson = string.Empty;
+        public static string applicationsScheduledTasksJson = string.Empty;
+        public static string applicationsServicesJson = string.Empty;
+        public static string applicationsDriversJson = string.Empty;
+        public static string antivirusInformationJson = string.Empty;
+        public static string cronjobsJson = string.Empty;
+
         //Datatables
         public static DataTable events_data_table = new DataTable();
 

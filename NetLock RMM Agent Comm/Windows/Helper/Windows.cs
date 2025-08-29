@@ -1,12 +1,14 @@
-﻿using System;
+﻿using Global.Helper;
+using NetLock_RMM_Agent_Comm;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
+using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using static Global.Online_Mode.Handler;
-using Global.Helper;
-using System.Text.Json;
 
 namespace Windows.Helper
 {
@@ -89,7 +91,18 @@ namespace Windows.Helper
                 // Return the list of antivirus products as a JSON array
                 string antivirus_products_json = "[" + string.Join("," + Environment.NewLine, antivirus_productsJsonList) + "]";
                 Logging.Device_Information("Device_Information.Windows.Antivirus_Products", "antivirus_products_json", antivirus_products_json);
-                return antivirus_products_json;
+
+                // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+                if (Device_Worker.antivirusProductsJson == antivirus_products_json)
+                {
+                    Logging.Debug("Device_Information.Windows.Antivirus_Products", "Antivirus products have not changed", "");
+                    return "-";
+                }
+                else
+                {
+                    Device_Worker.antivirusProductsJson = antivirus_products_json;
+                    return antivirus_products_json;
+                }
             }
             catch (Exception ex)
             {
@@ -141,8 +154,17 @@ namespace Windows.Helper
                         }
                     }
 
-                    // Return the antivirus information as a JSON object
-                    return antivirus_information_json;
+                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
+                    if (Device_Worker.antivirusInformationJson == antivirus_information_json)
+                    {
+                        Logging.Device_Information("Device_Information.Process_List.Collect", "No changes in process information detected.", "");
+                        return "-";
+                    }
+                    else
+                    {
+                        Device_Worker.antivirusInformationJson = antivirus_information_json;
+                        return antivirus_information_json;
+                    }
                 }
                 catch (Exception ex)
                 {

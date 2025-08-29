@@ -140,8 +140,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
 
-            await JSRuntime.InvokeVoidAsync("makeColumnsSortable", tableId, DotNetObjectReference.Create(this));
-
             disabled = true;
 
             devices_table_view_port = "70vh";
@@ -191,11 +189,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         private bool expanded = false;
         private bool disabled = true;
         private string devices_table_view_port = "70vh";
-        private string sorted_column;
         private string device_table_search_string = "";
         private int events_rows_per_page = 25;
         private static string date = String.Empty;
-        private string tableId = "devicesTable";
 
         private string tenant_id = String.Empty;
         private string location_id = String.Empty;
@@ -302,6 +298,11 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             (tenant_guid, location_guid) = await Classes.MySQL.Handler.Get_Tenant_Location_Guid(row.tenant_name, row.location_name);
 
             events_mysql_data = await Events_Load(row.device_id, true);
+
+            if (String.IsNullOrEmpty(notes_string))
+                notes_expanded = false;
+            else
+                notes_expanded = true;
 
             loading_overlay = false;
 
@@ -4102,7 +4103,7 @@ WHERE device_id = @deviceId");
         public string notes_device_id = String.Empty;
         public string notes_location_id = String.Empty;
         public string notes_tenant_id = String.Empty;
-
+        private bool notes_expanded = false;
         private async Task Notes_Edit_Form()
         {
             if (notes_disabled)
@@ -4123,32 +4124,27 @@ WHERE device_id = @deviceId");
             try
             {
                 notes_old_string = notes_string;
-                string username = await localStorage.GetItemAsync<string>("username");
 
                 await conn.OpenAsync();
 
-                string execute_query = "UPDATE devices SET notes = @notes WHERE id = @device_id AND location_name = @location_name AND tenant_name = @tenant_name; INSERT INTO `device_information_notes_history` (`tenant_name`, `location_name`, `device_id`, `device_name`, `date`, `author`, `note`) VALUES (@tenant_name, @location_name, @device_id, @device_name, @date, @author, @notes_old);";
+                string execute_query = "UPDATE devices SET notes = @notes WHERE id = @device_id; INSERT INTO `device_information_notes_history` (`device_id`, `date`, `author`, `note`) VALUES (@device_id, @date, @author, @notes_old);";
 
                 MySqlCommand cmd = new MySqlCommand(execute_query, conn);
-
-                cmd.Parameters.AddWithValue("@tenant_name", notes_tenant_name);
-                cmd.Parameters.AddWithValue("@location_name", notes_location_name);
                 cmd.Parameters.AddWithValue("@device_id", notes_device_id);
-                cmd.Parameters.AddWithValue("@device_name", notes_device_name);
                 cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 cmd.Parameters.AddWithValue("@notes", await Base64.Handler.Encode(notes_string));
-                cmd.Parameters.AddWithValue("@author", username);
                 cmd.Parameters.AddWithValue("@notes_old", await Base64.Handler.Encode(notes_old_string));
+                cmd.Parameters.AddWithValue("@author", netlock_username);
 
                 cmd.ExecuteNonQuery();
 
                 await Notes_Edit_Form();
 
-                this.Snackbar.Add("Gespeichert.", Severity.Success);
+                this.Snackbar.Add("Saved.", Severity.Success);
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("/devices -> Notes_Save", "Result", ex.Message);
+                Logging.Handler.Error("/devices -> Notes_Save", "Result", ex.ToString());
             }
             finally
             {
@@ -4187,7 +4183,7 @@ WHERE device_id = @deviceId");
 
         private async Task Device_Information_Notes_History_Table_Submit_Picker()
         {
-            device_information_notes_history_table_picker.CloseAsync();
+            await device_information_notes_history_table_picker.CloseAsync();
 
             device_information_notes_history_mysql_data = await Device_Information_Notes_History_Load();
         }
@@ -4258,7 +4254,7 @@ WHERE device_id = @deviceId");
                             }
                             catch (Exception ex)
                             {
-                                Logging.Handler.Error("/devices -> Device_Information_Notes_History_Load", "MySQL_Query (corrupt json entry)", ex.Message);
+                                Logging.Handler.Error("/devices -> Device_Information_Notes_History_Load", "MySQL_Query (corrupt json entry)", ex.ToString());
                             }
                         }
                     }
@@ -4268,7 +4264,7 @@ WHERE device_id = @deviceId");
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("/devices -> Device_Information_Notes_History_Load", "MySQL_Query", ex.Message);
+                Logging.Handler.Error("/devices -> Device_Information_Notes_History_Load", "MySQL_Query", ex.ToString());
                 return new List<Device_Information_Notes_History_Entity>(); // Return an empty list or handle the exception as needed
             }
             finally

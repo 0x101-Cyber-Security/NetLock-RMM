@@ -2,10 +2,10 @@ namespace NetLock_RMM_Server
 { 
     public class Application_Settings
     {
-        public static string server_version = "2.5.2.6";
-        public static string agent_version = "2.5.2.6";
+        public static string server_version = "2.5.2.7";
+        public static string agent_version = "2.5.2.7";
         public static string Local_Encryption_Key = "01234567890123456789012345678901";
 
-        //OSSCH_START 550611f1-597d-49f2-a90c-cc68f8599a22 //OSSCH_END
+        //OSSCH_START edceef73-f98e-491e-a6f9-c1c1726ea2cc //OSSCH_END
     }
 }

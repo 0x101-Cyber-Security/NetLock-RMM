@@ -560,7 +560,7 @@ namespace Global.Online_Mode
 
                 // Get the processes list
                 string processes_json = Device_Information.Processes.Collect();
-
+                
                 // Create the data for "cpu_information"
                 string cpu_information_json = Device_Information.Hardware.CPU_Information();
 

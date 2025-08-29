@@ -151,48 +151,143 @@ namespace NetLock_RMM_Server.Agent.Windows
                 //Insert into database
                 await conn.OpenAsync();
 
-                string execute_query = "UPDATE `devices` SET " +
-                       "`ram_information` = @ram_information, " +
-                       "`cpu_information` = @cpu_information, " +
-                       "`network_adapters` = @network_adapters, " +
-                       "`disks` = @disks, " +
-                       "`applications_installed` = @applications_installed, " +
-                       "`applications_logon` = @applications_logon, " +
-                       "`applications_scheduled_tasks` = @applications_scheduled_tasks, " +
-                       "`applications_drivers` = @applications_drivers, " +
-                       "`applications_services` = @applications_services, " +
-                       "`processes` = @processes, " +
-                       "`antivirus_products` = @antivirus_products, " +
-                       "`antivirus_information` = @antivirus_information, " +
-                       "`cronjobs` = @cronjobs " +
-                       "WHERE id = @device_id;";
+                using (var cmd = conn.CreateCommand())
+                {
+                    cmd.Parameters.AddWithValue("@device_id", device_id);
 
-                MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                    // Processes
+                    if (processes_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `processes` = @processes WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@processes", processes_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
 
-                cmd.Parameters.AddWithValue("@device_id", device_id);
-                cmd.Parameters.AddWithValue("@ram_information", ram_information_json_string);
-                cmd.Parameters.AddWithValue("@cpu_information", cpu_information_json_string);
-                cmd.Parameters.AddWithValue("@network_adapters", network_adapters_json_string);
-                cmd.Parameters.AddWithValue("@disks", disks_json_string);
-                cmd.Parameters.AddWithValue("@applications_installed", applications_installed_json_string);
-                cmd.Parameters.AddWithValue("@applications_logon", applications_logon_json_string);
-                cmd.Parameters.AddWithValue("@applications_scheduled_tasks", applications_scheduled_tasks_json_string);
-                cmd.Parameters.AddWithValue("@applications_drivers", applications_drivers_json_string);
-                cmd.Parameters.AddWithValue("@applications_services", applications_services_json_string);
-                cmd.Parameters.AddWithValue("@processes", processes_json_string);
-                cmd.Parameters.AddWithValue("@antivirus_products", antivirus_products_json_string);
-                cmd.Parameters.AddWithValue("@antivirus_information", antivirus_information_json_string);
-                cmd.Parameters.AddWithValue("@cronjobs", cronjobs_json_string);
-                cmd.ExecuteNonQuery();
+                    // CPU
+                    if (cpu_information_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `cpu_information` = @cpu_information WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@cpu_information", cpu_information_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // RAM
+                    if (ram_information_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `ram_information` = @ram_information WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@ram_information", ram_information_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Network
+                    if (network_adapters_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `network_adapters` = @network_adapters WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@network_adapters", network_adapters_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Disks
+                    if (disks_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `disks` = @disks WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@disks", disks_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Antivirus Products
+                    if (antivirus_products_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `antivirus_products` = @antivirus_products WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@antivirus_products", antivirus_products_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Applications Installed
+                    if (applications_installed_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `applications_installed` = @applications_installed WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@applications_installed", applications_installed_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Applications Logon
+                    if (applications_logon_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `applications_logon` = @applications_logon WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@applications_logon", applications_logon_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Scheduled Tasks
+                    if (applications_scheduled_tasks_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `applications_scheduled_tasks` = @applications_scheduled_tasks WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@applications_scheduled_tasks", applications_scheduled_tasks_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Drivers
+                    if (applications_drivers_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `applications_drivers` = @applications_drivers WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@applications_drivers", applications_drivers_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Services
+                    if (applications_services_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `applications_services` = @applications_services WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@applications_services", applications_services_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Antivirus Info
+                    if (antivirus_information_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `antivirus_information` = @antivirus_information WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@antivirus_information", antivirus_information_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Cronjobs
+                    if (cronjobs_json_string != "-")
+                    {
+                        cmd.CommandText = "UPDATE `devices` SET `cronjobs` = @cronjobs WHERE id = @device_id;";
+                        cmd.Parameters.Clear();
+                        cmd.Parameters.AddWithValue("@device_id", device_id);
+                        cmd.Parameters.AddWithValue("@cronjobs", cronjobs_json_string);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
 
                 //Insert applications_installed_history
-                // Check if the data is new
-                string applications_installed_json_string_hashed = await IO.Get_SHA512_From_String(applications_installed_json_string);
-
-                string applications_installed_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_installed");
-                applications_installed_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_installed_json_string_hashed_db);
-
-                if (applications_installed_json_string_hashed != applications_installed_json_string_hashed_db)
+                if (applications_installed_json_string != "-")
                 {
                     string applications_installed_history_execute_query = "INSERT INTO `applications_installed_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -205,12 +300,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 // Insert cronjobs_history
-                // Check if the data is new
-                string cronjobs_json_string_hashed = await IO.Get_SHA512_From_String(cronjobs_json_string);
-                string cronjobs_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "cronjobs");
-                cronjobs_json_string_hashed_db = await IO.Get_SHA512_From_String(cronjobs_json_string_hashed_db);
-
-                if (cronjobs_json_string_hashed != cronjobs_json_string_hashed_db)
+                if (cronjobs_json_string != "-")
                 {
                     string cronjobs_history_execute_query = "INSERT INTO `device_information_cronjobs_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -223,12 +313,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert applications_logon_history
-                // Check if the data is new
-                string applications_logon_json_string_hashed = await IO.Get_SHA512_From_String(applications_logon_json_string);
-                string applications_logon_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_logon");
-                applications_logon_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_logon_json_string_hashed_db);
-
-                if (applications_logon_json_string_hashed != applications_logon_json_string_hashed_db)
+                if (applications_logon_json_string != "-")
                 {
                     string applications_logon_history_execute_query = "INSERT INTO `applications_logon_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -241,12 +326,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert applications_scheduled_tasks_history
-                // Check if the data is new
-                string applications_scheduled_tasks_json_string_hashed = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string);
-                string applications_scheduled_tasks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_scheduled_tasks");
-                applications_scheduled_tasks_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_scheduled_tasks_json_string_hashed_db);
-
-                if (applications_scheduled_tasks_json_string_hashed != applications_scheduled_tasks_json_string_hashed_db)
+                if (applications_scheduled_tasks_json_string != "-")
                 {
                     string applications_scheduled_tasks_history_execute_query = "INSERT INTO `applications_scheduled_tasks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -259,12 +339,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert applications_services_history
-                // Check if the data is new
-                string applications_services_json_string_hashed = await IO.Get_SHA512_From_String(applications_services_json_string);
-                string applications_services_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_services");
-                applications_services_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_services_json_string_hashed_db);
-
-                if (applications_services_json_string_hashed != applications_services_json_string_hashed_db)
+                if (applications_services_json_string != "-")
                 {
                     string applications_services_history_execute_query = "INSERT INTO `applications_services_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -277,12 +352,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert applications_drivers_history
-                // Check if the data is new
-                string applications_drivers_json_string_hashed = await IO.Get_SHA512_From_String(applications_drivers_json_string);
-                string applications_drivers_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "applications_drivers");
-                applications_drivers_json_string_hashed_db = await IO.Get_SHA512_From_String(applications_drivers_json_string_hashed_db);
-
-                if (applications_drivers_json_string_hashed != applications_drivers_json_string_hashed_db)
+                if (applications_drivers_json_string != "-")
                 {
                     string applications_drivers_history_execute_query = "INSERT INTO `applications_drivers_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -323,7 +393,6 @@ namespace NetLock_RMM_Server.Agent.Windows
                         }
                         await device_information_general_history_reader.CloseAsync();
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -342,12 +411,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 device_information_general_history_cmd.ExecuteNonQuery();
 
                 //Insert device_information_disks_history
-                // Check if the data is new
-                string disks_json_string_hashed = await IO.Get_SHA512_From_String(disks_json_string);
-                string disks_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "disks");
-                disks_json_string_hashed_db = await IO.Get_SHA512_From_String(disks_json_string_hashed_db);
-
-                if (disks_json_string_hashed != disks_json_string_hashed_db)
+                if (disks_json_string != "-")
                 {
                     string device_information_disks_history_execute_query = "INSERT INTO `device_information_disks_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -360,12 +424,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert device_information_cpu_history
-                // Check if the data is new
-                string cpu_json_string_hashed = await IO.Get_SHA512_From_String(cpu_json_string);
-                string cpu_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "cpu_information");
-                cpu_json_string_hashed_db = await IO.Get_SHA512_From_String(cpu_json_string_hashed_db);
-
-                if (cpu_json_string_hashed != cpu_json_string_hashed_db)
+                if (cpu_json_string != "-")
                 {
                     string device_information_cpu_history_execute_query = "INSERT INTO `device_information_cpu_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -378,12 +437,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert device_information_ram_history
-                // Check if the data is new
-                string ram_json_string_hashed = await IO.Get_SHA512_From_String(ram_json_string);
-                string ram_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "ram_information");
-                ram_json_string_hashed_db = await IO.Get_SHA512_From_String(ram_json_string_hashed_db);
-
-                if (ram_json_string_hashed != ram_json_string_hashed_db)
+                if (ram_json_string != "-")
                 {
                     string device_information_ram_history_execute_query = "INSERT INTO `device_information_ram_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -396,12 +450,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert device_information_network_adapters_history
-                // Check if the data is new
-                string network_adapters_json_string_hashed = await IO.Get_SHA512_From_String(network_adapters_json_string);
-                string network_adapters_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "network_adapters");
-                network_adapters_json_string_hashed_db = await IO.Get_SHA512_From_String(network_adapters_json_string_hashed_db);
-
-                if (network_adapters_json_string_hashed != network_adapters_json_string_hashed_db)
+                if (network_adapters_json_string != "-")
                 {
                     string device_information_network_adapters_history_execute_query = "INSERT INTO `device_information_network_adapters_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -414,12 +463,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert device_information_task_manager_history
-                // Check if the data is new
-                string processes_json_string_hashed = await IO.Get_SHA512_From_String(processes_json_string);
-                string processes_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "processes");
-                processes_json_string_hashed_db = await IO.Get_SHA512_From_String(processes_json_string_hashed_db);
-                
-                if (processes_json_string_hashed != processes_json_string_hashed_db)
+                if (processes_json_string != "-")
                 {
                     string device_information_task_manager_history_execute_query = "INSERT INTO `device_information_task_manager_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
@@ -432,12 +476,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 //Insert device_information_antivirus_history
-                // Check if the data is new
-                string antivirus_information_json_string_hashed = await IO.Get_SHA512_From_String(antivirus_information_json_string);
-                string antivirus_information_json_string_hashed_db = await MySQL.Handler.Quick_Reader($"SELECT * FROM devices WHERE id = {device_id};", "antivirus_information");
-                antivirus_information_json_string_hashed_db = await IO.Get_SHA512_From_String(antivirus_information_json_string_hashed_db);
-
-                if (antivirus_information_json_string_hashed != antivirus_information_json_string_hashed_db)
+                if (antivirus_products_json_string != "-")
                 {
                     string device_information_antivirus_products_history_execute_query = "INSERT INTO `device_information_antivirus_products_history` (`device_id`, `date`, `json`) VALUES (@device_id, @date, @json);";
 
