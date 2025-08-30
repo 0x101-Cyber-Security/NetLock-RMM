@@ -500,6 +500,21 @@ namespace Global.Online_Mode
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
                                 File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
+                                // Clear local information
+                                Device_Worker.processesJson = String.Empty;
+                                Device_Worker.cpuInformationJson = String.Empty;
+                                Device_Worker.ramInformationJson = String.Empty;
+                                Device_Worker.networkAdaptersJson = String.Empty;
+                                Device_Worker.disksJson = String.Empty;
+                                Device_Worker.antivirusProductsJson = String.Empty;
+                                Device_Worker.applicationsInstalledJson = String.Empty;
+                                Device_Worker.applicationsLogonJson = String.Empty;
+                                Device_Worker.applicationsScheduledTasksJson = String.Empty;
+                                Device_Worker.applicationsServicesJson = String.Empty;
+                                Device_Worker.applicationsDriversJson = String.Empty;
+                                Device_Worker.antivirusInformationJson = String.Empty;
+                                Device_Worker.cronjobsJson = String.Empty;
+
                                 Device_Worker.authorized = false;
                             }
 
@@ -683,6 +698,22 @@ namespace Global.Online_Mode
 
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+
+                                // Clear local information
+                                Device_Worker.processesJson = String.Empty;
+                                Device_Worker.cpuInformationJson = String.Empty;
+                                Device_Worker.ramInformationJson = String.Empty;
+                                Device_Worker.networkAdaptersJson = String.Empty;
+                                Device_Worker.disksJson = String.Empty;
+                                Device_Worker.antivirusProductsJson = String.Empty;
+                                Device_Worker.applicationsInstalledJson = String.Empty;
+                                Device_Worker.applicationsLogonJson = String.Empty;
+                                Device_Worker.applicationsScheduledTasksJson = String.Empty;
+                                Device_Worker.applicationsServicesJson = String.Empty;
+                                Device_Worker.applicationsDriversJson = String.Empty;
+                                Device_Worker.antivirusInformationJson = String.Empty;
+                                Device_Worker.cronjobsJson = String.Empty;
 
                                 Device_Worker.authorized = false;
                             }
@@ -790,6 +821,22 @@ namespace Global.Online_Mode
 
                                 // Write the new server config JSON to the file
                                 File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+
+                                // Clear local information
+                                Device_Worker.processesJson = String.Empty;
+                                Device_Worker.cpuInformationJson = String.Empty;
+                                Device_Worker.ramInformationJson = String.Empty;
+                                Device_Worker.networkAdaptersJson = String.Empty;
+                                Device_Worker.disksJson = String.Empty;
+                                Device_Worker.antivirusProductsJson = String.Empty;
+                                Device_Worker.applicationsInstalledJson = String.Empty;
+                                Device_Worker.applicationsLogonJson = String.Empty;
+                                Device_Worker.applicationsScheduledTasksJson = String.Empty;
+                                Device_Worker.applicationsServicesJson = String.Empty;
+                                Device_Worker.applicationsDriversJson = String.Empty;
+                                Device_Worker.antivirusInformationJson = String.Empty;
+                                Device_Worker.cronjobsJson = String.Empty;
 
                                 Device_Worker.authorized = false;
                             }

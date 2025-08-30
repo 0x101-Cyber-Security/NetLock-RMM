@@ -218,7 +218,7 @@ namespace Global.Device_Information
                                 // Extract the CPU speed
                                 cpu_speed = line.Split(':')[1].Trim();
 
-                                // Wandle den extrahierten Wert in eine Gleitkommazahl um
+                                // Convert the extracted value to a floating-point number
                                 if (double.TryParse(cpu_speed, out double cpuSpeed))
                                 {
                                     double roundedCpuSpeed = Math.Round(cpuSpeed);
@@ -711,7 +711,7 @@ namespace Global.Device_Information
                         outsourced_pool = swapUsed; // als Beispiel
                     }
 
-                    // Berechne 'available' und 'assured' aus MemAvailable
+                    // Calculate 'available' and 'assured' from MemAvailable
                     if (memInfoDict.ContainsKey("MemAvailable"))
                     {
                         available = (Convert.ToUInt64(memInfoDict["MemAvailable"].Split(' ')[0]) / 1024d).ToString(); // in MB
@@ -869,10 +869,57 @@ namespace Global.Device_Information
                 }
             }
 
-            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-            if (Device_Worker.ramInformationJson == ram_information_json)
+            // Improved comparison logic to detect actual data changes
+            bool hasChanges = false;
+
+            if (string.IsNullOrEmpty(Device_Worker.ramInformationJson))
             {
-                Logging.Device_Information("Device_Information.Hardware.RAM_Information", "No changes in RAM information detected.", "");
+                hasChanges = true;
+                Logging.Device_Information("Device_Information.Hardware.RAM_Information", "First collection or empty previous data", "");
+            }
+            else
+            {
+                try
+                {
+                    // Deserialize the stored JSON to an object
+                    var previousRamInfo = JsonSerializer.Deserialize<RAM_Information>(Device_Worker.ramInformationJson);
+                    var currentRamInfo = JsonSerializer.Deserialize<RAM_Information>(ram_information_json);
+
+                    if (previousRamInfo == null || currentRamInfo == null)
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Hardware.RAM_Information",
+                            "Deserialization resulted in null object", "");
+                    }
+                    else
+                    {
+                        // Compare important properties
+                        if (previousRamInfo.available != currentRamInfo.available ||
+                            previousRamInfo.assured != currentRamInfo.assured ||
+                            previousRamInfo.cache != currentRamInfo.cache ||
+                            previousRamInfo.outsourced_pool != currentRamInfo.outsourced_pool ||
+                            previousRamInfo.not_outsourced_pool != currentRamInfo.not_outsourced_pool ||
+                            previousRamInfo.hardware_reserved != currentRamInfo.hardware_reserved ||
+                            previousRamInfo.slots_used != currentRamInfo.slots_used)
+                        {
+                            hasChanges = true;
+                            Logging.Device_Information("Device_Information.Hardware.RAM_Information",
+                                "Changes detected in RAM information", "");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Consider deserialization errors as changes
+                    hasChanges = true;
+                    Logging.Error("Device_Information.Hardware.RAM_Information",
+                        "Error during comparison", ex.ToString());
+                }
+            }
+
+            if (!hasChanges)
+            {
+                Logging.Device_Information("Device_Information.Hardware.RAM_Information", "No changes detected since last check.", "");
                 return "-";
             }
             else
@@ -1008,6 +1055,7 @@ namespace Global.Device_Information
         public static string Disks()
         {
             string disks_json = String.Empty;
+            List<Disks> currentDisks = new List<Disks>(); // List for collecting current Disks objects
 
             if (OperatingSystem.IsWindows())
             {
@@ -1078,7 +1126,12 @@ namespace Global.Device_Information
 
                                     // Serialize the disk object into a JSON string and add it to the list
                                     string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
-                                    disksJsonList.Add(disksJson);
+                                    
+                                    lock (disksJsonList)
+                                    {
+                                        disksJsonList.Add(disksJson);
+                                        currentDisks.Add(diskInfo); // Add to comparison list
+                                    }
                                 }
                                 catch (Exception ex)
                                 {
@@ -1121,6 +1174,7 @@ namespace Global.Device_Information
                                         // Serialize the disk object into a JSON string and add it to the list
                                         string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                                         disksJsonList.Add(disksJson);
+                                        currentDisks.Add(diskInfo); // Add to comparison list
                                     }
                                 }
                                 catch (Exception ex)
@@ -1134,7 +1188,7 @@ namespace Global.Device_Information
                             Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to gather basic disk information for uncollected letters (general error).", ex.ToString());
                         }
 
-                        // Create and log JSON array
+                        // Create JSON array and log
                         disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
                         Logging.Device_Information("Device_Information.Hardware.Disks", "Collected the following disk information.", disks_json);
                     }
@@ -1195,6 +1249,9 @@ namespace Global.Device_Information
                                 status = "N/A",
                             };
 
+                            // Add to comparison list
+                            currentDisks.Add(diskInfo);
+
                             // Serialize disk object and add to list
                             string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                             disksJsonList.Add(disksJson);
@@ -1251,7 +1308,7 @@ namespace Global.Device_Information
                             // Compile disk information
                             Disks diskInfo = new Disks
                             {
-                                letter = drive.Name,  // In Linux there are no drive letters as in Windows, so we use the name.
+                                letter = drive.Name,  // In macOS there are no drive letters as in Windows, so we use the name.
                                 label = "N/A", // drive.VolumeLabel is the same as drive.Name
                                 model = "N/A",
                                 firmware_revision = "N/A",  // Linux does not provide a firmware version via lsblk
@@ -1265,6 +1322,9 @@ namespace Global.Device_Information
                                 status = "N/A",
                             };
 
+                            // Add to comparison list
+                            currentDisks.Add(diskInfo);
+
                             // Serialize disk object and add to list
                             string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
                             disksJsonList.Add(disksJson);
@@ -1274,67 +1334,6 @@ namespace Global.Device_Information
                             Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information.", ex.ToString());
                         }
                     }
-
-// List of JSON data for each hard drive
-/*List<string> disksJsonList = new List<string>();
-
-// Retrieve all hard disc information with diskutil in plist format
-string diskutilListOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, "diskutil list -plist");
-Logging.Device_Information("Device_Information.Hardware.Disks", "diskutil-list-Output", diskutilListOutput);
-
-// Parsing the plist output
-var plist = MacOS.Helper.Plist.Parse(diskutilListOutput);
-var allDisks = plist["AllDisksAndPartitions"] as IEnumerable<object>;
-
-foreach (var diskObj in allDisks)
-{
-    try
-    {
-        var disk = diskObj as Dictionary<string, object>;
-
-        string name = disk.GetValueOrDefault("DeviceIdentifier", "N/A").ToString();
-
-        // Retrieve diskutil info for this device
-        string diskutilInfoOutput = MacOS.Helper.Zsh.Execute_Script("Disks", false, $"diskutil info -plist {name}");
-        var infoPlist = MacOS.Helper.Plist.Parse(diskutilInfoOutput);
-
-        // Extract size details
-        long totalSizeInBytes = infoPlist.GetValueOrDefault("TotalSize", 0L) is long totalSize ? totalSize : 0;
-        long freeSpaceInBytes = infoPlist.GetValueOrDefault("FreeSpace", 0L) is long freeSpace ? freeSpace : 0;
-
-        // Calculate usage percentage
-        double usagePercentage = (totalSizeInBytes > 0)
-            ? ((totalSizeInBytes - freeSpaceInBytes) / (double)totalSizeInBytes) * 100
-            : 0;
-
-        // Convert sizes to GB
-        double totalSizeInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(totalSizeInBytes);
-        double freeSpaceInGB = MacOS.Helper.MacOS.Disks_Convert_Size_To_GB_Two(freeSpaceInBytes);
-
-        Console.WriteLine($"Total size: {totalSizeInGB} GB, Free space: {freeSpaceInGB} GB, Usage: {usagePercentage:F2}%");
-
-        // Compile disk information
-        Disks diskInfo = new Disks
-        {
-            letter = name,
-            label = disk.GetValueOrDefault("VolumeName", "N/A").ToString(),
-            model = infoPlist.GetValueOrDefault("MediaName", "N/A").ToString(),
-            drive_type = infoPlist.GetValueOrDefault("SolidState", false).ToString() == "True" ? "SSD" : "HDD",
-            drive_format = disk.GetValueOrDefault("FilesystemName", "N/A").ToString(),
-            capacity = totalSizeInGB.ToString("F2") + " GB",
-            usage = usagePercentage.ToString("F2") + " %", // Add usage in percentage
-            status = infoPlist.GetValueOrDefault("Writable", false).ToString() == "True" ? "Online" : "Offline",
-        };
-
-        // Serialize disk object and add to list
-        string disksJson = JsonSerializer.Serialize(diskInfo, new JsonSerializerOptions { WriteIndented = true });
-        disksJsonList.Add(disksJson);
-    }
-    catch (Exception ex)
-    {
-        Logging.Device_Information("Device_Information.Hardware.Disks", "Failed to collect disk information.", ex.ToString());
-    }
-}*/
 
                     // JSON-Array erstellen und loggen
                     disks_json = "[" + string.Join("," + Environment.NewLine, disksJsonList) + "]";
@@ -1351,8 +1350,69 @@ foreach (var diskObj in allDisks)
                 return "[]";
             }
 
-            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-            if (Device_Worker.disksJson == disks_json)
+            // Object-based comparison instead of string comparison
+            bool hasChanges = false;
+                        
+            if (string.IsNullOrEmpty(Device_Worker.disksJson) || Device_Worker.disksJson == "[]")
+            {
+                hasChanges = true;
+                Logging.Device_Information("Device_Information.Hardware.Disks", "First collection or empty previous data", "");
+            }
+            else
+            {
+                try
+                {                    
+                    // Deserialize the stored JSON to a list of objects
+                    var previousDisks = JsonSerializer.Deserialize<List<Disks>>(
+                        Device_Worker.disksJson.StartsWith("[") ? 
+                        Device_Worker.disksJson : 
+                        "[]") ?? new List<Disks>();
+
+                    // Check if number of disks is different
+                    if (previousDisks.Count != currentDisks.Count)
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Hardware.Disks", 
+                            "Changes detected: Different number of disks", 
+                            $"Previous: {previousDisks.Count}, Current: {currentDisks.Count}");
+                    }
+                    else
+                    {                        
+                        // Create a dictionary for fast access and comparison
+                        var currentDict = new Dictionary<string, Disks>();
+                        foreach (var disk in currentDisks)
+                        {
+                            // Use drive letter/name, model, and serial number as unique key
+                            string key = (disk.letter ?? "N/A") + "|" + (disk.model ?? "N/A") + "|" + (disk.serial_number ?? "N/A");
+                            if (!currentDict.ContainsKey(key))
+                                currentDict[key] = disk;
+                        }
+
+                        // Compare each previous disk with the current ones
+                        foreach (var disk in previousDisks)
+                        {
+                            string key = (disk.letter ?? "N/A") + "|" + (disk.model ?? "N/A") + "|" + (disk.serial_number ?? "N/A");
+                            
+                            // If a previous disk is no longer present or important properties have changed
+                            if (!currentDict.TryGetValue(key, out var currentDisk) ||
+                                IsSignificantDiskChange(disk, currentDisk))
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Hardware.Disks", "Changes detected for disk", disk.letter);
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Treat deserialization errors as a change
+                    hasChanges = true;
+                    Logging.Error("Device_Information.Hardware.Disks", "Error during comparison", ex.ToString());
+                }
+            }
+
+            if (!hasChanges)
             {
                 Logging.Device_Information("Device_Information.Hardware.Disks", "No changes in disk information detected.", "");
                 return "-";
@@ -1362,6 +1422,49 @@ foreach (var diskObj in allDisks)
                 Device_Worker.disksJson = disks_json;
                 return disks_json;
             }
+        }
+
+        // Helper method to detect significant changes in disks
+        private static bool IsSignificantDiskChange(Disks previous, Disks current)
+        {
+            // Check for changes in important properties
+            if (previous.drive_type != current.drive_type ||
+                previous.drive_format != current.drive_format ||
+                previous.drive_ready != current.drive_ready ||
+                previous.label != current.label)
+            {
+                return true;
+            }
+
+            // Check for significant changes in capacity or usage
+            // Here we allow a small tolerance (e.g. for normal usage fluctuations)
+            try
+            {
+                double prevCapacity = Convert.ToDouble(previous.capacity);
+                double currCapacity = Convert.ToDouble(current.capacity);
+
+                // If the capacity has changed by more than 1 GB
+                if (Math.Abs(prevCapacity - currCapacity) > 1.0)
+                {
+                    return true;
+                }
+
+                // For usage, we allow larger fluctuations (1%), as it can naturally change
+                double prevUsage = Convert.ToDouble(previous.usage);
+                double currUsage = Convert.ToDouble(current.usage);
+
+                if (Math.Abs(prevUsage - currUsage) > 1.0)
+                {
+                    return true;
+                }
+            }
+            catch
+            {
+                // If there are problems with conversion, we assume something has changed
+                return true;
+            }
+
+            return false;
         }
 
         public static string RAM_Total()
@@ -1729,7 +1832,7 @@ foreach (var diskObj in allDisks)
                     string product = null;
                     string vendor = null;
 
-                    // Alle Zeilen durchsuchen
+                    // Search all lines
                     var lines = output.Split('\n');
                     foreach (var line in lines)
                     {

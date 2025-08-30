@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
+using NetLock_RMM_User_Process.Windows.ScreenControl;
 
 namespace NetLock_RMM_User_Process.Windows.Mouse
 {
@@ -81,10 +82,15 @@ namespace NetLock_RMM_User_Process.Windows.Mouse
                 }
 
                 var screen = screens[screenIndex];
+                
+                // Translate coordinates based on scaling factors
+                // This translates from web console coordinates to actual screen coordinates
+                (int actualX, int actualY) = ScreenCapture.TranslateCoordinates(screenIndex, x, y);
+                Console.WriteLine($"Translating mouse coordinates: ({x},{y}) -> ({actualX},{actualY})");
 
                 // Calculate the absolute coordinates for the specified screen
-                int absoluteX = screen.Left + x;
-                int absoluteY = screen.Top + y;
+                int absoluteX = screen.Left + actualX;
+                int absoluteY = screen.Top + actualY;
 
                 // Place the mouse pointer on the calculated absolute coordinates
                 SetCursorPos(absoluteX, absoluteY);
@@ -149,7 +155,5 @@ namespace NetLock_RMM_User_Process.Windows.Mouse
                 Console.WriteLine($"Failed to left mouse up: {ex.Message}");
             }
         }
-
     }
-
 }

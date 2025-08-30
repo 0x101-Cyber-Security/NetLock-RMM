@@ -63,6 +63,23 @@ var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enable
 Server.isDocker = isRunningInDocker;
 Server.loggingEnabled = loggingEnabled;
 
+// Kestrel-Limits aus appsettings.json laden
+var kestrelLimitsConfig = builder.Configuration.GetSection("Kestrel:Limits");
+var maxConnections = kestrelLimitsConfig.GetValue<int?>("MaxConcurrentConnections") ?? null;
+var maxUpgradedConnections = kestrelLimitsConfig.GetValue<int?>("MaxConcurrentUpgradedConnections") ?? null;
+var maxBodySize = kestrelLimitsConfig.GetValue<long?>("MaxRequestBodySize") ?? 10L * 1024 * 1024 * 1024;
+var keepAliveTimeout = kestrelLimitsConfig.GetValue<int?>("KeepAliveTimeout") ?? 130;
+
+// SignalR-Konfiguration aus appsettings.json laden
+var signalRConfig = builder.Configuration.GetSection("SignalR");
+var maxMsgSize = signalRConfig.GetValue<long>("MaximumReceiveMessageSize", 102400000);
+var clientTimeout = signalRConfig.GetValue<int>("ClientTimeoutInterval", 30);
+var keepAlive = signalRConfig.GetValue<int>("KeepAliveInterval", 15);
+var handshakeTimeout = signalRConfig.GetValue<int>("HandshakeTimeout", 30);
+var detailedErrors = signalRConfig.GetValue<bool>("EnableDetailedErrors", true);
+var streamBuffer = signalRConfig.GetValue<int>("StreamBufferCapacity", 20);
+var maxParallelInvocations = signalRConfig.GetValue<int>("MaximumParallelInvocationsPerClient", 5);
+
 var role_comm = builder.Configuration.GetValue<bool>("Kestrel:Roles:Comm", true);
 var role_update = builder.Configuration.GetValue<bool>("Kestrel:Roles:Update", true);
 var role_trust = builder.Configuration.GetValue<bool>("Kestrel:Roles:Trust", true);
@@ -195,8 +212,15 @@ builder.WebHost.UseKestrel(k =>
 {
     IServiceProvider appServices = k.ApplicationServices;
 
-    // Set the maximum request body size to 10 gb
-    k.Limits.MaxRequestBodySize = 10L * 1024 * 1024 * 1024; // 10 GB
+
+
+    // Konfiguriere Kestrel-Limits
+    k.Limits.MaxRequestBodySize = maxBodySize;
+    k.Limits.MaxConcurrentConnections = maxConnections;
+    k.Limits.MaxConcurrentUpgradedConnections = maxUpgradedConnections;
+    k.Limits.KeepAliveTimeout = TimeSpan.FromSeconds(keepAliveTimeout);
+    k.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+    k.Limits.Http2.MaxStreamsPerConnection = 200;
     
     if (https)
     {
@@ -285,7 +309,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 03e07d3e-d85f-4cc5-b819-6578531ebbc7 //OSSCH_END
+        //OSSCH_START fe2fb845-6a87-4dbc-baec-11516bef376d //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -295,14 +319,20 @@ if (Roles.Update || Roles.Trust)
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMvc();
 builder.Services.AddControllers();
+
 builder.Services.AddSignalR(options =>
 {
-    options.MaximumReceiveMessageSize = 102400000; // Increase maximum message size to 100 MB
+    options.MaximumReceiveMessageSize = maxMsgSize; 
+    options.ClientTimeoutInterval = TimeSpan.FromSeconds(clientTimeout);
+    options.KeepAliveInterval = TimeSpan.FromSeconds(keepAlive);
+    options.HandshakeTimeout = TimeSpan.FromSeconds(handshakeTimeout); 
+    options.EnableDetailedErrors = detailedErrors; 
+    options.StreamBufferCapacity = streamBuffer;
+    options.MaximumParallelInvocationsPerClient = maxParallelInvocations;
+}).AddHubOptions<CommandHub>(options =>
+{
+    options.MaximumReceiveMessageSize = maxMsgSize;
 });
-
-
-// Add the LLaMa model service as a singleton. Currently disabled because in testings using ANY llm was just to CPU intensive. As most servers dont have a GPU, implementation needs to be postboned to a unknown time. Might find a solution in future
-//builder.Services.AddSingleton<LLaMaService>();
 
 // Register background service
 builder.Services.AddHostedService<Events_Notification_Service>();
@@ -1384,7 +1414,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START c9f28d6c-e00f-4801-b9cc-18aa47838f9a //OSSCH_END
+    //OSSCH_START 58d03ab4-1d27-47f3-bd1e-654d0bd5966e //OSSCH_END
 }
 
 /*

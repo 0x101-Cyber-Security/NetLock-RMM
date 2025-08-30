@@ -24,6 +24,7 @@ namespace Global.Device_Information
         public static string Applications_Installed()
         {
             string applications_installed_json = String.Empty;
+            List<Applications_Installed> currentApplications = new List<Applications_Installed>();
 
             if (OperatingSystem.IsWindows())
             {
@@ -98,7 +99,7 @@ namespace Global.Device_Information
                                 }
                                 catch { }
 
-                                // Überprüfen, ob mindestens ein Wert gefunden wurde
+                                // Check if at least one value was found
                                 if (!empty)
                                 {
                                     // Create installed software object
@@ -118,6 +119,7 @@ namespace Global.Device_Information
                                     lock (applications_installedJsonList)
                                     {
                                         applications_installedJsonList.Add(applications_installedJson);
+                                        currentApplications.Add(applicationInfo); // Add object to comparison list
                                     }
                                 }
                             }
@@ -194,7 +196,7 @@ namespace Global.Device_Information
 
                             if (!empty)
                             {
-                                // Erstellen des JSON-Objekts
+                                // Create JSON object
                                 Applications_Installed applicationInfo = new Applications_Installed
                                 {
                                     name = string.IsNullOrEmpty(DisplayName_64bit) ? "N/A" : DisplayName_64bit,
@@ -205,13 +207,14 @@ namespace Global.Device_Information
                                     uninstallation_string = string.IsNullOrEmpty(UninstallString_64bit) ? "N/A" : UninstallString_64bit
                                 };
 
-                                // Serialisieren des JSON-Objekts und Hinzufügen zur Liste
-                                string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
-
-                                // Sichern des Zugriffs auf die gemeinsame Liste
+                                // Ensure thread-safe access to shared list
                                 lock (applications_installedJsonList)
                                 {
+                                    // Serialize the JSON object and add it to the list
+                                    string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
+
                                     applications_installedJsonList.Add(applications_installedJson);
+                                    currentApplications.Add(applicationInfo); // Add object to comparison list
                                 }
                             }
                         }
@@ -269,6 +272,7 @@ namespace Global.Device_Information
                                 lock (applications_installedJsonList)
                                 {
                                     applications_installedJsonList.Add(applications_installedJson);
+                                    currentApplications.Add(applicationInfo); // Add object to comparison list
                                 }
                             }
                         }
@@ -329,6 +333,7 @@ namespace Global.Device_Information
                                 lock (applications_installedJsonList)
                                 {
                                     applications_installedJsonList.Add(applications_installedJson);
+                                    currentApplications.Add(applicationInfo); // Add object to comparison list
                                 }
                             }
                             catch (Exception ex)
@@ -358,14 +363,78 @@ namespace Global.Device_Information
                 applications_installed_json = "[]";
             }
 
-            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-            if (Device_Worker.applicationsInstalledJson == applications_installed_json)
+            // Compare on object level instead of string comparison
+            bool hasChanges = false;
+
+            Console.WriteLine("checking for application changes");
+            Console.WriteLine($"application: {(Device_Worker.applicationsInstalledJson == null ? "null" : Device_Worker.applicationsInstalledJson.Length.ToString())}");
+
+            if (Device_Worker.applicationsInstalledJson == null)
+            {
+                Console.WriteLine("applicationsInstalledJson is null, changes are accepted.");
+                hasChanges = true;
+            }
+            else
+            {
+                try
+                {
+                    Console.WriteLine("Trying to deserialize previous applications from JSON...");
+                    // Try to deserialize previous applications from JSON
+                    var previousApplications = JsonSerializer.Deserialize<List<Applications_Installed>>(
+                        Device_Worker.applicationsInstalledJson.StartsWith("[") ?
+                        Device_Worker.applicationsInstalledJson :
+                        "[]") ?? new List<Applications_Installed>();
+
+                    Console.WriteLine($"Previous applications loaded: {previousApplications.Count}, current applications: {currentApplications.Count}");
+
+                    // Check if number of applications has changed
+                    if (previousApplications.Count != currentApplications.Count)
+                    {
+                        Console.WriteLine("Number of applications has changed.");
+                        hasChanges = true;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Number of applications is unchanged, check details...");
+                        // Check if number of applications is unchanged, check details...
+                        // Compare applications by name and version, but prevent duplicate keys
+                        var currentDict = new Dictionary<string, Applications_Installed>();
+                        foreach (var a in currentApplications)
+                        {
+                            string key = (a.name ?? "N/A") + "|" + (a.version ?? "N/A");
+                            if (!currentDict.ContainsKey(key))
+                                currentDict[key] = a;
+                        }
+                        foreach (var app in previousApplications)
+                        {
+                            string key = (app.name ?? "N/A") + "|" + (app.version ?? "N/A");
+                            if (!currentDict.ContainsKey(key))
+                            {
+                                Console.WriteLine($"Application changed or removed: {key}");
+                                hasChanges = true;
+                                break;
+                            }
+                            Console.WriteLine($"Application unchanged: {key}");
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error deserializing or comparing applications: {ex.Message}");
+                    // Treat deserialization problems as a change
+                    hasChanges = true;
+                }
+            }
+
+            if (!hasChanges)
             {
                 Logging.Device_Information("Device_Information.Software.Applications_Installed", "No changes detected since last check.", "");
+                Console.WriteLine("No new application data found.");
                 return "-";
             }
             else
             {
+                Console.WriteLine("New application data found, updating applicationsInstalledJson.");
                 Device_Worker.applicationsInstalledJson = applications_installed_json;
                 return applications_installed_json;
             }
@@ -377,6 +446,9 @@ namespace Global.Device_Information
             {
                 try
                 {
+                    // List for collecting logon objects for comparison
+                    List<Applications_Logon> currentLogons = new List<Applications_Logon>();
+                    
                     // Create a list of JSON strings for each installed software
                     List<string> applications_logonJsonList = new List<string>();
 
@@ -396,6 +468,9 @@ namespace Global.Device_Information
                                     user_sid = string.IsNullOrEmpty(reader["UserSID"].ToString()) ? "N/A" : reader["UserSID"].ToString(),
                                 };
 
+                                // Collect object for comparison list
+                                currentLogons.Add(logonInfo);
+
                                 // Serialize the logon object into a JSON string and add it to the list
                                 string logonJson = JsonSerializer.Serialize(logonInfo, new JsonSerializerOptions { WriteIndented = true });
                                 Logging.Device_Information("Device_Information.Software.Applications_Logon", "logonJson", logonJson);
@@ -410,16 +485,82 @@ namespace Global.Device_Information
 
                     // Create and log JSON array
                     string applications_logon_json = "[" + string.Join("," + Environment.NewLine, applications_logonJsonList) + "]";
-                    Logging.Device_Information("Device_Information.Software.Applications_Installed", "applications_logon_json", applications_logon_json);
+                    Logging.Device_Information("Device_Information.Software.Applications_Logon", "applications_logon_json", applications_logon_json);
 
-                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-                    if (Device_Worker.applicationsLogonJson == applications_logon_json)
+                    // Object-based comparison instead of string comparison
+                    bool hasChanges = false;
+                    
+                    if (string.IsNullOrEmpty(Device_Worker.applicationsLogonJson) || Device_Worker.applicationsLogonJson == "[]")
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Software.Applications_Logon", "First capture or empty previous data", "");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            // Try to deserialize previous logons from JSON
+                            var previousLogons = JsonSerializer.Deserialize<List<Applications_Logon>>(
+                                Device_Worker.applicationsLogonJson.StartsWith("[") ? 
+                                Device_Worker.applicationsLogonJson : 
+                                "[]") ?? new List<Applications_Logon>();
+
+                            // Check if number of logons has changed
+                            if (previousLogons.Count != currentLogons.Count)
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Software.Applications_Logon", 
+                                    "Changes detected: Different number of logon entries", 
+                                    $"Previous: {previousLogons.Count}, Current: {currentLogons.Count}");
+                            }
+                            else
+                            {
+                                // Create dictionary for fast access and comparison
+                                var currentDict = new Dictionary<string, Applications_Logon>();
+                                foreach (var logon in currentLogons)
+                                {
+                                    string key = (logon.name ?? "N/A") + "|" + (logon.command ?? "N/A");
+                                    if (!currentDict.ContainsKey(key))
+                                        currentDict[key] = logon;
+                                }
+
+                                // Compare each previous entry with the current ones
+                                foreach (var logon in previousLogons)
+                                {
+                                    string key = (logon.name ?? "N/A") + "|" + (logon.command ?? "N/A");
+                                    
+                                    // If a previous entry is no longer present or has changed
+                                    if (!currentDict.TryGetValue(key, out var currentLogon) ||
+                                        logon.path != currentLogon.path ||
+                                        logon.user != currentLogon.user ||
+                                        logon.user_sid != currentLogon.user_sid)
+                                    {
+                                        hasChanges = true;
+                                        Logging.Device_Information("Device_Information.Software.Applications_Logon", 
+                                            "Changes detected in logon entry", logon.name);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Treat deserialization problems as a change
+                            hasChanges = true;
+                            Logging.Error("Device_Information.Software.Applications_Logon", 
+                                "Error in comparison", ex.ToString());
+                        }
+                    }
+
+                    if (!hasChanges)
                     {
                         Logging.Device_Information("Device_Information.Software.Applications_Logon", "No changes detected since last check.", "");
+                        Console.WriteLine("Applications_Logon: " + "No changes detected since last check");
                         return "-";
                     }
                     else
                     {
+                        Console.WriteLine("Applications_Logon: " + "New data found, updating applicationsLogonJson.");
                         Device_Worker.applicationsLogonJson = applications_logon_json;
                         return applications_logon_json;
                     }
@@ -435,13 +576,15 @@ namespace Global.Device_Information
                 Logging.Debug("Device_Information.Software.Applications_Logon", "Operating system is not Windows", "");
                 return "[]";
             }
-
         }
 
         public static string Applications_Scheduled_Tasks()
         {
             if (OperatingSystem.IsWindows())
             {
+                // List for collecting task objects for comparison
+                List<Applications_Scheduled_Tasks> currentTasks = new List<Applications_Scheduled_Tasks>();
+                
                 // Create a list of JSON strings for each installed software
                 List<string> applications_scheduled_tasksJsonList = new List<string>();
 
@@ -466,6 +609,9 @@ namespace Global.Device_Information
                                 last_execution = string.IsNullOrEmpty(tsk.LastRunTime.ToString()) ? "N/A" : tsk.LastRunTime.ToString(),
                             };
 
+                            // Add object to comparison list
+                            currentTasks.Add(scheduledTaskInfo);
+
                             // Serialize the scheduled task object into a JSON string and add it to the list
                             string scheduledTaskJson = JsonSerializer.Serialize(scheduledTaskInfo, new JsonSerializerOptions { WriteIndented = true });
                             Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "scheduledTaskJson", scheduledTaskJson);
@@ -481,14 +627,91 @@ namespace Global.Device_Information
                     string applications_scheduled_tasks_json = "[" + string.Join("," + Environment.NewLine, applications_scheduled_tasksJsonList) + "]";
                     Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "applications_scheduled_tasks_json", applications_scheduled_tasks_json);
 
-                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-                    if (Device_Worker.applicationsScheduledTasksJson == applications_scheduled_tasks_json)
+                    // Object-based comparison instead of string comparison
+                    bool hasChanges = false;
+                    
+                    if (string.IsNullOrEmpty(Device_Worker.applicationsScheduledTasksJson) || Device_Worker.applicationsScheduledTasksJson == "[]")
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "First capture or empty previous data", "");
+                        Console.WriteLine("Applications_Scheduled_Tasks: First capture or empty previous data");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Console.WriteLine("Applications_Scheduled_Tasks: Trying to deserialize previous tasks from JSON...");
+                            
+                            // Try to deserialize previous tasks from JSON
+                            var previousTasks = JsonSerializer.Deserialize<List<Applications_Scheduled_Tasks>>(
+                                Device_Worker.applicationsScheduledTasksJson.StartsWith("[") ? 
+                                Device_Worker.applicationsScheduledTasksJson : 
+                                "[]") ?? new List<Applications_Scheduled_Tasks>();
+
+                            Console.WriteLine($"Applications_Scheduled_Tasks: Previous tasks loaded: {previousTasks.Count}, current tasks: {currentTasks.Count}");
+
+                            // Check if number of tasks has changed
+                            if (previousTasks.Count != currentTasks.Count)
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", 
+                                    "Changes detected: Different number of scheduled tasks", 
+                                    $"Previous: {previousTasks.Count}, Current: {currentTasks.Count}");
+                                Console.WriteLine("Applications_Scheduled_Tasks: Number of tasks has changed.");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Applications_Scheduled_Tasks: Number of tasks is unchanged, check details...");
+                                
+                                // Create dictionary for fast access and comparison
+                                var currentDict = new Dictionary<string, Applications_Scheduled_Tasks>();
+                                foreach (var task in currentTasks)
+                                {
+                                    // Use name and path as unique key
+                                    string key = (task.name ?? "N/A") + "|" + (task.path ?? "N/A");
+                                    if (!currentDict.ContainsKey(key))
+                                        currentDict[key] = task;
+                                }
+
+                                // Compare each previous task with the current ones
+                                foreach (var task in previousTasks)
+                                {
+                                    string key = (task.name ?? "N/A") + "|" + (task.path ?? "N/A");
+                                    
+                                    // If a previous task is no longer present or important properties have changed
+                                    if (!currentDict.TryGetValue(key, out var currentTask) ||
+                                        task.status != currentTask.status ||
+                                        task.author != currentTask.author ||
+                                        task.user_sid != currentTask.user_sid)
+                                    {
+                                        hasChanges = true;
+                                        Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", 
+                                            "Changes detected in scheduled task", task.name);
+                                        Console.WriteLine($"Applications_Scheduled_Tasks: Task changed or removed: {task.name}");
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Treat deserialization problems as a change
+                            hasChanges = true;
+                            Logging.Error("Device_Information.Software.Applications_Scheduled_Tasks", 
+                                "Error in comparison", ex.ToString());
+                            Console.WriteLine($"Applications_Scheduled_Tasks: Error deserializing or comparing: {ex.Message}");
+                        }
+                    }
+
+                    if (!hasChanges)
                     {
                         Logging.Device_Information("Device_Information.Software.Applications_Scheduled_Tasks", "No changes detected since last check.", "");
+                        Console.WriteLine("Applications_Scheduled_Tasks: No changes detected.");
                         return "-";
                     }
                     else
                     {
+                        Console.WriteLine("Applications_Scheduled_Tasks: New data found, updating applicationsScheduledTasksJson.");
                         Device_Worker.applicationsScheduledTasksJson = applications_scheduled_tasks_json;
                         return applications_scheduled_tasks_json;
                     }
@@ -509,6 +732,8 @@ namespace Global.Device_Information
         public static string Applications_Services()
         {
             string applications_services_json = String.Empty;
+            // List for collecting service objects for comparison
+            List<Applications_Services> currentServices = new List<Applications_Services>();
 
             if (OperatingSystem.IsWindows())
             {
@@ -535,6 +760,9 @@ namespace Global.Device_Information
                                     description = string.IsNullOrEmpty(obj["Description"].ToString()) ? "N/A" : obj["Description"].ToString(),
                                 };
 
+                                // Add object to comparison list
+                                currentServices.Add(serviceInfo);
+
                                 // Serialize the service object into a JSON string and add it to the list
                                 string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
                                 Logging.Device_Information("Device_Information.Software.Applications_Services", "serviceJson", serviceJson);
@@ -557,7 +785,7 @@ namespace Global.Device_Information
                     applications_services_json = "[]";
                 }
             }
-            if (OperatingSystem.IsLinux())
+            else if (OperatingSystem.IsLinux())
             {
                 try
                 {
@@ -595,6 +823,9 @@ namespace Global.Device_Information
                                     login_as = "N/A",     // Not directly available in systemd output
                                     path = "N/A"          // Path information is not always available in systemd output
                                 };
+
+                                // Add object to comparison list
+                                currentServices.Add(serviceInfo);
 
                                 // Serialize the service object into a JSON string and add it to the list
                                 string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
@@ -661,6 +892,10 @@ namespace Global.Device_Information
                                     login_as = loginAs,
                                     path = programPath
                                 };
+                                
+                                // Add object to comparison list
+                                currentServices.Add(serviceInfo);
+                                
                                 // Serialize the service object into a JSON string and add it to the list
                                 string serviceJson = JsonSerializer.Serialize(serviceInfo, new JsonSerializerOptions { WriteIndented = true });
                                 applications_servicesJsonList.Add(serviceJson);
@@ -682,15 +917,98 @@ namespace Global.Device_Information
                     applications_services_json = "[]";
                 }
             }
+            else
+            {
+                applications_services_json = "[]";
+            }
 
-            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-            if (Device_Worker.applicationsServicesJson == applications_services_json)
+            // Object-based comparison instead of string comparison
+            bool hasChanges = false;
+            
+            Console.WriteLine("Checking for service changes...");
+            
+            if (string.IsNullOrEmpty(Device_Worker.applicationsServicesJson) || Device_Worker.applicationsServicesJson == "[]")
+            {
+                hasChanges = true;
+                Logging.Device_Information("Device_Information.Software.Applications_Services", "First capture or empty previous data", "");
+                Console.WriteLine("Applications_Services: First capture or empty previous data");
+            }
+            else
+            {
+                try
+                {
+                    Console.WriteLine("Applications_Services: Trying to deserialize previous services from JSON...");
+                    
+                    // Try to deserialize previous services from JSON
+                    var previousServices = JsonSerializer.Deserialize<List<Applications_Services>>(
+                        Device_Worker.applicationsServicesJson.StartsWith("[") ? 
+                        Device_Worker.applicationsServicesJson : 
+                        "[]") ?? new List<Applications_Services>();
+
+                    Console.WriteLine($"Applications_Services: Previous services loaded: {previousServices.Count}, current services: {currentServices.Count}");
+
+                    // Check if number of services has changed
+                    if (previousServices.Count != currentServices.Count)
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Software.Applications_Services", 
+                            "Changes detected: Different number of services", 
+                            $"Previous: {previousServices.Count}, Current: {currentServices.Count}");
+                        Console.WriteLine("Applications_Services: Number of services has changed.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Applications_Services: Number of services is unchanged, check details...");
+                        
+                        // Create dictionary for fast access and comparison
+                        var currentDict = new Dictionary<string, Applications_Services>();
+                        foreach (var service in currentServices)
+                        {
+                            // Use name as unique key (Name is usually unique for services)
+                            string key = service.name ?? "N/A";
+                            if (!currentDict.ContainsKey(key))
+                                currentDict[key] = service;
+                        }
+
+                        // Compare each previous service with the current ones
+                        foreach (var service in previousServices)
+                        {
+                            string key = service.name ?? "N/A";
+                            
+                            // If a previous service is no longer present or important properties have changed
+                            if (!currentDict.TryGetValue(key, out var currentService) ||
+                                service.status != currentService.status ||
+                                service.start_type != currentService.start_type ||
+                                service.path != currentService.path)
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Software.Applications_Services", 
+                                    "Changes detected in service", service.name);
+                                Console.WriteLine($"Applications_Services: Service changed or removed: {service.name}");
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Treat deserialization problems as a change
+                    hasChanges = true;
+                    Logging.Error("Device_Information.Software.Applications_Services", 
+                        "Error in comparison", ex.ToString());
+                    Console.WriteLine($"Applications_Services: Error deserializing or comparing: {ex.Message}");
+                }
+            }
+
+            if (!hasChanges)
             {
                 Logging.Device_Information("Device_Information.Software.Applications_Services", "No changes detected since last check.", "");
+                Console.WriteLine("Applications_Services: No changes detected.");
                 return "-";
             }
             else
             {
+                Console.WriteLine("Applications_Services: New data found, updating applicationsServicesJson.");
                 Device_Worker.applicationsServicesJson = applications_services_json;
                 return applications_services_json;
             }
@@ -705,6 +1023,8 @@ namespace Global.Device_Information
         public static string Applications_Drivers()
         {
             string applications_drivers_json = String.Empty;
+            // List for collecting driver objects for comparison
+            List<Applications_Drivers> currentDrivers = new List<Applications_Drivers>();
 
             if (OperatingSystem.IsWindows())
             {
@@ -737,6 +1057,9 @@ namespace Global.Device_Information
                                     version = string.IsNullOrEmpty(image_version) ? "N/A" : image_version,
                                 };
 
+                                // Add object to comparison list
+                                currentDrivers.Add(driverInfo);
+
                                 // Serialize the driver object into a JSON string and add it to the list
                                 string driverJson = JsonSerializer.Serialize(driverInfo, new JsonSerializerOptions { WriteIndented = true });
                                 Logging.Device_Information("Device_Information.Software.Applications_Drivers", "driverJson", driverJson);
@@ -766,8 +1089,73 @@ namespace Global.Device_Information
             }
 
 
-            // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-            if (Device_Worker.applicationsDriversJson == applications_drivers_json)
+            // Object-based comparison instead of string comparison
+            bool hasChanges = false;
+        
+            if (string.IsNullOrEmpty(Device_Worker.applicationsDriversJson) || Device_Worker.applicationsDriversJson == "[]")
+            {
+                hasChanges = true;
+                Logging.Device_Information("Device_Information.Software.Applications_Drivers", "First capture or empty previous data", "");
+            }
+            else
+            {
+                try
+                {            
+                    // Try to deserialize previous drivers from JSON
+                    var previousDrivers = JsonSerializer.Deserialize<List<Applications_Drivers>>(
+                        Device_Worker.applicationsDriversJson.StartsWith("[") ? 
+                        Device_Worker.applicationsDriversJson : 
+                        "[]") ?? new List<Applications_Drivers>();
+
+                    // Check if number of drivers has changed
+                    if (previousDrivers.Count != currentDrivers.Count)
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Software.Applications_Drivers", 
+                            "Changes detected: Different number of drivers", 
+                            $"Previous: {previousDrivers.Count}, Current: {currentDrivers.Count}");
+                    }
+                    else
+                    {                        
+                        // Create dictionary for fast access and comparison
+                        var currentDict = new Dictionary<string, Applications_Drivers>();
+                        foreach (var driver in currentDrivers)
+                        {
+                            // Use name and path as unique key
+                            string key = (driver.name ?? "N/A") + "|" + (driver.path ?? "N/A");
+                            if (!currentDict.ContainsKey(key))
+                                currentDict[key] = driver;
+                        }
+
+                        // Compare each previous driver with the current ones
+                        foreach (var driver in previousDrivers)
+                        {
+                            string key = (driver.name ?? "N/A") + "|" + (driver.path ?? "N/A");
+                            
+                            // If a previous driver is no longer present or important properties have changed
+                            if (!currentDict.TryGetValue(key, out var currentDriver) ||
+                                driver.status != currentDriver.status ||
+                                driver.version != currentDriver.version ||
+                                driver.start_type != currentDriver.start_type)
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Software.Applications_Drivers", 
+                                    "Changes detected in driver", driver.name);
+                                break;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Treat deserialization problems as a change
+                    hasChanges = true;
+                    Logging.Error("Device_Information.Software.Applications_Drivers", 
+                        "Error in comparison", ex.ToString());
+                }
+            }
+
+            if (!hasChanges)
             {
                 Logging.Device_Information("Device_Information.Software.Applications_Drivers", "No changes detected since last check.", "");
                 return "-";
@@ -783,24 +1171,24 @@ namespace Global.Device_Information
         {
             string cronjobsJson = String.Empty;
 
-            // Liste zum Speichern der JSON-Daten für jeden Cronjob
+            // List for storing JSON data for each Cronjob
             List<string> cronjobsJsonList = new List<string>();
 
             if (OperatingSystem.IsLinux())
             {
                 try
                 {
-                    // Verwenden von `awk` oder besserem Parsing-Befehl
+                    // Use `awk` or better parsing command
                     string output = Linux.Helper.Bash.Execute_Script("Cronjobs", false, "systemctl list-timers --all --no-pager | awk 'NR>1 {for(i=1;i<=NF;i++) printf \"%s|\", $i; printf \"\\n\"}'");
-                    // Aufteilen der Ausgabe in Zeilen
+                    // Split output into lines
                     var lines = output.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
 
                     foreach (var line in lines)
                     {
-                        // Aufteilen jeder Zeile anhand des Pipesymbols '|'
+                        // Split each line by the pipe symbol '|'
                         var details = line.Split('|', StringSplitOptions.RemoveEmptyEntries);
 
-                        // Überprüfen, ob genügend Felder vorhanden sind
+                        // Check if enough fields are present
                         if (details.Length >= 7)
                         {
                             string cronjobNextRun = details[0].Trim() + " " + details[1].Trim() + " " + details[2].Trim();
@@ -810,7 +1198,7 @@ namespace Global.Device_Information
                             string cronjobUnit = details.Length > 7 ? details[7].Trim() : string.Empty;
                             string activates = details.Length > 8 ? details[8].Trim() : string.Empty;
 
-                            // Erstellen eines Cronjobs-Objekts
+                            // Create a cronjob object
                             var cronjobInfo = new Cronjobs
                             {
                                 next = cronjobNextRun,
@@ -821,7 +1209,7 @@ namespace Global.Device_Information
                                 activates = activates
                             };
 
-                            // JSON-Serialisierung
+                            // JSON serialization
                             string cronjobJson = JsonSerializer.Serialize(cronjobInfo, new JsonSerializerOptions { WriteIndented = true });
 
                             lock (cronjobsJsonList)
@@ -831,7 +1219,7 @@ namespace Global.Device_Information
                         }
                     }
 
-                    // JSON-Array aus der Liste erstellen
+                    // JSON array from the list
                     cronjobsJson = "[" + string.Join("," + Environment.NewLine, cronjobsJsonList) + "]";
                 }
                 catch (Exception ex)

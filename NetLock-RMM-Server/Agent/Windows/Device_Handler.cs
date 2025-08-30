@@ -47,7 +47,6 @@ namespace NetLock_RMM_Server.Agent.Windows
         public static async Task<string> Update_Device_Information(string json)
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-            
             try
             {
                 //Extract JSON
@@ -75,56 +74,24 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Deserialisierung des gesamten JSON-Strings
                 using (JsonDocument document = JsonDocument.Parse(json))
                 {
-                    // Extrahieren des JSON-Strings für den "disks"-Abschnitt
                     JsonElement device_identity_element = document.RootElement.GetProperty("device_identity");
                     device_identity_json_string = device_identity_element.ToString();
+                    cpu_information_json_string = document.RootElement.GetProperty("cpu_information").ToString();
+                    ram_information_json_string = document.RootElement.GetProperty("ram_information").ToString();
+                    network_adapters_json_string = document.RootElement.GetProperty("network_adapters").ToString();
+                    disks_json_string = document.RootElement.GetProperty("disks").ToString();
+                    applications_installed_json_string = document.RootElement.GetProperty("applications_installed").ToString();
+                    applications_logon_json_string = document.RootElement.GetProperty("applications_logon").ToString();
+                    applications_scheduled_tasks_json_string = document.RootElement.GetProperty("applications_scheduled_tasks").ToString();
+                    applications_drivers_json_string = document.RootElement.GetProperty("applications_drivers").ToString();
+                    applications_services_json_string = document.RootElement.GetProperty("applications_services").ToString();
+                    processes_json_string = document.RootElement.GetProperty("processes").ToString();
+                    cpu_json_string = document.RootElement.GetProperty("cpu_information").ToString();
+                    ram_json_string = document.RootElement.GetProperty("ram_information").ToString();
+                    antivirus_products_json_string = document.RootElement.GetProperty("antivirus_products").ToString();
+                    antivirus_information_json_string = document.RootElement.GetProperty("antivirus_information").ToString();
+                    cronjobs_json_string = document.RootElement.GetProperty("cronjobs").ToString();
 
-                    JsonElement cpu_information_element = document.RootElement.GetProperty("cpu_information");
-                    cpu_information_json_string = cpu_information_element.ToString();
-                    
-                    JsonElement ram_information_element = document.RootElement.GetProperty("ram_information");
-                    ram_information_json_string = ram_information_element.ToString();
-
-                    JsonElement network_adapters_element = document.RootElement.GetProperty("network_adapters");
-                    network_adapters_json_string = network_adapters_element.ToString();
-
-                    JsonElement disks_element = document.RootElement.GetProperty("disks");
-                    disks_json_string = disks_element.ToString();
-
-                    JsonElement applications_installed_element = document.RootElement.GetProperty("applications_installed");
-                    applications_installed_json_string = applications_installed_element.ToString();
-
-                    JsonElement applications_logon_element = document.RootElement.GetProperty("applications_logon");
-                    applications_logon_json_string = applications_logon_element.ToString();
-
-                    JsonElement applications_scheduled_tasks_element = document.RootElement.GetProperty("applications_scheduled_tasks");
-                    applications_scheduled_tasks_json_string = applications_scheduled_tasks_element.ToString();
-
-                    JsonElement applications_drivers_element = document.RootElement.GetProperty("applications_drivers");
-                    applications_drivers_json_string = applications_drivers_element.ToString();
-
-                    JsonElement applications_services_element = document.RootElement.GetProperty("applications_services");
-                    applications_services_json_string = applications_services_element.ToString();
-
-                    JsonElement processes_element = document.RootElement.GetProperty("processes");
-                    processes_json_string = processes_element.ToString();
-
-                    JsonElement cpu_element = document.RootElement.GetProperty("cpu_information");
-                    cpu_json_string = cpu_element.ToString();
-
-                    JsonElement ram_element = document.RootElement.GetProperty("ram_information");
-                    ram_json_string = ram_element.ToString();
-
-                    JsonElement antivirus_products_element = document.RootElement.GetProperty("antivirus_products");
-                    antivirus_products_json_string = antivirus_products_element.ToString();
-
-                    JsonElement antivirus_information_element = document.RootElement.GetProperty("antivirus_information");
-                    antivirus_information_json_string = antivirus_information_element.ToString();
-
-                    JsonElement cronjobs_element = document.RootElement.GetProperty("cronjobs");
-                    cronjobs_json_string = cronjobs_element.ToString();
-
-                    // Ausgabe des extrahierten JSON-Strings
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "ram_information_json_string", ram_information_json_string);
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "cpu_information_json_string", cpu_information_json_string);
                     Logging.Handler.Debug("Agent.Windows.Device_Handler.Update_Device_Information", "network_adapters_json_string", network_adapters_json_string);
@@ -148,142 +115,39 @@ namespace NetLock_RMM_Server.Agent.Windows
                 // Get device id with device name, tenant id & location id
                 int device_id = await Helper.Get_Device_Id(device_identity.device_name, tenant_id, location_id);
 
-                //Insert into database
                 await conn.OpenAsync();
 
-                using (var cmd = conn.CreateCommand())
+                // Check what fields are not "-" and create the update query dynamically based on that, so we only update the fields that have new data and not everything
+                var updateFields = new Dictionary<string, string>();
+                if (processes_json_string != "-") updateFields["processes"] = processes_json_string;
+                if (cpu_information_json_string != "-") updateFields["cpu_information"] = cpu_information_json_string;
+                if (ram_information_json_string != "-") updateFields["ram_information"] = ram_information_json_string;
+                if (network_adapters_json_string != "-") updateFields["network_adapters"] = network_adapters_json_string;
+                if (disks_json_string != "-") updateFields["disks"] = disks_json_string;
+                if (antivirus_products_json_string != "-") updateFields["antivirus_products"] = antivirus_products_json_string;
+                if (applications_installed_json_string != "-") updateFields["applications_installed"] = applications_installed_json_string;
+                if (applications_logon_json_string != "-") updateFields["applications_logon"] = applications_logon_json_string;
+                if (applications_scheduled_tasks_json_string != "-") updateFields["applications_scheduled_tasks"] = applications_scheduled_tasks_json_string;
+                if (applications_drivers_json_string != "-") updateFields["applications_drivers"] = applications_drivers_json_string;
+                if (applications_services_json_string != "-") updateFields["applications_services"] = applications_services_json_string;
+                if (antivirus_information_json_string != "-") updateFields["antivirus_information"] = antivirus_information_json_string;
+                if (cronjobs_json_string != "-") updateFields["cronjobs"] = cronjobs_json_string;
+
+                if (updateFields.Count > 0)
                 {
+                    var setClauses = new List<string>();
+                    var cmd = conn.CreateCommand();
+                    int paramIdx = 0;
+                    foreach (var kvp in updateFields)
+                    {
+                        string paramName = "@p" + paramIdx;
+                        setClauses.Add($"`{kvp.Key}` = {paramName}");
+                        cmd.Parameters.AddWithValue(paramName, kvp.Value);
+                        paramIdx++;
+                    }
+                    cmd.CommandText = $"UPDATE `devices` SET {string.Join(", ", setClauses)} WHERE id = @device_id;";
                     cmd.Parameters.AddWithValue("@device_id", device_id);
-
-                    // Processes
-                    if (processes_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `processes` = @processes WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@processes", processes_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // CPU
-                    if (cpu_information_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `cpu_information` = @cpu_information WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@cpu_information", cpu_information_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // RAM
-                    if (ram_information_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `ram_information` = @ram_information WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@ram_information", ram_information_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Network
-                    if (network_adapters_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `network_adapters` = @network_adapters WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@network_adapters", network_adapters_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Disks
-                    if (disks_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `disks` = @disks WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@disks", disks_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Antivirus Products
-                    if (antivirus_products_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `antivirus_products` = @antivirus_products WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@antivirus_products", antivirus_products_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Applications Installed
-                    if (applications_installed_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `applications_installed` = @applications_installed WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@applications_installed", applications_installed_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Applications Logon
-                    if (applications_logon_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `applications_logon` = @applications_logon WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@applications_logon", applications_logon_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Scheduled Tasks
-                    if (applications_scheduled_tasks_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `applications_scheduled_tasks` = @applications_scheduled_tasks WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@applications_scheduled_tasks", applications_scheduled_tasks_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Drivers
-                    if (applications_drivers_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `applications_drivers` = @applications_drivers WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@applications_drivers", applications_drivers_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Services
-                    if (applications_services_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `applications_services` = @applications_services WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@applications_services", applications_services_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Antivirus Info
-                    if (antivirus_information_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `antivirus_information` = @antivirus_information WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@antivirus_information", antivirus_information_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-
-                    // Cronjobs
-                    if (cronjobs_json_string != "-")
-                    {
-                        cmd.CommandText = "UPDATE `devices` SET `cronjobs` = @cronjobs WHERE id = @device_id;";
-                        cmd.Parameters.Clear();
-                        cmd.Parameters.AddWithValue("@device_id", device_id);
-                        cmd.Parameters.AddWithValue("@cronjobs", cronjobs_json_string);
-                        await cmd.ExecuteNonQueryAsync();
-                    }
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 //Insert applications_installed_history

@@ -6,5 +6,6 @@
         public static bool isDocker = false;
         public static bool loggingEnabled = true;
         public static DateTime serverStartTime = DateTime.Now;
+
     }
 }

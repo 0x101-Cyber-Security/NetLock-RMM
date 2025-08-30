@@ -53,7 +53,8 @@ namespace Windows.Helper
         {
             try
             {
-                // Create a list of JSON strings for each antivirus product
+                // Liste zum Sammeln der aktuellen Antivirus-Produkte
+                List<Antivirus_Products> currentProducts = new List<Antivirus_Products>();
                 List<string> antivirus_productsJsonList = new List<string>();
 
                 if (OperatingSystem.IsWindows())
@@ -74,16 +75,18 @@ namespace Windows.Helper
                                 timestamp = obj["timestamp"]?.ToString() ?? "N/A",
                             };
 
+                            // Objekt zur Vergleichsliste hinzufügen
+                            currentProducts.Add(antivirus_productsInfo);
+
                             // Serialize the antivirus product object into a JSON string and add it to the list
-                            string network_adapterJson = JsonSerializer.Serialize(antivirus_productsInfo, new JsonSerializerOptions { WriteIndented = true });
-                            antivirus_productsJsonList.Add(network_adapterJson);
+                            string antivirus_productJson = JsonSerializer.Serialize(antivirus_productsInfo, new JsonSerializerOptions { WriteIndented = true });
+                            antivirus_productsJsonList.Add(antivirus_productJson);
                         }
                     }
                 }
                 else
                 {
                     Logging.Debug("Device_Information.Windows.Antivirus_Products", "Operating system is not Windows", "");
-
                     // If the operating system is not Windows, return an empty list
                     return "[]";
                 }
@@ -92,14 +95,94 @@ namespace Windows.Helper
                 string antivirus_products_json = "[" + string.Join("," + Environment.NewLine, antivirus_productsJsonList) + "]";
                 Logging.Device_Information("Device_Information.Windows.Antivirus_Products", "antivirus_products_json", antivirus_products_json);
 
-                // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-                if (Device_Worker.antivirusProductsJson == antivirus_products_json)
+                // Objektbasierter Vergleich statt String-Vergleich
+                bool hasChanges = false;
+                
+                Console.WriteLine("Checking for antivirus product changes...");
+                
+                if (string.IsNullOrEmpty(Device_Worker.antivirusProductsJson) || Device_Worker.antivirusProductsJson == "[]")
+                {
+                    hasChanges = true;
+                    Logging.Device_Information("Device_Information.Windows.Antivirus_Products", "Erste Erfassung oder leere vorherige Daten", "");
+                    Console.WriteLine("Antivirus_Products: Erste Erfassung oder leere vorherige Daten");
+                }
+                else
+                {
+                    try
+                    {
+                        Console.WriteLine("Antivirus_Products: Versuche, vorherige Antivirenprodukte aus JSON zu deserialisieren...");
+                        
+                        // Deserialize den gespeicherten JSON zu einer Liste von Objekten
+                        var previousProducts = JsonSerializer.Deserialize<List<Antivirus_Products>>(
+                            Device_Worker.antivirusProductsJson.StartsWith("[") ? 
+                            Device_Worker.antivirusProductsJson : 
+                            "[]") ?? new List<Antivirus_Products>();
+
+                        Console.WriteLine($"Antivirus_Products: Vorherige Produkte geladen: {previousProducts.Count}, aktuelle Produkte: {currentProducts.Count}");
+
+                        // Prüfe, ob Anzahl unterschiedlich ist
+                        if (previousProducts.Count != currentProducts.Count)
+                        {
+                            hasChanges = true;
+                            Logging.Device_Information("Device_Information.Windows.Antivirus_Products", 
+                                "Änderungen erkannt: Unterschiedliche Anzahl von Antivirenprodukten", 
+                                $"Vorher: {previousProducts.Count}, Aktuell: {currentProducts.Count}");
+                            Console.WriteLine("Antivirus_Products: Anzahl der Antivirenprodukte hat sich geändert.");
+                        }
+                        else
+                        {
+                            Console.WriteLine("Antivirus_Products: Anzahl der Antivirenprodukte unverändert, prüfe Details...");
+                            
+                            // Erstelle ein Dictionary für schnellen Zugriff und Vergleich
+                            var currentDict = new Dictionary<string, Antivirus_Products>();
+                            foreach (var product in currentProducts)
+                            {
+                                // Verwende GUID als eindeutigen Schlüssel
+                                string key = product.instance_guid ?? "N/A";
+                                if (!currentDict.ContainsKey(key))
+                                    currentDict[key] = product;
+                            }
+
+                            // Vergleiche jedes vorherige Produkt mit den aktuellen
+                            foreach (var product in previousProducts)
+                            {
+                                string key = product.instance_guid ?? "N/A";
+                                
+                                // Wenn ein vorheriges Produkt nicht mehr vorhanden ist oder sich wichtige Eigenschaften geändert haben
+                                if (!currentDict.TryGetValue(key, out var currentProduct) ||
+                                    product.display_name != currentProduct.display_name ||
+                                    product.path_to_signed_product_exe != currentProduct.path_to_signed_product_exe ||
+                                    product.path_to_signed_reporting_exe != currentProduct.path_to_signed_reporting_exe ||
+                                    product.product_state != currentProduct.product_state)
+                                {
+                                    hasChanges = true;
+                                    Logging.Device_Information("Device_Information.Windows.Antivirus_Products", 
+                                        "Änderungen erkannt bei Antivirenprodukt", product.display_name);
+                                    Console.WriteLine($"Antivirus_Products: Produkt geändert oder entfernt: {product.display_name}");
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Bei Deserialisierungsproblemen als Änderung behandeln
+                        hasChanges = true;
+                        Logging.Error("Device_Information.Windows.Antivirus_Products", 
+                            "Fehler beim Vergleich", ex.ToString());
+                        Console.WriteLine($"Antivirus_Products: Fehler beim Deserialisieren oder Vergleichen: {ex.Message}");
+                    }
+                }
+
+                if (!hasChanges)
                 {
                     Logging.Debug("Device_Information.Windows.Antivirus_Products", "Antivirus products have not changed", "");
+                    Console.WriteLine("Antivirus_Products: Keine Änderungen erkannt.");
                     return "-";
                 }
                 else
                 {
+                    Console.WriteLine("Antivirus_Products: Neue Daten gefunden, aktualisiere antivirusProductsJson.");
                     Device_Worker.antivirusProductsJson = antivirus_products_json;
                     return antivirus_products_json;
                 }
@@ -118,14 +201,15 @@ namespace Windows.Helper
                 try
                 {
                     string antivirus_information_json = "{}";
+                    Antivirus_Information currentAntivirusInfo = null;
 
-                    // Get the antivirus information from the AntiVirusProduct class in the SecurityCenter2 namespace (Windows Security Center), which is available since Windows 10 version 1703 (Creators Update) and Windows Server 2016 (Windows 10 version 1607)
+                    // Get the antivirus information from Windows Defender
                     using (ManagementObjectSearcher searcher = new ManagementObjectSearcher("Root\\Microsoft\\Windows\\Defender", "SELECT * FROM MSFT_MpComputerStatus"))
                     {
                         foreach (ManagementObject obj in searcher.Get())
                         {
                             // Create antivirus information object
-                            Antivirus_Information antivirus_information = new Antivirus_Information
+                            currentAntivirusInfo = new Antivirus_Information
                             {
                                 amengineversion = obj["AMEngineVersion"]?.ToString() ?? "N/A",
                                 amproductversion = obj["AMProductVersion"]?.ToString() ?? "N/A",
@@ -149,19 +233,101 @@ namespace Windows.Helper
                             };
 
                             // Serialize the antivirus information object into a JSON string
-                            antivirus_information_json = JsonSerializer.Serialize(antivirus_information, new JsonSerializerOptions { WriteIndented = true });
+                            antivirus_information_json = JsonSerializer.Serialize(currentAntivirusInfo, new JsonSerializerOptions { WriteIndented = true });
                             Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "antivirus_information_json", antivirus_information_json);
                         }
                     }
 
-                    // Check if the JSON matches with the previously collected JSON, if yes, return empty string
-                    if (Device_Worker.antivirusInformationJson == antivirus_information_json)
+                    // Wenn kein Antiviren-Objekt gefunden wurde
+                    if (currentAntivirusInfo == null)
                     {
-                        Logging.Device_Information("Device_Information.Process_List.Collect", "No changes in process information detected.", "");
+                        Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "Keine Antiviren-Informationen gefunden", "");
+                        return "{}";
+                    }
+
+                    // Objektbasierter Vergleich statt String-Vergleich
+                    bool hasChanges = false;
+                    
+                    Console.WriteLine("Checking for antivirus information changes...");
+                    
+                    if (string.IsNullOrEmpty(Device_Worker.antivirusInformationJson) || Device_Worker.antivirusInformationJson == "{}")
+                    {
+                        hasChanges = true;
+                        Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "Erste Erfassung oder leere vorherige Daten", "");
+                        Console.WriteLine("Antivirus_Information: Erste Erfassung oder leere vorherige Daten");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            Console.WriteLine("Antivirus_Information: Versuche, vorherige Antiviren-Information aus JSON zu deserialisieren...");
+                            
+                            // Deserialize den gespeicherten JSON zu einem Objekt
+                            var previousAntivirusInfo = JsonSerializer.Deserialize<Antivirus_Information>(Device_Worker.antivirusInformationJson);
+
+                            if (previousAntivirusInfo == null)
+                            {
+                                hasChanges = true;
+                                Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "Vorherige Daten konnten nicht deserialisiert werden", "");
+                            }
+                            else
+                            {
+                                Console.WriteLine("Antivirus_Information: Vergleiche Antiviren-Informationen...");
+                                
+                                // Überprüfe auf Änderungen bei wichtigen Eigenschaften
+                                if (previousAntivirusInfo.amengineversion != currentAntivirusInfo.amengineversion ||
+                                    previousAntivirusInfo.amproductversion != currentAntivirusInfo.amproductversion ||
+                                    previousAntivirusInfo.amserviceenabled != currentAntivirusInfo.amserviceenabled ||
+                                    previousAntivirusInfo.amserviceversion != currentAntivirusInfo.amserviceversion ||
+                                    previousAntivirusInfo.antispywareenabled != currentAntivirusInfo.antispywareenabled ||
+                                    previousAntivirusInfo.antispywaresignatureversion != currentAntivirusInfo.antispywaresignatureversion ||
+                                    previousAntivirusInfo.antivirusenabled != currentAntivirusInfo.antivirusenabled ||
+                                    previousAntivirusInfo.antivirussignatureversion != currentAntivirusInfo.antivirussignatureversion ||
+                                    previousAntivirusInfo.behaviormonitorenabled != currentAntivirusInfo.behaviormonitorenabled ||
+                                    previousAntivirusInfo.ioavprotectionenabled != currentAntivirusInfo.ioavprotectionenabled ||
+                                    previousAntivirusInfo.istamperprotected != currentAntivirusInfo.istamperprotected ||
+                                    previousAntivirusInfo.nisenabled != currentAntivirusInfo.nisenabled ||
+                                    previousAntivirusInfo.nisengineversion != currentAntivirusInfo.nisengineversion ||
+                                    previousAntivirusInfo.nissignatureversion != currentAntivirusInfo.nissignatureversion ||
+                                    previousAntivirusInfo.onaccessprotectionenabled != currentAntivirusInfo.onaccessprotectionenabled ||
+                                    previousAntivirusInfo.realtimetprotectionenabled != currentAntivirusInfo.realtimetprotectionenabled)
+                                {
+                                    hasChanges = true;
+                                    Logging.Device_Information("Device_Information.Windows.Antivirus_Information", 
+                                        "Änderungen an Antiviren-Einstellungen oder Versionen erkannt", "");
+                                    Console.WriteLine("Antivirus_Information: Änderungen an Konfiguration oder Versionen erkannt");
+                                }
+                                // Optional: Separat auf Signatur-Update-Zeitstempel prüfen
+                                else if (previousAntivirusInfo.antispywaresignaturelastupdated != currentAntivirusInfo.antispywaresignaturelastupdated ||
+                                         previousAntivirusInfo.antivirussignaturelastupdated != currentAntivirusInfo.antivirussignaturelastupdated ||
+                                         previousAntivirusInfo.nissignaturelastupdated != currentAntivirusInfo.nissignaturelastupdated)
+                                {
+                                    hasChanges = true;
+                                    Logging.Device_Information("Device_Information.Windows.Antivirus_Information", 
+                                        "Signatur-Updates erkannt", "");
+                                    Console.WriteLine("Antivirus_Information: Neue Signatur-Updates erkannt");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Bei Deserialisierungsproblemen als Änderung behandeln
+                            hasChanges = true;
+                            Logging.Error("Device_Information.Windows.Antivirus_Information", 
+                                "Fehler beim Vergleich", ex.ToString());
+                            Console.WriteLine($"Antivirus_Information: Fehler beim Deserialisieren oder Vergleichen: {ex.Message}");
+                        }
+                    }
+
+                    if (!hasChanges)
+                    {
+                        Logging.Device_Information("Device_Information.Windows.Antivirus_Information", "No changes in antivirus information detected.", "");
+                        Console.WriteLine("Antivirus_Information: Keine Änderungen erkannt.");
                         return "-";
                     }
                     else
                     {
+                        Console.WriteLine("Antivirus_Information: Neue Daten gefunden, aktualisiere antivirusInformationJson.");
                         Device_Worker.antivirusInformationJson = antivirus_information_json;
                         return antivirus_information_json;
                     }

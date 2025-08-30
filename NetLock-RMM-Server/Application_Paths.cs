@@ -7,6 +7,12 @@ namespace NetLock_RMM_Server
     public class Application_Paths
     {
         public static string logs_dir = Path.Combine(GetBasePath(), "0x101 Cyber Security", "NetLock RMM", "Server", "Logs");
+        
+        // Log-Dateipfade f�r verschiedene Log-Level
+        public static string log_debug_path = Path.Combine(logs_dir, "debug.log");
+        public static string log_info_path = Path.Combine(logs_dir, "info.log");
+        public static string log_warning_path = Path.Combine(logs_dir, "warning.log");
+        public static string log_error_path = Path.Combine(logs_dir, "error.log");
 
         public static string _public_uploads_user = Path.Combine(GetCurrentDirectory(), "www", "public", "uploads", "user");
         public static string _public_downloads_user = Path.Combine(GetCurrentDirectory(), "www", "public", "downloads", "user");
@@ -20,8 +26,9 @@ namespace NetLock_RMM_Server
         public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
         public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
-        //OSSCH_START 5477cd59-0e52-4493-aed9-f3a90fbc95fa //OSSCH_END
+        //OSSCH_START e598d223-8c39-4edf-ac9d-8f53d83aaec5 //OSSCH_END
 
+        // LetsEncrypt-Pfad
         public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
 
         // LLM
