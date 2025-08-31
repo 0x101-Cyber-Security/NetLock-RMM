@@ -16,12 +16,10 @@ namespace NetLock_RMM_Server.SignalR
     public class CommandHub : Hub
     {
         // Verbindungswerte werden aus der appsettings.json geladen und defaulten zu sinnvollen Werten
-        private static readonly int MAX_CONNECTION_ATTEMPTS = 
-            GetAppSetting<int>("SignalR:MaxConnectionAttempts", 5);
-        
-        private static readonly int CONNECTION_ATTEMPT_DELAY_MS = 
-            GetAppSetting<int>("SignalR:ConnectionAttemptDelayMs", 5000);
-        
+        private static readonly int MAX_CONNECTION_ATTEMPTS = Configuration.SignalR.MaxConnectionAttempts;
+        private static readonly int CONNECTION_ATTEMPT_DELAY_MS = Configuration.SignalR.ConnectionAttemptDelayMs;
+
+
         public class Device_Identity
         {
             public string? agent_version { get; set; }

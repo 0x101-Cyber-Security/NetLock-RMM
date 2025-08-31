@@ -134,7 +134,7 @@
 
                     <MudTable Class="mt-5" Height="@(devices_table_view_port)" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Devices_Table_Filter_Func)">
                         <ToolBarContent>
-                            <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                        <MudTextField @bind-Value="device_table_search_string" @bind-Value:after="SearchDeviceByName" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
                         </ToolBarContent>
                         <HeaderContent>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
@@ -159,8 +159,8 @@
                         @{
                             DateTime lastAccess;
                             var isValidDate = DateTime.TryParse(row.last_access, out lastAccess);
-                            var isOlderThan10Minutes = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 10;
-                            var iconColor = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 10 ? "color: grey;" : "color: green;";
+                            var isOlderThan10Minutes = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 30;
+                            var iconColor = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 30 ? "color: grey;" : "color: green;";
                         }
 
                         @if (row.platform == "Windows")
@@ -290,8 +290,8 @@
 
                                         </RowTemplate>
                                             <PagerContent>
-                                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
-                                            </PagerContent>
+                                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50, 100, 250, 500, int.MaxValue }" @bind-Value="@devicesTableRowsPerPage" @bind-Value:after="() => Get_Clients_OverviewAsync(true)" />
+                                        </PagerContent>
                                     </MudTable>
 
                 if (!disabled)

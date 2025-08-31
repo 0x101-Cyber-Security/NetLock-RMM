@@ -140,7 +140,7 @@ namespace NetLock_RMM_Agent_Comm
             // Setup synchronize timer
             try
             {
-                sync_timer = new System.Timers.Timer(120000); //sync 10 minutes | currently testing with lower value
+                sync_timer = new System.Timers.Timer(1800000); //sync 30 minutes | currently testing with lower value
                 sync_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
                 sync_timer.Enabled = true;
             }

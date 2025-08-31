@@ -470,7 +470,7 @@ namespace Global.Online_Mode
                                 Device_Worker.authorized = true;
                             }
 
-                            Device_Worker.sync_timer.Interval = 600000; // change to 10 minutes
+                            Device_Worker.sync_timer.Interval = 1800000; // change to 10 minutes
                             Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
                         else if (result == "unauthorized")
@@ -518,7 +518,7 @@ namespace Global.Online_Mode
                                 Device_Worker.authorized = false;
                             }
 
-                            Device_Worker.sync_timer.Interval = 30000; // change to 30 seconds
+                            Device_Worker.sync_timer.Interval = 1800000; // change to 30 seconds
                             Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
 

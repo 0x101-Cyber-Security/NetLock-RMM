@@ -144,7 +144,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             devices_table_view_port = "70vh";
 
-            await Get_Clients_OverviewAsync();
+            await Get_Clients_OverviewAsync(false);
 
             string tenant_name = await localStorage.GetItemAsync<string>("tenant_name");
             group_name = await localStorage.GetItemAsync<string>("group_name");
@@ -234,6 +234,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         public string applications_drivers = String.Empty;
 
         #region Device Table
+
+        private int devicesTableRowsPerPage = 25;
 
         private bool Devices_Table_Filter_Func(MySQL_Entity row)
         {
@@ -3058,7 +3060,7 @@ WHERE device_id = @deviceId");
 
             if (result.Canceled)
             {
-                await Get_Clients_OverviewAsync();
+                await Get_Clients_OverviewAsync(true);
                 return;
             }
 
@@ -3066,7 +3068,7 @@ WHERE device_id = @deviceId");
 
             if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
             {
-                await Get_Clients_OverviewAsync();
+                await Get_Clients_OverviewAsync(true);
             }
         }
 
@@ -3100,7 +3102,7 @@ WHERE device_id = @deviceId");
 
             if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
             {
-                await Get_Clients_OverviewAsync();
+                await Get_Clients_OverviewAsync(true);
             }
         }
 
@@ -3203,11 +3205,18 @@ WHERE device_id = @deviceId");
 
         public List<MySQL_Entity> mysql_data;
 
-        private async Task Get_Clients_OverviewAsync()
+        private async Task Get_Clients_OverviewAsync(bool loadingOverlay)
         {
+            if (loadingOverlay)
+            {
+                loading_overlay = true;
+                StateHasChanged();
+            }
+
             string tenant_name = await localStorage.GetItemAsync<string>("tenant_name");
             string group_name = await localStorage.GetItemAsync<string>("group_name");
             string location_name = await localStorage.GetItemAsync<string>("location_name");
+            
             string query = null;
 
             mysql_data = new List<MySQL_Entity>();
@@ -3223,32 +3232,39 @@ WHERE device_id = @deviceId");
                 if (tenant_name == "all")
                 {
                     this.group_name_displayed = Localizer["all_devices"];
-                    query = "SELECT * FROM devices WHERE authorized = '1';";
+                    query = "SELECT * FROM devices WHERE authorized = '1' LIMIT @limit;";
                     command = new MySqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@limit", devicesTableRowsPerPage);
                 }
                 else if (location_name == "all")
                 {
                     this.group_name_displayed = tenant_name;
-                    query = "SELECT * FROM devices WHERE authorized = '1' AND tenant_name = @tenant_name;";
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND tenant_name = @tenant_name LIMIT @limit;";
                     command = new MySqlCommand(query, conn);
                     command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@limit", devicesTableRowsPerPage);
+
                 }
                 else if (group_name == "all")
                 {
                     this.group_name_displayed = tenant_name + "/" + location_name;
-                    query = "SELECT * FROM devices WHERE authorized = '1' AND location_name = @location_name AND tenant_name = @tenant_name;";
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND location_name = @location_name AND tenant_name = @tenant_name LIMIT @limit;";
                     command = new MySqlCommand(query, conn);
                     command.Parameters.AddWithValue("@location_name", location_name);
                     command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@limit", devicesTableRowsPerPage);
+
                 }
                 else
                 {
                     this.group_name_displayed = tenant_name + "/" + location_name + "/" + group_name;
-                    query = "SELECT * FROM devices WHERE authorized = '1' AND group_name = @group_name AND location_name = @location_name AND tenant_name = @tenant_name;";
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND group_name = @group_name AND location_name = @location_name AND tenant_name = @tenant_name LIMIT @limit;";
                     command = new MySqlCommand(query, conn);
                     command.Parameters.AddWithValue("@group_name", group_name);
                     command.Parameters.AddWithValue("@location_name", location_name);
                     command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@limit", devicesTableRowsPerPage);
+
                 }
 
                 Logging.Handler.Debug("/devices -> Get_Clients_OverviewAsync", "MySQL_Query", query);
@@ -3291,7 +3307,116 @@ WHERE device_id = @deviceId");
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
+
+                if (loadingOverlay)
+                {
+                    loading_overlay = false;
+                    StateHasChanged();
+                }
+            }
+        }
+
+        private async Task SearchDeviceByName()
+        {
+            if (String.IsNullOrEmpty(device_table_search_string))
+            {
+                await Get_Clients_OverviewAsync(true);
+                return;
+            }
+
+            string tenant_name = await localStorage.GetItemAsync<string>("tenant_name");
+            string group_name = await localStorage.GetItemAsync<string>("group_name");
+            string location_name = await localStorage.GetItemAsync<string>("location_name");
+
+            string query = null;
+            mysql_data = new List<MySQL_Entity>();
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+                MySqlCommand command;
+
+                string deviceNameFilter = "%" + device_table_search_string + "%";
+
+                if (tenant_name == "all")
+                {
+                    this.group_name_displayed = Localizer["all_devices"];
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND device_name LIKE @deviceName;";
+                    command = new MySqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@deviceName", deviceNameFilter);
+                }
+                else if (location_name == "all")
+                {
+                    this.group_name_displayed = tenant_name;
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND tenant_name = @tenant_name AND device_name LIKE @deviceName;";
+                    command = new MySqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@deviceName", deviceNameFilter);
+                }
+                else if (group_name == "all")
+                {
+                    this.group_name_displayed = tenant_name + "/" + location_name;
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND location_name = @location_name AND tenant_name = @tenant_name AND device_name LIKE @deviceName;";
+                    command = new MySqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@location_name", location_name);
+                    command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@deviceName", deviceNameFilter);
+                }
+                else
+                {
+                    this.group_name_displayed = tenant_name + "/" + location_name + "/" + group_name;
+                    query = "SELECT * FROM devices WHERE authorized = '1' AND group_name = @group_name AND location_name = @location_name AND tenant_name = @tenant_name AND device_name LIKE @deviceName;";
+                    command = new MySqlCommand(query, conn);
+                    command.Parameters.AddWithValue("@group_name", group_name);
+                    command.Parameters.AddWithValue("@location_name", location_name);
+                    command.Parameters.AddWithValue("@tenant_name", tenant_name);
+                    command.Parameters.AddWithValue("@deviceName", deviceNameFilter);
+                }
+
+                Logging.Handler.Debug("/devices -> SearchDeviceByName", "MySQL_Query", query);
+
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            MySQL_Entity entity = new MySQL_Entity
+                            {
+                                device_id = reader["id"].ToString() ?? String.Empty,
+                                device_name = reader["device_name"].ToString() ?? String.Empty,
+                                tenant_name = reader["tenant_name"].ToString() ?? String.Empty,
+                                tenant_id = reader["tenant_id"].ToString() ?? String.Empty,
+                                location_name = reader["location_name"].ToString() ?? String.Empty,
+                                location_id = reader["location_id"].ToString() ?? String.Empty,
+                                group_name = reader["group_name"].ToString() ?? String.Empty,
+                                agent_version = reader["agent_version"].ToString() ?? String.Empty,
+                                last_access = reader["last_access"].ToString() ?? String.Empty,
+                                ip_address = reader["ip_address_internal"].ToString() + " & " + reader["ip_address_external"].ToString(),
+                                operating_system = reader["operating_system"].ToString() ?? String.Empty,
+                                domain = reader["domain"].ToString() ?? String.Empty,
+                                antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty,
+                                firewall_status = reader["firewall_status"].ToString() ?? String.Empty,
+                                platform = reader["platform"].ToString() ?? String.Empty,
+                                uptime_monitoring_enabled = (reader["uptime_monitoring_enabled"]?.ToString() == "1"),
+                                last_active_user = reader["last_active_user"].ToString() ?? String.Empty,
+                            };
+
+                            mysql_data.Add(entity);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> SearchDeviceByName", "MySQL_Query", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
             }
         }
 

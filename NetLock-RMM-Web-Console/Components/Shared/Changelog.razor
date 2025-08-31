@@ -91,6 +91,7 @@
     protected override async Task OnInitializedAsync()
     {
         // Always the latest changelog on top
+        changelogs.Add("2.5.2.8: Cosmic-Dawn preview", await Base64.Handler.Decode(Changelogs.v2528));
         changelogs.Add("2.5.2.7: Cosmic-Dawn preview", await Base64.Handler.Decode(Changelogs.v2527));
         changelogs.Add("2.5.2.6: Remote screen control fixed", await Base64.Handler.Decode(Changelogs.v2526));
         changelogs.Add("2.5.2.5: Smaller changes & fixes", await Base64.Handler.Decode(Changelogs.v2525));
@@ -109,7 +110,7 @@
             .UseYamlFrontMatter()
             .Build();
 
-        currentChangelogHtml = Markdown.ToHtml(await Base64.Handler.Decode(Changelogs.v2527), pipeline); // Current changelog
+        currentChangelogHtml = Markdown.ToHtml(await Base64.Handler.Decode(Changelogs.v2528), pipeline); // Current changelog
     }
 
     private void OK()

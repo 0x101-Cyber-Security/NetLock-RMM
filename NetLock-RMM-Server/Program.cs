@@ -79,6 +79,8 @@ var handshakeTimeout = signalRConfig.GetValue<int>("HandshakeTimeout", 30);
 var detailedErrors = signalRConfig.GetValue<bool>("EnableDetailedErrors", true);
 var streamBuffer = signalRConfig.GetValue<int>("StreamBufferCapacity", 20);
 var maxParallelInvocations = signalRConfig.GetValue<int>("MaximumParallelInvocationsPerClient", 5);
+var maxConnectionAttempts = signalRConfig.GetValue<int>("MaxConnectionAttempts", 5);
+var connectionAttemptDelayMs = signalRConfig.GetValue<int>("ConnectionAttemptDelayMs", 5000);
 
 var role_comm = builder.Configuration.GetValue<bool>("Kestrel:Roles:Comm", true);
 var role_update = builder.Configuration.GetValue<bool>("Kestrel:Roles:Update", true);
@@ -309,7 +311,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START fe2fb845-6a87-4dbc-baec-11516bef376d //OSSCH_END
+        //OSSCH_START 84c54b55-a176-4d9c-870b-12d471163783 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1414,7 +1416,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 58d03ab4-1d27-47f3-bd1e-654d0bd5966e //OSSCH_END
+    //OSSCH_START 2ec32cd0-12a1-4cb4-be8f-9ec5479b2fb3 //OSSCH_END
 }
 
 /*
