@@ -267,4 +267,10 @@
   <data name="wait_for_device_to_download_file" xml:space="preserve">
     <value>Wait for the device to download the file.</value>
   </data>
+  <data name="copy_filename" xml:space="preserve">
+    <value>Copy filename</value>
+  </data>
+  <data name="copy_full_path" xml:space="preserve">
+    <value>Copy full path</value>
+  </data>
 </root>

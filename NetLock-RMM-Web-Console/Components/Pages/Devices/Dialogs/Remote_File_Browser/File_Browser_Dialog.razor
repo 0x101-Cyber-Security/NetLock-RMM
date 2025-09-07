@@ -89,6 +89,7 @@
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Delete_Directory(remote_file_browser_row.path); }">@Localizer["delete"]</MudMenuItem>
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Move_Directory_Dialog(remote_file_browser_row.path); }">@Localizer["move"]</MudMenuItem>
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Rename_Directory_Dialog(remote_file_browser_row.path); }">@Localizer["rename"]</MudMenuItem>
+                                                <MudMenuItem @onclick="async () => { await Remote_File_Browser_Copy_Full_Path(remote_file_browser_row.path); }">@Localizer["copy_full_path"]</MudMenuItem>
                                             }
                                             else
                                             {
@@ -96,6 +97,8 @@
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Delete_File(remote_file_browser_row.path); }">@Localizer["delete"]</MudMenuItem>
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Move_File_Dialog(remote_file_browser_row.path); }">@Localizer["move"]</MudMenuItem>
                                                 <MudMenuItem @onclick="async () => { await Remote_File_Browser_Rename_File_Dialog(remote_file_browser_row.path); }">@Localizer["rename"]</MudMenuItem>
+                                                <MudMenuItem @onclick="async () => { await Remote_File_Browser_Copy_Filename(remote_file_browser_row.name); }">@Localizer["copy_filename"]</MudMenuItem>
+                                                <MudMenuItem @onclick="async () => { await Remote_File_Browser_Copy_Full_Path(remote_file_browser_row.path); }">@Localizer["copy_full_path"]</MudMenuItem>
                                             }
                                         }
 
@@ -1863,6 +1866,26 @@
         }
 
         await Remote_File_Browser_Rename_File(_remote_file_path, _remote_file_path_new);
+    }
+
+    private async Task Remote_File_Browser_Copy_Filename(string filename)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", filename);
+
+        Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
+    }
+
+    private async Task Remote_File_Browser_Copy_Full_Path(string path)
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", path);
+
+        Snackbar.Add(Localizer["copied_to_clipboard"], Severity.Info);
     }
 
     private bool uploading_linear = false;
