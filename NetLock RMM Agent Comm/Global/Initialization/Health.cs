@@ -78,11 +78,14 @@ namespace Global.Initialization
         // Check if the firewall rules are in place
         public static void Check_Firewall()
         {
+            // Dev setup moved to linux. Com is not available on linux. Need to look for a alternative to set firewall rules and verify them
+            /*
             Windows.Microsoft_Defender_Firewall.Handler.NetLock_RMM_Comm_Agent_Rule_Inbound();
             Windows.Microsoft_Defender_Firewall.Handler.NetLock_RMM_Comm_Agent_Rule_Outbound();
             Windows.Microsoft_Defender_Firewall.Handler.NetLock_RMM_Health_Service_Rule();
             Windows.Microsoft_Defender_Firewall.Handler.NetLock_Installer_Rule();
             Windows.Microsoft_Defender_Firewall.Handler.NetLock_Uninstaller_Rule();
+            */
         }
 
         // Check if the databases are in place

@@ -24,18 +24,6 @@
     <Content Remove="Components\Pages\Devices\Dialogs\Remote_Control\Remote_Control_Send_Keys_Dialog.razor" />
   </ItemGroup>
 
-  <ItemGroup>
-    <COMReference Include="NetFwTypeLib">
-      <WrapperTool>tlbimp</WrapperTool>
-      <VersionMinor>0</VersionMinor>
-      <VersionMajor>1</VersionMajor>
-      <Guid>58fbcf7c-e7a9-467c-80b3-fc65e8fcca08</Guid>
-      <Lcid>0</Lcid>
-      <Isolated>false</Isolated>
-      <EmbedInteropTypes>true</EmbedInteropTypes>
-    </COMReference>
-  </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />

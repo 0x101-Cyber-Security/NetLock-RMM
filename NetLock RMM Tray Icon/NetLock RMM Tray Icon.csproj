@@ -6,6 +6,7 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <AssemblyName>NetLock_RMM_Tray_Icon</AssemblyName>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,11 +22,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Chat\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <AvaloniaResource Include="Assets\avatar.png" />
+      <Content Include="Assets\avatar.png">
+          <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Content>
     <AvaloniaResource Include="Assets\trayicon.ico" />
+    <Content Include="Assets\trayicon.ico">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

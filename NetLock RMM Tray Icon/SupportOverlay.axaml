@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetLock_RMM_Tray_Icon.SupportOverlay"
+        Title="Support Connected"
+        Width="300" Height="120"
+        WindowStartupLocation="Manual"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        SystemDecorations="None"
+        Background="Transparent"
+        ExtendClientAreaToDecorationsHint="True">
+    
+    <Border Background="#E74C3C" 
+            CornerRadius="12" 
+            Margin="10"
+            Opacity="0.95">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" 
+                              OffsetX="0" 
+                              OffsetY="5" 
+                              Color="Black" 
+                              Opacity="0.3"/>
+        </Border.Effect>
+        
+        <Grid Margin="15,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <!-- Avatar and text area as StackPanel -->
+            <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center" Margin="0,0,0,0">
+                <Ellipse Width="40" Height="40" Margin="0,0,0,0" VerticalAlignment="Center">
+                    <Ellipse.Fill>
+                        <ImageBrush Source="Assets/avatar.png" Stretch="UniformToFill"/>
+                    </Ellipse.Fill>
+                </Ellipse>
+            </StackPanel>
+            
+            <!-- Text content with title -->
+            <StackPanel Grid.Column="1" Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock x:Name="SupportTitleTextBlock"
+                           Text="Support-Admin"
+                           FontSize="15"
+                           FontWeight="Bold"
+                           Foreground="#FFF"
+                           Margin="0,0,0,2"/>
+                <TextBlock x:Name="SupportNameTextBlock"
+                           Text="Support-Mitarbeiter" 
+                           FontSize="14" 
+                           FontWeight="Bold" 
+                           Foreground="White"/>
+                <TextBlock Text="ist verbunden" 
+                           FontSize="12" 
+                           Foreground="White" 
+                           Opacity="0.9"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

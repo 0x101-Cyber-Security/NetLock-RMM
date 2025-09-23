@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Data.Sqlite;
 using System.Data;
 using System.Linq;
 using System.Runtime;
@@ -10,6 +9,7 @@ using System.Threading.Tasks;
 using System.Configuration;
 using NetLock_RMM_Agent_Comm;
 using Global.Helper;
+using Microsoft.Data.Sqlite;
 
 namespace Global.Events
 {

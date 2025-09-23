@@ -1,0 +1,382 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetLock_RMM_Tray_Icon.ActionSidebar"
+        Title="NetLock RMM Actions"
+        Width="280" Height="800"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="Manual"
+        Background="Transparent"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="True">
+
+	<Border Background="#34495E" 
+	        BorderBrush="#2C3E50" 
+	        BorderThickness="2,0,0,0"
+	        CornerRadius="10,0,0,10">
+		
+		<Grid RowDefinitions="Auto,*,Auto">
+			
+			<!-- Header -->
+			<Border Grid.Row="0" 
+			        Background="#2C3E50" 
+			        CornerRadius="8,0,0,0"
+			        Padding="15,12">
+				<Grid ColumnDefinitions="*,Auto">
+					<TextBlock Grid.Column="0"
+					          Text="Action Templates" 
+					          FontSize="16" 
+					          FontWeight="Bold" 
+					          Foreground="White" 
+					          VerticalAlignment="Center"/>
+					
+					<Button Grid.Column="1"
+					        x:Name="MinimizeButton"
+					        Content="−"
+					        Width="25" Height="25"
+					        Background="Transparent"
+					        Foreground="White"
+					        BorderThickness="0"
+					        FontSize="16"
+					        FontWeight="Bold"
+					        CornerRadius="12"
+					        ToolTip.Tip="Minimieren">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#3F5A75"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+				</Grid>
+			</Border>
+			
+			<!-- Content -->
+			<ScrollViewer Grid.Row="1" 
+			             x:Name="ContentScrollViewer"
+			             VerticalScrollBarVisibility="Auto" 
+			             HorizontalScrollBarVisibility="Disabled"
+			             Padding="15,10">
+				<StackPanel Spacing="8">
+					
+					<!-- Quick Actions Section -->
+					<TextBlock Text="Quick Actions" 
+					          FontSize="12" 
+					          FontWeight="SemiBold" 
+					          Foreground="#BDC3C7" 
+					          Margin="0,5,0,8"/>
+					
+					<Button x:Name="SystemInfoButton"
+					        Content="🖥️ System Info"
+					        Background="#3498DB"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Systeminformationen abrufen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#2980B9"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="ServiceStatusButton"
+					        Content="⚙️ Service Status"
+					        Background="#3498DB"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Service-Status prüfen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#2980B9"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="UpdatesButton"
+					        Content="⬆️ Updates"
+					        Background="#3498DB"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Nach Updates suchen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#2980B9"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<!-- Monitoring Section -->
+					<TextBlock Text="Monitoring" 
+					          FontSize="12" 
+					          FontWeight="SemiBold" 
+					          Foreground="#BDC3C7" 
+					          Margin="0,15,0,8"/>
+					
+					<Button x:Name="NetworkStatusButton"
+					        Content="🌐 Netzwerk Status"
+					        Background="#27AE60"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Netzwerkverbindung prüfen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#229954"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="DiskSpaceButton"
+					        Content="💾 Festplattenspeicher"
+					        Background="#27AE60"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Speicherplatz überprüfen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#229954"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="PerformanceButton"
+					        Content="📊 Performance"
+					        Background="#27AE60"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="System-Performance anzeigen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#229954"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<!-- Security Section -->
+					<TextBlock Text="Sicherheit" 
+					          FontSize="12" 
+					          FontWeight="SemiBold" 
+					          Foreground="#BDC3C7" 
+					          Margin="0,15,0,8"/>
+					
+					<Button x:Name="SecurityScanButton"
+					        Content="🔍 Security Scan"
+					        Background="#E74C3C"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Sicherheitsscan starten">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#C0392B"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="FirewallStatusButton"
+					        Content="🔥 Firewall Status"
+					        Background="#E74C3C"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Firewall-Status prüfen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#C0392B"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<!-- Maintenance Section -->
+					<TextBlock Text="Wartung" 
+					          FontSize="12" 
+					          FontWeight="SemiBold" 
+					          Foreground="#BDC3C7" 
+					          Margin="0,15,0,8"/>
+					
+					<Button x:Name="CleanupButton"
+					        Content="🧹 System Cleanup"
+					        Background="#F39C12"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="System-Bereinigung starten">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#E67E22"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="BackupButton"
+					        Content="💿 Backup erstellen"
+					        Background="#F39C12"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Backup erstellen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#E67E22"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="RestartButton"
+					        Content="🔄 System Neustart"
+					        Background="#F39C12"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="System neu starten">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#E67E22"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<!-- Remote Actions Section -->
+					<TextBlock Text="Remote Actions" 
+					          FontSize="12" 
+					          FontWeight="SemiBold" 
+					          Foreground="#BDC3C7" 
+					          Margin="0,15,0,8"/>
+					
+					<Button x:Name="RemoteDesktopButton"
+					        Content="🖱️ Remote Desktop"
+					        Background="#9B59B6"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Remote Desktop starten">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#8E44AD"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+					
+					<Button x:Name="FileTransferButton"
+					        Content="📁 Datei Transfer"
+					        Background="#9B59B6"
+					        Foreground="White"
+					        BorderThickness="0"
+					        CornerRadius="6"
+					        Padding="15,10"
+					        HorizontalAlignment="Stretch"
+					        HorizontalContentAlignment="Left"
+					        FontSize="13"
+					        ToolTip.Tip="Dateien übertragen">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#8E44AD"/>
+								<Setter Property="RenderTransform" Value="scale(1.02)"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+
+				</StackPanel>
+			</ScrollViewer>
+			
+			<!-- Footer -->
+			<Border Grid.Row="2" 
+			        x:Name="FooterBorder"
+			        Background="#2C3E50" 
+			        CornerRadius="0,0,8,0"
+			        Padding="15,8">
+				<Grid ColumnDefinitions="*,Auto">
+					<TextBlock Grid.Column="0"
+					          Text="NetLock RMM"
+					          FontSize="11"
+					          Foreground="#95A5A6"
+					          VerticalAlignment="Center"/>
+					
+					<Button Grid.Column="1"
+					        x:Name="ToggleVisibilityButton"
+					        Content="👁️"
+					        Width="30" Height="25"
+					        Background="Transparent"
+					        Foreground="#95A5A6"
+					        BorderThickness="0"
+					        FontSize="12"
+					        CornerRadius="4"
+					        ToolTip.Tip="Sichtbarkeit umschalten">
+						<Button.Styles>
+							<Style Selector="Button:hover">
+								<Setter Property="Background" Value="#3F5A75"/>
+								<Setter Property="Foreground" Value="White"/>
+							</Style>
+						</Button.Styles>
+					</Button>
+				</Grid>
+			</Border>
+			
+		</Grid>
+	</Border>
+</Window>

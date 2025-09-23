@@ -177,37 +177,7 @@ Console.WriteLine(Environment.NewLine);
 Console.WriteLine("[Environment]");
 Console.WriteLine($"Running under Docker: {isRunningInDocker}");
 
-// Output firewall status
-Console.WriteLine(Environment.NewLine);
-Console.WriteLine("[Firewall Status]");
-bool microsoft_defender_firewall_status = NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Status();
-
-if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
-{
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("Microsoft Defender Firewall is enabled.");
-}
-else if (!microsoft_defender_firewall_status && OperatingSystem.IsWindows())
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("Microsoft Defender Firewall is disabled. You should enable it for your own safety. NetLock adds firewall rules automatically according to your configuration.");
-}
-
 Console.ResetColor();
-
-// Add firewall rule for HTTP
-NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Rule_Inbound(http_port.ToString());
-NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Rule_Outbound(http_port.ToString());
-
-if (https)
-{
-    // Add firewall rule for HTTPS
-    NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Rule_Inbound(https_port.ToString());
-    NetLock_RMM_Server.Microsoft_Defender_Firewall.Handler.Rule_Outbound(https_port.ToString());
-
-    if (letsencrypt)
-        builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo(Application_Paths.lettuceencrypt_persistent_data_dir), letsencrypt_password);
-}
 
 // Configure Kestrel server options
 builder.WebHost.UseKestrel(k =>
@@ -311,7 +281,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.api_enabled)
     {
-        //OSSCH_START 84c54b55-a176-4d9c-870b-12d471163783 //OSSCH_END
+        //OSSCH_START f59c93f1-3c13-4062-b801-cda5a3a5f5e7 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -1416,7 +1386,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 2ec32cd0-12a1-4cb4-be8f-9ec5479b2fb3 //OSSCH_END
+    //OSSCH_START 4e321c20-e1f3-4d7f-8a5e-32401a61ccd2 //OSSCH_END
 }
 
 /*

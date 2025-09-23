@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using NetFwTypeLib;
 using Global.Helper;
 using NetLock_RMM_Agent_Comm;
+using Windows.Helper;
 
 namespace Windows.Microsoft_Defender_Firewall
 {
@@ -16,37 +16,36 @@ namespace Windows.Microsoft_Defender_Firewall
         {
             try
             {
-                INetFwMgr mgr = (INetFwMgr)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwMgr", false));
-                return mgr.LocalPolicy.CurrentProfile.FirewallEnabled;
+                string command = "Get-NetFirewallProfile | Where-Object {$_.Enabled -eq $true} | Select-Object -ExpandProperty Name";
+                string result = PowerShell.Execute_Command("Firewall_Status", command, 30000);
+                
+                // If any profile is enabled, consider firewall as enabled
+                return !string.IsNullOrWhiteSpace(result) && result.Trim() != "Error.";
             }
             catch (Exception ex)
             {
                 Logging.Error("Microsoft_Defender_Firewall.Handler.Status", "Windows Firewall Status", ex.ToString());
                 return false;
             }
-        }
+        } 
         
         public static void NetLock_RMM_Comm_Agent_Rule_Outbound()
         {
             try
             {
-                INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
                 // Check if NetLock service rule is existing
-                bool rule_existing = firewallPolicy.Rules.Cast<INetFwRule>().Any(rule => rule.Name == "NetLock RMM Comm Agent Outbound");
+                string checkCommand = "Get-NetFirewallRule -DisplayName 'NetLock RMM Comm Agent Outbound' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName";
+                string checkResult = PowerShell.Execute_Command("Firewall_Rule_Check", checkCommand, 30000);
+                
+                bool rule_existing = !string.IsNullOrWhiteSpace(checkResult) && checkResult.Contains("NetLock RMM Comm Agent Outbound");
 
                 // Create NetLock service rule if not existing
                 if (!rule_existing)
                 {
                     Logging.Microsoft_Defender_Firewall("Microsoft_Defender_Firewall.NetLock_RMM_Comm_Agent_Rule_Outbound", "rule_existing", rule_existing.ToString());
 
-                    INetFwRule2 new_rule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    new_rule.Name = "NetLock RMM Comm Agent Outbound";
-                    new_rule.Enabled = true;
-                    new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                    new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.netlock_service_exe;
-                    firewallPolicy.Rules.Add(new_rule);
+                    string createCommand = $"New-NetFirewallRule -DisplayName 'NetLock RMM Comm Agent Outbound' -Direction Outbound -Action Allow -Program '{Application_Paths.netlock_service_exe}' -Enabled True";
+                    PowerShell.Execute_Command("Firewall_Rule_Create", createCommand, 30000);
                 }
                 else
                 {
@@ -63,23 +62,19 @@ namespace Windows.Microsoft_Defender_Firewall
         {
             try
             {
-                INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
                 // Check if NetLock service rule is existing
-                bool rule_existing = firewallPolicy.Rules.Cast<INetFwRule>().Any(rule => rule.Name == "NetLock RMM Comm Agent Inbound");
+                string checkCommand = "Get-NetFirewallRule -DisplayName 'NetLock RMM Comm Agent Inbound' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName";
+                string checkResult = PowerShell.Execute_Command("Firewall_Rule_Check", checkCommand, 30000);
+                
+                bool rule_existing = !string.IsNullOrWhiteSpace(checkResult) && checkResult.Contains("NetLock RMM Comm Agent Inbound");
 
                 // Create NetLock service rule if not existing
                 if (!rule_existing)
                 {
                     Logging.Microsoft_Defender_Firewall("Microsoft_Defender_Firewall.NetLock_RMM_Comm_Agent_Rule_Inbound", "rule_existing", rule_existing.ToString());
 
-                    INetFwRule2 new_rule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    new_rule.Name = "NetLock RMM Comm Agent Inbound";
-                    new_rule.Enabled = true;
-                    new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_IN;
-                    new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.netlock_service_exe;
-                    firewallPolicy.Rules.Add(new_rule);
+                    string createCommand = $"New-NetFirewallRule -DisplayName 'NetLock RMM Comm Agent Inbound' -Direction Inbound -Action Allow -Program '{Application_Paths.netlock_service_exe}' -Enabled True";
+                    PowerShell.Execute_Command("Firewall_Rule_Create", createCommand, 30000);
                 }
                 else
                 {
@@ -96,23 +91,19 @@ namespace Windows.Microsoft_Defender_Firewall
         {
             try
             {
-                INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
                 // Check if NetLock service rule is existing
-                bool rule_existing = firewallPolicy.Rules.Cast<INetFwRule>().Any(rule => rule.Name == "NetLock RMM Health Agent");
+                string checkCommand = "Get-NetFirewallRule -DisplayName 'NetLock RMM Health Agent' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName";
+                string checkResult = PowerShell.Execute_Command("Firewall_Rule_Check", checkCommand, 30000);
+                
+                bool rule_existing = !string.IsNullOrWhiteSpace(checkResult) && checkResult.Contains("NetLock RMM Health Agent");
 
                 // Create NetLock service rule if not existing
                 if (!rule_existing)
                 {
                     Logging.Microsoft_Defender_Firewall("Microsoft_Defender_Firewall.NetLock_RMM_Health_Service_Rule", "rule_existing", rule_existing.ToString());
 
-                    INetFwRule2 new_rule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    new_rule.Name = "NetLock RMM Health Agent";
-                    new_rule.Enabled = true;
-                    new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                    new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.netlock_health_service_exe;
-                    firewallPolicy.Rules.Add(new_rule);
+                    string createCommand = $"New-NetFirewallRule -DisplayName 'NetLock RMM Health Agent' -Direction Outbound -Action Allow -Program '{Application_Paths.netlock_health_service_exe}' -Enabled True";
+                    PowerShell.Execute_Command("Firewall_Rule_Create", createCommand, 30000);
                 }
                 else
                 {
@@ -129,23 +120,19 @@ namespace Windows.Microsoft_Defender_Firewall
         {
             try
             {
-                INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
                 // Check if NetLock installer rule is existing
-                bool rule_existing = firewallPolicy.Rules.Cast<INetFwRule>().Any(rule => rule.Name == "NetLock RMM Installer");
+                string checkCommand = "Get-NetFirewallRule -DisplayName 'NetLock RMM Installer' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName";
+                string checkResult = PowerShell.Execute_Command("Firewall_Rule_Check", checkCommand, 30000);
+                
+                bool rule_existing = !string.IsNullOrWhiteSpace(checkResult) && checkResult.Contains("NetLock RMM Installer");
 
                 // Create NetLock service rule if not existing
                 if (!rule_existing)
                 {
                     Logging.Microsoft_Defender_Firewall("Microsoft_Defender_Firewall.NetLock_Installer_Rule", "rule_existing", rule_existing.ToString());
 
-                    INetFwRule2 new_rule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    new_rule.Name = "NetLock RMM Installer";
-                    new_rule.Enabled = true;
-                    new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                    new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.c_temp_installer_path;
-                    firewallPolicy.Rules.Add(new_rule);
+                    string createCommand = $"New-NetFirewallRule -DisplayName 'NetLock RMM Installer' -Direction Outbound -Action Allow -Program '{Application_Paths.c_temp_installer_path}' -Enabled True";
+                    PowerShell.Execute_Command("Firewall_Rule_Create", createCommand, 30000);
                 }
                 else
                 {
@@ -162,23 +149,19 @@ namespace Windows.Microsoft_Defender_Firewall
         {
             try
             {
-                INetFwPolicy2 firewallPolicy = (INetFwPolicy2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FwPolicy2"));
-
                 // Check if NetLock installer rule is existing
-                bool rule_existing = firewallPolicy.Rules.Cast<INetFwRule>().Any(rule => rule.Name == "NetLock RMM Uninstaller");
+                string checkCommand = "Get-NetFirewallRule -DisplayName 'NetLock RMM Uninstaller' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty DisplayName";
+                string checkResult = PowerShell.Execute_Command("Firewall_Rule_Check", checkCommand, 30000);
+                
+                bool rule_existing = !string.IsNullOrWhiteSpace(checkResult) && checkResult.Contains("NetLock RMM Uninstaller");
 
                 // Create NetLock service rule if not existing
                 if (!rule_existing)
                 {
                     Logging.Microsoft_Defender_Firewall("Microsoft_Defender_Firewall.NetLock_Uninstaller_Rule", "rule_existing", rule_existing.ToString());
 
-                    INetFwRule2 new_rule = (INetFwRule2)Activator.CreateInstance(Type.GetTypeFromProgID("HNetCfg.FWRule"));
-                    new_rule.Name = "NetLock RMM Uninstaller";
-                    new_rule.Enabled = true;
-                    new_rule.Direction = NET_FW_RULE_DIRECTION_.NET_FW_RULE_DIR_OUT;
-                    new_rule.Action = NET_FW_ACTION_.NET_FW_ACTION_ALLOW;
-                    new_rule.ApplicationName = Application_Paths.c_temp_installer_path;
-                    firewallPolicy.Rules.Add(new_rule);
+                    string createCommand = $"New-NetFirewallRule -DisplayName 'NetLock RMM Uninstaller' -Direction Outbound -Action Allow -Program '{Application_Paths.c_temp_installer_path}' -Enabled True";
+                    PowerShell.Execute_Command("Firewall_Rule_Create", createCommand, 30000);
                 }
                 else
                 {

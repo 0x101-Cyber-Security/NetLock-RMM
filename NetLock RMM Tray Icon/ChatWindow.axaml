@@ -1,0 +1,152 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="NetLock_RMM_Tray_Icon.ChatWindow"
+        Title="NetLock RMM Chat"
+        Width="900" Height="650"
+        MinWidth="600" MinHeight="80"
+        Background="#F0F2F5"
+        Icon="Assets/trayicon.ico"
+        CanResize="True"
+        WindowStartupLocation="CenterScreen">
+
+	<Grid x:Name="MainGrid" RowDefinitions="Auto,*,Auto" Margin="0">
+
+		<!-- Header -->
+		<Border Grid.Row="0" Background="#2C3E50" Padding="20,15">
+			<Grid ColumnDefinitions="Auto,*,Auto">
+				<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+					<Ellipse Width="40" Height="40" Margin="0,0,12,0">
+						<Ellipse.Fill>
+							<ImageBrush Source="Assets/avatar.png" Stretch="UniformToFill"/>
+						</Ellipse.Fill>
+					</Ellipse>
+					<StackPanel VerticalAlignment="Center">
+						<TextBlock Text="Nico Mak"
+						          FontSize="18"
+						          FontWeight="Bold"
+						          Foreground="White"/>
+
+					</StackPanel>
+				</StackPanel>
+
+				<TextBlock Grid.Column="1"
+				          Text="NetLock Remote Monitoring Management"
+				          FontSize="14"
+				          Foreground="#BDC3C7"
+				          VerticalAlignment="Center"
+				          HorizontalAlignment="Center"/>
+
+				<Button Grid.Column="2"
+				       x:Name="SettingsButton"
+				       Content="⚙️"
+				       Background="Transparent"
+				       BorderThickness="0"
+				       FontSize="16"
+				       Foreground="White"
+				       Padding="8"
+				       ToolTip.Tip="About">
+					<Button.Flyout>
+						<MenuFlyout>
+							<!--<MenuItem Header="Chat als TXT speichern" x:Name="SaveChatMenuItem">
+								<MenuItem.Icon>
+									<TextBlock Text="💾" FontSize="14"/>
+								</MenuItem.Icon>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="Chat löschen" x:Name="ClearChatMenuItem">
+								<MenuItem.Icon>
+									<TextBlock Text="🗑️" FontSize="14"/>
+								</MenuItem.Icon>
+							</MenuItem>
+							<MenuItem Header="Animationen" x:Name="AnimationsMenuItem">
+								<MenuItem.Icon>
+									<TextBlock Text="✨" FontSize="14"/>
+								</MenuItem.Icon>
+								<MenuItem Header="Aktiviert" x:Name="EnableAnimationsMenuItem"/>
+								<MenuItem Header="Deaktiviert" x:Name="DisableAnimationsMenuItem"/>
+							</MenuItem>
+							<Separator/>
+							<MenuItem Header="Chat-Verlauf" x:Name="ChatHistoryMenuItem">
+								<MenuItem.Icon>
+									<TextBlock Text="📋" FontSize="14"/>
+								</MenuItem.Icon>
+								<MenuItem Header="Kopieren" x:Name="CopyChatMenuItem"/>
+								<MenuItem Header="Drucken" x:Name="PrintChatMenuItem"/>
+							</MenuItem>
+							<Separator/> -->
+							<MenuItem Header="About" x:Name="AboutMenuItem">
+								<MenuItem.Icon>
+									<TextBlock Text="ℹ️" FontSize="14"/>
+								</MenuItem.Icon>
+							</MenuItem>
+						</MenuFlyout>
+					</Button.Flyout>
+				</Button>
+
+			</Grid>
+		</Border>
+
+		<!-- Chat Messages Area -->
+		<Border Grid.Row="1" Background="White" Margin="0" x:Name="ContentArea">
+			<ScrollViewer x:Name="ChatScrollViewer"
+			             VerticalScrollBarVisibility="Auto"
+			             HorizontalScrollBarVisibility="Disabled"
+			             Padding="20,15,20,10">
+				<StackPanel x:Name="ChatMessagesPanel" Margin="0,0,0,45" Spacing="12"/>
+			</ScrollViewer>
+		</Border>
+
+		<!-- Input Area -->
+		<Border Grid.Row="2" Background="White" BorderBrush="#E1E8ED" BorderThickness="0,1,0,0" Padding="20,15" x:Name="InputArea">
+			<Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto">
+				<!-- Message Input -->
+				<Border Grid.Column="0"
+				       Background="#F8F9FA"
+				       CornerRadius="20"
+				       BorderBrush="#E1E8ED"
+				       BorderThickness="1"
+				       Padding="15,10">
+					<TextBox x:Name="MessageTextBox"
+					        Background="Transparent"
+					        BorderThickness="0"
+					        Watermark="Nachricht eingeben..."
+					        FontSize="14"
+					        MinHeight="20"
+					        MaxHeight="100"
+					        TextWrapping="Wrap"
+					        AcceptsReturn="False"
+					        VerticalContentAlignment="Center"/>
+				</Border>
+
+				<!-- Send Button -->
+				<Button x:Name="SendButton"
+				       Grid.Column="1"
+				       Content="➤"
+				       Width="50" Height="50"
+				       Background="#21618C"
+				       Foreground="White"
+				       FontSize="20"
+				       FontWeight="Bold"
+				       CornerRadius="25"
+				       BorderThickness="0"
+				       Margin="10,0,0,0"
+				       HorizontalContentAlignment="Center"
+				       VerticalContentAlignment="Center"
+				       ToolTip.Tip="Nachricht senden (Enter)">
+					<Button.Styles>
+						<Style Selector="Button:hover">
+							<Setter Property="Background" Value="#2980B9"/>
+						</Style>
+						<Style Selector="Button:pressed">
+							<Setter Property="Background" Value="#21618C"/>
+						</Style>
+						<Style Selector="Button:disabled">
+							<Setter Property="Background" Value="#BDC3C7"/>
+							<Setter Property="Opacity" Value="0.6"/>
+						</Style>
+					</Button.Styles>
+				</Button>
+			</Grid>
+		</Border>
+	</Grid>
+</Window>

@@ -134,7 +134,7 @@
 
                     <MudTable Class="mt-5" Height="@(devices_table_view_port)" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@mysql_data" Filter="new Func<MySQL_Entity, bool>(Devices_Table_Filter_Func)">
                         <ToolBarContent>
-                        <MudTextField @bind-Value="device_table_search_string" @bind-Value:after="SearchDeviceByName" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
+                        <MudTextField @bind-Value="device_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0" Immediate="true"></MudTextField>
                         </ToolBarContent>
                         <HeaderContent>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
@@ -290,7 +290,7 @@
 
                                         </RowTemplate>
                                             <PagerContent>
-                                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50, 100, 250, 500, int.MaxValue }" @bind-Value="@devicesTableRowsPerPage" @bind-Value:after="() => Get_Clients_OverviewAsync(true)" />
+                                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25, 50, 75, 100, 250, 500, 750, 1000, 1250, 1500, 1750, 2000, int.MaxValue }" @bind-Value="@devicesTableRowsPerPage" />
                                         </PagerContent>
                                     </MudTable>
 

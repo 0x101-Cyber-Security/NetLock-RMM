@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Net.NetworkInformation;
 using Microsoft.Win32;
 using System.Reflection.Emit;
-using NetFwTypeLib;
 using System.Diagnostics;
 using System.Runtime;
 using Global.Helper;

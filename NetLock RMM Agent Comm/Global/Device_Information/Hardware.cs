@@ -23,7 +23,6 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Diagnostics.Eventing.Reader;
 using System.Diagnostics.Metrics;
-using Microsoft.Data.Sqlite;
 
 namespace Global.Device_Information
 {

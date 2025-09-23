@@ -108,7 +108,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check license code signed
-//OSSCH_START 8c9fa263-46da-4ad9-b003-4b0634597326 //OSSCH_END
+//OSSCH_START 42c3283c-f72f-4128-958f-3ef1c56c43ac //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -196,38 +196,6 @@ Console.WriteLine(Environment.NewLine);
 Console.WriteLine("[Logging]");
 Console.WriteLine($"Logging: {loggingEnabled}");
 Console.WriteLine(Environment.NewLine);
-
-// Output firewall status
-Console.WriteLine(Environment.NewLine);
-Console.WriteLine("[Firewall Status]");
-bool microsoft_defender_firewall_status = Microsoft_Defender_Firewall.Status();
-
-if (microsoft_defender_firewall_status && OperatingSystem.IsWindows())
-{
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("Microsoft Defender Firewall is enabled.");
-}
-else if (!microsoft_defender_firewall_status && OperatingSystem.IsWindows())
-{
-    Console.ForegroundColor = ConsoleColor.Red;
-    Console.WriteLine("Microsoft Defender Firewall is disabled. You should enable it for your own safety. NetLock adds firewall rules automatically according to your configuration.");
-}
-
-Console.ResetColor();
-
-// Add firewall rule for HTTP
-Microsoft_Defender_Firewall.Rule_Inbound(http_port.ToString());
-Microsoft_Defender_Firewall.Rule_Outbound(http_port.ToString());
-
-if (https)
-{
-    // Add firewall rule for HTTPS
-    Microsoft_Defender_Firewall.Rule_Inbound(https_port.ToString());
-    Microsoft_Defender_Firewall.Rule_Outbound(https_port.ToString());
-
-    if (letsencrypt)
-        builder.Services.AddLettuceEncrypt().PersistDataToDirectory(new DirectoryInfo(Application_Paths.lettuceencrypt_persistent_data_dir), letsencrypt_password);
-}
 
 builder.WebHost.UseKestrel(k =>
 {
@@ -512,7 +480,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START aa0f0fba-5040-40fb-8f4c-8612ed2b76a1 //OSSCH_END
+//OSSCH_START 2488c388-6390-4aab-b556-cc553ba0370c //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
