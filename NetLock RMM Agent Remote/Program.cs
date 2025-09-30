@@ -1,7 +1,8 @@
 ﻿using NetLock_RMM_Agent_Remote;
 using Global.Helper;
 using System.Collections.Generic;
-using Windows.Helper.ScreenControl; // Hinzugefügt für List<T>
+using Windows.Helper.ScreenControl;
+using _x101.HWID_System; // Hinzugefügt für List<T>
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -15,6 +16,29 @@ if (Logging.Check_Debug_Mode()) // debug_mode
 }
 else
     Console.WriteLine("Debug mode disabled");
+
+// Read server_config.json
+if (Convert.ToBoolean(Global.Initialization.Server_Config.Ssl())) // ssl
+{
+    Global.Configuration.Agent.ssl = true;
+    Global.Configuration.Agent.http_https = "https://";
+}
+else
+{
+    Global.Configuration.Agent.ssl = false;
+    Global.Configuration.Agent.http_https = "http://";
+}
+
+Global.Configuration.Agent.package_guid = Global.Initialization.Server_Config.Package_Guid();
+Global.Configuration.Agent.communication_servers = Global.Initialization.Server_Config.Communication_Servers();
+Global.Configuration.Agent.remote_servers = Global.Initialization.Server_Config.Remote_Servers();
+Global.Configuration.Agent.update_servers = Global.Initialization.Server_Config.Update_Servers();
+Global.Configuration.Agent.trust_servers = Global.Initialization.Server_Config.Trust_Servers();
+Global.Configuration.Agent.file_servers = Global.Initialization.Server_Config.File_Servers();
+Global.Configuration.Agent.tenant_guid = Global.Initialization.Server_Config.Tenant_Guid();
+Global.Configuration.Agent.location_guid = Global.Initialization.Server_Config.Location_Guid();
+Global.Configuration.Agent.language = Global.Initialization.Server_Config.Language();
+Global.Configuration.Agent.device_name = Environment.MachineName;
 
 if (OperatingSystem.IsWindows())
 {
@@ -43,6 +67,11 @@ else if (OperatingSystem.IsMacOS())
 Global.Initialization.Health.Check_Directories();
 
 builder.Services.AddHostedService<Remote_Worker>();
+
+// Get access key
+Remote_Worker.access_key = Global.Initialization.Server_Config.Access_Key();
+Global.Configuration.Agent.hwid = ENGINE.HW_UID; // init after access key, because the linux & macos hwid generation is based on the access key
+Remote_Worker.authorized = Global.Initialization.Server_Config.Authorized();
 
 var host = builder.Build();
 host.Run();

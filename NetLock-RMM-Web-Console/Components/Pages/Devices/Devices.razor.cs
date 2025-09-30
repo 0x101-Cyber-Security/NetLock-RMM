@@ -154,7 +154,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             Update_Chart_Options();
 
-            if (Configuration.Members_Portal.api_enabled)
+            if (Configuration.Members_Portal.IsApiEnabled)
                 await Get_Members_Portal_License_Limit();
 
             await Remote_Setup_SignalR();

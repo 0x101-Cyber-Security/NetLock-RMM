@@ -29,5 +29,28 @@
             if (!Directory.Exists(Application_Paths._public_downloads_user))
                 Directory.CreateDirectory(Application_Paths._public_downloads_user);
         }
+        
+        public static bool Delete_Directories()
+        {
+            if (Directory.Exists(Application_Paths._public_downloads_user))
+                Directory.Delete(Application_Paths._public_downloads_user, true);
+            
+            if (Directory.Exists(Application_Paths._public_uploads_user))
+                Directory.Delete(Application_Paths._public_uploads_user, true);
+            
+            if (Directory.Exists(Application_Paths._private_files))
+                Directory.Delete(Application_Paths._private_files, true);
+            
+            if (Directory.Exists(Application_Paths.internal_temp_dir))
+                Directory.Delete(Application_Paths.internal_temp_dir, true);
+            
+            if (Directory.Exists(Application_Paths.logs_dir))
+                Directory.Delete(Application_Paths.logs_dir, true);
+            
+            // Recreate directories
+            Check_Directories();
+
+            return true;
+        }
     }
 }

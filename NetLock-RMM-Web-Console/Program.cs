@@ -1,3 +1,4 @@
+using System.Configuration;
 using MudBlazor.Services;
 using NetLock_RMM_Web_Console.Components;
 using NetLock_RMM_Web_Console;
@@ -18,6 +19,7 @@ using LettuceEncrypt;
 using LettuceEncrypt.Acme;
 using MudBlazor;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Extensions.Primitives;
 using static MudBlazor.Defaults;
 using NetLock_RMM_Web_Console.Classes.Helper;
 using Org.BouncyCastle.Asn1.X509.Qualified;
@@ -79,26 +81,6 @@ else
 if (!String.IsNullOrEmpty(publicOverrideUrl))
     Web_Console.publicOverrideUrl = publicOverrideUrl;
 
-// Cloud instances use the remote server connection string for agent configuration as its fixed and allows easier onboarding for customers
-if (Members_Portal.cloud_enabled)
-{
-    //(?<= https ?:\/\/)([a - zA - Z0 - 9\-\.] +):(\d +)
-    // Use regex to extract the server and port from the publicOverrideUrl
-    var match = System.Text.RegularExpressions.Regex.Match(publicOverrideUrl, @"^(https?://)?([^:/]+)(?::(\d+))?");
-
-    if (match.Success)
-    {
-        var server = match.Groups[2].Value;
-        var port = match.Groups[3].Success ? match.Groups[3].Value : "443"; // Default to 443 if no port is specified
-
-        Web_Console.agentConfigurationConnectionString = $"{server}:{port}";
-    }
-    else
-    {
-        Console.WriteLine("Invalid publicOverrideUrl format. Using default remote server configuration.");
-    }
-}
-
 // Title
 Web_Console.title = builder.Configuration.GetValue<string>("Webinterface:Title", "NetLock RMM");
 
@@ -107,8 +89,8 @@ if (Web_Console.title == "Your company name")
 
 var language = builder.Configuration["Webinterface:Language"];
 
-// Check license code signed
-//OSSCH_START 42c3283c-f72f-4128-958f-3ef1c56c43ac //OSSCH_END
+// Check members portal parts
+//OSSCH_START ea2a06b1-8883-40ca-93c2-20f2c2c8847d //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -173,23 +155,25 @@ Console.WriteLine($"File Use SSL: {fileServerConfig.UseSSL}");
 Console.WriteLine($"File Connnection String: {File_Server.Connection_String}");
 Console.WriteLine(Environment.NewLine);
 
-// Output members portal configuration
-Console.WriteLine("[Members Portal]");
-Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
-
-if (!String.IsNullOrEmpty(Members_Portal.api_key))
-    Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
-
-Console.WriteLine(Environment.NewLine);
-
 // Webinterface
 Console.WriteLine("[Webinterface]");
 Console.WriteLine($"Language: {language}");
 Console.WriteLine($"Title: {Web_Console.title}");
 Console.WriteLine($"Public Override Domain: {Web_Console.publicOverrideUrl}");
+Console.WriteLine(Environment.NewLine);
 
-if (Members_Portal.cloud_enabled)
-    Console.WriteLine($"Agent Configuration Connection String: {Web_Console.agentConfigurationConnectionString}");
+// Members Portal Api
+Console.WriteLine("[Members Portal Api]");
+Console.WriteLine($"Api Enabled: {Members_Portal.IsApiEnabled}");
+Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
+Console.WriteLine($"Cloud Enabled: {Members_Portal.IsCloudEnabled}");
+Console.WriteLine($"Agent Configuration Connection String: {Web_Console.agentConfigurationConnectionString}");
+Console.WriteLine($"Server Guid: {Members_Portal.ServerGuid}");
+Console.WriteLine($"License Valid Until: {validUntilStr}");
+Console.WriteLine($"License Package Name: {packageName}");
+Console.WriteLine($"License Max Devices: {licensesMax}");
+Console.WriteLine($"License Hard Limit: {licensesHardLimit}");
+Console.WriteLine($"Code Signed: {Members_Portal.IsCodeSigned}");
 Console.WriteLine(Environment.NewLine);
 
 // Logging
@@ -275,7 +259,7 @@ else
         if (!await Database.Check_Table_Existing()) // Table does not exist
         {
             Console.WriteLine("Database tables do not exist. Creating tables...");
-            await Database.Execute_Installation_Script();
+            await Database.Execute_Installation_Script(false);
             await Database.Execute_Update_Scripts();
             Console.WriteLine("Database tables created.");
         }
@@ -295,27 +279,27 @@ else
             Console.ResetColor();
 
             // Get api key
-            if (String.IsNullOrEmpty(Members_Portal.api_key))
+            if (String.IsNullOrEmpty(Members_Portal.ApiKey))
             {
-                Members_Portal.api_key = await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Get_Api_Key();
+                Members_Portal.ApiKey = await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Get_Api_Key();
 
-                Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.api_key);
+                Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.ApiKey);
             }
             else
-                await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Set_Api_Key(Members_Portal.api_key);
+                await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Set_Api_Key(Members_Portal.ApiKey);
 
             // Do cloud stuff
-            if (Members_Portal.cloud_enabled)
+            if (Members_Portal.IsCloudEnabled)
             {
+                // Enforce cloud settings
+                await Database.EnforceCloudSettings();
+                
                 Console.WriteLine("Cloud enabled. Checking cloud connection...");
                 if (await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Check_Connection())
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.WriteLine("Cloud connection successful.");
                     Console.ResetColor();
-
-                    // Enforce cloud settings
-                    await Database.EnforceCloudSettings();
                 }
                 else
                 {
@@ -324,9 +308,9 @@ else
                     Console.ResetColor();
                 }
             }
-
+            
             // Update license info
-            await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_License_Info_Json(Members_Portal.api_key);
+            await NetLock_RMM_Web_Console.Classes.Members_Portal.Handler.Request_License_Info_Json(Members_Portal.ApiKey);
         }
     }
 }
@@ -480,12 +464,18 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 2488c388-6390-4aab-b556-cc553ba0370c //OSSCH_END
+//OSSCH_START c6174f06-6780-420c-99a8-420f4e19e695 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Server started.");
+
+// Members Portal Api Cloud Version Endpoints
+if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
+{
+    //OSSCH_START 6d233fbf-bd88-48e6-8994-d42dbac63dff //OSSCH_END
+}
 
 // Start server
 app.Run();

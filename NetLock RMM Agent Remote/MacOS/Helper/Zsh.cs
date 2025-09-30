@@ -48,29 +48,76 @@ namespace MacOS.Helper
                     // Start the process
                     process.Start();
 
-                    // Write the cleaned script to the process's standard input
+                    // Write the cleaned script to the process's standard input and close it immediately
                     using (StreamWriter writer = process.StandardInput)
                     {
                         writer.Write(script);
                     }
+                    // StandardInput is automatically closed when the StreamWriter is disposed
 
-                    // Read the output and error
-                    string output = process.StandardOutput.ReadToEnd();
-                    string error = process.StandardError.ReadToEnd();
+                    // Capture the streams before they can be disposed
+                    var stdout = process.StandardOutput;
+                    var stderr = process.StandardError;
 
-                    // Wait for process end, max. 1 day (86400000 ms)
-                    bool exited = process.WaitForExit(86400000);
-                    if (!exited)
+                    // Use async reading with timeout to prevent hanging
+                    var outputTask = Task.Run(() => stdout.ReadToEnd());
+                    var errorTask = Task.Run(() => stderr.ReadToEnd());
+
+                    // Wait for process to exit with timeout (5 minutes instead of 1 day)
+                    const int timeoutMs = 300000; // 5 minutes
+                    bool processExited = process.WaitForExit(timeoutMs);
+
+                    string output = "";
+                    string error = "";
+
+                    if (processExited)
                     {
-                        try { process.Kill(); } catch { }
-                        throw new TimeoutException("The script took too long and was canceled.");
+                        // Process exited normally, get the results
+                        try
+                        {
+                            if (outputTask.Wait(5000)) // Wait max 5 seconds for output reading
+                                output = outputTask.Result;
+                            else
+                                output = "Output reading timed out";
+                        }
+                        catch (Exception)
+                        {
+                            output = "Error reading output";
+                        } 
+
+                        try
+                        {
+                            if (errorTask.Wait(5000)) // Wait max 5 seconds for error reading
+                                error = errorTask.Result;
+                            else
+                                error = "Error reading timed out";
+                        }
+                        catch (Exception)
+                        {
+                            error = "Error reading stderr";
+                        }
+                    }
+                    else
+                    {
+                        // Process didn't exit within timeout, kill it
+                        try
+                        {
+                            process.Kill();
+                            process.WaitForExit(5000); // Give it 5 seconds to clean up
+                        }
+                        catch (Exception)
+                        {
+                            // Ignore errors when killing the process
+                        }
+
+                        return "Error: Script execution timed out (5 minutes). The script may have been waiting for user input or was stuck in an infinite loop.";
                     }
 
                     // Log the output and error
                     if (!string.IsNullOrEmpty(error))
                     {
                         Logging.PowerShell("MacOS.Helper.Zsh.Execute_Script", "Script error output", error);
-                        return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
+                        return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "More output: " + Environment.NewLine + error;
                     }
                     else
                     {

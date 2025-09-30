@@ -24,8 +24,17 @@ namespace NetLock_RMM_Agent_Remote
             _logger = logger;
         }
 
-        private bool ssl = false;
+        // Server config
+        public static string access_key = string.Empty;
+        public static bool authorized = false;
 
+        // Server communication
+        public static string remote_server = string.Empty;
+        public static string file_server = string.Empty;
+        
+        public static bool remote_server_status = false;
+        public static bool file_server_status = false;
+        
         // Local Server
         private const int Port = 7337;
         private const string ServerIp = "127.0.0.1"; // Localhost
@@ -35,8 +44,7 @@ namespace NetLock_RMM_Agent_Remote
         private Timer local_server_clientCheckTimer;
 
         // Remote Server Client
-        string remote_server_url = String.Empty;
-        string remote_server_url_command = String.Empty;
+        public static string remote_server_url_command = String.Empty;
         private HubConnection remote_server_client;
         private Timer remote_server_clientCheckTimer;
         bool remote_server_client_setup = false;
@@ -44,39 +52,20 @@ namespace NetLock_RMM_Agent_Remote
         // User process monitoring
         private Timer user_process_monitoringCheckTimer;
 
-        // File Server
-        private string file_server_url = String.Empty;
-
+        // Get server config timer
+        private Timer serverConfigCheckTimer;
+        
         // Device Identity
-        public string device_identity = String.Empty;
+        public string device_identity_json = String.Empty;
 
         public class Device_Identity
         {
-            public string agent_version { get; set; }
             public string package_guid { get; set; }
             public string device_name { get; set; }
             public string location_guid { get; set; }
             public string tenant_guid { get; set; }
             public string access_key { get; set; }
             public string hwid { get; set; }
-            public string platform { get; set; }
-            public string ip_address_internal { get; set; }
-            public string operating_system { get; set; }
-            public string domain { get; set; }
-            public string antivirus_solution { get; set; }
-            public string firewall_status { get; set; }
-            public string architecture { get; set; }
-            public string last_boot { get; set; }
-            public string timezone { get; set; }
-            public string cpu { get; set; }
-            public string cpu_usage { get; set; }
-            public string mainboard { get; set; }
-            public string gpu { get; set; }
-            public string ram { get; set; }
-            public string ram_usage { get; set; }
-            public string tpm { get; set; }
-            public string environment_variables { get; set; }
-            public string last_active_user { get; set; }
         }
 
         public class Command_Entity
@@ -114,11 +103,21 @@ namespace NetLock_RMM_Agent_Remote
                     try
                     {
                         Logging.Debug("Service.OnStart", "Service started", "Information");
+                        
+                        await LoadServerConfig();
 
                         // Start the timer to check the remote server status
-                        local_server_clientCheckTimer = new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
-                        remote_server_clientCheckTimer = new Timer(async (e) => await Remote_Server_Check_Connection_Status(), null, TimeSpan.Zero, TimeSpan.FromSeconds(15));
-                        user_process_monitoringCheckTimer = new Timer(async (e) => await CheckUserProcessStatus(), null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+                        local_server_clientCheckTimer =
+                            new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero,
+                                TimeSpan.FromSeconds(15));
+                        remote_server_clientCheckTimer =
+                            new Timer(async (e) => await Remote_Server_Check_Connection_Status(), null, TimeSpan.Zero,
+                                TimeSpan.FromSeconds(15));
+                        user_process_monitoringCheckTimer = new Timer(async (e) => await CheckUserProcessStatus(), null,
+                            TimeSpan.Zero, TimeSpan.FromMinutes(1));
+
+                        serverConfigCheckTimer = new Timer(async (e) => await LoadServerConfig(),
+                            null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
 
                         _ = Task.Run(async () => await Local_Server_Start());
 
@@ -148,8 +147,7 @@ namespace NetLock_RMM_Agent_Remote
                 Console.WriteLine("Connected to the local server.");
                 Logging.Debug("Service.Local_Server_Connect", "Connected to the local server.", "");
 
-                // Get the device identity from the local server
-                await Local_Server_Send_Message("get_device_identity");
+                // Previously used for initial device identity request. Removed that, but logic stays in place for future use cases.
             }
             catch (Exception ex)
             {
@@ -180,44 +178,17 @@ namespace NetLock_RMM_Agent_Remote
                     // device_identity
                     if (messageParts[0].ToString() == "device_identity")
                     {
-                        Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Device identity received", messageParts[1]);
-
-                        if (String.IsNullOrEmpty(messageParts[1]))
-                            Logging.Error("Service.Local_Server_Handle_Server_Messages", "Device identity is empty or not ready yet.", "");
-                        else
-                        {
-                            ssl = Convert.ToBoolean(messageParts[2]);
-
-                            device_identity = messageParts[1];
-                            remote_server_url = $"{messageParts[3]}/commandHub";
-                            remote_server_url_command = $"{messageParts[3]}";
-                            file_server_url = $"{messageParts[4]}";
-
-                            // if messageParts[2] (ssl) is true, use https, else http
-                            if (ssl)
-                            {
-                                remote_server_url = "https://" + remote_server_url;
-                                remote_server_url_command = "https://" + remote_server_url_command;
-                            }
-                            else
-                            {
-                                remote_server_url = "http://" + remote_server_url;
-                                remote_server_url_command = "http://" + remote_server_url_command;
-                            }
-
-                            Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Device identity", device_identity);
-                            Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Remote server URL", remote_server_url);
-                            Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Remote server URL (command)", remote_server_url_command);
-                            Logging.Debug("Service.Local_Server_Handle_Server_Messages", "File server URL", file_server_url);
-
-                            await Remote_Server_Check_Connection_Status();
-                        }
+                        Logging.Debug("Service.Local_Server_Handle_Server_Messages", "Device identity received",
+                            messageParts[1]);
+                        
+                        // Preset logic in place for future use cases
                     }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.Local_Server_Handle_Server_Messages", "Failed to handle server messages.", ex.ToString());
+                Logging.Error("Service.Local_Server_Handle_Server_Messages", "Failed to handle server messages.",
+                    ex.ToString());
             }
         }
 
@@ -236,7 +207,8 @@ namespace NetLock_RMM_Agent_Remote
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.Local_Server_Send_Message", "Failed to send message to the local server.", ex.ToString());
+                Logging.Error("Service.Local_Server_Send_Message", "Failed to send message to the local server.",
+                    ex.ToString());
             }
         }
 
@@ -255,18 +227,19 @@ namespace NetLock_RMM_Agent_Remote
                 {
                     Logging.Debug("Service.Check_Connection_Status", "Local server connection is active.", "");
 
-                    // Get the device identity from the local server
-                    await Local_Server_Send_Message("get_device_identity");
+                    // Previously used for initial device identity request. Removed that, but logic stays in place for future use cases.
                 }
                 else
                 {
-                    Logging.Debug("Service.Check_Connection_Status", "Local server connection lost, attempting to reconnect.", "");
+                    Logging.Debug("Service.Check_Connection_Status",
+                        "Local server connection lost, attempting to reconnect.", "");
                     await Local_Server_Connect();
                 }
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.Check_Connection_Status", "Failed to check remote_server_client or local_server_client status.", ex.ToString());
+                Logging.Error("Service.Check_Connection_Status",
+                    "Failed to check remote_server_client or local_server_client status.", ex.ToString());
             }
         }
 
@@ -277,7 +250,7 @@ namespace NetLock_RMM_Agent_Remote
         {
             try
             {
-                if (!string.IsNullOrEmpty(device_identity))
+                if (!string.IsNullOrEmpty(device_identity_json))
                 {
                     // Prevents multiple simultaneous connection attempts (in place to test remote screen control keyboard ghosting) https://github.com/0x101-Cyber-Security/NetLock-RMM/issues/89
                     await _signalRConnectionLock.WaitAsync();
@@ -286,14 +259,16 @@ namespace NetLock_RMM_Agent_Remote
                         if (_signalRConnecting)
                             return;
 
-                        if (!remote_server_client_setup || remote_server_client == null || remote_server_client.State == HubConnectionState.Disconnected)
+                        if (!remote_server_client_setup || remote_server_client == null ||
+                            remote_server_client.State == HubConnectionState.Disconnected)
                         {
                             _signalRConnecting = true;
                             await Setup_SignalR();
                         }
                         else if (remote_server_client.State == HubConnectionState.Connected)
                         {
-                            Logging.Debug("Service.Check_Connection_Status", "Remote server connection is already active.", "");
+                            Logging.Debug("Service.Check_Connection_Status",
+                                "Remote server connection is already active.", "");
                         }
                     }
                     finally
@@ -305,7 +280,8 @@ namespace NetLock_RMM_Agent_Remote
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.Check_Connection_Status", "Failed to check remote_server_client status.", ex.ToString());
+                Logging.Error("Service.Check_Connection_Status", "Failed to check remote_server_client status.",
+                    ex.ToString());
             }
         }
 
@@ -314,47 +290,49 @@ namespace NetLock_RMM_Agent_Remote
             try
             {
                 // Check if the device_identity is empty, if so, return
-                if (String.IsNullOrEmpty(device_identity))
+                if (String.IsNullOrEmpty(device_identity_json))
                 {
                     Logging.Error("Service.Setup_SignalR", "Device identity is empty.", "");
                     return;
                 }
                 else
-                    Logging.Debug("Service.Setup_SignalR", "Device identity is not empty. Preparing remote connection.", "");
+                    Logging.Debug("Service.Setup_SignalR", "Device identity is not empty. Preparing remote connection.",
+                        "");
 
-                Logging.Debug("Service.Setup_SignalR", "Device identity JSON", device_identity);
+                Logging.Debug("Service.Setup_SignalR", "Device identity JSON", device_identity_json);
 
                 // Deserialise device identity
-                var jsonDocument = JsonDocument.Parse(device_identity);
+                var jsonDocument = JsonDocument.Parse(device_identity_json);
                 var deviceIdentityElement = jsonDocument.RootElement.GetProperty("device_identity");
 
-                Device_Identity device_identity_object = JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
+                Device_Identity device_identity_object =
+                    JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
 
                 if (remote_server_client != null)
                 {
                     await remote_server_client.DisposeAsync();
                     remote_server_client = null;
                 }
-                
-                remote_server_client = new HubConnectionBuilder()
-                .WithUrl(remote_server_url, options =>
-                {
-                    options.Headers.Add("Device-Identity", Uri.EscapeDataString(device_identity));
-                    options.UseStatefulReconnect = true;
-                    options.WebSocketConfiguration = socket =>
-                    {
-                        socket.KeepAliveInterval = TimeSpan.FromSeconds(30);
-                    };
-                }).ConfigureLogging(logging =>
-                {
-                    if (OperatingSystem.IsWindows())
-                        logging.AddEventLog();
 
-                    logging.AddConsole();
-                    logging.SetMinimumLevel(LogLevel.Warning);
-                })
-                .WithAutomaticReconnect()
-                .Build();
+                remote_server_client = new HubConnectionBuilder()
+                    .WithUrl(Global.Configuration.Agent.http_https + remote_server, options =>
+                    {
+                        options.Headers.Add("Device-Identity", Uri.EscapeDataString(device_identity_json));
+                        options.UseStatefulReconnect = true;
+                        options.WebSocketConfiguration = socket =>
+                        {
+                            socket.KeepAliveInterval = TimeSpan.FromSeconds(30);
+                        };
+                    }).ConfigureLogging(logging =>
+                    {
+                        if (OperatingSystem.IsWindows())
+                            logging.AddEventLog();
+
+                        logging.AddConsole();
+                        logging.SetMinimumLevel(LogLevel.Warning);
+                    })
+                    .WithAutomaticReconnect()
+                    .Build();
 
                 remote_server_client.On<string>("ReceiveMessage", async (command) =>
                 {
@@ -365,6 +343,20 @@ namespace NetLock_RMM_Agent_Remote
                     // Example: If the command is "sync", send a message to the local server to force a sync with the remote server
                     if (command == "sync")
                         await Local_Server_Send_Message("sync");
+                });
+
+                // Handle ConnectionEstablished event from server
+                remote_server_client.On<string>("ConnectionEstablished", (message) =>
+                {
+                    Logging.Debug("Service.Setup_SignalR", "ConnectionEstablished with message", message);
+                    // Connection established, no further action needed
+                });
+
+                // Handle ConnectionEstablished event from server - without parameter
+                remote_server_client.On("ConnectionEstablished", () =>
+                {
+                    Logging.Debug("Service.Setup_SignalR", "ConnectionEstablished without message", "");
+                    // Connection established, no further action needed
                 });
 
                 // Receive a message from the remote server, process the command and send a response back to the remote server
@@ -383,18 +375,22 @@ namespace NetLock_RMM_Agent_Remote
                         if (command_object.type == 0) // Remote Shell
                         {
                             if (OperatingSystem.IsWindows())
-                                result = Windows.Helper.PowerShell.Execute_Script(command_object.type.ToString(), command_object.powershell_code);
+                                result = Windows.Helper.PowerShell.Execute_Script(command_object.type.ToString(),
+                                    command_object.powershell_code);
                             else if (OperatingSystem.IsLinux())
-                                result = Linux.Helper.Bash.Execute_Script("Remote Shell", true, command_object.powershell_code);
+                                result = Linux.Helper.Bash.Execute_Script("Remote Shell", true,
+                                    command_object.powershell_code);
                             else if (OperatingSystem.IsMacOS())
-                                result = MacOS.Helper.Zsh.Execute_Script("Remote Shell", true, command_object.powershell_code);
+                                result = MacOS.Helper.Zsh.Execute_Script("Remote Shell", true,
+                                    command_object.powershell_code);
 
                             Logging.Debug("Client", "PowerShell executed", result);
                         }
                         else if (command_object.type == 1) // File Browser
                         {
                             // if linux or macos convert the path to linux/macos path
-                            if (!String.IsNullOrEmpty(command_object.file_browser_path) && OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+                            if (!String.IsNullOrEmpty(command_object.file_browser_path) && OperatingSystem.IsLinux() ||
+                                OperatingSystem.IsMacOS())
                                 command_object.file_browser_path = command_object.file_browser_path.Replace("\\", "/");
 
                             // 0 = get drives, 1 = index, 2 = create dir, 3 = delete dir, 4 = move dir, 5 = rename dir, 6 = create file, 7 = delete file, 8 = move file, 9 = rename file, 10 = download file, 11 = upload file
@@ -405,11 +401,13 @@ namespace NetLock_RMM_Agent_Remote
                             {
                                 result = IO.Get_Drives();
                             }
+
                             if (command_object.file_browser_command == 1) // index
                             {
                                 // Get all directories and files in the specified path, create a json including date, size and file type
                                 var directoryDetails = await IO.Get_Directory_Index(command_object.file_browser_path);
-                                result = JsonSerializer.Serialize(directoryDetails, new JsonSerializerOptions { WriteIndented = true });
+                                result = JsonSerializer.Serialize(directoryDetails,
+                                    new JsonSerializerOptions { WriteIndented = true });
                             }
                             else if (command_object.file_browser_command == 2) // create dir
                             {
@@ -421,15 +419,18 @@ namespace NetLock_RMM_Agent_Remote
                             }
                             else if (command_object.file_browser_command == 4) // move dir
                             {
-                                result = IO.Move_Directory(command_object.file_browser_path, command_object.file_browser_path_move);
+                                result = IO.Move_Directory(command_object.file_browser_path,
+                                    command_object.file_browser_path_move);
                             }
                             else if (command_object.file_browser_command == 5) // rename dir
                             {
-                                result = IO.Rename_Directory(command_object.file_browser_path, command_object.file_browser_path_move);
+                                result = IO.Rename_Directory(command_object.file_browser_path,
+                                    command_object.file_browser_path_move);
                             }
                             else if (command_object.file_browser_command == 6) // create file
                             {
-                                result = await IO.Create_File(command_object.file_browser_path, command_object.file_browser_file_content);
+                                result = await IO.Create_File(command_object.file_browser_path,
+                                    command_object.file_browser_file_content);
                             }
                             else if (command_object.file_browser_command == 7) // delete file
                             {
@@ -437,20 +438,29 @@ namespace NetLock_RMM_Agent_Remote
                             }
                             else if (command_object.file_browser_command == 8) // move file
                             {
-                                result = IO.Move_File(command_object.file_browser_path, command_object.file_browser_path_move);
+                                result = IO.Move_File(command_object.file_browser_path,
+                                    command_object.file_browser_path_move);
                             }
                             else if (command_object.file_browser_command == 9) // rename file
                             {
-                                result = IO.Rename_File(command_object.file_browser_path, command_object.file_browser_path_move);
+                                result = IO.Rename_File(command_object.file_browser_path,
+                                    command_object.file_browser_path_move);
                             }
                             else if (command_object.file_browser_command == 10) // download file from file server
                             {
                                 // download url with tenant guid, location guid & device name
-                                string download_url = file_server_url + "/admin/files/download/device" + "?guid=" + command_object.file_browser_file_guid + "&tenant_guid=" + device_identity_object.tenant_guid + "&location_guid=" + device_identity_object.location_guid + "&device_name=" + device_identity_object.device_name + "&access_key=" + device_identity_object.access_key + "&hwid=" + device_identity_object.hwid;
+                                string download_url = file_server + "/admin/files/download/device" + "?guid=" +
+                                                      command_object.file_browser_file_guid + "&tenant_guid=" +
+                                                      device_identity_object.tenant_guid + "&location_guid=" +
+                                                      device_identity_object.location_guid + "&device_name=" +
+                                                      device_identity_object.device_name + "&access_key=" +
+                                                      device_identity_object.access_key + "&hwid=" +
+                                                      device_identity_object.hwid;
 
                                 Logging.Debug("Service.Setup_SignalR", "Download URL", download_url);
 
-                                result = await Http.DownloadFileAsync(ssl, download_url, command_object.file_browser_path, device_identity_object.package_guid);
+                                result = await Http.DownloadFileAsync(Global.Configuration.Agent.ssl, download_url,
+                                    command_object.file_browser_path, device_identity_object.package_guid);
 
                                 Logging.Debug("Service.Setup_SignalR", "File downloaded", result);
                             }
@@ -459,12 +469,18 @@ namespace NetLock_RMM_Agent_Remote
                                 string file_name = Path.GetFileName(command_object.file_browser_path);
 
                                 // upload url with tenant guid, location guid & device name
-                                string upload_url = file_server_url + "/admin/files/upload/device" + "?tenant_guid=" + device_identity_object.tenant_guid + "&location_guid=" + device_identity_object.location_guid + "&device_name=" + device_identity_object.device_name + "&access_key=" + device_identity_object.access_key + "&hwid=" + device_identity_object.hwid;
+                                string upload_url = file_server + "/admin/files/upload/device" + "?tenant_guid=" +
+                                                    device_identity_object.tenant_guid + "&location_guid=" +
+                                                    device_identity_object.location_guid + "&device_name=" +
+                                                    device_identity_object.device_name + "&access_key=" +
+                                                    device_identity_object.access_key + "&hwid=" +
+                                                    device_identity_object.hwid;
 
                                 Logging.Debug("Service.Setup_SignalR", "Upload URL", upload_url);
 
                                 // Upload the file to the server
-                                result = await Http.UploadFileAsync(ssl, upload_url, command_object.file_browser_path, device_identity_object.package_guid);
+                                result = await Http.UploadFileAsync(Global.Configuration.Agent.ssl, upload_url, command_object.file_browser_path,
+                                    device_identity_object.package_guid);
                             }
                         }
                         else if (command_object.type == 2) // Service
@@ -518,12 +534,14 @@ namespace NetLock_RMM_Agent_Remote
                             {
                                 try
                                 {
-                                    Logging.Debug("Service.Setup_SignalR", "Remote Control command", command_object.command);
+                                    Logging.Debug("Service.Setup_SignalR", "Remote Control command",
+                                        command_object.command);
 
                                     // Check if ctrlaltdel and send through SAS instead
                                     if (command_object.remote_control_keyboard_input == "ctrlaltdel")
                                     {
-                                        Logging.Debug("Service.Setup_SignalR", "Sending SAS for ctrlaltdel", command_object.remote_control_username);
+                                        Logging.Debug("Service.Setup_SignalR", "Sending SAS for ctrlaltdel",
+                                            command_object.remote_control_username);
 
                                         Sas_Diagnostics.LogContext();
 
@@ -540,11 +558,13 @@ namespace NetLock_RMM_Agent_Remote
                                         remote_control_mouse_action = command_object.remote_control_mouse_action,
                                         remote_control_mouse_xyz = command_object.remote_control_mouse_xyz,
                                         remote_control_keyboard_input = command_object.remote_control_keyboard_input,
-                                        remote_control_keyboard_content = command_object.remote_control_keyboard_content,
+                                        remote_control_keyboard_content =
+                                            command_object.remote_control_keyboard_content,
                                     };
 
                                     // Convert the object into a JSON string
-                                    string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                    string json = JsonSerializer.Serialize(jsonObject,
+                                        new JsonSerializerOptions { WriteIndented = true });
                                     Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
 
                                     // Send through local SignalR Hub to User
@@ -552,7 +572,8 @@ namespace NetLock_RMM_Agent_Remote
                                 }
                                 catch (Exception ex)
                                 {
-                                    Logging.Error("Service.Setup_SignalR", "Failed to execute remote control command.", ex.ToString());
+                                    Logging.Error("Service.Setup_SignalR", "Failed to execute remote control command.",
+                                        ex.ToString());
                                 }
 
                                 // Return because no further action is required
@@ -563,7 +584,8 @@ namespace NetLock_RMM_Agent_Remote
                     catch (Exception ex)
                     {
                         result = ex.Message;
-                        Logging.Error("Service.Setup_SignalR", "Failed to execute file browser command.", ex.ToString());
+                        Logging.Error("Service.Setup_SignalR", "Failed to execute file browser command.",
+                            ex.ToString());
                     }
 
                     // Send the response back to the server
@@ -572,9 +594,12 @@ namespace NetLock_RMM_Agent_Remote
                         if (String.IsNullOrEmpty(result))
                             result = "Command executed. No result returned.";
 
-                        Logging.Debug("Client", "Sending response back to the server", "result: " + result + "response_id: " + command_object.response_id);
-                        await remote_server_client.InvokeAsync("ReceiveClientResponse", command_object.response_id, result);
-                        Logging.Debug("Client", "Response sent back to the server", "result: " + result + "response_id: " + command_object.response_id);
+                        Logging.Debug("Client", "Sending response back to the server",
+                            "result: " + result + "response_id: " + command_object.response_id);
+                        await remote_server_client.InvokeAsync("ReceiveClientResponse", command_object.response_id,
+                            result);
+                        Logging.Debug("Client", "Response sent back to the server",
+                            "result: " + result + "response_id: " + command_object.response_id);
                     }
 
                     await Task.CompletedTask;
@@ -595,6 +620,7 @@ namespace NetLock_RMM_Agent_Remote
         }
 
         #region User agent process monitoring
+
         private async Task CheckUserProcessStatus()
         {
             if (!OperatingSystem.IsWindows()) return;
@@ -619,16 +645,17 @@ namespace NetLock_RMM_Agent_Remote
                 if (!processIsRunning)
                 {
                     bool success = Windows.Helper.ScreenControl.Win32Interop.CreateInteractiveSystemProcess(
-                       commandLine: Application_Paths.netlock_rmm_user_agent_path,
-                       targetSessionId: 0,
-                       hiddenWindow: false,
-                       out var procInfo
-                   );
+                        commandLine: Application_Paths.netlock_rmm_user_agent_path,
+                        targetSessionId: 0,
+                        hiddenWindow: false,
+                        out var procInfo
+                    );
                 }
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.CheckUserProcess", "Exception while checking or starting user processes.", ex.ToString());
+                Logging.Error("Service.CheckUserProcess", "Exception while checking or starting user processes.",
+                    ex.ToString());
             }
         }
 
@@ -637,7 +664,10 @@ namespace NetLock_RMM_Agent_Remote
         #region Remote Agent Local Server
 
         private const int Remote_Agent_Local_Port = 7338;
-        private ConcurrentDictionary<string, TcpClient> _clients = new ConcurrentDictionary<string, TcpClient>(); // Clients by username
+
+        private ConcurrentDictionary<string, TcpClient>
+            _clients = new ConcurrentDictionary<string, TcpClient>(); // Clients by username
+
         private TcpListener _listener;
         private CancellationTokenSource _cancellationTokenSourceLocal = new CancellationTokenSource();
         private SemaphoreSlim _connectionSemaphore = new SemaphoreSlim(100); // Limit to 100 concurrent clients
@@ -652,7 +682,8 @@ namespace NetLock_RMM_Agent_Remote
                 _listener = new TcpListener(IPAddress.Parse("127.0.0.1"), Remote_Agent_Local_Port);
                 _listener.Start();
                 Console.WriteLine("Remote Agent Server started. Waiting for connections...");
-                Logging.Debug("Service.Remote_Agent_Local_Server_Start", "Server started. Waiting for connections...", "");
+                Logging.Debug("Service.Remote_Agent_Local_Server_Start", "Server started. Waiting for connections...",
+                    "");
 
                 while (!_cancellationTokenSourceLocal.Token.IsCancellationRequested)
                 {
@@ -660,7 +691,8 @@ namespace NetLock_RMM_Agent_Remote
                     var client = await _listener.AcceptTcpClientAsync();
                     if (client != null)
                     {
-                        _ = Local_Server_Handle_Client(client, _cancellationTokenSourceLocal.Token); // Handle client asynchronously
+                        _ = Local_Server_Handle_Client(client,
+                            _cancellationTokenSourceLocal.Token); // Handle client asynchronously
                     }
                 }
             }
@@ -678,7 +710,8 @@ namespace NetLock_RMM_Agent_Remote
 
             try
             {
-                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, true); // Enable KeepAlive
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive,
+                    true); // Enable KeepAlive
 
                 // Wait for the client to send the username first
                 int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
@@ -705,7 +738,8 @@ namespace NetLock_RMM_Agent_Remote
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling client: {ex.Message}");
-                Logging.Error("Service.Remote_Agent_Local_Server_Handle_Client", "Error handling client.", ex.ToString());
+                Logging.Error("Service.Remote_Agent_Local_Server_Handle_Client", "Error handling client.",
+                    ex.ToString());
             }
             finally
             {
@@ -716,7 +750,8 @@ namespace NetLock_RMM_Agent_Remote
             }
         }
 
-        private async Task HandleClientMessages(string username, TcpClient client, NetworkStream stream, CancellationToken cancellationToken)
+        private async Task HandleClientMessages(string username, TcpClient client, NetworkStream stream,
+            CancellationToken cancellationToken)
         {
             byte[] buffer = new byte[BufferSize];
 
@@ -729,23 +764,26 @@ namespace NetLock_RMM_Agent_Remote
                         break;
 
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Logging.Debug("Service.Remote_Agent_Server_HandleClientMessages", $"Message from user {username}", "not displaying due to high data usage");
+                    Logging.Debug("Service.Remote_Agent_Server_HandleClientMessages", $"Message from user {username}",
+                        "not displaying due to high data usage");
 
                     // Process client message
                     try
                     {
-                        Logging.Remote_Control("Service.Remote_Agent_Server_HandleClientMessages", "Processing message", "Task triggered");
+                        Logging.Remote_Control("Service.Remote_Agent_Server_HandleClientMessages", "Processing message",
+                            "Task triggered");
                         await ProcessMessage(message);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Error("Service.Remote_Agent_Server_ProcessMessage", "Error invoking client response.", ex.ToString());
+                        Logging.Error("Service.Remote_Agent_Server_ProcessMessage", "Error invoking client response.",
+                            ex.ToString());
                     }
 
                     // Der code wird nicht ausgeführt
                     /*_ = Task.Run(async () =>
                     {
-                       
+
                     });*/
                 }
             }
@@ -756,7 +794,8 @@ namespace NetLock_RMM_Agent_Remote
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling messages from {username}: {ex.Message}");
-                Logging.Error("Service.Remote_Agent_Server_HandleClientMessages", "Error handling messages from client.", ex.ToString());
+                Logging.Error("Service.Remote_Agent_Server_HandleClientMessages",
+                    "Error handling messages from client.", ex.ToString());
             }
             finally
             {
@@ -771,7 +810,8 @@ namespace NetLock_RMM_Agent_Remote
         {
             try
             {
-                Logging.Remote_Control("Service.Remote_Agent_Server_ProcessMessage", "Processing message", "Task triggered");
+                Logging.Remote_Control("Service.Remote_Agent_Server_ProcessMessage", "Processing message",
+                    "Task triggered");
 
                 // Split message per $
                 string[] messageParts = message.Split('$');
@@ -790,7 +830,8 @@ namespace NetLock_RMM_Agent_Remote
                     }
                     catch (Exception ex)
                     {
-                        Logging.Error("Service.Remote_Agent_Server_ProcessMessage", "Error invoking client response.", ex.ToString());
+                        Logging.Error("Service.Remote_Agent_Server_ProcessMessage", "Error invoking client response.",
+                            ex.ToString());
                     }
                 }
                 else if (messageParts[0] == "screen_indexes")
@@ -802,7 +843,7 @@ namespace NetLock_RMM_Agent_Remote
                     await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
                 }
                 else if (messageParts[0] == "clipboard_content")
-                { 
+                {
                     await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
                 }
             }
@@ -833,13 +874,15 @@ namespace NetLock_RMM_Agent_Remote
                 else
                 {
                     Console.WriteLine($"No client connected with username: {username}");
-                    Logging.Error("Service.Remote_Agent_Server_SendToClient", "No client connected with username", username);
+                    Logging.Error("Service.Remote_Agent_Server_SendToClient", "No client connected with username",
+                        username);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed to send message to {username}: {ex.Message}");
-                Logging.Error("Service.Remote_Agent_Server_SendToClient", "Failed to send message to client", ex.ToString());
+                Logging.Error("Service.Remote_Agent_Server_SendToClient", "Failed to send message to client",
+                    ex.ToString());
             }
         }
 
@@ -848,10 +891,11 @@ namespace NetLock_RMM_Agent_Remote
             try
             {
                 // Deserialise device identity
-                var jsonDocument = JsonDocument.Parse(device_identity);
+                var jsonDocument = JsonDocument.Parse(device_identity_json);
                 var deviceIdentityElement = jsonDocument.RootElement.GetProperty("device_identity");
 
-                Device_Identity device_identity_object = JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
+                Device_Identity device_identity_object =
+                    JsonSerializer.Deserialize<Device_Identity>(deviceIdentityElement.ToString());
 
                 Logging.Debug("device_identity_object", "", device_identity_object.package_guid);
 
@@ -867,7 +911,8 @@ namespace NetLock_RMM_Agent_Remote
                 };
 
                 // Serialize the full JSON back into a string
-                string outputJson = JsonSerializer.Serialize(fullJson, new JsonSerializerOptions { WriteIndented = true });
+                string outputJson =
+                    JsonSerializer.Serialize(fullJson, new JsonSerializerOptions { WriteIndented = true });
 
                 Logging.Debug("Remote_Control_Send_Screen", "outputJson", outputJson);
 
@@ -875,13 +920,17 @@ namespace NetLock_RMM_Agent_Remote
                 using (var httpClient = new HttpClient())
                 {
                     // Set the content type header
-                    httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                    httpClient.DefaultRequestHeaders.Accept.Add(
+                        new MediaTypeWithQualityHeaderValue("application/json"));
                     httpClient.DefaultRequestHeaders.Add("Package-Guid", device_identity_object.package_guid);
 
-                    Logging.Debug("Remote_Control_Send_Screen", "communication_server", remote_server_url_command + "/Agent/Windows/Remote/Command");
+                    Logging.Debug("Remote_Control_Send_Screen", "communication_server",
+                        Global.Configuration.Agent.http_https + remote_server_url_command + "/Agent/Windows/Remote/Command");
 
                     // Send the JSON data to the server
-                    var response = await httpClient.PostAsync(remote_server_url_command + "/Agent/Windows/Remote/Command", new StringContent(outputJson, Encoding.UTF8, "application/json"));
+                    var response = await httpClient.PostAsync(
+                        Global.Configuration.Agent.http_https + remote_server_url_command + "/Agent/Windows/Remote/Command",
+                        new StringContent(outputJson, Encoding.UTF8, "application/json"));
 
                     // Check if the request was successful
                     if (response.IsSuccessStatusCode)
@@ -893,7 +942,8 @@ namespace NetLock_RMM_Agent_Remote
                     else
                     {
                         // Request failed, handle the error
-                        Logging.Debug("Remote_Control_Send_Screen", "request", "Request failed: " + response.StatusCode + " " + response.Content.ToString());
+                        Logging.Debug("Remote_Control_Send_Screen", "request",
+                            "Request failed: " + response.StatusCode + " " + response.Content.ToString());
                     }
                 }
             }
@@ -911,6 +961,51 @@ namespace NetLock_RMM_Agent_Remote
             Logging.Debug("Service.Remote_Agent_Server_Stop", "Server stopped.", "");
         }
 
-    }
-    #endregion
+        #endregion
+
+        #region ServerConfig
+    
+        private async Task LoadServerConfig()
+        {
+            try
+            {
+                // Get access key & authorized state
+                access_key = Global.Initialization.Server_Config.Access_Key();
+                authorized = Global.Initialization.Server_Config.Authorized();
+                
+                // Create the device identity JSON object
+                //Create JSON
+                Device_Identity identity = new Device_Identity
+                {
+                    package_guid = Global.Configuration.Agent.package_guid,
+                    device_name = Environment.MachineName,
+                    location_guid = Global.Configuration.Agent.location_guid,
+                    tenant_guid = Global.Configuration.Agent.tenant_guid,
+                    access_key = access_key,
+                    hwid = Global.Configuration.Agent.hwid,
+                };
+
+                // Create the object that contains the device_identity object
+                var jsonObject = new { device_identity = identity };
+
+                // Serialize the object to a JSON string
+                string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                Logging.Debug("Online_Mode.Handler.Authenticate", "json", json);
+
+                // Declare public
+                device_identity_json = json;
+                
+                // Check servers | We do not want to spam the server with requests here. 
+                if (authorized && !remote_server_status || !file_server_status)
+                    await Global.Initialization.Check_Connection.Check_Servers();
+            }
+            catch (Exception ex)
+            {
+                Logging.Error("Service.LoadServerConfig", "Error loading server configuration", ex.ToString());
+            }
+        }
+
+        #endregion
+        
+    } 
 }

@@ -24,5 +24,14 @@ namespace NetLock_RMM_Web_Console.Classes.Setup
             if (!Directory.Exists(Application_Paths.internal_recordings_dir))
                 Directory.CreateDirectory(Application_Paths.internal_recordings_dir);
         }
+        
+        public static void Delete_Directories()
+        {
+            if (Directory.Exists(Application_Paths.internal_temp_dir))
+                Directory.Delete(Application_Paths.internal_temp_dir, true);
+            
+            if (Directory.Exists(Application_Paths.logs_dir))
+                Directory.Delete(Application_Paths.logs_dir, true);
+        }
     }
 }

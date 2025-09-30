@@ -625,7 +625,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
                 finally
                 {
-                    conn.Close();
+                    await conn.CloseAsync();
                 }
 
                 // Call the next delegate/middleware in the pipeline

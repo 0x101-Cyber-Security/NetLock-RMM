@@ -1,4 +1,4 @@
-﻿using MySqlConnector;
+using MySqlConnector;
 using System.Configuration;
 using System.Data.Common;
 using System.Diagnostics;
@@ -439,15 +439,19 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
 
 
         // Execute installation SQL script
-        public static async Task<bool> Execute_Installation_Script()
+        public static async Task<bool> Execute_Installation_Script(bool reset)
         {
             // Read old settings:
             // smtp
-            string smtp = String.Empty; 
-            smtp = await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "smtp");
+            string smtp = String.Empty;
+            
+            if (!reset)
+                smtp = await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "smtp");
 
             // files api key
             string files_api_key = String.Empty;
+            
+            if (!reset)
                 files_api_key = await MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "files_api_key");
 
             // Generate random files api key if empty
@@ -566,8 +570,16 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
   ""settings_protocols_enabled"": true
 }";
 
-                await Classes.MySQL.Handler.Execute_Command("INSERT INTO accounts (username, password, reset_password, role, permissions, tenants) VALUES ('admin', '" + password + "', 1, 'Administrator', '" + permissions + "', '[\r\n  {\r\n    \"id\": \"3\",\r\n    \"guid\": \"96a08389-4e34-4c0f-91a4-d5b22e036a8c\"\r\n  }\r\n]');");
 
+                if (reset)
+                {
+                    await Classes.MySQL.Handler.Execute_Command("INSERT INTO accounts (username, password, reset_password, role, permissions, tenants) VALUES ('admin', '" + BCrypt.Net.BCrypt.HashPassword(Randomizer.Handler.Generate_Password(false, 12)) + "', 1, 'Administrator', '" + permissions + "', '[\r\n  {\r\n    \"id\": \"3\",\r\n    \"guid\": \"96a08389-4e34-4c0f-91a4-d5b22e036a8c\"\r\n  }\r\n]');");
+                }
+                else
+                {
+                    await Classes.MySQL.Handler.Execute_Command("INSERT INTO accounts (username, password, reset_password, role, permissions, tenants) VALUES ('admin', '" + password + "', 1, 'Administrator', '" + permissions + "', '[\r\n  {\r\n    \"id\": \"3\",\r\n    \"guid\": \"96a08389-4e34-4c0f-91a4-d5b22e036a8c\"\r\n  }\r\n]');");
+                }
+                
                 Logging.Handler.Debug("Execute_Installation_Script", "Result", "Admin user added successfully.");
                 Console.WriteLine("Admin user added successfully.");
                 Console.WriteLine("Username: admin");
@@ -776,28 +788,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
         }
 
-        public static async Task EnforceCloudSettings() // Preventing data flood on our side, needs to be adjusted on server side too in the future
-        {
-            string query = "UPDATE settings SET agent_updates_windows_enabled = 0, agent_updates_linux_enabled = 0, agent_updates_macos_enabled = 0, cleanup_applications_drivers_history_enabled = 1, cleanup_applications_drivers_history_days = 1, cleanup_applications_installed_history_enabled = 1, cleanup_applications_installed_history_days = 1, cleanup_applications_logon_history_enabled = 1, cleanup_applications_logon_history_days = 1, cleanup_applications_scheduled_tasks_history_enabled = 1, cleanup_applications_scheduled_tasks_history_days = 1, cleanup_applications_services_history_enabled = 1, cleanup_applications_services_history_days = 1, cleanup_device_information_antivirus_products_history_enabled = 1, cleanup_device_information_antivirus_products_history_days = 1, cleanup_device_information_cpu_history_enabled = 1, cleanup_device_information_cpu_history_days = 1, cleanup_device_information_cronjobs_history_enabled = 1, cleanup_device_information_cronjobs_history_days = 1, cleanup_device_information_disks_history_enabled = 1, cleanup_device_information_disks_history_days = 1, cleanup_device_information_general_history_enabled = 1, cleanup_device_information_general_history_days = 1, cleanup_device_information_history_enabled = 1, cleanup_device_information_history_days = 1, cleanup_device_information_network_adapters_history_enabled = 1, cleanup_device_information_network_adapters_history_days = 1, cleanup_device_information_ram_history_enabled = 1, cleanup_device_information_ram_history_days = 1, cleanup_device_information_task_manager_history_enabled = 1, cleanup_device_information_task_manager_history_days = 1, cleanup_events_history_enabled = 0;";
-
-            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
-
-            try
-            {
-                await conn.OpenAsync();
-
-                MySqlCommand command = new MySqlCommand(query, conn);
-                
-                await command.ExecuteNonQueryAsync();
-            }
-            catch (Exception ex)
-            {
-                Logging.Handler.Error("Classes.MySQL.Database", "Result", ex.ToString());
-            }
-            finally
-            {
-                await conn.CloseAsync();
-            }
-        }
+        //OSSCH_START 3be43c9b-1446-404b-9797-5621a38591d6 //OSSCH_END
+        
+        // Reset database
+        //OSSCH_START 42dc4434-0686-4527-b0b1-db57e29958d7 //OSSCH_END
     }
 }

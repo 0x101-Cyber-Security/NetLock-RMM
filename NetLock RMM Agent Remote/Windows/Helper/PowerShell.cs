@@ -56,35 +56,85 @@ namespace Windows.Helper
                     return "-";
                 }
 
-                using Process cmd_process = new Process();
+                using Process cmdProcess = new Process();
 
-                cmd_process.StartInfo.FileName = "powershell.exe";
-                cmd_process.StartInfo.Arguments = $"-ExecutionPolicy Bypass -EncodedCommand {script}";
+                cmdProcess.StartInfo.FileName = "powershell.exe";
+                cmdProcess.StartInfo.Arguments = $"-ExecutionPolicy Bypass -EncodedCommand {script}";
 
-                cmd_process.StartInfo.UseShellExecute = false;
-                cmd_process.StartInfo.RedirectStandardOutput = true;
-                cmd_process.StartInfo.RedirectStandardError = true;
-                cmd_process.StartInfo.CreateNoWindow = true;
+                cmdProcess.StartInfo.UseShellExecute = false;
+                cmdProcess.StartInfo.RedirectStandardOutput = true;
+                cmdProcess.StartInfo.RedirectStandardError = true;
+                cmdProcess.StartInfo.RedirectStandardInput = true;
+                cmdProcess.StartInfo.CreateNoWindow = true;
 
-                cmd_process.Start();
+                cmdProcess.Start();
 
-                // Read output and error (blocking until process ends)
-                string output = cmd_process.StandardOutput.ReadToEnd();
-                string error = cmd_process.StandardError.ReadToEnd();
+                // Close standard input immediately to prevent hanging on input requests
+                cmdProcess.StandardInput.Close();
 
-                // Wait for process end, max. 1 day (86400000 ms)
-                bool exited = cmd_process.WaitForExit(86400000);
-                if (!exited)
+                // Capture the streams before they can be disposed
+                var stdout = cmdProcess.StandardOutput;
+                var stderr = cmdProcess.StandardError;
+
+                // Use async reading with timeout to prevent hanging
+                var outputTask = Task.Run(() => stdout.ReadToEnd());
+                var errorTask = Task.Run(() => stderr.ReadToEnd());
+
+                // Wait for process to exit with timeout (5 minutes)
+                const int timeoutMs = 300000; // 5 minutes
+                bool processExited = cmdProcess.WaitForExit(timeoutMs);
+
+                string output = "";
+                string error = "";
+
+                if (processExited)
                 {
-                    try { cmd_process.Kill(); } catch { }
-                    throw new TimeoutException("The script took too long and was canceled.");
+                    // Process exited normally, get the results
+                    try
+                    {
+                        if (outputTask.Wait(5000)) // Wait max 5 seconds for output reading
+                            output = outputTask.Result;
+                        else
+                            output = "Output reading timed out";
+                    }
+                    catch (Exception)
+                    {
+                        output = "Error reading output";
+                    }
+
+                    try
+                    {
+                        if (errorTask.Wait(5000)) // Wait max 5 seconds for error reading
+                            error = errorTask.Result;
+                        else
+                            error = "Error reading timed out";
+                    }
+                    catch (Exception)
+                    {
+                        error = "Error reading stderr";
+                    }
+                }
+                else
+                {
+                    // Process didn't exit within timeout, kill it
+                    try
+                    {
+                        cmdProcess.Kill();
+                        cmdProcess.WaitForExit(5000); // Give it 5 seconds to clean up
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore errors when killing the process
+                    }
+
+                    return "Error: Script execution timed out (5 minutes). The script may have been waiting for user input or was stuck in an infinite loop.";
                 }
 
                 // Log the output and error
                 if (!string.IsNullOrEmpty(error))
                 {
                     Logging.PowerShell("Helper.Powershell.Execute_Script", "Script error output", error);
-                    return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "Error output: " + Environment.NewLine + error;
+                    return "Output: " + Environment.NewLine + output + Environment.NewLine + Environment.NewLine + "More output: " + Environment.NewLine + error;
                 }
                 else
                 {

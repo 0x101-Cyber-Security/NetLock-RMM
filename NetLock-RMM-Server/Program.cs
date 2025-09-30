@@ -32,6 +32,7 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using System.Text.Json;
 using System.Threading;
+using NetLock_RMM_Server.Setup;
 using static NetLock_RMM_Server.Agent.Windows.Authentification;
 using static NetLock_RMM_Server.SignalR.CommandHub;
 
@@ -103,8 +104,10 @@ var membersPortal = builder.Configuration.GetSection("Members_Portal_Api").Get<N
 
 if (membersPortal.Enabled)
 {
-    Members_Portal.api_enabled = true;
-    Members_Portal.api_key = membersPortal.ApiKeyOverride ?? String.Empty;
+    Members_Portal.IsApiEnabled = true;
+    Members_Portal.ApiKey = membersPortal.ApiKeyOverride ?? String.Empty;
+    Members_Portal.IsCloudEnabled = membersPortal.Cloud;
+    Members_Portal.ServerGuid = membersPortal.ServerGuid ?? String.Empty;
 }
 
 // Output OS
@@ -159,13 +162,12 @@ Console.WriteLine($"Server role (notification): {role_notification}");
 Console.WriteLine($"Server role (file): {role_file}");
 Console.WriteLine(Environment.NewLine);
 
-// Output members portal configuration
-Console.WriteLine("[Members Portal]");
-Console.WriteLine($"Api Enabled: {Members_Portal.api_enabled}");
-
-if (!String.IsNullOrEmpty(Members_Portal.api_key))
-    Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
-
+// Members Portal Api
+Console.WriteLine("[Members Portal Api]");
+Console.WriteLine($"Api Enabled: {Members_Portal.IsApiEnabled}");
+Console.WriteLine($"Api Key Override: {membersPortal.ApiKeyOverride}");
+Console.WriteLine($"Cloud Enabled: {Members_Portal.IsCloudEnabled}");
+Console.WriteLine($"Server Guid: {Members_Portal.ServerGuid}");
 Console.WriteLine(Environment.NewLine);
 
 // Logging
@@ -266,11 +268,11 @@ else
     await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
 
     // Get api key
-    if (String.IsNullOrEmpty(Members_Portal.api_key))
+    if (String.IsNullOrEmpty(Members_Portal.ApiKey))
     {
-        Members_Portal.api_key = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
+        Members_Portal.ApiKey = await NetLock_RMM_Server.MySQL.Handler.Get_Members_Portal_Api_Key();
 
-        Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.api_key);
+        Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.ApiKey);
     }
 }
 
@@ -279,9 +281,9 @@ Console.WriteLine(Environment.NewLine);
 // Check Package Status and Request Packages from Members Portal API if roles apply, api enabled and API key is set
 if (Roles.Update || Roles.Trust)
 {
-    if (Members_Portal.api_enabled)
+    if (Members_Portal.IsApiEnabled)
     {
-        //OSSCH_START f59c93f1-3c13-4062-b801-cda5a3a5f5e7 //OSSCH_END
+        //OSSCH_START f08ad9bd-2c30-4c0b-95f9-9a0151bc1306 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -348,6 +350,18 @@ app.MapGet("/test", async context =>
     context.Response.StatusCode = 200;
     await context.Response.WriteAsync("ok");
 });
+
+// Members Portal Api Cloud Version Endpoints
+if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
+{
+    //OSSCH_START eb38de9f-73c3-4608-b285-c9748f9cc0b4 //OSSCH_END
+}
+
+if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
+{
+    // Credentials update endpoint
+    //OSSCH_START b2955073-f077-4bd8-8b51-ecd80610018a //OSSCH_END
+}
 
 //Check Version
 if (role_comm)
@@ -709,7 +723,7 @@ if (role_comm)
                 return;
             }
         }
-
+ResetInstance
         string api_key = string.Empty;
 
         // Read the JSON data
@@ -1386,7 +1400,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 4e321c20-e1f3-4d7f-8a5e-32401a61ccd2 //OSSCH_END
+    //OSSCH_START b8745a0e-e2fa-4c0b-9131-e6a69ea5976e //OSSCH_END
 }
 
 /*

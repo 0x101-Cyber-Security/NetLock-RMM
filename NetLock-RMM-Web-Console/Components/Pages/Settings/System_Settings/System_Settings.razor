@@ -98,7 +98,7 @@
 
     <Authorized>
 
-        @if (Configuration.Members_Portal.cloud_enabled)
+        @if (Configuration.Members_Portal.IsCloudEnabled)
         {
             <MudAlert Class="mb-3" Severity="Severity.Warning">This section is administered by the cloud team. The view is limited. :-)</MudAlert>
         }
@@ -107,7 +107,7 @@
         {
             <MudTabs KeepPanelsAlive=true Class="mt-0" Elevation="4" Rounded="false" Color="@Color.Default">
 
-                @if (!Configuration.Members_Portal.cloud_enabled)
+                @if (!Configuration.Members_Portal.IsCloudEnabled)
                 {
                 <MudTabPanel Text="Overview">
 
@@ -389,7 +389,7 @@
                             </MudItem>
                         </MudGrid>
 
-                        @if (!_dnsWarning && !Configuration.Members_Portal.cloud_enabled && !remoteServerConnectionStatus && !fileServerConnectionStatus)
+                        @if (!_dnsWarning && !Configuration.Members_Portal.IsCloudEnabled && !remoteServerConnectionStatus && !fileServerConnectionStatus)
                         {
                             <MudAlert Class="mt-2 ml-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Dns">PTR record mismatch detected! Your provided hostname resolves to: @_dnsWarningText but it should resolve to: @Configuration.Remote_Server.Hostname instead, according to your provided configuration. More details: https://docs.netlockrmm.com/en/troubleshooting/ptr-mismatch</MudAlert>
                         }
@@ -401,7 +401,7 @@
                 </MudTabPanel>
 
                 }
-                    @if (!Configuration.Members_Portal.cloud_enabled)
+                    @if (!Configuration.Members_Portal.IsCloudEnabled)
                     {
                     <MudTabPanel Text="Members Portal Api">
 
@@ -409,7 +409,7 @@
 
                             <MudText Class="ml-2" Typo="Typo.h6">@Localizer["Members Portal Api"]</MudText>
 
-                            @if (!Configuration.Members_Portal.api_enabled)
+                            @if (!Configuration.Members_Portal.IsApiEnabled)
                             {
                                 <MudAlert Class="mb-2" Severity="Severity.Warning" Icon="@Icons.Material.Filled.SyncDisabled">@Localizer["members portal api is not enabled. Please enable it in the appsettings.json"]</MudAlert>
                             }
@@ -454,7 +454,7 @@
                         <MudSwitch Class="ml-2" @bind-Value="agent_updates_linux_enabled" Color="Color.Primary">Linux</MudSwitch>
                         <MudSwitch Class="ml-2" @bind-Value="agent_updates_macos_enabled" Color="Color.Primary">MacOS</MudSwitch>
 
-                        @if (!Configuration.Members_Portal.cloud_enabled)
+                        @if (!Configuration.Members_Portal.IsCloudEnabled)
                         {
                             <div style="display: flex; align-items: center; width: 250px">
                                 <MudNumericField Class="ml-2" @bind-Value="agent_updates_max_concurrent_updates" Label="Max concurrent updates" Variant="Variant.Text" Min="1" Max="100" />
@@ -468,7 +468,7 @@
                         <MudButton Class="ml-2 mt-3 mb-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAgentUpdates">Save</MudButton>
                     </MudPaper>
                 </MudTabPanel>
-                @if (!Configuration.Members_Portal.cloud_enabled)
+                @if (!Configuration.Members_Portal.IsCloudEnabled)
                 {
                     <MudTabPanel Text="Database">
                         <MudPaper Class="mt-0">
@@ -622,7 +622,7 @@
                 }
                 <MudTabPanel Text="Remote Screen Control">
                     <MudPaper Class="mt-0 mb-0">
-                        @if (!Configuration.Members_Portal.isCodeSigned)
+                        @if (!Configuration.Members_Portal.IsCodeSigned)
                         {
                             <MudAlert Class="mb-3" Severity="Severity.Warning" Icon="@Icons.Material.Filled.Warning">@Application_Settings.onlyPro</MudAlert>
                         }
@@ -633,7 +633,7 @@
 
                         <MudCheckBox T="bool" @bind-Value="remoteScreenSessionRecordingAutoClean" Label="Auto purge" Color="Color.Primary" />
 
-                        @if (Configuration.Members_Portal.cloud_enabled)
+                        @if (Configuration.Members_Portal.IsCloudEnabled)
                         {
                             <MudText Class="ml-2 mt-2" Typo="Typo.body1">Your recordings will be kept for seven days.</MudText>
                         }
@@ -735,7 +735,7 @@
         await Get_Servers();
         await Get_Agent_Updates();
 
-        if (Configuration.Members_Portal.api_enabled)
+        if (Configuration.Members_Portal.IsApiEnabled)
             await Get_Members_Portal_License_Status();
 
         // Get CPU Usage
@@ -977,13 +977,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START d6171263-6ace-4f1d-b26c-f86b72c35025 //OSSCH_END
+    //OSSCH_START a68c7458-8589-4083-8236-28a876e6aee6 //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 6d3b00c5-a1ea-4b03-8796-9190e4408674 //OSSCH_END
+    //OSSCH_START 02fafca7-606e-4652-bb4b-fc51d1b6ef8e //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 2fd7e242-cfdb-4072-9f47-25720109e573 //OSSCH_END
+    //OSSCH_START f8966046-f01e-4286-9016-8d7ff19093a6 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()

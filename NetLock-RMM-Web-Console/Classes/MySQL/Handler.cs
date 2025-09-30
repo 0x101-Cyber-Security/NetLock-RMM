@@ -51,12 +51,12 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             catch (Exception ex)
             {
                 Logging.Handler.Error("Classes.MySQL.Handler.Execute_Command", "Query: " + query, ex.Message);
-                conn.Close();
+                await conn.CloseAsync();
                 return false;
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
@@ -78,13 +78,13 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Classes.MySQL.Handler.Execute_Command", "Query: " + query,  ex.Message);
-                conn.Close();
+                Logging.Handler.Error("Classes.MySQL.Handler.Execute_Command", "Query: " + query,  ex.ToString());
+                await conn.CloseAsync();
                 return false;
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 

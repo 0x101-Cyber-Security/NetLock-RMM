@@ -52,17 +52,17 @@
                         <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
                     </MudTooltip>
                 </div>
-
-                @if (!Configuration.Members_Portal.cloud_enabled)
+                
+                if (Configuration.Members_Portal.IsCloudEnabled)
                 {
+                    <MudButton Class="mt-2 mb-3" OnClick="GetCloudPreset" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info">Load cloud preset</MudButton>
                 }
 
-                <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
-                <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
-                <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-                <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-                <MudTextField Label="File Server" T="string" @bind-Value="file_servers" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
-
+                <MudTextField Label="Communication Server" T="string" @bind-Value="communication_servers" @bind-Value:after="CleanInput" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+                <MudTextField Label="Remote Server" T="string" @bind-Value="remote_servers" @bind-Value:after="CleanInput" Required="true" RequiredError="@Localizer["required"]" Immediate="true" ReadOnly="false" />
+                <MudTextField Label="Update Server" T="string" @bind-Value="update_servers" @bind-Value:after="CleanInput" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+                <MudTextField Label="Trust Server" T="string" @bind-Value="trust_servers" @bind-Value:after="CleanInput" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
+                <MudTextField Label="File Server" T="string" @bind-Value="file_servers" @bind-Value:after="CleanInput" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" ReadOnly="false" />
 
                 <MudSelect Class="mt-2" T="string" Label="@Localizer["tenant"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" @bind-Value="tenant_name" @bind-Value:after="async () => { await Get_Tenant_Id(tenant_name); }" Immediate="true" Required="true" RequiredError="@Localizer["required"]">
                     @{
@@ -172,16 +172,6 @@
 
         await Get_Configurations();
 
-        // If cloud, set the default servers
-        if (Configuration.Members_Portal.cloud_enabled)
-        {
-            communication_servers = Configuration.Web_Console.agentConfigurationConnectionString;
-            remote_servers = Configuration.Web_Console.agentConfigurationConnectionString;
-            update_servers = Configuration.Web_Console.agentConfigurationConnectionString;
-            trust_servers = Configuration.Web_Console.agentConfigurationConnectionString;
-            file_servers = Configuration.Web_Console.agentConfigurationConnectionString;
-        }
-
         StateHasChanged();
     }
 
@@ -271,6 +261,45 @@
                 if (file_servers_split[1] != "7080")
                     file_servers = file_servers_split[0] + ":7080";
             }
+        }
+    }
+
+    private async Task CleanInput()
+    {
+        bool protocolRemoved = false;
+
+        if (communication_servers.Contains("http://") || communication_servers.Contains("https://"))
+        {
+            communication_servers = communication_servers.Replace("http://", "").Replace("https://", "").Trim();
+            protocolRemoved = true;
+        }
+        if (remote_servers.Contains("http://") || remote_servers.Contains("https://"))
+        {
+            remote_servers = remote_servers.Replace("http://", "").Replace("https://", "").Trim();
+            protocolRemoved = true;
+        }
+        if (update_servers.Contains("http://") || update_servers.Contains("https://"))
+        {
+            update_servers = update_servers.Replace("http://", "").Replace("https://", "").Trim();
+            protocolRemoved = true;
+        }
+        if (trust_servers.Contains("http://") || trust_servers.Contains("https://"))
+        {
+            trust_servers = trust_servers.Replace("http://", "").Replace("https://", "").Trim();
+            protocolRemoved = true;
+        }
+        if (file_servers.Contains("http://") || file_servers.Contains("https://"))
+        {
+            file_servers = file_servers.Replace("http://", "").Replace("https://", "").Trim();
+            protocolRemoved = true;
+        }
+
+        StateHasChanged();
+
+        if (protocolRemoved)
+        {
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Do not include http(s)://. Handle SSL through the SSL checkbox.", Severity.Warning, config => { config.ShowCloseIcon = true; });
         }
     }
 
@@ -512,7 +541,7 @@
         await Get_Locations(tenant_id); // Get locations for default tenant
         await Get_Guids(); // Get tenant & location guids by id
         await Get_Names(); // Get tenant & location names by id
-
+        
         StateHasChanged();
     }
 
@@ -720,7 +749,21 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START ad530cf6-7bff-4c0d-9464-8253b58bae37 //OSSCH_END
+    //OSSCH_START b1d315bf-4f2c-479d-be76-d62fd7b50871 //OSSCH_END
+
+    private async Task GetCloudPreset()
+    {
+        // If cloud, set the default servers
+        if (Configuration.Members_Portal.IsCloudEnabled)
+        {
+            ssl = true;
+            communication_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            remote_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            update_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            trust_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+            file_servers = Configuration.Web_Console.agentConfigurationConnectionString;
+        }
+    }
 
     private async Task Download_Installer_Popup()
     {

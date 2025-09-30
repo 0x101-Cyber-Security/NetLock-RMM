@@ -1,8 +1,1 @@
-﻿namespace NetLock_RMM_Server.Members_Portal
-{
-    public class Config
-    {
-        public bool Enabled { get; set; } = false;
-        public string ApiKeyOverride { get; set; } = string.Empty;
-    }
-}
+//OSSCH_START 0144a063-0c0c-4531-a445-41fb89f79059 //OSSCH_END

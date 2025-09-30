@@ -132,14 +132,14 @@
                 <MudIconButton Class="mt-2" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="async () => { await Get_Clients_OverviewAsync(); }"></MudIconButton>
             </MudTooltip>
 
-            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@(Configuration.Members_Portal.api_enabled && members_portal_license_limit_reached)" @onclick="async () => { await Authorize_Devices(); }">@Localizer["authorize_device"]</MudButton>
+            <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Default" Disabled="@(Configuration.Members_Portal.IsApiEnabled && members_portal_license_limit_reached)" @onclick="async () => { await Authorize_Devices(); }">@Localizer["authorize_device"]</MudButton>
             <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Error" @onclick="async () => { await Delete_Device(); }">@Localizer["delete_device"]</MudButton>
 
             <MudTooltip Text="@Localizer["export_data"]">
                 <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.FileDownload" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" @onclick="Trigger_Export_Device_Table_Dialog"></MudIconButton>
             </MudTooltip>
 
-            @if (Configuration.Members_Portal.api_enabled && members_portal_license_limit_reached)
+            @if (Configuration.Members_Portal.IsApiEnabled && members_portal_license_limit_reached)
             {
                 <MudAlert Class="mt-3" Severity="Severity.Error" Icon="@Icons.Material.Filled.Error">@Localizer["membership_hard_limit_reached"] @Localizer["your configured limit is"] @members_portal_license_limit @Localizer["and_you_currently_have"] @members_portal_license_count @Localizer["active_devices"] @Localizer["please_remove_or_increase_memberships_limit"]</MudAlert>
             }
@@ -375,7 +375,7 @@
 
         await Get_Clients_OverviewAsync();
 
-        if (Configuration.Members_Portal.api_enabled)
+        if (Configuration.Members_Portal.IsApiEnabled)
             await Get_Members_Portal_License_Limit();
 
         StateHasChanged();

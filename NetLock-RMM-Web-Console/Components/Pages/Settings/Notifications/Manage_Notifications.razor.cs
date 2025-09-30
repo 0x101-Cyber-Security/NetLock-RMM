@@ -454,9 +454,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
                    row.tenants.Contains(microsoft_teams_notifications_table_search_string, StringComparison.OrdinalIgnoreCase);
         }
 
-        private string microsoft_teams_notifications_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+        private string microsoft_teams_notifications_selectedRowContent = ""; // Hier wird der Inhalt der ausgewï¿½hlten Zeile gespeichert
 
-        // Der Handler für den TableRowClick-Event
+        // Der Handler fï¿½r den TableRowClick-Event
         private void Microsoft_Teams_Notifications_RowClickHandler(Microsoft_Teams_Notifications_Entity row)
         {
             microsoft_teams_notifications_selectedRowContent = row.connector_name;
@@ -961,9 +961,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
                    row.tenants.Contains(ntfy_sh_notifications_table_search_string, StringComparison.OrdinalIgnoreCase);
         }
 
-        private string ntfy_sh_notifications_selectedRowContent = ""; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+        private string ntfy_sh_notifications_selectedRowContent = ""; // Hier wird der Inhalt der ausgewï¿½hlten Zeile gespeichert
 
-        // Der Handler für den TableRowClick-Event
+        // Der Handler fï¿½r den TableRowClick-Event
         private void Ntfy_sh_Notifications_RowClickHandler(Ntfy_sh_Notifications_Entity row)
         {
             ntfy_sh_notifications_selectedRowContent = row.topic_name;
