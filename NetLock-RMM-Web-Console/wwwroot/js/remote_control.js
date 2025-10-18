@@ -278,6 +278,19 @@ window.remoteScreen = {
     }
 };
 
+window.scrollToBottom = (element) => {
+    if (element) {
+        element.scrollTop = element.scrollHeight;
+        element.scroll({ top: element.scrollHeight, behavior: 'smooth' });
+    }
+};
+
+window.registerBeforeUnload = function(dotNetRef) {
+    window.addEventListener('beforeunload', function () {
+        dotNetRef.invokeMethodAsync('DisposeOnUnload');
+    });
+};
+
 
 // JavaScript function for capturing the mouse position
 function captureMousePosition(elementId) {

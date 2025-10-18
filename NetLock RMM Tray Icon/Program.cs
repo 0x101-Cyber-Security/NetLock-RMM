@@ -7,6 +7,8 @@ using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Avalonia.Controls;
+using Avalonia.Threading;
 using Global.Helper;
 
 namespace NetLock_RMM_Tray_Icon
@@ -30,16 +32,18 @@ namespace NetLock_RMM_Tray_Icon
     
     class UserClient
     {
-        private TcpClient _client;
-        private NetworkStream _stream;
+        private static TcpClient? _client;
+        private static NetworkStream? _stream;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
         public class Command
         {
-            public string response_id { get; set; }
-            public string type { get; set; } 
-            public string command { get; set; }
+            public string response_id { get; set; } = string.Empty;
+            public string type { get; set; } = string.Empty;
+            public string command { get; set; } = string.Empty;
         }
+
+        private ChatWindow? _chatWindow;
 
         public async Task Local_Server_Connect()
         {
@@ -169,57 +173,149 @@ namespace NetLock_RMM_Tray_Icon
 
             return false;
         }
-
-        private async Task ProcessMessageAsync(string message)
-        {
-            try
-            {
-                // Deserialize the message to Command object
-                Command command = JsonSerializer.Deserialize<Command>(message);
-
-                if (command != null)
-                {
-                    // Enqueue the command for processing
-                    _commandQueue.Enqueue(command);
-                }
-                else
-                {
-                    Console.WriteLine("Failed to deserialize command.");
-                }
-            }
-            catch (JsonException jsonEx)
-            {
-                Console.WriteLine($"Failed to deserialize message: {jsonEx.Message}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error occurred while processing the message: {ex.Message}");
-            }
-        }
-
-        // Big WIP
+        
+        // Work in progress - command processing
         private async Task ProcessCommand(Command command)
         {
             try
             {
                 Console.WriteLine($"Processing command: {command.type} with response ID: {command.response_id}");
+                Logging.Debug("UserClient", "ProcessCommand", $"Processing command: {command.type} with response ID: {command.response_id}");
                 
                 switch (command.type)
                 {
-                    // Replace case "0" in ProcessCommand as follows:
-                    case "0": // Screen Capture
-                        _ = Task.Run(async () =>
+                    case "show_chat_window": // Show chat window
+                        try
                         {
-                            try
+                            Logging.Debug("UserClient", "ProcessCommand", "Showing chat window as per server command.");
+                           
+                            // Deserialize the command.command json to get additional parameters if needed
+                            /*
+                                var jsonObject = new
+                                {
+                                   firstName = firstName,
+                                   lastName = lastName,
+                                   command = 0, // 0 = show chat window
+                                };
+                            */
+
+                            // Example of logging the raw JSON command
+                            Logging.Debug("CommandJson", "json", command.command);
+
+                            string firstName = "";
+                            string lastName = "";
+                            
+                            // Deserialisierung des gesamten JSON-Strings
+                            using (JsonDocument document = JsonDocument.Parse(command.command))
                             {
-                
-                                await Local_Server_Send_Message($"screen_capture${command.response_id}${"base64Image"}");
+                                JsonElement firstNameElement = document.RootElement.GetProperty("firstName");
+                                firstName = firstNameElement.ToString();
+                                
+                                JsonElement lastNameElement = document.RootElement.GetProperty("lastName");
+                                lastName = lastNameElement.ToString();
                             }
-                            catch (Exception ex)
+                            
+                            await Dispatcher.UIThread.InvokeAsync(() =>
                             {
-                                Console.WriteLine($"Screenshot error: {ex.Message}");
-                            }
-                        });
+                                if (Application.Current?.ApplicationLifetime is Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime desktop)
+                                {
+                                    if (_chatWindow == null || !_chatWindow.IsVisible)
+                                    {
+                                        _chatWindow = new ChatWindow();
+                                        _chatWindow.FirstName = firstName;
+                                        _chatWindow.LastName = lastName;
+                                        _chatWindow.ResponseId = command.response_id;
+                                        _chatWindow.Show();
+                                    }
+                                    else
+                                    {
+                                        _chatWindow.FirstName = firstName;
+                                        _chatWindow.LastName = lastName;
+                                        _chatWindow.ResponseId = command.response_id;
+                                        _chatWindow.WindowState = WindowState.Normal; // if minimized
+                                        _chatWindow.Activate();
+                                        _chatWindow.Topmost = true;  // Set topmost to bring to front
+                                        _chatWindow.Topmost = false; // Reset topmost
+                                        _chatWindow.Focus();
+                                    }
+                                }
+                            });
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to open chat window: {ex.ToString()}");
+                            Console.WriteLine($"Failed to open chat window: {ex.Message}");
+                        }
+                        break;
+                    case "hide_chat_window": // Hide chat window
+                        try
+                        {
+                            Logging.Debug("UserClient", "ProcessCommand", "Hiding chat window as per server command.");
+
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (_chatWindow != null && _chatWindow.IsVisible)
+                                {
+                                    _chatWindow.Hide();
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to close chat window: {ex.ToString()}");
+                            Console.WriteLine($"Failed to close chat window: {ex.Message}");
+                        }
+                        break;
+                    case "exit_chat_window": // Close chat window
+                        try
+                        {
+                            Logging.Debug("UserClient", "ProcessCommand", "Exiting chat window as per server command.");
+
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (_chatWindow != null && _chatWindow.IsVisible)
+                                {
+                                    _chatWindow.Close();
+                                    _chatWindow = null;
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to exit chat window: {ex.ToString()}");
+                            Console.WriteLine($"Failed to exit chat window: {ex.Message}");
+                        }
+                        break;
+                    case "play_sound": // Respond to ping
+                        Logging.Debug("UserClient", "ProcessCommand", "Playing sound as per server command.");
+                        Console.Beep(); // Play a beep sound
+                        break;
+                    case "new_chat_message": // New chat message received
+                        try
+                        {
+                            Logging.Debug("UserClient", "ProcessCommand", "New chat message received as per server command.");
+
+                            string chatMessage = command.command;
+                            
+                            // If chat window is open, display the message
+                            if (_chatWindow != null && _chatWindow.IsVisible)
+                            {
+                                await Dispatcher.UIThread.InvokeAsync(() =>
+                                {
+                                        var bubble = _chatWindow.CreateMessageBubble(command.command, _chatWindow.FirstName, _chatWindow.LastName, false);
+                                        _chatWindow.ChatMessagesPanel.Children.Add(bubble);
+                                        
+                                        // Scroll to bottom to show new message
+                                        _chatWindow.ChatScrollViewer.ScrollToEnd();
+                                });
+                            }       
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to process new chat message: {ex.ToString()}");
+                            Console.WriteLine($"Failed to process new chat message: {ex.Message}");
+                        }
                         break;
                 }
             }
@@ -229,11 +325,11 @@ namespace NetLock_RMM_Tray_Icon
             }
         }
 
-        public async Task Local_Server_Send_Message(string message)
+        public static async Task Local_Server_Send_Message(string message)
         {
             try
             {
-                if (_stream != null && _client.Connected)
+                if (_stream != null && _client != null && _client.Connected)
                 {
                     byte[] messageBytes = Encoding.UTF8.GetBytes(message);
                     await _stream.WriteAsync(messageBytes, 0, messageBytes.Length);

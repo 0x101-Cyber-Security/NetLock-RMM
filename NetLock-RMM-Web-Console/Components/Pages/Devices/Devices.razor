@@ -138,6 +138,7 @@
                         </ToolBarContent>
                         <HeaderContent>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Name</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.device_name)">Label</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_active_user)">Last active user</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.tenant_name)">@Localizer["tenant"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.location_name)">@Localizer["location"]</MudTableSortLabel></MudTh>
@@ -187,9 +188,45 @@
                                     </span>
                                 </MudTd>
                         }
+                        
+                        @if (String.IsNullOrEmpty(row.label))
+                        {
+                            <MudTd DataLabel="Label" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
+                                    <ActivatorContent>
+                                        <span style="display: flex; align-items: center;">
+                                            <MudChip T="string" Color="Color.Info" Size="Size.Small">-</MudChip>
+                                        </span>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        @{
+                                            <MudMenuItem @onclick="async () => { await EditLabel(row.device_id, row.label); }">Edit</MudMenuItem>
+                                        }
 
+                                    </ChildContent>
+                                </MudMenu>
+                            </MudTd>
+                        }
+                        else
+                        {
+                            <MudTd DataLabel="Label" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                <MudMenu ActivationEvent="@MudBlazor.MouseEvent.RightClick" Dense="true">
+                                    <ActivatorContent>
+                                        <span style="display: flex; align-items: center;">
+                                            <MudChip T="string" Color="Color.Info" Size="Size.Small">@row.label</MudChip>
+                                        </span>
+                                    </ActivatorContent>
+                                    <ChildContent>
+                                        @{
+                                            <MudMenuItem @onclick="async () => { await EditLabel(row.device_id, row.label); }">Edit</MudMenuItem>
+                                        }
 
-                                            <MudTd DataLabel="Last active user" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                    </ChildContent>
+                                </MudMenu>
+                            </MudTd>
+                        }
+                        
+                        <MudTd DataLabel="Last active user" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                                 <span style="display: flex; align-items: center;">
                                                     <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_active_user
                                                 </span>

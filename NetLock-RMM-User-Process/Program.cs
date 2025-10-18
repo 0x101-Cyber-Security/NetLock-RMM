@@ -17,6 +17,8 @@ class UserClient
     private TcpClient _client;
     private NetworkStream _stream;
     private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+    private Task _messageHandlerTask;
+    private bool _isConnecting = false;
 
     public class Command
     {
@@ -31,26 +33,11 @@ class UserClient
 
     public async Task Local_Server_Connect()
     {
-        try
-        {
-            _client = new TcpClient();
-            await _client.ConnectAsync("127.0.0.1", 7338);
-            _stream = _client.GetStream();
-            // Send username to identify the user
-            string username = Environment.UserName;
-            await Local_Server_Send_Message($"username${username}");
-
-            // Start listening for messages from the server
-            _ = Local_Server_Handle_Server_Messages(_cancellationTokenSource.Token);
-            Console.WriteLine("Connected to the local server.");
-
-            // Start checking the connection status in a separate task
-            _ = MonitorConnectionAsync(_cancellationTokenSource.Token);
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Failed to connect to the local server: {ex.Message}");
-        }
+        // Start monitoring connection immediately - it will handle initial connection and reconnections
+        _ = MonitorConnectionAsync(_cancellationTokenSource.Token);
+        
+        // Wait a moment to allow initial connection attempt
+        await Task.Delay(1000);
     }
 
 
@@ -66,12 +53,19 @@ class UserClient
             byte[] buffer = new byte[4096]; // Adjust the size of the buffer as needed
             StringBuilder messageBuilder = new StringBuilder();
 
-            while (!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested && _client?.Connected == true)
             {
-                if (_stream.CanRead)
+                if (_stream?.CanRead == true)
                 {
                     // Read the incoming message length
                     int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+
+                    if (bytesRead == 0)
+                    {
+                        // Server closed the connection
+                        Console.WriteLine("Server closed the connection.");
+                        break;
+                    }
 
                     if (bytesRead > 0)
                     {
@@ -109,6 +103,11 @@ class UserClient
                         }
                     }
                 }
+                else
+                {
+                    // Stream is not readable, likely disconnected
+                    break;
+                }
 
                 // Process commands from the queue
                 while (_commandQueue.TryDequeue(out Command queuedCommand))
@@ -125,6 +124,16 @@ class UserClient
         catch (Exception ex)
         {
             Console.WriteLine($"An error occurred while listening for server messages: {ex.Message}");
+            // Mark connection as broken so MonitorConnectionAsync can handle reconnection
+            try
+            {
+                _client?.Close();
+            }
+            catch { }
+        }
+        finally
+        {
+            Console.WriteLine("Message handler task ended.");
         }
     }
 
@@ -393,29 +402,43 @@ class UserClient
             // Check if the client is still connected
             if (_client == null || !_client.Connected)
             {
-                Console.WriteLine("Disconnected from the server. Attempting to reconnect...");
-
-                // Try to reconnect
-                while (!_client.Connected && !cancellationToken.IsCancellationRequested)
+                if (!_isConnecting)
                 {
-                    try
-                    {
-                        _client = new TcpClient();
-                        await _client.ConnectAsync("127.0.0.1", 7338);
-                        _stream = _client.GetStream();
+                    _isConnecting = true;
+                    Console.WriteLine("Disconnected from the server. Attempting to reconnect...");
 
-                        // Send username to identify the user
-                        string username = Environment.UserName;
-                        await Local_Server_Send_Message($"username${username}");
-                        Console.WriteLine("Reconnected to the local server.");
-
-                        // Restart listening for messages
-                        _ = Local_Server_Handle_Server_Messages(cancellationToken);
-                    }
-                    catch (Exception ex)
+                    // Try to reconnect
+                    while ((_client == null || !_client.Connected) && !cancellationToken.IsCancellationRequested)
                     {
-                        Console.WriteLine($"Reconnect attempt failed: {ex.Message}");
-                        await Task.Delay(5000, cancellationToken); // Wait before retrying
+                        try
+                        {
+                            // Clean up existing connection
+                            _stream?.Close();
+                            _client?.Close();
+
+                            _client = new TcpClient();
+                            await _client.ConnectAsync("127.0.0.1", 7338);
+                            _stream = _client.GetStream();
+
+                            // Send username to identify the user
+                            string username = Environment.UserName;
+                            await Local_Server_Send_Message($"username${username}");
+                            Console.WriteLine("Connected to the local server.");
+
+                            // Start listening for messages (only if not already running)
+                            if (_messageHandlerTask == null || _messageHandlerTask.IsCompleted)
+                            {
+                                _messageHandlerTask = Local_Server_Handle_Server_Messages(cancellationToken);
+                            }
+                            
+                            _isConnecting = false;
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Reconnect attempt failed: {ex.Message}");
+                            await Task.Delay(5000, cancellationToken); // Wait before retrying
+                        }
                     }
                 }
             }

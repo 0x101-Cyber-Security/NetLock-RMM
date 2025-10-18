@@ -1,0 +1,26 @@
+@inject IDialogService DialogService
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField @bind-Value="oldLabel"  Variant="Variant.Text" />
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Submit" Variant="@Variant.Text" Size="Size.Small" Color="Color.Success">Submit</MudButton>
+        <MudButton OnClick="@Cancel" Variant="@Variant.Text" Size="Size.Small" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string oldLabel { get; set; } = string.Empty;
+    
+    void Submit()
+    {
+        MudDialog.Close(DialogResult.Ok(oldLabel));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+}

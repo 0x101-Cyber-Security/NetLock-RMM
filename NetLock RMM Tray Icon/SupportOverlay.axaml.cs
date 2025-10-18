@@ -8,6 +8,9 @@ using Avalonia.Threading;
 using NetLock_RMM_Tray_Icon.Config;
 using System.Text.Json;
 using System.IO;
+using Global.Encryption;
+using Global.Helper;
+using NetLock_RMM_Agent_Comm;
 
 namespace NetLock_RMM_Tray_Icon
 {
@@ -44,6 +47,8 @@ namespace NetLock_RMM_Tray_Icon
                 if (File.Exists(configPath))
                 {
                     string jsonString = File.ReadAllText(configPath);
+                    jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
+                    
                     using var doc = JsonDocument.Parse(jsonString);
                     var chatInterface = doc.RootElement.GetProperty("ChatInterface");
                     string firstName = chatInterface.GetProperty("OperatorFirstName").GetString() ?? "Support";
@@ -59,7 +64,9 @@ namespace NetLock_RMM_Tray_Icon
                 var supportNameTextBlock = this.FindControl<TextBlock>("SupportNameTextBlock");
                 if (supportNameTextBlock != null)
                     supportNameTextBlock.Text = "Support staff";
+                
                 Console.WriteLine($"Error loading support name: {ex.Message}");
+                Logging.Error("SupportOverlay", "SetSupportNameFromConfig", ex.ToString());
             }
         }
 
@@ -68,10 +75,13 @@ namespace NetLock_RMM_Tray_Icon
             try
             {
                 var supportTitleTextBlock = this.FindControl<TextBlock>("SupportTitleTextBlock");
-                string configPath = Path.Combine(AppContext.BaseDirectory, "config.json");
+                string configPath = Application_Paths.tray_icon_settings_json_path;
+                
                 if (File.Exists(configPath))
                 {
                     string jsonString = File.ReadAllText(configPath);
+                    jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
+
                     using var doc = JsonDocument.Parse(jsonString);
                     var chatInterface = doc.RootElement.GetProperty("ChatInterface");
                     string windowTitle = chatInterface.TryGetProperty("WindowTitle", out var wt) ? wt.GetString() ?? "" : "";
@@ -86,7 +96,9 @@ namespace NetLock_RMM_Tray_Icon
                 var supportTitleTextBlock = this.FindControl<TextBlock>("SupportTitleTextBlock");
                 if (supportTitleTextBlock != null)
                     supportTitleTextBlock.Text = "Support admin";
+
                 Console.WriteLine($"Error loading support title: {ex.Message}");
+                Logging.Error("SupportOverlay", "SetSupportTitleFromConfig", ex.ToString());
             }
         }
 

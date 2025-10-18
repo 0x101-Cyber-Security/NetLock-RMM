@@ -90,6 +90,9 @@ namespace NetLock_RMM_Agent_Comm
         public static string policy_sensors_json = string.Empty;
         public static string policy_jobs_json = string.Empty;
 
+        // TrayIcon
+        public static string policy_tray_icon_settings_json = string.Empty;
+        
         // Timers
         public static System.Timers.Timer start_timer;
         public static System.Timers.Timer sync_timer;

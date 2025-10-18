@@ -48,6 +48,10 @@ namespace Global.Initialization
                 // Sensors
                 if (!Directory.Exists(Application_Paths.program_data_sensors))
                     Directory.CreateDirectory(Application_Paths.program_data_sensors);
+                
+                // Tray Icon
+                if (!Directory.Exists(Application_Paths.tray_icon_dir))
+                    Directory.CreateDirectory(Application_Paths.tray_icon_dir);
             }
             catch (Exception ex)
             {

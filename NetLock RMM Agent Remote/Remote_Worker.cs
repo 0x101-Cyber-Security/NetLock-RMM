@@ -85,7 +85,7 @@ namespace NetLock_RMM_Agent_Remote
             public string remote_control_mouse_xyz { get; set; }
             public string remote_control_keyboard_input { get; set; }
             public string remote_control_keyboard_content { get; set; }
-            public string command { get; set; } // used for service, task manager, screen capture
+            public string command { get; set; } // used for service, task manager, screen capture. A command can either be a quick command like "list" or a json string with parameters, a number or json string
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -106,23 +106,32 @@ namespace NetLock_RMM_Agent_Remote
                         
                         await LoadServerConfig();
 
-                        // Start the timer to check the remote server status
+                        // Start the timer to check the local server connection status every 15 seconds
                         local_server_clientCheckTimer =
                             new Timer(async (e) => await Local_Server_Check_Connection_Status(), null, TimeSpan.Zero,
                                 TimeSpan.FromSeconds(15));
+                        
+                        // Start the timer to check the remote server connection status every 15 seconds
                         remote_server_clientCheckTimer =
                             new Timer(async (e) => await Remote_Server_Check_Connection_Status(), null, TimeSpan.Zero,
                                 TimeSpan.FromSeconds(15));
+                        
+                        // Start the timer to check the user process status every 1 minute
                         user_process_monitoringCheckTimer = new Timer(async (e) => await CheckUserProcessStatus(), null,
                             TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
+                        
+                        // Start the timer to reload the server config every 1 minute
                         serverConfigCheckTimer = new Timer(async (e) => await LoadServerConfig(),
                             null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
-
+                        
+                        // Starting the local server
                         _ = Task.Run(async () => await Local_Server_Start());
 
                         // Establishing a connection to the local server
                         _ = Task.Run(async () => await Local_Server_Connect()); // Läuft im Hintergrund
+                        
+                        // Check user process status as early as possible without blocking. This helps with device reboot scenarios
+                        _ = Task.Run(async () => await CheckUserProcessStatus());
                     }
                     catch (Exception ex)
                     {
@@ -134,6 +143,7 @@ namespace NetLock_RMM_Agent_Remote
             }
         }
 
+        #region Comm Agent Local Server 
         private async Task Local_Server_Connect()
         {
             try
@@ -242,7 +252,11 @@ namespace NetLock_RMM_Agent_Remote
                     "Failed to check remote_server_client or local_server_client status.", ex.ToString());
             }
         }
+        
+        #endregion
 
+        #region SignalR Remote Server
+        
         private readonly SemaphoreSlim _signalRConnectionLock = new SemaphoreSlim(1, 1);
         private bool _signalRConnecting = false;
 
@@ -334,17 +348,6 @@ namespace NetLock_RMM_Agent_Remote
                     .WithAutomaticReconnect()
                     .Build();
 
-                remote_server_client.On<string>("ReceiveMessage", async (command) =>
-                {
-                    Logging.Debug("Service.Setup_SignalR", "ReceiveMessage", command);
-
-                    // Insert the logic here to execute the command
-
-                    // Example: If the command is "sync", send a message to the local server to force a sync with the remote server
-                    if (command == "sync")
-                        await Local_Server_Send_Message("sync");
-                });
-
                 // Handle ConnectionEstablished event from server
                 remote_server_client.On<string>("ConnectionEstablished", (message) =>
                 {
@@ -358,12 +361,119 @@ namespace NetLock_RMM_Agent_Remote
                     Logging.Debug("Service.Setup_SignalR", "ConnectionEstablished without message", "");
                     // Connection established, no further action needed
                 });
+                
+                remote_server_client.On<string>("SendMessageToClient", async (command) =>
+                {
+                    Logging.Debug("Service.Setup_SignalR", "SendMessageToClient", command);
+
+                    // Deserialisation of the entire JSON string
+                    Command_Entity command_object = JsonSerializer.Deserialize<Command_Entity>(command);
+
+                    try
+                    {
+                        // Insert the logic here to execute the command
+                        if (command_object.type == 61) // Tray Icon - Hide chat window
+                        {
+                            Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command); 
+                            Console.WriteLine("Tray icon command: " + command_object.command);
+                            
+                            //  Create the JSON object
+                            var jsonObject = new
+                            {
+                                response_id = command_object.response_id,
+                                type = "hide_chat_window",
+                            };
+
+                            // Convert the object into a JSON string
+                            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                
+                            Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
+                            Console.WriteLine("Tray icon json: " + json);
+
+                            // Send through local server to tray icon user process
+                            await SendToClient(command_object.remote_control_username + "tray", json);
+                        }
+                        else if (command_object.type == 62) // Tray Icon - Play sound
+                        {
+                            Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command); 
+                            Console.WriteLine("Tray icon command: " + command_object.command);
+                            
+                            //  Create the JSON object
+                            var jsonObject = new
+                            {
+                                response_id = command_object.response_id,
+                                type = "play_sound",
+                            };
+
+                            // Convert the object into a JSON string
+                            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                
+                            Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
+                            Console.WriteLine("Tray icon json: " + json);
+
+                            // Send through local server to tray icon user process
+                            await SendToClient(command_object.remote_control_username + "tray", json);
+                        }
+                        else if (command_object.type == 63) // Tray Icon - Exit chat window
+                        {
+                            Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command); 
+                            Console.WriteLine("Tray icon command: " + command_object.command);
+                            
+                            //  Create the JSON object
+                            var jsonObject = new
+                            {
+                                response_id = command_object.response_id,
+                                type = "exit_chat_window",
+                            };
+
+                            // Convert the object into a JSON string
+                            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                
+                            Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
+                            Console.WriteLine("Tray icon json: " + json);
+
+                            // Send through local server to tray icon user process
+                            await SendToClient(command_object.remote_control_username + "tray", json);
+                        }
+                        else if (command_object.type == 64) // Tray Icon - Send message
+                        {
+                            Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command); 
+                            Console.WriteLine("Tray icon command: " + command_object.command);
+                            
+                            //  Create the JSON object
+                            var jsonObject = new
+                            {
+                                response_id = command_object.response_id,
+                                type = "new_chat_message",
+                                command = command_object.command,
+                            };
+
+                            // Convert the object into a JSON string
+                            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                
+                            Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
+                            Console.WriteLine("Tray icon json: " + json);
+
+                            // Send through local server to tray icon user process
+                            await SendToClient(command_object.remote_control_username + "tray", json);
+                        }   
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Error("Service.Setup_SignalR", "Failed to deserialize command object.", ex.ToString());
+                    }
+
+                    // Example: If the command is "sync", send a message to the local server to force a sync with the remote server
+                    if (command == "sync")
+                        await Local_Server_Send_Message("sync");
+                });
 
                 // Receive a message from the remote server, process the command and send a response back to the remote server
                 remote_server_client.On<string>("SendMessageToClientAndWaitForResponse", async (command) =>
                 {
                     Logging.Debug("Service.Setup_SignalR", "SendMessageToClientAndWaitForResponse", command);
-
+                    Console.WriteLine("Command received: " + command);
+                    
                     // Deserialisation of the entire JSON string
                     Command_Entity command_object = JsonSerializer.Deserialize<Command_Entity>(command);
                     // Example: If the type is 0, execute the powershell code and send the response back to the remote server if wait_response = true
@@ -517,8 +627,10 @@ namespace NetLock_RMM_Agent_Remote
                             // Check if the command requests connected users
                             if (command_object.command == "4")
                             {
-                                // Get the connected users from _clients, seperate by comma
-                                List<string> connected_users = _clients.Keys.ToList();
+                                // Get connected users from _clients, excluding those with "tray" suffix
+                                List<string> connected_users = _clients.Keys
+                                    .Where(u => !u.EndsWith("tray", StringComparison.OrdinalIgnoreCase))
+                                    .ToList();
 
                                 // Move the device name user (if existing) to the first position
                                 if (connected_users.Contains(device_identity_object.device_name))
@@ -526,7 +638,7 @@ namespace NetLock_RMM_Agent_Remote
                                     connected_users.Remove(device_identity_object.device_name);
                                     connected_users.Insert(0, device_identity_object.device_name);
                                 }
-
+                                
                                 // Convert the list to a comma separated string 
                                 result = string.Join(",", connected_users);
                             }
@@ -558,8 +670,7 @@ namespace NetLock_RMM_Agent_Remote
                                         remote_control_mouse_action = command_object.remote_control_mouse_action,
                                         remote_control_mouse_xyz = command_object.remote_control_mouse_xyz,
                                         remote_control_keyboard_input = command_object.remote_control_keyboard_input,
-                                        remote_control_keyboard_content =
-                                            command_object.remote_control_keyboard_content,
+                                        remote_control_keyboard_content = command_object.remote_control_keyboard_content,
                                     };
 
                                     // Convert the object into a JSON string
@@ -580,15 +691,39 @@ namespace NetLock_RMM_Agent_Remote
                                 return;
                             }
                         }
+                        else if (command_object.type == 6) // Tray Icon - Show chat window
+                        {
+                            Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command); 
+                            
+                            //  Create the JSON object
+                            var jsonObject = new
+                            {
+                                response_id = command_object.response_id,
+                                type = "show_chat_window",
+                                command = command_object.command,
+                            };
+
+                            // Convert the object into a JSON string
+                            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                                
+                            Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
+
+                            // Send through local server to tray icon user process
+                            await SendToClient(command_object.remote_control_username + "tray", json);
+                            
+                            // Return because no further action is required
+                            return;
+                        }
                     }
                     catch (Exception ex)
                     {
                         result = ex.Message;
                         Logging.Error("Service.Setup_SignalR", "Failed to execute file browser command.",
                             ex.ToString());
+                        Console.WriteLine("Error executing command: " + ex.ToString());
                     }
 
-                    // Send the response back to the server
+                    // Send the response back to the server (if we execute a single operation that doesnt require a response, we need to return the operation in that method to prevent this from executing)
                     if (!String.IsNullOrEmpty(command_object.type.ToString()))
                     {
                         if (String.IsNullOrEmpty(result))
@@ -597,7 +732,7 @@ namespace NetLock_RMM_Agent_Remote
                         Logging.Debug("Client", "Sending response back to the server",
                             "result: " + result + "response_id: " + command_object.response_id);
                         await remote_server_client.InvokeAsync("ReceiveClientResponse", command_object.response_id,
-                            result);
+                            result, false);
                         Logging.Debug("Client", "Response sent back to the server",
                             "result: " + result + "response_id: " + command_object.response_id);
                     }
@@ -618,6 +753,8 @@ namespace NetLock_RMM_Agent_Remote
                 Logging.Error("Service.Setup_SignalR", "Failed to start SignalR.", ex.ToString());
             }
         }
+        
+        #endregion
 
         #region User agent process monitoring
 
@@ -766,6 +903,8 @@ namespace NetLock_RMM_Agent_Remote
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
                     Logging.Debug("Service.Remote_Agent_Server_HandleClientMessages", $"Message from user {username}",
                         "not displaying due to high data usage");
+                    
+                    Console.WriteLine($"Message received from {username}: [data not displayed]");
 
                     // Process client message
                     try
@@ -836,15 +975,25 @@ namespace NetLock_RMM_Agent_Remote
                 }
                 else if (messageParts[0] == "screen_indexes")
                 {
-                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
+                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2], false);
                 }
                 else if (messageParts[0] == "users")
                 {
-                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
+                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2], false);
                 }
                 else if (messageParts[0] == "clipboard_content")
                 {
-                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2]);
+                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2], false);
+                }
+                else if (messageParts[0] == "chat_message")
+                {
+                    Console.WriteLine($"Service.Remote_Agent_Server_ProcessMessage - Chat message received: {messageParts[2]}");
+                    await remote_server_client.SendAsync("ReceiveClientResponse", messageParts[1], messageParts[2], true);
+                }
+                else
+                {
+                    Logging.Debug("Service.Remote_Agent_Server_ProcessMessage", "Unknown message type",
+                        messageParts[0]);
                 }
             }
             catch (Exception ex)

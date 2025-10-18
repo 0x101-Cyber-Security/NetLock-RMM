@@ -244,6 +244,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             //Search logic for each column
             return row.device_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   row.label.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                    row.tenant_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                    row.location_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
                    row.group_name.Contains(device_table_search_string, StringComparison.OrdinalIgnoreCase) ||
@@ -406,6 +407,68 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             devices_table_view_port = expanded ? "35vh" : "70vh";
 
             StateHasChanged();
+        }
+
+        //Edit label
+        private async Task EditLabel(string deviceId, string oldLabel)
+        {
+            try
+            {
+                var options = new DialogOptions
+                {
+                    CloseButton = true,
+                    FullWidth = true,
+                    MaxWidth = MaxWidth.Small,
+                    BackgroundClass = "dialog-blurring",
+                };
+
+                var parameters = new DialogParameters();
+                parameters.Add("oldLabel", oldLabel);
+                    
+                var dialog = DialogService.Show<Pages.Devices.Dialogs.Edit_Label>("Edit label", parameters, options);
+                var result = await dialog.Result;
+
+                if (!result.Canceled)
+                {
+                    string newLabel = result.Data?.ToString() ?? string.Empty; 
+                    
+                    MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+                    try
+                    {
+                        await conn.OpenAsync();
+                        
+                        // Update the label in the database
+                        using (MySqlCommand cmd = new MySqlCommand("UPDATE devices SET label = @label WHERE id = @device_id;", conn))
+                        {
+                            cmd.Parameters.AddWithValue("@label", newLabel);
+                            cmd.Parameters.AddWithValue("@device_id", deviceId);
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                        
+                        // Update the label in the local list
+                        var device = mysql_data.FirstOrDefault(d => d.device_id == deviceId);
+                        
+                        if (device != null)
+                        {
+                            device.label = newLabel;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("", "Result", ex.ToString());
+                        Console.WriteLine(ex.ToString());
+                    }
+                    finally
+                    {
+                        await conn.CloseAsync();
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Handler.Error("EditLabel", "Result", e.ToString());
+            }
         }
 
         #endregion
@@ -3182,10 +3245,14 @@ WHERE device_id = @deviceId");
             }
         }
 
+        #region  Device Overview Table
+
+        
         public class MySQL_Entity
         {
             public string device_id { get; set; } = "Empty";
             public string device_name { get; set; } = "Empty";
+            public string label { get; set; } = "Empty";
             public string tenant_name { get; set; } = "Empty";
             public string tenant_id { get; set; } = "Empty";
             public string location_name { get; set; } = "Empty";
@@ -3265,6 +3332,7 @@ WHERE device_id = @deviceId");
                             {
                                 device_id = reader["id"].ToString() ?? String.Empty,
                                 device_name = reader["device_name"].ToString() ?? String.Empty,
+                                label = reader["label"].ToString() ?? String.Empty,
                                 tenant_name = reader["tenant_name"].ToString() ?? String.Empty,
                                 tenant_id = reader["tenant_id"].ToString() ?? String.Empty,
                                 location_name = reader["location_name"].ToString() ?? String.Empty,
@@ -3472,10 +3540,12 @@ WHERE device_id = @deviceId");
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
+        #endregion
+        
 
         #region Device Information General History
 
@@ -5409,8 +5479,7 @@ WHERE device_id = @deviceId");
         }
 
         #endregion
-
-
+        
         #region Data_Export
 
         private bool show_export_table_dialog_open = false;

@@ -7,7 +7,7 @@ namespace NetLock_RMM_Web_Console
         public static string versionUrl = "https://github.com/0x101-Cyber-Security/NetLock-RMM/milestone/2";
         public static string Local_Encryption_Key = "01234567890123456789012345678901";
 
-        //OSSCH_START 6d5a470d-124e-4f31-aa68-9af64169b4a1 //OSSCH_END
+        //OSSCH_START 8137df60-cc44-4c0d-80f6-48a5c438c347 //OSSCH_END
 
         public static string onlyPro = "This feature is exclusive to Pro & Cloud users. Please ensure you have an active paid membership, or your changes will not take effect.";
     }

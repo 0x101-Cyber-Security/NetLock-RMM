@@ -1,0 +1,151 @@
+@using System.Security.Claims
+@using System.Text.Json
+
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" Label="Name" @bind-Value="@Name" Immediate="true" />
+        <MudTextField Class="mt-2" T="string" Label="Description" @bind-Value="@Description" Immediate="true"/>
+
+        <MudSelect Class="mt-2" T="string" @bind-Value="@Action" Label="Action" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate="true">
+            <MudSelectItem T="string" Value="@("Open url")">Open url</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Start process")">Start process</MudSelectItem>
+        </MudSelect>
+        
+        <MudTextField T="string" Label="Action Details" @bind-Value="@ActionDetails" HelperText="@GetActionDetailsHelperText()" Immediate="true" />
+        
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Submit" Color="Color.Success" Disabled="(String.IsNullOrEmpty(Name) || String.IsNullOrEmpty(Action) || String.IsNullOrEmpty(ActionDetails))">Submit</MudButton>
+        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; } 
+    [Parameter] public string button_json { get; set; } = string.Empty;
+    [Parameter] public string Id { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Action { get; set; } = "Open url";
+    public string ActionDetails { get; set; } = "https://netlockrmm.com";
+    
+    public TrayIconButtonsEntity Button { get; set; } = new TrayIconButtonsEntity();
+    
+    public class TrayIconButtonsEntity
+    {
+        public string Id { get; set; } = String.Empty;
+        public string Name { get; set; } = String.Empty;
+        public string Description { get; set; } = String.Empty;
+        public string Author { get; set; } = String.Empty;
+        public string Date { get; set; } = String.Empty;
+        public string Action { get; set; } = String.Empty;
+        public string ActionDetails { get; set; } = String.Empty;
+        public string Json { get; set; } = String.Empty;
+    }
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        try
+        {
+            // Deserialize button_json if provided
+            if (!string.IsNullOrEmpty(button_json) && button_json.Trim() != "[]")
+            {
+                try
+                {
+                    Button = JsonSerializer.Deserialize<TrayIconButtonsEntity>(button_json);
+                    
+                    if (Button != null)
+                    {
+                        Id = Button.Id;
+                        Name = Button.Name;
+                        Description = Button.Description;
+                        Author = Button.Author;
+                        Action = Button.Action;
+                        ActionDetails = Button.ActionDetails;
+                    }
+                    else
+                    {
+                        Button = new TrayIconButtonsEntity(); // fallback to empty
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("Edit_Button_Dialog", "JSON Deserialize", ex.ToString());
+                    Button = new TrayIconButtonsEntity(); // fallback to empty
+                }
+            }
+            else
+            {
+                Button = new TrayIconButtonsEntity();
+            }
+        }
+        catch (Exception e)
+        {
+            Logging.Handler.Error("Edit_Button_Dialog", "AfterInitializedAsync", e.ToString());
+        }
+
+        StateHasChanged();
+    }
+    
+    private async void Submit()
+    {
+        
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            MudDialog.Cancel();
+            return;
+        }
+        
+        // Retrieve username from claims
+        string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+        
+        var buttonData = new
+        {
+            Id = Id,
+            Name = Name,
+            Description = Description,
+            Author = netlock_username,
+            Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            Action = Action,
+            ActionDetails = ActionDetails
+        };
+        
+        MudDialog.Close(DialogResult.Ok(JsonSerializer.Serialize(buttonData)));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    string GetActionDetailsHelperText()
+    {
+        return Action switch
+        {
+            "Open url" => "Enter the URL to open (e.g., https://example.com)",
+            "Start process" => "Enter the process path or command to execute (e.g., notepad.exe)",
+            _ => "Enter the details for the selected action"
+        };
+    }
+}

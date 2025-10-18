@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="NetLock_RMM_Tray_Icon.ChatWindow"
+        x:CompileBindings="False"
         Title="NetLock RMM Chat"
         Width="900" Height="650"
         MinWidth="600" MinHeight="80"
@@ -21,7 +22,7 @@
 						</Ellipse.Fill>
 					</Ellipse>
 					<StackPanel VerticalAlignment="Center">
-						<TextBlock Text="Nico Mak"
+						<TextBlock Text="{Binding DisplayName}"
 						          FontSize="18"
 						          FontWeight="Bold"
 						          Foreground="White"/>
@@ -131,8 +132,8 @@
 				       BorderThickness="0"
 				       Margin="10,0,0,0"
 				       HorizontalContentAlignment="Center"
-				       VerticalContentAlignment="Center"
-				       ToolTip.Tip="Nachricht senden (Enter)">
+				       VerticalContentAlignment="Center">
+				       <!-- ToolTip.Tip="Nachricht senden (Enter)" -->
 					<Button.Styles>
 						<Style Selector="Button:hover">
 							<Setter Property="Background" Value="#2980B9"/>

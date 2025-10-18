@@ -384,5 +384,43 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 await conn.CloseAsync();
             }
         }
+        
+        public static async Task<(string, string)> GetOperatorFirstLastName(string netlock_username)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                string query = "SELECT * FROM accounts WHERE username = @netlock_username;";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+                Logging.Handler.Debug("Example", "MySQL_Prepared_Query", query);
+
+                using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            return (reader["first_name"].ToString() ?? String.Empty, reader["last_name"].ToString() ?? String.Empty);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Example", "MySQL_Query", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+            
+            return (String.Empty, String.Empty);
+        }
     }
 }

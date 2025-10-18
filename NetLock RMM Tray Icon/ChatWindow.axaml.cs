@@ -6,24 +6,74 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
 using System;
+using System.ComponentModel;
 using System.Threading.Tasks;
 using System.IO;
 using System.Text.Json;
+using Global.Encryption;
+using Global.Helper;
+using NetLock_RMM_Agent_Comm;
 using NetLock_RMM_Tray_Icon.Config;
 
 namespace NetLock_RMM_Tray_Icon
 {
-    public partial class ChatWindow : Window
+    public partial class ChatWindow : Window, INotifyPropertyChanged
     {
         private bool _isTyping;
         private bool _isFirstTimeOpen = true;
         private double _expandedWidth = 500;
         private double _collapsedWidth = 60;
 
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        private string _firstName = "";
+        private string _lastName = "";
+        private string _responseId = "";
+
+        public string FirstName
+        {
+            get => _firstName;
+            set
+            {
+                _firstName = value;
+                OnPropertyChanged(nameof(FirstName));
+                OnPropertyChanged(nameof(DisplayName));
+            }
+        }
+
+        public string LastName
+        {
+            get => _lastName;
+            set
+            {
+                _lastName = value;
+                OnPropertyChanged(nameof(LastName));
+                OnPropertyChanged(nameof(DisplayName));
+            }
+        }
+
+        public string ResponseId
+        {
+            get => _responseId;
+            set
+            {
+                _responseId = value;
+                OnPropertyChanged(nameof(_responseId));
+            }
+        }
+        
+        public string DisplayName => $"{FirstName} {LastName}";
+        
+        protected void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        
         public ChatWindow()
         {
             InitializeComponent();
-
+            DataContext = this;
+        
             // Window options for normal window functionality
             this.WindowStartupLocation = WindowStartupLocation.CenterScreen;
             this.WindowState = WindowState.Normal;
@@ -53,28 +103,38 @@ namespace NetLock_RMM_Tray_Icon
 
         private void LoadConfig()
         {
-            string configPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
+            string configPath = Application_Paths.tray_icon_settings_json_path;
 
-            if (File.Exists(configPath))
+            try
             {
-                string jsonString = File.ReadAllText(configPath);
-                var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
-                AppConfig.ChatConfig = configRoot?.ChatInterface;
+                if (File.Exists(configPath))
+                {
+                    string jsonString = File.ReadAllText(configPath);
+                    jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
 
-                var config = AppConfig.ChatConfig;
-                if (config == null) return;
+                    var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
+                    AppConfig.ChatConfig = configRoot?.ChatInterface;
 
-                if (!string.IsNullOrEmpty(config.WindowTitle))
-                    this.Title = config.WindowTitle;
+                    var config = AppConfig.ChatConfig;
+                    if (config == null) return;
 
-                if (!string.IsNullOrEmpty(config.InputFieldText))
-                    MessageTextBox.Watermark = config.InputFieldText;
+                    if (!string.IsNullOrEmpty(config.WindowTitle))
+                        this.Title = config.WindowTitle;
 
-                if (config.SettingsEnabled.HasValue)
-                    SettingsButton.IsVisible = config.SettingsEnabled.Value;
+                    if (!string.IsNullOrEmpty(config.InputFieldText))
+                        MessageTextBox.Watermark = config.InputFieldText;
 
-                if (config.SettingsAboutEnabled.HasValue)
-                    AboutMenuItem.IsVisible = config.SettingsAboutEnabled.Value;
+                    if (config.SettingsEnabled.HasValue)
+                        SettingsButton.IsVisible = config.SettingsEnabled.Value;
+
+                    if (config.SettingsAboutEnabled.HasValue)
+                        AboutMenuItem.IsVisible = config.SettingsAboutEnabled.Value;
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                Logging.Error("ChatWindow", "LoadConfig", e.ToString());
             }
         }
 
@@ -182,34 +242,53 @@ namespace NetLock_RMM_Tray_Icon
             var message = MessageTextBox.Text?.Trim();
             if (!string.IsNullOrEmpty(message))
             {
-                AddChatMessage(message, true);
+                AddChatMessage(message, Environment.UserName, "", true);
+             
+                // Build json object with chat identity
+                //  Create the JSON object
+                var jsonObject = new
+                {
+                    name = Environment.UserName,
+                    message = message
+                };
+
+                // Convert the object into a JSON string
+                string messageJson = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+                Logging.Debug("Online_Mode.Handler.Update_Device_Information", "json", messageJson);
+                
+                UserClient.Local_Server_Send_Message($"chat_message${_responseId}${messageJson}");
+
                 MessageTextBox.Text = string.Empty;
                 ScrollToBottom();
-                SimulateTypingAndResponse(message);
+                //SimulateTypingAndResponse(message);
             }
         }
 
         private void AddWelcomeMessage()
         {
-            var welcomeText = AppConfig.ChatConfig?.WelcomeMessage ?? "Willkommen!";
-            AddChatMessage(welcomeText, false);
+            var welcomeMessageEnabled = AppConfig.ChatConfig?.WelcomeMessageEnabled ?? false;
+            var welcomeText = AppConfig.ChatConfig?.WelcomeMessageText ?? "Welcome!";
+            
+            if (welcomeMessageEnabled)
+                AddChatMessage(welcomeText, _firstName, _lastName, false);
         }
 
-        private void AddChatMessage(string message, bool isOwnMessage)
+        private void AddChatMessage(string message, string firstName, string lastName, bool isOwnMessage)
         {
-            var messageContainer = CreateMessageBubble(message, isOwnMessage);
+            var messageContainer = CreateMessageBubble(message, firstName, lastName, isOwnMessage);
             ChatMessagesPanel.Children.Add(messageContainer);
             AnimateNewMessage(messageContainer);
         }
 
-        private Border CreateMessageBubble(string text, bool isOwnMessage)
+        public Border CreateMessageBubble(string text, string firstName, string lastName, bool isOwnMessage)
         {
-            var timeText = new TextBlock
+            var nameText = new TextBlock
             {
-                Text = DateTime.Now.ToString("HH:mm"),
-                FontSize = 11,
-                Foreground = new SolidColorBrush(Color.Parse("#95A5A6")),
-                Margin = new Thickness(0, 2, 0, 0)
+                Text = $"{firstName} {lastName}",
+                FontWeight = FontWeight.Bold,
+                FontSize = 13,
+                Foreground = isOwnMessage ? Brushes.White : new SolidColorBrush(Color.Parse("#2C3E50")),
+                Margin = new Thickness(0, 0, 0, 2)
             };
 
             var messageText = new TextBlock
@@ -222,11 +301,20 @@ namespace NetLock_RMM_Tray_Icon
                 LineHeight = 20
             };
 
+            var timeText = new TextBlock
+            {
+                Text = DateTime.Now.ToString("HH:mm"),
+                FontSize = 11,
+                Foreground = new SolidColorBrush(Color.Parse("#95A5A6")),
+                Margin = new Thickness(0, 2, 0, 0)
+            };
+
             var textContainer = new StackPanel
             {
                 Orientation = Orientation.Vertical,
                 Spacing = 2
             };
+            textContainer.Children.Add(nameText);
             textContainer.Children.Add(messageText);
             textContainer.Children.Add(timeText);
 
@@ -283,17 +371,6 @@ namespace NetLock_RMM_Tray_Icon
                 Child = messageContainer,
                 Margin = new Thickness(0, 4)
             };
-        }
-
-        private async void SimulateTypingAndResponse(string userMessage)
-        {
-            ShowTypingIndicator();
-            await Task.Delay(1500 + new Random().Next(1500));
-            HideTypingIndicator();
-
-            var response = GenerateBotResponse(userMessage);
-            AddChatMessage(response, false);
-            ScrollToBottom();
         }
 
         private void ShowTypingIndicator()

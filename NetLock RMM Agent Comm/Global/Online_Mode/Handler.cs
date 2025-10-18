@@ -866,7 +866,13 @@ namespace Global.Online_Mode
 
                                 JsonElement policy_jobs_json_element = document.RootElement.GetProperty("policy_jobs_json");
                                 Device_Worker.policy_jobs_json = policy_jobs_json_element.ToString();
+                                
+                                JsonElement tray_icon_settings_element = document.RootElement.GetProperty("tray_icon_settings_json");
+                                Device_Worker.policy_tray_icon_settings_json = tray_icon_settings_element.ToString();
                             }
+                            
+                            // Write the trayicon json to disk for the tray icon process to read it
+                            File.WriteAllText(Application_Paths.tray_icon_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_tray_icon_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
 
                             // Insert into policy database
                             Initialization.Database.NetLock_Data_Setup();
@@ -885,7 +891,8 @@ namespace Global.Online_Mode
                                 "'antivirus_controlled_folder_access_folders_json', " +
                                 "'antivirus_controlled_folder_access_ruleset_json', " +
                                 "'sensors_json', " +
-                                "'jobs_json'" +
+                                "'jobs_json', " +
+                                "'tray_icon_settings_json'" +
 
                                 ") VALUES (" +
 
@@ -895,7 +902,8 @@ namespace Global.Online_Mode
                                 "'" + Windows_Worker.policy_antivirus_controlled_folder_access_folders_json + "'," + //policy_antivirus_controlled_folder_access_folders_json
                                 "'" + Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json + "'," + //policy_antivirus_controlled_folder_access_ruleset_json
                                 "'" + Device_Worker.policy_sensors_json + "'," + //policy_sensors_json
-                                "'" + Device_Worker.policy_jobs_json + "'" + //policy_jobs_json
+                                "'" + Device_Worker.policy_jobs_json + "'," + //policy_sensors_json
+                                "'" + Device_Worker.policy_tray_icon_settings_json + "'" + //policy_jobs_json
 
                                 ");"
                                 , db_conn);

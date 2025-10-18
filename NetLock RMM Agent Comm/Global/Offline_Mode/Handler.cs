@@ -108,6 +108,20 @@ namespace Global.Offline_Mode
                             error = true;
                             Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (jobs_json). Because of the following error, online settings will be requested.", ex.Message);
                         }
+                        
+                        // tray_icon_settings_json
+                        try
+                        {
+                            Device_Worker.policy_tray_icon_settings_json = reader["tray_icon_settings_json"].ToString();
+                            
+                            // Write to disk for the tray icon process to read it
+                            File.WriteAllText(Application_Paths.tray_icon_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_tray_icon_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
+                        }
+                        catch (Exception ex)
+                        {
+                            error = true;
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (tray_icon_settings_json). Because of the following error, online settings will be requested.", ex.Message);
+                        }
                     }
 
                     reader.Close();

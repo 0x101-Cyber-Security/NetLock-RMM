@@ -296,8 +296,9 @@ namespace NetLock_RMM_Server.SignalR
                 Logging.Handler.Debug("SignalR CommandHub", "SendMessageToClient", $"Sending command to client {client_id}: {command_json}");
 
                 // Send the command to the client mit Retry-Mechanismus
-                await TrySendToClientWithRetry(client_id, "ReceiveMessage", command_json);
-
+                //await TrySendToClientWithRetry(client_id, "SendMessageToClient", command_json);
+                await CommandHubSingleton.Instance.HubContext.Clients.Client(client_id).SendAsync("SendMessageToClient", command_json);
+                
                 Logging.Handler.Debug("SignalR CommandHub", "SendMessageToClient", $"Command sent to client {client_id}");
             }
             catch (Exception ex)
@@ -354,7 +355,7 @@ namespace NetLock_RMM_Server.SignalR
         }
 
         // Receive response from client and send it back to the admin client
-        public async Task ReceiveClientResponse(string responseId, string response)
+        public async Task ReceiveClientResponse(string responseId, string response, bool persistent)
         {
             try
             {
@@ -483,7 +484,8 @@ namespace NetLock_RMM_Server.SignalR
             finally
             {
                 // Remove the responseId from the dictionary
-                CommandHubSingleton.Instance.RemoveAdminCommand(responseId);
+                if (!persistent) 
+                    CommandHubSingleton.Instance.RemoveAdminCommand(responseId);
             }
         }
 
@@ -527,6 +529,8 @@ namespace NetLock_RMM_Server.SignalR
                     default: return "ReceiveClientResponse";
                 }
             }
+            else if (type == 6) // Tray Icon - Chat Message
+                return "ReceiveClientResponseTrayIconChatMessage";
             
             return "ReceiveClientResponse"; // Fallback
         }
@@ -574,7 +578,7 @@ namespace NetLock_RMM_Server.SignalR
                     else
                         await Clients.Caller.SendAsync("ReceiveClientResponse", responseMessage);
                     
-                    return;
+                    return; // No need to forward this check to the client
                 }
                 else if (command.type == 5) // check connection with positive response
                 {
@@ -647,9 +651,12 @@ namespace NetLock_RMM_Server.SignalR
                 throw; // Rethrow the exception to handle it appropriately in the calling method
             }
         }
+        
+        // Add client admin id to the json
+        
 
         // Helper-Methode für robustere SignalR-Kommunikation
-        private async Task<bool> TrySendToClientWithRetry(string clientId, string method, object arg)
+        private async Task<bool> TrySendToClientWithRetry(string clientId, string method, string arg)
         {
             int attempts = 0;
             bool success = false;

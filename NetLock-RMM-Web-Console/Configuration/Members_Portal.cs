@@ -1,4 +1,4 @@
 namespace NetLock_RMM_Web_Console.Configuration
 {
-    //OSSCH_START 35d8427d-5d2f-4ce3-96ae-9b5e440b6d7b //OSSCH_END
+    //OSSCH_START 4f04fbef-0b5a-46f8-bd1b-7b7572314a75 //OSSCH_END
 }

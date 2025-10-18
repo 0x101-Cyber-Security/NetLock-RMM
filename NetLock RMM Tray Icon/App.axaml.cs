@@ -8,10 +8,13 @@ using NetLock_RMM_Tray_Icon.Config;
 using Avalonia.Controls.Shapes;
 using System;
 using System.Collections.Generic;
+using System.Net.Security;
 using System.Threading.Tasks;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Global.Encryption;
 using Global.Helper;
+using NetLock_RMM_Agent_Comm;
 
 
 namespace NetLock_RMM_Tray_Icon
@@ -20,48 +23,21 @@ namespace NetLock_RMM_Tray_Icon
     {
         private TrayIcon _trayIcon;
         private ActionSidebar? _actionSidebar;
+        
 
-        public class ButtonConfig
-        {
-            public string? Name { get; set; }
-            public string? Action { get; set; }
-            public string? ActionDetails { get; set; }
-        }
-        
-        public class TrayIconConfig
-        {
-            public string? Title { get; set; } = "NetLock RMM";
-            public bool? AboutButtonEnabled { get; set; } = true;
-            public string? AboutButtonTitle { get; set; } = "About";
-            public bool? ExitButtonEnabled { get; set; } = true;
-            public string? ExitButtonTitle { get; set; } = "Exit";
-        }
-        
-        public class AboutInterfaceConfig
-        {
-            public string? WindowTitle { get; set; } = "About NetLock RMM";
-            public string? Emoji { get; set; } = "🔒";
-            public string? Title { get; set; } = "NetLock RMM";
-            public string? Description { get; set; } = " The open-source RMM supporting Windows, Linux & MacOS.";
-            public bool? VersionEnabled { get; set; } = false;
-            public bool? PolicyEnabled { get; set; } = false;
-            public bool? CopyrightTextEnabled { get; set; } = true;
-            public string? CopyrightText { get; set; } = null;
-            public string? CloseButtonTitle { get; set; } = "Close";
-        }
         
         public class ConfigRoot
         {
-            public TrayIconConfig? TrayIcon { get; set; }
-            public AboutInterfaceConfig? AboutInterface { get; set; }
+            public Handler.TrayIconConfig? TrayIcon { get; set; }
+            public Handler.AboutInterfaceConfig? AboutInterface { get; set; }
             public Handler.ChatInterfaceConfig? ChatInterface { get; set; }
-            public List<ButtonConfig>? Buttons { get; set; }
+            public List<Handler.TrayButtonConfig>? Buttons { get; set; }
         }
         
         public static class AppConfig
         {
-            public static TrayIconConfig? TrayConfig { get; set; }
-            public static AboutInterfaceConfig? AboutConfig { get; set; }
+            public static Handler.TrayIconConfig? TrayConfig { get; set; }
+            public static Handler.AboutInterfaceConfig? AboutConfig { get; set; }
             public static Handler.ChatInterfaceConfig? ChatConfig { get; set; }
         }
         
@@ -78,6 +54,9 @@ namespace NetLock_RMM_Tray_Icon
                 {
                     desktop.MainWindow = new ChatWindow();
                     
+                    // Hide main window
+                    desktop.MainWindow.Hide();
+                    
                     // Initialize ActionSidebar
                     //_actionSidebar = new ActionSidebar();
                     //_actionSidebar.Show();
@@ -93,12 +72,16 @@ namespace NetLock_RMM_Tray_Icon
                     var menu = new NativeMenu();
                     
                     // Additional buttons from config
-                    string configPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
+                    string configPath = System.IO.Path.Combine(Application_Paths.tray_icon_settings_json_path);
+                    
                     if (File.Exists(configPath))
                     {
                         try
                         {
                             string jsonString = File.ReadAllText(configPath);
+                            
+                            jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
+                            
                             var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
                             if (configRoot?.Buttons != null)
                             {
@@ -120,7 +103,7 @@ namespace NetLock_RMM_Tray_Icon
                     }
                 
                     // Add buttons from config as menu items
-                    if (AppConfig.TrayConfig != null && AppConfig.TrayConfig.AboutButtonEnabled == true)
+                    if (AppConfig.TrayConfig != null && AppConfig.TrayConfig.AboutButtonEnabled == true && AppConfig.AboutConfig.Enabled == true)
                     {
                         var aboutItem = new NativeMenuItem(AppConfig.TrayConfig.AboutButtonTitle ?? "About");
                         aboutItem.Click += (_, __) => ShowAboutDialog();
@@ -162,7 +145,7 @@ namespace NetLock_RMM_Tray_Icon
                 
                 switch (action.ToLower())
                 {
-                    case "url":
+                    case "Open url":
                         try
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(actionDetails) 
@@ -175,7 +158,7 @@ namespace NetLock_RMM_Tray_Icon
                             Logging.Error("HandleButtonAction", "error", ex.ToString());
                         }
                         break;
-                    case "start_process":
+                    case "Start process":
                         try
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(actionDetails) 
@@ -201,14 +184,25 @@ namespace NetLock_RMM_Tray_Icon
         
         private void LoadConfig()
         {
-            string configPath = System.IO.Path.Combine(AppContext.BaseDirectory, "config.json");
-            if (File.Exists(configPath))
+            string configPath = Application_Paths.tray_icon_settings_json_path;
+
+            try
             {
-                string jsonString = File.ReadAllText(configPath);
-                var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
-                AppConfig.TrayConfig = configRoot?.TrayIcon;
-                AppConfig.AboutConfig = configRoot?.AboutInterface;
-                AppConfig.ChatConfig = configRoot?.ChatInterface;
+                if (File.Exists(configPath))
+                {
+                    string jsonString = File.ReadAllText(configPath);
+                
+                    jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
+                
+                    var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
+                    AppConfig.TrayConfig = configRoot?.TrayIcon;
+                    AppConfig.AboutConfig = configRoot?.AboutInterface;
+                    AppConfig.ChatConfig = configRoot?.ChatInterface;
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Error("LoadConfig", "error", e.ToString());
             }
         }
         
@@ -216,7 +210,7 @@ namespace NetLock_RMM_Tray_Icon
         {
             try
             {
-                var about = AppConfig.AboutConfig ?? new AboutInterfaceConfig();
+                var about = AppConfig.AboutConfig ?? new Handler.AboutInterfaceConfig();
                 var dialog = new Window
                 {
                     Title = about.WindowTitle ?? "About NetLock RMM",

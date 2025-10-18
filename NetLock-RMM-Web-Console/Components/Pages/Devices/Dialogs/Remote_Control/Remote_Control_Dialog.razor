@@ -51,7 +51,101 @@
         user-select: none;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
+     
+    .chat-container {
+         height: calc(100vh - 350px);
+         overflow-y: auto;
+         padding: 12px;
+         display: flex;
+         flex-direction: column;
+         gap: 8px;
+         background-color: rgba(0,0,0,0.02);
+         border-radius: 8px;
+     }
 
+    .date-divider {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 12px 0;
+    }
+
+    .date-badge {
+        background-color: var(--mud-palette-background-grey);
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        color: var(--mud-palette-text-secondary);
+    }
+
+    .message-container {
+        display: flex;
+        margin-bottom: 8px;
+        max-width: 85%;
+    }
+
+    .own-message {
+        align-self: flex-end;
+        flex-direction: row-reverse;
+    }
+
+    .other-message {
+        align-self: flex-start;
+    }
+
+    .avatar-placeholder {
+        margin-right: 8px;
+        align-self: flex-end;
+    }
+
+    .message-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .own-content {
+        align-items: flex-end;
+    }
+
+    .other-content {
+        align-items: flex-start;
+    }
+
+    .message-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 2px;
+        padding: 0 4px;
+        gap: 8px;
+    }
+
+    .sender-name {
+        font-weight: 500;
+    }
+
+    .message-time {
+        opacity: 0.7;
+        font-size: 0.7rem;
+    }
+
+    .message-bubble {
+        padding: 8px 12px;
+        border-radius: 12px;
+        word-break: break-word;
+        white-space: pre-wrap;
+        overflow-wrap: break-word;
+    }
+
+    .own-content .message-bubble {
+        background-color: var(--mud-palette-surface);
+        border-bottom-right-radius: 4px;
+    }
+
+    .other-content .message-bubble {
+        background-color: var(--mud-palette-surface);
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
 </style>
 
 <MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
@@ -110,7 +204,7 @@
                         <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Warning" Indeterminate="true">
                             <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background. Please wait.</MudText>
                         </MudProgressLinear>
-
+                        
                         <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true" OnClick="Remote_Get_Users">Fetch users</MudButton>
 
                         <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
@@ -186,12 +280,10 @@
                                     <MudButton Class="mt-2" Variant="Variant.Filled" Size="Size.Small" FullWidth="true" OnClick="@RemoteSendKeys">Send</MudButton>
                                 </MudPaper>
                             </MudPopover>
-
-                            @*<MudTooltip Text="Open Chat">
-                                <MudIconButton Icon="@Icons.Material.Filled.Chat"
-                                               Color="Color.Primary"
-                                               OnClick="@ToggleChat" />
-                            </MudTooltip>*@
+                            
+                            <MudTooltip Text="Open Chat">
+                                <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Chat" Variant="Variant.Filled" Size="Size.Medium" Color="Color.Default" OnClick="ToggleChat"></MudIconButton>
+                            </MudTooltip>
 
                             @if (permissions_devices_remote_shell)
                             {
@@ -275,23 +367,108 @@
                 }
             }
 
-            @* <MudDrawer Class="pa-4" Anchor="Anchor.Right" Open="@_chatOpen" Elevation="8" Width="350px" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Temporary" Overlay="true">
+           <MudDrawer Class="pa-4" Anchor="Anchor.Right" Open="@_chatOpen" Elevation="8" Width="650px" ClipMode="DrawerClipMode.Docked" Variant="DrawerVariant.Temporary" Overlay="false">
 
-                <MudText Typo="Typo.h6">Chat</MudText>
-                <MudDivider Class="mb-2" />
-    
-                <!-- Beispiel-Chatbereich -->
+    <!-- Header mit Titel und Schließen-Button -->
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <MudText Typo="Typo.h6" Style="font-weight: 600;">Chat</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Close"
+                       Color="Color.Default"
+                       Size="Size.Small"
+                       OnClick="ToggleChat"
+                       Title="Close chat" />
+    </div>
 
-                <MudPaper Class="pa-2" Style="height: calc(100vh - 200px); overflow-y: auto;">
-                    <MudChat>
-                    e4okpifhiesjfi
-                    
-                    </MudChat>
-                </MudPaper>
+    <MudDivider Class="mb-3"/>
 
-                <MudTextField T="string" Placeholder="Type a message…" Class="mt-2" Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Send" AdornmentOnClick="SendMessage" />
-            </MudDrawer> *@
+    <!-- Aktionsleiste kompakt -->
+    <MudPaper Elevation="0" Class="pa-2 mb-3">
+        <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
+            <MudTooltip Text="Open chat window for user">
+                <MudIconButton Icon="@Icons.Material.Filled.Visibility"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               Variant="Variant.Text"
+                               OnClick="TrayIconShowChat" />
+            </MudTooltip>
 
+            <MudTooltip Text="Play sound on user device">
+                <MudIconButton Icon="@Icons.Material.Filled.VolumeUp"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               Variant="Variant.Text"
+                               OnClick="TrayIconPlaySound" />
+            </MudTooltip>
+
+            <MudTooltip Text="Exit chat window on user device">
+                <MudIconButton Icon="@Icons.Material.Filled.ExitToApp"
+                               Color="Color.Default"
+                               Size="Size.Small"
+                               Variant="Variant.Text"
+                               OnClick="TrayIconExitChat" />
+            </MudTooltip>
+        </div>
+    </MudPaper>
+
+    <!-- MudChat Component -->
+    <div @ref="_chatScrollContainer" class="chat-container">
+        @{
+            DateTime? lastDate = null;
+            foreach (var msg in chatMessages)
+            {
+                // Datum-Header anzeigen wenn ein neuer Tag beginnt
+                if (lastDate == null || msg.Time.Date != lastDate.Value.Date)
+                {
+                    <div class="date-divider">
+                        <MudText Typo="Typo.caption" Class="date-badge">
+                            @(msg.Time.Date == DateTime.Today ? "Heute" : msg.Time.ToString("dd. MMMM yyyy"))
+                        </MudText>
+                    </div>
+                    lastDate = msg.Time.Date;
+                }
+            
+                <div class="message-container @(msg.IsOwn ? "own-message" : "other-message")">
+                    @if (!msg.IsOwn)
+                    {
+                        <div class="avatar-placeholder">
+                            <MudAvatar Color="Color.Primary" Size="Size.Small">@(msg.Sender?.Length > 0 ? msg.Sender[0] : '?')</MudAvatar>
+                        </div>
+                    }
+                
+                    <div class="message-content @(msg.IsOwn ? "own-content" : "other-content")">
+                        <div class="message-header">
+                            <MudText Typo="Typo.caption" Class="sender-name">@msg.Sender</MudText>
+                            <MudText Typo="Typo.caption" Class="message-time">@msg.Time.ToString("HH:mm")</MudText>
+                        </div>
+                        <MudPaper Elevation="0" Class="message-bubble">
+                            <MudText Typo="Typo.body2">@msg.Text</MudText>
+                        </MudPaper>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+
+
+
+    <!-- Eingabefeld -->
+    <MudTextField T="string"
+                  Placeholder="Nachricht eingeben…"
+                  Class="mt-3"
+                  Variant="Variant.Outlined"
+                  Margin="Margin.Dense"
+                  Adornment="Adornment.End"
+                  AdornmentIcon="@Icons.Material.Filled.Send"
+                  AdornmentColor="Color.Primary"
+                  @bind-Value="_trayIconChatMessageInput"
+                  OnKeyDown="TrayIconChatMessageInputKeyDown"
+                  OnAdornmentClick="TrayIconSendChatMessage"
+                  Immediate="true"/>
+
+</MudDrawer>
+
+            
         </MudPaper>
 
     </DialogContent>
@@ -374,7 +551,7 @@
     private bool showMobileKeyboard = false;
 
     // User chat
-    bool _chatOpen = false;
+    bool _chatOpen = true;
 
     void ToggleChat() => _chatOpen = !_chatOpen;
 
@@ -387,6 +564,8 @@
     {
         if (firstRender)
         {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("registerBeforeUnload", _dotNetRef);
             await AfterInitializedAsync();
         }
     }
@@ -565,7 +744,7 @@
                         //Console.WriteLine(DateTime.Now + ": " + imageSrc.Length.ToString());
 
                         // Check if recording is enabled
-                        //OSSCH_START 6e8f5116-04fd-4b94-9602-ab66aa81e11b //OSSCH_END
+                        //OSSCH_START 127e66be-9cc3-4712-bee1-17ca2a2470d9 //OSSCH_END
                         // Check if the image is rendered correctly
                         if (imageSrc.Length == 20063) // 22 = empty image
                         {
@@ -725,6 +904,49 @@
                     }
                 });
             });
+            
+            // ReceiveClientResponseTrayIconChatMessage
+            remote_server_client.On<string>("ReceiveClientResponseTrayIconChatMessage", async (command) =>
+            {
+                Logging.Handler.Debug("ReceiveClientResponseTrayIconChatMessage", "command", command);
+
+                // Use InvokeAsync to reflect changes on UI immediately
+                await InvokeAsync(() =>
+                {
+                    try
+                    {
+                        //Console.WriteLine(DateTime.Now + ": ReceiveClientResponseTrayIconChatMessage: " + command);
+                        string name = String.Empty;
+                        string message = string.Empty;
+                        
+                        // Deserialize the JSON message
+                        using (JsonDocument document = JsonDocument.Parse(command))
+                        {
+                            JsonElement nameElement = document.RootElement.GetProperty("name");
+                            name = nameElement.ToString();
+                            
+                            JsonElement messageElement = document.RootElement.GetProperty("message");
+                            message = messageElement.ToString();
+                        }
+                        
+                        // Add the chat message to the lis
+                        chatMessages.Add(new ChatMessage
+                        {
+                            Text = message,
+                            Sender = name,
+                            Time = DateTime.Now,
+                            IsOwn = false
+                        });
+
+                        ScrollToBottom();
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("ReceiveClientResponseRemoteControlClipboard", "General error", ex.ToString());
+                    }
+                });
+            });
 
             // Start the connection
             await remote_server_client.StartAsync();
@@ -835,7 +1057,7 @@
 
             var command = new Remote_Command
             {
-                type = 5, // remote control
+                type = 5, // Check connection (this is only handled by the server and not forwared to the client)
                 wait_response = true,
                 command = "0", // Will be converted to type at client side | 5 = check connection on backend
                 remote_control_username = user, // refresh screen
@@ -1762,8 +1984,398 @@
     }
 
     #endregion
+    
+    #region Tray Icon
+    
+    private async Task TrayIconShowChat()
+    {
+        try
+        {
+            // Build command json, including firstname and lastname, so the client can show it in the chat window
+            var userInfo = await Classes.MySQL.Handler.GetOperatorFirstLastName(netlock_username);
 
-    public async void Dispose()
+            string firstName = userInfo.Item1;
+            string lastName = userInfo.Item2;
+            
+            // Create command json including firstname and lastname, so the client can show it in the chat window
+            var jsonObject = new
+            {
+                firstName = firstName,
+                lastName = lastName,
+            };
+
+            // Convert the object into a JSON string
+            string commandJson = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Logging.Handler.Debug("TrayIconShowChat", "commandJson", commandJson);
+            
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+            {
+                token = token
+            };
+
+            var targetDevice = new Remote_Target_Device
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
+
+            var command = new Remote_Command
+            {
+                type = 6, // Tray Icon | Show chat window
+                wait_response = true,
+                command = commandJson, // Will be converted to type at client side | 0 = show chat window
+                remote_control_username = user, // Target user
+            };
+
+            var rootObject = new Remote_Root_Object
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
+
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            //Console.WriteLine(ex.Message);
+        }
+    }
+    
+    private async Task TrayIconHideChat()
+    {
+        try
+        {
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+            {
+                token = token
+            };
+
+            var targetDevice = new Remote_Target_Device
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
+
+            var command = new Remote_Command
+            {
+                type = 61, // Tray Icon | Show chat window
+                wait_response = false,
+                command = String.Empty, // Will be converted to type at client side | 0 = show chat window
+                remote_control_username = user, // Target user
+            };
+
+            var rootObject = new Remote_Root_Object
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
+
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            //Console.WriteLine(ex.Message);
+        }
+    }
+    
+    private async Task TrayIconPlaySound()
+    {
+        try
+        {
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+            {
+                token = token
+            };
+
+            var targetDevice = new Remote_Target_Device
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
+
+            var command = new Remote_Command
+            {
+                type = 62, // Tray Icon | Show chat window
+                wait_response = false,
+                command = String.Empty, // Will be converted to type at client side | 0 = show chat window
+                remote_control_username = user, // Target user
+            };
+
+            var rootObject = new Remote_Root_Object
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
+
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            //Console.WriteLine(ex.Message);
+        }
+    }
+    
+    private async Task TrayIconExitChat()
+    {
+        try
+        {
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+            {
+                token = token
+            };
+
+            var targetDevice = new Remote_Target_Device
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
+
+            var command = new Remote_Command
+            {
+                type = 63, // Tray Icon | Exit chat window
+                wait_response = false,
+                command = String.Empty, // Will be converted to type at client side | 0 = show chat window
+                remote_control_username = user, // Target user
+            };
+
+            var rootObject = new Remote_Root_Object
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
+
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            //Console.WriteLine(ex.Message);
+        }
+    }
+    
+    private string _trayIconChatMessageInput = string.Empty;
+    private ElementReference _chatScrollContainer;
+    
+    public class ChatMessage
+    {
+        public string Text { get; set; }
+        public string Sender { get; set; }
+        public DateTime Time { get; set; }
+        public bool IsOwn { get; set; }
+    }
+
+    private List<ChatMessage> chatMessages = new();
+    private string ownName = "You"; // Optional: dynamisch setzen
+    
+    private async Task TrayIconChatMessageInputKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await TrayIconSendChatMessage();
+        }
+    }
+    
+    private async Task TrayIconSendChatMessage()
+    {
+        try
+        {
+            string chatMessage = string.Empty;
+            
+            if (!string.IsNullOrWhiteSpace(_trayIconChatMessageInput))
+            {
+                chatMessages.Add(new ChatMessage
+                {
+                    Text = _trayIconChatMessageInput,
+                    Sender = ownName,
+                    Time = DateTime.Now,
+                    IsOwn = true
+                });
+                
+                chatMessage =  _trayIconChatMessageInput;  
+                _trayIconChatMessageInput = string.Empty;
+                
+                StateHasChanged();
+                await ScrollToBottom();
+            }
+            else
+            {
+                return;
+            }
+
+            // Create the object
+            var adminIdentity = new Remote_Admin_Identity
+            {
+                token = token
+            };
+
+            var targetDevice = new Remote_Target_Device
+            {
+                device_id = device_id,
+                device_name = device_name,
+                tenant_guid = tenant_guid,
+                location_guid = location_guid
+            };
+
+            var command = new Remote_Command
+            {
+                type = 64, // Tray Icon | Show chat window
+                wait_response = false,
+                command = chatMessage, // Will be converted to type at client side | 0 = show chat window
+                remote_control_username = user, // Target user
+            };
+
+            var rootObject = new Remote_Root_Object
+            {
+                admin_identity = adminIdentity,
+                target_device = targetDevice,
+                command = command
+            };
+            
+            // Serialization of the object
+            string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+            if (remote_server_client_setup)
+            {
+                Logging.Handler.Debug("/dashboard -> Remote_Check_Connection", "Message", json);
+
+                try
+                {
+                    await remote_server_client.SendAsync("MessageReceivedFromWebconsole", json);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+                }
+            }
+            else
+            {
+                Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "Remote server not setup.", "");
+                await Reconnect();
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Remote_Check_Connection", "General error", ex.ToString());
+            //Console.WriteLine(ex.Message);
+        }
+    }
+    
+    private async Task ScrollToBottom()
+    {
+        try
+        {
+            await InvokeAsync(StateHasChanged);
+            await Task.Delay(50); // Warte auf DOM-Update
+            await JSRuntime.InvokeVoidAsync("scrollToBottom", _chatScrollContainer);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Debug("ScrollToBottom", "Error", ex.ToString());
+        }
+    }
+    
+    #endregion
+
+    public void Dispose()
     {
         try
         {
@@ -1775,14 +2387,13 @@
 
             if (remote_server_client is not null)
             {
-                _ = remote_server_client.StopAsync();
-                _ = remote_server_client.DisposeAsync();
+                remote_server_client.StopAsync().GetAwaiter().GetResult();
+                remote_server_client.DisposeAsync().GetAwaiter().GetResult();
             }
 
             if (recordSessionForce)
             {
-                // Create the new gif
-                //GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms); // Currently disabled because it can cause a huge gif that causes out of memory
+                // GifCreator.Handler.Create(recordSessionIdDir, remote_screen_refresh_ms);
             }
 
             MudDialog.Close();
@@ -1797,6 +2408,17 @@
         {
             loading_overlay = false;
             StateHasChanged();
+        }
+    }
+    
+    [JSInvokable]
+    public async Task DisposeOnUnload()
+    {
+        await Remote_Screen_Refresh_Timer_Stop();
+        if (remote_server_client is not null)
+        {
+            await remote_server_client.StopAsync();
+            await remote_server_client.DisposeAsync();
         }
     }
 }

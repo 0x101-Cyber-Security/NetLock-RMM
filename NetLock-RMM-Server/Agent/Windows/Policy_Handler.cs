@@ -182,7 +182,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 string group_name = string.Empty;
 
                 // Policy information
-                string policy_name = string.Empty;
+                string policy_name = null;
                 string antivirus_settings_json = string.Empty;
                 string antivirus_exclusions_json = string.Empty;
                 string antivirus_scan_jobs_json = string.Empty;
@@ -190,6 +190,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 string antivirus_controlled_folder_access_ruleset_json = string.Empty;
                 string sensors_json = string.Empty;
                 string jobs_json = string.Empty;
+                string tray_icon_settings_json = string.Empty;
 
                 // Log the communicated agent information
                 Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "device_identity.device_name", device_name);
@@ -271,79 +272,107 @@ namespace NetLock_RMM_Server.Agent.Windows
                 }
 
                 // Filter automations, detect which automation applies to the device and return the policy
-                bool matched = false;
                 
+                // Device Name
                 foreach (var automation in automations_list)
                 {
-                    Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "Filter automations (info)", $"{automation.name}, {automation.category}, {automation.sub_category}, {automation.condition}, {automation.expected_result}, {automation.trigger}");
-
-                    // Condition is device name
                     if (automation.category == 0 && automation.condition == 0 && automation.expected_result == device_name)
                     {
                         policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is internal ip address
-                    if (automation.category == 0 && automation.condition == 4 && automation.expected_result == device_identity.ip_address_internal)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is external ip address
-                    if (automation.category == 0 && automation.condition == 5 && automation.expected_result == external_ip_address)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is domain
-                    if (automation.category == 0 && automation.condition == 6 && automation.expected_result == device_identity.domain)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is group
-                    if (automation.category == 0 && automation.condition == 3 && automation.expected_result == group_name)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is location name
-                    if (automation.category == 0 && automation.condition == 2 && automation.expected_result == location_name)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
-                    }
-
-                    // Condition is tenant name
-                    if (automation.category == 0 && automation.condition == 1 && automation.expected_result == tenant_name)
-                    {
-                        policy_name = automation.trigger;
-                        matched = true;
-                        continue;
+                        break;
                     }
                 }
 
-                // No assigned policy found, return nothing
-                if (matched == false)
+                // Tenant
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 1 && automation.expected_result == tenant_name)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // Location
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 2 && automation.expected_result == location_name)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // Group
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 3 && automation.expected_result == group_name)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // Internal IP
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 4 && automation.expected_result == device_identity.ip_address_internal)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // External IP
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 5 && automation.expected_result == external_ip_address)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // Domain
+                if (policy_name == null)
+                {
+                    foreach (var automation in automations_list)
+                    {
+                        if (automation.category == 0 && automation.condition == 6 && automation.expected_result == device_identity.domain)
+                        {
+                            policy_name = automation.trigger;
+                            break;
+                        }
+                    }
+                }
+
+                // No policy found
+                if (policy_name == null)
                 {
                     Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "matched", "no_assigned_policy_found");
                     return "no_assigned_policy_found";
                 }
                 else
+                {
                     Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "Filter automations (matched)", policy_name);
+                }
 
-                // Get policy from database
+                // Policy aus Datenbank holen (unverändert)
                 try
                 {
                     string query = "SELECT * FROM policies WHERE name = @policy_name;";
@@ -365,6 +394,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                                 antivirus_controlled_folder_access_folders_json = reader["antivirus_controlled_folder_access_folders"].ToString();
                                 sensors_json = reader["sensors"].ToString();
                                 jobs_json = reader["jobs"].ToString();
+                                tray_icon_settings_json = reader["tray_icon_settings"].ToString();
                             }
                         }
                     }
@@ -536,7 +566,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                     antivirus_controlled_folder_access_folders_json,
                     antivirus_controlled_folder_access_ruleset_json,
                     policy_sensors_json,
-                    policy_jobs_json
+                    policy_jobs_json,
+                    tray_icon_settings_json
                 };
 
                 // Serialize JSON object to string and return it

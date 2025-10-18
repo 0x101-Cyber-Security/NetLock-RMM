@@ -22,7 +22,7 @@ namespace Global.Helper
             try
             {
                 // Check if debug file exists in user config directory
-                string debugFile = Path.Combine(Application_Paths.ConfigDir, "debug.txt");
+                string debugFile = Application_Paths.program_data_debug_txt;
                 return File.Exists(debugFile);
             }
             catch
@@ -36,7 +36,6 @@ namespace Global.Helper
             // Ensure all required directories exist
             Directory.CreateDirectory(Application_Paths.NetLockUserDir);
             Directory.CreateDirectory(Application_Paths.LogsDir);
-            Directory.CreateDirectory(Application_Paths.ConfigDir);
             Directory.CreateDirectory(Application_Paths.TempDir);
         }
 

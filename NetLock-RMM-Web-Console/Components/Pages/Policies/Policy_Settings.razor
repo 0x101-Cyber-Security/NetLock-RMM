@@ -665,6 +665,147 @@
 
                     </MudPaper>
                 </MudTabPanel>
+                
+                <MudTabPanel Text="Tray Icon">
+                    
+                     <MudPaper Class="p-3">
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@TrayIconEnabled" Label="Enable" Color="Color.Primary" />
+        
+                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">General</MudText>
+                        <MudTextField Class="ml-3" T="string" Label="Tray Icon Title" @bind-Value="@TrayIconTitle" Disabled="@(!TrayIconEnabled)" />
+        
+                        <MudText Class="ml-2 mt-3" Typo="Typo.h6">Buttons</MudText>
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@TrayIconAboutButtonEnabled" Label="Show About Button" Color="Color.Primary" Disabled="@(!TrayIconEnabled)" />
+                        <MudTextField Class="ml-4" T="string" Label="About Button Title" @bind-Value="@TrayIconAboutButtonTitle" Disabled="@(!TrayIconEnabled || !TrayIconAboutButtonEnabled)" />
+        
+                        <MudCheckBox Class="ml-2 mt-2" T="bool" @bind-Value="@TrayIconExitButtonEnabled" Label="Show Exit Button" Color="Color.Primary" Disabled="@(!TrayIconEnabled)" />
+                        <MudTextField Class="ml-4 mb-2" T="string" Label="Exit Button Title" @bind-Value="@TrayIconExitButtonTitle" Disabled="@(!TrayIconEnabled || !TrayIconExitButtonEnabled)" />
+                    </MudPaper>
+        
+                    <MudPaper Class="mt-5 p-3">
+                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">About Interface</MudText>
+        
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@AboutInterfaceEnabled" Label="Enable" Color="Color.Primary" />
+        
+                        <MudTextField Class="ml-3 mt-3" T="string" Label="Window Title" @bind-Value="@AboutInterfaceWindowTitle" Disabled="@(!AboutInterfaceEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Emoji" @bind-Value="@AboutInterfaceEmoji" Disabled="@(!AboutInterfaceEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Title" @bind-Value="@AboutInterfaceTitle" Disabled="@(!AboutInterfaceEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Description" @bind-Value="@AboutInterfaceDescription" Disabled="@(!AboutInterfaceEnabled)" />
+        
+                        <MudDivider Class="mt-3 mb-1" />
+        
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@AboutInterfaceVersionEnabled" Label="Show Version" Color="Color.Primary" Disabled="@(!AboutInterfaceEnabled)" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@AboutInterfacePolicyEnabled" Label="Show Policy" Color="Color.Primary" Disabled="@(!AboutInterfaceEnabled)" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@AboutInterfaceCopyrightTextEnabled" Label="Show Copyright" Color="Color.Primary" Disabled="@(!AboutInterfaceEnabled)" />
+        
+                        <MudTextField Class="ml-3 mt-2 mb-2" T="string" Label="Close Button Title" @bind-Value="@AboutInterfaceCloseButtonTitle" Disabled="@(!AboutInterfaceEnabled)" />
+                    </MudPaper>
+        
+                    <MudPaper Class="mt-5 p-3">
+                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">Chat interface</MudText>
+        
+                        <MudTextField Class="ml-3 mt-3" T="string" Label="Loading Message" @bind-Value="@ChatInterfaceLoadingMessage" />
+                        <MudTextField Class="ml-3" T="string" Label="Window Title" @bind-Value="@ChatInterfaceWindowTitle" />
+                        <MudTextField Class="ml-3" T="string" Label="Subtitle" @bind-Value="@ChatInterfaceSubtitle" />
+        
+                        <MudDivider Class="mt-3 mb-3" />
+        
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@ChatInterfaceWelcomeMessageEnabled" Label="Show Welcome Message" Color="Color.Primary" />
+                        <MudTextField Class="ml-4" T="string" Label="Welcome Message Text" @bind-Value="@ChatInterfaceWelcomeMessageText" Disabled="@(!ChatInterfaceWelcomeMessageEnabled)" />
+        
+                        <MudTextField Class="ml-3 mt-2" T="string" Label="Input Field Placeholder" @bind-Value="@ChatInterfaceInputFieldText" />
+        
+                        <MudDivider Class="mt-3 mb-3" />
+        
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@ChatInterfaceSettingsEnabled" Label="Enable Settings" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-3" T="bool" @bind-Value="@ChatInterfaceSettingsExportChatHistoryEnabled" Label="Allow Export Chat History" Color="Color.Primary" Disabled="@(!ChatInterfaceSettingsEnabled)" />
+                        <MudCheckBox Class="ml-3" T="bool" @bind-Value="@ChatInterfaceSettingsCopyChatHistoryEnabled" Label="Allow Copy Chat History" Color="Color.Primary" Disabled="@(!ChatInterfaceSettingsEnabled)" />
+                        <MudCheckBox Class="ml-3 mb-2" T="bool" @bind-Value="@ChatInterfaceSettingsAboutEnabled" Label="Show About" Color="Color.Primary" Disabled="@(!ChatInterfaceSettingsEnabled)" />
+                    </MudPaper>
+        
+                    <MudPaper Class="mt-5 p-3">
+                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">Remote Screen Control</MudText>
+        
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@RemoteScreenControlEnabled" Label="Enable" Color="Color.Primary" />
+        
+                        <MudTextField Class="ml-3 mt-3" T="string" Label="Request Title" @bind-Value="@RemoteScreenControlRequestTitle" Disabled="@(!RemoteScreenControlEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Request Message" @bind-Value="@RemoteScreenControlRequestMessage" Disabled="@(!RemoteScreenControlEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Accept Button Title" @bind-Value="@RemoteScreenControlAcceptButtonTitle" Disabled="@(!RemoteScreenControlEnabled)" />
+                        <MudTextField Class="ml-3" T="string" Label="Decline Button Title" @bind-Value="@RemoteScreenControlDeclineButtonTitle" Disabled="@(!RemoteScreenControlEnabled)" />
+                        <MudTextField Class="ml-3 mb-2" T="string" Label="Stop Button Title" @bind-Value="@RemoteScreenControlStopButtonTitle" Disabled="@(!RemoteScreenControlEnabled)" />
+                        <MudTextField Class="ml-3 mb-2" T="string" Label="Support Agent Connected Message" @bind-Value="@RemoteScreenControlSessionActiveText" Disabled="@(!RemoteScreenControlEnabled)" />
+                    </MudPaper>
+        
+                    <MudPaper Class="mt-5 p-3">
+                        <MudText Class="ml-2 mt-2" Typo="Typo.h6">Buttons</MudText>
+                        
+                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="Variant.Filled" OnClick="@Show_Add_Button_Dialog" Color="Color.Default" StartIcon="@Icons.Material.Filled.Add" Disabled="@(!TrayIconEnabled)">@Localizer["add"]</MudButton>
+
+                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Show_Edit_Button_Dialog())" Disabled="@(!TrayIconEnabled || String.IsNullOrEmpty(TrayIconButtonsSelectedRowContentId))">@Localizer["edit"]</MudButton>
+
+                        <MudButton Class="ml-2 mt-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => DeleteTrayIconButton())" Disabled="@(!TrayIconEnabled || String.IsNullOrEmpty(TrayIconButtonsSelectedRowContentId))">@Localizer["delete"]</MudButton>
+
+                        
+                        <MudTable Class="mt-0" Height="20vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@TrayIconButtonsMySqlData" Filter="new Func<TrayIconButtonsEntity, bool>(TrayIconButtonsTableFilterFunc)">
+                            <ToolBarContent>
+                                <MudTextField @bind-Value="TrayIconButtonsTableSearchString" Placeholder="Search" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                            </ToolBarContent>
+                            <HeaderContent>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.Name)">Name</MudTableSortLabel></MudTh>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.Description)">Description</MudTableSortLabel></MudTh>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.Author)">Author</MudTableSortLabel></MudTh>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.Date)">Date</MudTableSortLabel></MudTh>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.Action)">Action</MudTableSortLabel></MudTh>
+                                <MudTh Style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<TrayIconButtonsEntity, object>(x => x.ActionDetails)">Action details</MudTableSortLabel></MudTh>
+                    
+                            </HeaderContent>
+                            <RowTemplate Context="TrayIconButtonsRow">
+                    
+                                <MudTd DataLabel="Name" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.Name
+                                    </span>
+                                </MudTd>
+                                
+                                <MudTd DataLabel="Description" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.Description
+                                    </span>
+                                </MudTd>
+                    
+                                <MudTd DataLabel="Author" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.Author
+                                    </span>
+                                </MudTd>
+                    
+                                <MudTd DataLabel="Date" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.Date
+                                    </span>
+                                </MudTd>
+                    
+                                <MudTd DataLabel="Action" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.Action
+                                    </span>
+                                </MudTd>
+                    
+                                <MudTd DataLabel="Action details" @onclick="() => TrayIconButtonsRowClickHandler(TrayIconButtonsRow)" @ondblclick="() => TrayIconButtonsRowDblClickHandler(TrayIconButtonsRow)" class="@TrayIconButtonsGetRowClass(TrayIconButtonsRow)" style="white-space: nowrap;">
+                                    <span style="display: flex; align-items: center;">
+                                        &nbsp;@TrayIconButtonsRow.ActionDetails
+                                    </span>
+                                </MudTd>
+
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="Entries per page" />
+                                </PagerContent>
+                            </MudTable>
+                        </MudPaper>
+                    
+                </MudTabPanel>
+
             </MudTabs>
         }
 
@@ -757,6 +898,8 @@
         await Get_Sensors_Overview();
         await Get_Jobs_Overview();
         await Get_Antivirus_Controlled_Folder_Access_Rulesets();
+        await TrayIconSettingsLoad();
+        await TrayIconButtonsLoad();
 
         StateHasChanged();
     }
@@ -976,6 +1119,7 @@
                         antivirus_controlled_folder_access_folders_json = String.IsNullOrEmpty(reader["antivirus_controlled_folder_access_folders"].ToString()) ? "[]" : reader["antivirus_controlled_folder_access_folders"].ToString() ?? "[]";
                         sensors_json = String.IsNullOrEmpty(reader["sensors"].ToString()) ? "[]" : reader["sensors"].ToString() ?? "[]";
                         jobs_json = String.IsNullOrEmpty(reader["jobs"].ToString()) ? "[]" : reader["jobs"].ToString() ?? "[]";
+                        TrayIconSettingsJson = String.IsNullOrEmpty(reader["tray_icon_settings"].ToString()) ? "{}" : reader["tray_icon_settings"].ToString() ?? "{}";
                     }
                 }
             }
@@ -1149,6 +1293,85 @@
         }
 
         #endregion
+        
+        #region Tray Icon
+        
+        try
+        {
+            // Serialize the list of buttons from the ButtonsJson string
+            List<ButtonSettings> buttons = new List<ButtonSettings>();
+            
+            try
+            {
+                buttons = JsonSerializer.Deserialize<List<ButtonSettings>>(ButtonsJson) ?? new List<ButtonSettings>();
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/Policy_Settings -> Save_Policy (Deserialize ButtonsJson)", "Result", ex.ToString());
+            }
+            
+            // Root settings
+            RootSettings traySettings = new RootSettings
+            {
+                TrayIcon = new TrayIconSettings
+                {
+                    Enabled = TrayIconEnabled,
+                    Title = TrayIconTitle,
+                    AboutButtonEnabled = TrayIconAboutButtonEnabled,
+                    AboutButtonTitle = TrayIconAboutButtonTitle,
+                    ExitButtonEnabled = TrayIconExitButtonEnabled,
+                    ExitButtonTitle = TrayIconExitButtonTitle
+                },
+                AboutInterface = new AboutInterfaceSettings
+                {
+                    Enabled = AboutInterfaceEnabled,
+                    WindowTitle = AboutInterfaceWindowTitle,
+                    Emoji = AboutInterfaceEmoji,
+                    Title = AboutInterfaceTitle,
+                    Description = AboutInterfaceDescription,
+                    VersionEnabled = AboutInterfaceVersionEnabled,
+                    PolicyEnabled = AboutInterfacePolicyEnabled,
+                    CopyrightTextEnabled = AboutInterfaceCopyrightTextEnabled,
+                    CloseButtonTitle = AboutInterfaceCloseButtonTitle
+                },
+                ChatInterface = new ChatInterfaceSettings
+                {
+                    LoadingMessage = ChatInterfaceLoadingMessage,
+                    WindowTitle = ChatInterfaceWindowTitle,
+                    Subtitle = ChatInterfaceSubtitle,
+                    WelcomeMessageEnabled = ChatInterfaceWelcomeMessageEnabled,
+                    WelcomeMessagText = ChatInterfaceWelcomeMessageText,
+                    InputFieldText = ChatInterfaceInputFieldText,
+                    SettingsEnabled = ChatInterfaceSettingsEnabled,
+                    SettingsExportChatHistoryEnabled = ChatInterfaceSettingsExportChatHistoryEnabled,
+                    SettingsCopyChatHistoryEnabled = ChatInterfaceSettingsCopyChatHistoryEnabled,
+                    SettingsAboutEnabled = ChatInterfaceSettingsAboutEnabled
+                },
+                RemoteScreenControl = new RemoteScreenControlSettings
+                {
+                    Enabled = RemoteScreenControlEnabled,
+                    RequestTitle = RemoteScreenControlRequestTitle,
+                    RequestMessage = RemoteScreenControlRequestMessage,
+                    AcceptButtonTitle = RemoteScreenControlAcceptButtonTitle,
+                    DeclineButtonTitle = RemoteScreenControlDeclineButtonTitle,
+                    StopButtonTitle = RemoteScreenControlStopButtonTitle,
+                    SessionActiveText = RemoteScreenControlSessionActiveText
+                },
+                Buttons = new List<ButtonSettings>(buttons),
+            };
+
+            // Serialize to JSON
+            TrayIconSettingsJson = JsonSerializer.Serialize(traySettings, new JsonSerializerOptions { WriteIndented = true });
+
+            // Logging
+            Logging.Handler.Debug("/Policy_Settings -> Save_Policy (Create TrayIconSettingsJson)", "Result", TrayIconSettingsJson);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings -> Save_Policy (Create TrayIconSettingsJson)", "Result", ex.ToString());
+        }
+        
+        #endregion
 
         MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -1158,7 +1381,7 @@
         {
             await conn.OpenAsync();
 
-            string execute_query = "UPDATE policies SET antivirus_settings = @antivirus_settings, antivirus_exclusions = @antivirus_exclusions, antivirus_scan_jobs = @antivirus_scan_jobs, antivirus_controlled_folder_access_folders = @antivirus_controlled_folder_access_folders, sensors = @sensors, jobs = @jobs WHERE name = @policy_name;";
+            string execute_query = "UPDATE policies SET antivirus_settings = @antivirus_settings, antivirus_exclusions = @antivirus_exclusions, antivirus_scan_jobs = @antivirus_scan_jobs, antivirus_controlled_folder_access_folders = @antivirus_controlled_folder_access_folders, sensors = @sensors, jobs = @jobs, tray_icon_settings = @tray_icon_settings WHERE name = @policy_name;";
 
             MySqlCommand cmd = new MySqlCommand(execute_query, conn);
 
@@ -1169,6 +1392,7 @@
             cmd.Parameters.AddWithValue("@antivirus_controlled_folder_access_folders", antivirus_controlled_folder_access_folders_json);
             cmd.Parameters.AddWithValue("@sensors", sensors_json);
             cmd.Parameters.AddWithValue("@jobs", jobs_json);
+            cmd.Parameters.AddWithValue("@tray_icon_settings", TrayIconSettingsJson);
 
             cmd.ExecuteNonQuery();
 
@@ -2367,6 +2591,543 @@
         //await Show_Export_Table_Dialog("jobs");
     }
 
+    #endregion
+    
+    #region Tray Icon
+    
+    string TrayIconSettingsJson = "[]";
+
+    // Tray Icon
+    public bool TrayIconEnabled = false;
+    public string TrayIconTitle = "NetLock RMM Support Chat";
+    public bool TrayIconAboutButtonEnabled = true;
+    public string TrayIconAboutButtonTitle = "About";
+    public bool TrayIconExitButtonEnabled = true;
+    public string TrayIconExitButtonTitle = "Exit";
+
+    // About Interface
+    public bool AboutInterfaceEnabled = false;
+    public string AboutInterfaceWindowTitle = "NetLock RMM";
+    public string AboutInterfaceEmoji = "😀";
+    public string AboutInterfaceTitle = "NetLock RMM";
+    public string AboutInterfaceDescription = "support@netlockrmm.com";
+    public bool AboutInterfaceVersionEnabled = true;
+    public bool AboutInterfacePolicyEnabled = true;
+    public bool AboutInterfaceCopyrightTextEnabled = true;
+    public string AboutInterfaceCloseButtonTitle = "Close";
+
+    // Chat Interface
+    public string ChatInterfaceLoadingMessage = "Welcome to NetLock RMM...";
+    public string ChatInterfaceWindowTitle = "NetLock RMM Support Chat";
+    public string ChatInterfaceSubtitle = "NetLock RMM Support Team";
+    public bool ChatInterfaceWelcomeMessageEnabled = true;
+    public string ChatInterfaceWelcomeMessageText = "Hello there, I would like to chat with you about a issue.";
+    public string ChatInterfaceInputFieldText = "Enter your message here...";
+    public bool ChatInterfaceSettingsEnabled = true;
+    public bool ChatInterfaceSettingsExportChatHistoryEnabled = true;
+    public bool ChatInterfaceSettingsCopyChatHistoryEnabled = true;
+    public bool ChatInterfaceSettingsAboutEnabled = true;
+
+    // Remote Screen Control
+    public bool RemoteScreenControlEnabled = true;
+    public string RemoteScreenControlRequestTitle = "A admin wants to control your screen";
+    public string RemoteScreenControlRequestMessage = "Do you want to allow remote screen control?";
+    public string RemoteScreenControlAcceptButtonTitle = "Accept";
+    public string RemoteScreenControlDeclineButtonTitle = "Decline";
+    public string RemoteScreenControlStopButtonTitle = "Stop Remote Screen Control";
+    public string RemoteScreenControlSessionActiveText = "A admin is controlling your screen";
+
+    // Buttons JSON
+    public string ButtonsJson = "[]";
+
+    public class TrayIconSettings
+    {
+        public bool Enabled { get; set; }
+        public string Title { get; set; }
+        public bool AboutButtonEnabled { get; set; }
+        public string AboutButtonTitle { get; set; }
+        public bool ExitButtonEnabled { get; set; }
+        public string ExitButtonTitle { get; set; }
+    }
+
+    public class AboutInterfaceSettings
+    {
+        public bool Enabled { get; set; }
+        public string WindowTitle { get; set; }
+        public string Emoji { get; set; }
+        public string Title { get; set; }
+        public string Description { get; set; }
+        public bool VersionEnabled { get; set; }
+        public bool PolicyEnabled { get; set; }
+        public bool CopyrightTextEnabled { get; set; }
+        public string CloseButtonTitle { get; set; }
+    }
+
+    public class ChatInterfaceSettings
+    {
+        public string LoadingMessage { get; set; }
+        public string WindowTitle { get; set; }
+        public string Subtitle { get; set; }
+        public string OperatorFirstName { get; set; }
+        public string OperatorLastName { get; set; }
+        public bool WelcomeMessageEnabled { get; set; }
+        public string WelcomeMessagText { get; set; }
+        public string InputFieldText { get; set; }
+        public bool SettingsEnabled { get; set; }
+        public bool SettingsExportChatHistoryEnabled { get; set; }
+        public bool SettingsCopyChatHistoryEnabled { get; set; }
+        public bool SettingsAboutEnabled { get; set; }
+    }
+
+    public class RemoteScreenControlSettings
+    {
+        public bool Enabled { get; set; }
+        public string RequestTitle { get; set; }
+        public string RequestMessage { get; set; }
+        public string AcceptButtonTitle { get; set; }
+        public string DeclineButtonTitle { get; set; }
+        public string StopButtonTitle { get; set; }
+        public string SessionActiveText { get; set; }
+    }
+
+    public class ButtonSettings
+    {
+        public string Id { get; set; }
+        public string Name { get; set; }
+        public string Description { get; set; }
+        public string Author { get; set; }
+        public string Date { get; set; }
+        public string Action { get; set; }
+        public string ActionDetails { get; set; }
+    }
+
+    public class RootSettings
+    {
+        public TrayIconSettings TrayIcon { get; set; }
+        public AboutInterfaceSettings AboutInterface { get; set; }
+        public ChatInterfaceSettings ChatInterface { get; set; }
+        public RemoteScreenControlSettings RemoteScreenControl { get; set; }
+        public List<ButtonSettings> Buttons { get; set; }
+    }
+
+    private async Task TrayIconSettingsLoad()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(TrayIconSettingsJson) || TrayIconSettingsJson == "[]")
+            {
+                Logging.Handler.Debug("/Policy_Settings -> LoadTrayIcon", "tray_icon_json_empty", "Empty JSON, using defaults");
+                return;
+            }
+
+            Logging.Handler.Debug("/Policy_Settings -> LoadTrayIcon (Extract)", "tray_icon_json", TrayIconSettingsJson);
+
+            RootSettings settings = JsonSerializer.Deserialize<RootSettings>(TrayIconSettingsJson);
+
+            if (settings == null)
+            {
+                Logging.Handler.Error("/Policy_Settings -> LoadTrayIcon", "Result", "Failed to deserialize settings.");
+                return;
+            }
+
+            // Tray Icon
+            if (settings.TrayIcon != null)
+            {
+                TrayIconEnabled = settings.TrayIcon.Enabled;
+                TrayIconTitle = settings.TrayIcon.Title;
+                TrayIconAboutButtonEnabled = settings.TrayIcon.AboutButtonEnabled;
+                TrayIconAboutButtonTitle = settings.TrayIcon.AboutButtonTitle;
+                TrayIconExitButtonEnabled = settings.TrayIcon.ExitButtonEnabled;
+                TrayIconExitButtonTitle = settings.TrayIcon.ExitButtonTitle;
+            }
+
+            // About Interface
+            if (settings.AboutInterface != null)
+            {
+                AboutInterfaceEnabled = settings.AboutInterface.Enabled;
+                AboutInterfaceWindowTitle = settings.AboutInterface.WindowTitle;
+                AboutInterfaceEmoji = settings.AboutInterface.Emoji;
+                AboutInterfaceTitle = settings.AboutInterface.Title;
+                AboutInterfaceDescription = settings.AboutInterface.Description;
+                AboutInterfaceVersionEnabled = settings.AboutInterface.VersionEnabled;
+                AboutInterfacePolicyEnabled = settings.AboutInterface.PolicyEnabled;
+                AboutInterfaceCopyrightTextEnabled = settings.AboutInterface.CopyrightTextEnabled;
+                AboutInterfaceCloseButtonTitle = settings.AboutInterface.CloseButtonTitle;
+            }
+
+            // Chat Interface
+            if (settings.ChatInterface != null)
+            {
+                ChatInterfaceLoadingMessage = settings.ChatInterface.LoadingMessage;
+                ChatInterfaceWindowTitle = settings.ChatInterface.WindowTitle;
+                ChatInterfaceSubtitle = settings.ChatInterface.Subtitle;
+                ChatInterfaceWelcomeMessageEnabled = settings.ChatInterface.WelcomeMessageEnabled;
+                ChatInterfaceWelcomeMessageText = settings.ChatInterface.WelcomeMessagText;
+                ChatInterfaceInputFieldText = settings.ChatInterface.InputFieldText;
+                ChatInterfaceSettingsEnabled = settings.ChatInterface.SettingsEnabled;
+                ChatInterfaceSettingsExportChatHistoryEnabled = settings.ChatInterface.SettingsExportChatHistoryEnabled;
+                ChatInterfaceSettingsCopyChatHistoryEnabled = settings.ChatInterface.SettingsCopyChatHistoryEnabled;
+                ChatInterfaceSettingsAboutEnabled = settings.ChatInterface.SettingsAboutEnabled;
+            }
+
+            // Remote Screen Control
+            if (settings.RemoteScreenControl != null)
+            {
+                RemoteScreenControlEnabled = settings.RemoteScreenControl.Enabled;
+                RemoteScreenControlRequestTitle = settings.RemoteScreenControl.RequestTitle;
+                RemoteScreenControlRequestMessage = settings.RemoteScreenControl.RequestMessage;
+                RemoteScreenControlAcceptButtonTitle = settings.RemoteScreenControl.AcceptButtonTitle;
+                RemoteScreenControlDeclineButtonTitle = settings.RemoteScreenControl.DeclineButtonTitle;
+                RemoteScreenControlStopButtonTitle = settings.RemoteScreenControl.StopButtonTitle;
+                RemoteScreenControlSessionActiveText = settings.RemoteScreenControl.SessionActiveText;
+            }
+
+            // Buttons
+            if (settings.Buttons != null)
+            {
+                ButtonsJson = JsonSerializer.Serialize(settings.Buttons);
+            }
+
+            Logging.Handler.Debug("/Policy_Settings -> LoadTrayIcon", "Result", "Settings successfully loaded.");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings -> LoadTrayIcon", "Exception", ex.ToString());
+        }
+    }
+    
+    public List<TrayIconButtonsEntity> TrayIconButtonsMySqlData;
+
+    public class TrayIconButtonsEntity
+    {
+        public string Id { get; set; } = String.Empty;
+        public string Name { get; set; } = String.Empty;
+        public string Description { get; set; } = String.Empty;
+        public string Author { get; set; } = String.Empty;
+        public string Date { get; set; } = String.Empty;
+        public string Action { get; set; } = String.Empty;
+        public string ActionDetails { get; set; } = String.Empty;
+        public string Json { get; set; } = String.Empty;
+    }
+
+    private string TrayIconButtonsTableSearchString = String.Empty;
+
+    private bool TrayIconButtonsTableFilterFunc(TrayIconButtonsEntity row)
+    {
+        if (string.IsNullOrEmpty(TrayIconButtonsTableSearchString))
+            return true;
+
+        //Search logic for each column
+        return row.Name.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase) ||
+            row.Description.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase) ||
+            row.Author.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase) ||
+            row.Date.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase) ||
+            row.Action.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase) ||
+            row.ActionDetails.Contains(TrayIconButtonsTableSearchString, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private string TrayIconButtonsSelectedRowContentId = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+    private string TrayIconButtonsSelectedRowContentJson = String.Empty; // Hier wird der Inhalt der ausgewählten Zeile gespeichert
+
+    // Der Handler für den TableRowClick-Event
+    private void TrayIconButtonsRowClickHandler(TrayIconButtonsEntity row)
+    {
+        TrayIconButtonsSelectedRowContentId = row.Id;
+        TrayIconButtonsSelectedRowContentJson = row.Json;
+    }
+
+    private async void TrayIconButtonsRowDblClickHandler(TrayIconButtonsEntity row)
+    {
+        await Show_Edit_Button_Dialog();
+    }
+
+    private string TrayIconButtonsGetRowClass(TrayIconButtonsEntity row)
+    {
+        return row.Id == TrayIconButtonsSelectedRowContentId ? (_isDarkMode ? "selected-row-dark" : "selected-row-light") : String.Empty;
+    }
+
+    private bool TrayIconButtons_Get_Row_Selected()
+    {
+        if (String.IsNullOrEmpty(TrayIconButtonsSelectedRowContentId) == false)
+         return false;
+        else
+         return true;
+    }
+     
+    private async Task TrayIconButtonsLoad()
+    {
+        // Deserialize ButtonsJson and load into TrayIconButtonsMySqlData
+        TrayIconButtonsMySqlData = new List<TrayIconButtonsEntity>();
+        
+        try
+        {
+            if (string.IsNullOrWhiteSpace(ButtonsJson) || ButtonsJson == "[]")
+            {
+                Logging.Handler.Debug("/Policy_Settings -> TrayIconButtonsLoad", "buttons_json_empty", "Empty JSON, using defaults");
+                return;
+            }
+
+            Logging.Handler.Debug("/Policy_Settings -> TrayIconButtonsLoad (Extract)", "buttons_json", ButtonsJson);
+
+            List<ButtonSettings> buttons = JsonSerializer.Deserialize<List<ButtonSettings>>(ButtonsJson);
+
+            if (buttons == null)
+            {
+                Logging.Handler.Error("/Policy_Settings -> TrayIconButtonsLoad", "Result", "Failed to deserialize buttons.");
+                return;
+            }
+
+            foreach (var button in buttons)
+            {
+                TrayIconButtonsEntity entity = new TrayIconButtonsEntity
+                {
+                    Id = button.Id,
+                    Name = button.Name,
+                    Description = button.Description,
+                    Author = button.Author,
+                    Date = button.Date,
+                    Action = button.Action,
+                    ActionDetails = button.ActionDetails,
+                    Json = JsonSerializer.Serialize(button)
+                };
+
+                TrayIconButtonsMySqlData.Add(entity);
+            }
+
+            Logging.Handler.Debug("/Policy_Settings -> TrayIconButtonsLoad", "Result", "Buttons successfully loaded.");
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/Policy_Settings -> TrayIconButtonsLoad", "Exception", ex.ToString());
+        }
+    }
+
+    // Open Add Button Dialog
+    private bool add_button_dialog_open = false;
+
+    private async Task Show_Add_Button_Dialog()
+    {
+        try
+        {
+            if (add_button_dialog_open)
+            return;
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+
+        add_button_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Policies.Dialogs.TrayIcon.Add_Button_Dialog>("Add new button", parameters, options).Result;
+
+        add_button_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/policy_settings -> Add_Button_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            // Take the new button json and add it to the buttons json
+            /*
+             *
+             *        var buttonData = new
+                {
+                    Name = Name,
+                    Action = Action,
+                    ActionDetails = ActionDetails
+                };
+                
+             */
+                    
+            // Deserialize existing buttons
+            List<ButtonSettings> existingButtons = new List<ButtonSettings>();
+            
+            if (!string.IsNullOrWhiteSpace(ButtonsJson) && ButtonsJson != "[]")
+            {
+                existingButtons = JsonSerializer.Deserialize<List<ButtonSettings>>(ButtonsJson);
+            }
+            
+            // Deserialize new button
+            ButtonSettings newButton = JsonSerializer.Deserialize<ButtonSettings>(result.Data.ToString());
+            
+            if (newButton != null)
+            {
+                existingButtons.Add(newButton);
+                
+                // Serialize back to JSON
+                ButtonsJson = JsonSerializer.Serialize(existingButtons, new JsonSerializerOptions { WriteIndented = true });
+                
+                // Load the buttons again
+                await TrayIconButtonsLoad();
+                
+                Logging.Handler.Debug("/policy_settings -> Add_Button_Dialog", "Updated ButtonsJson", ButtonsJson);
+                StateHasChanged();
+            }
+            else
+            {
+                Logging.Handler.Error("/policy_settings -> Add_Button_Dialog", "Result", "Failed to deserialize new button.");
+            }
+        }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/policy_settings -> Show_Add_Button_Dialog", "ButtonsJson_Deserialize", ex.ToString());
+            ButtonsJson = "[]";
+        }
+    }
+    
+    // Open Edit Button Dialog
+    private bool edit_button_dialog_open = false;
+    
+    private async Task Show_Edit_Button_Dialog()
+    {
+        if (edit_button_dialog_open)
+            return;
+
+        if (String.IsNullOrEmpty(TrayIconButtonsSelectedRowContentJson))
+            return;
+
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackgroundClass = "dialog-blurring",
+        };
+
+        DialogParameters parameters = new DialogParameters();
+        parameters.Add("id", TrayIconButtonsSelectedRowContentId);
+        parameters.Add("button_json", TrayIconButtonsSelectedRowContentJson);
+
+        edit_button_dialog_open = true;
+
+        var result = await this.DialogService.Show<Pages.Policies.Dialogs.TrayIcon.Edit_Button_Dialog>("Edit button", parameters, options).Result;
+
+        edit_button_dialog_open = false;
+
+        if (result.Canceled)
+            return;
+
+        Logging.Handler.Debug("/policy_settings -> Edit_Button_Dialog", "Result", result.Data.ToString());
+
+        if (String.IsNullOrEmpty(result.Data.ToString()) == false && result.Data.ToString() != "error")
+        {
+            // Take the edited button json and update it in the buttons json
+            /*
+                        Id = Id,
+               Description = Description,
+               Author = netlock_username,
+               Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+               Action = Action,
+               ActionDetails = ActionDetails
+             */
+            
+            // Deserialize existing buttons
+            List<ButtonSettings> existingButtons = new List<ButtonSettings>();
+            
+            if (!string.IsNullOrWhiteSpace(ButtonsJson) && ButtonsJson != "[]")
+            {
+                existingButtons = JsonSerializer.Deserialize<List<ButtonSettings>>(ButtonsJson);
+            }
+            
+            // Deserialize edited button
+            ButtonSettings editedButton = JsonSerializer.Deserialize<ButtonSettings>(result.Data.ToString());
+            
+            if (editedButton != null)
+            {
+                // Find and update the button in the existing list
+                var buttonToUpdate = existingButtons.Find(b => b.Id == editedButton.Id);
+                if (buttonToUpdate != null)
+                {
+                    buttonToUpdate.Name = editedButton.Name;
+                    buttonToUpdate.Description = editedButton.Description;
+                    buttonToUpdate.Author = editedButton.Author;
+                    buttonToUpdate.Date = editedButton.Date;
+                    buttonToUpdate.Action = editedButton.Action;
+                    buttonToUpdate.ActionDetails = editedButton.ActionDetails;
+                }
+                
+                // Serialize back to JSON
+                ButtonsJson = JsonSerializer.Serialize(existingButtons, new JsonSerializerOptions { WriteIndented = true });
+                
+                // Load the buttons again
+                await TrayIconButtonsLoad();
+                
+                Logging.Handler.Debug("/policy_settings -> Edit_Button_Dialog", "Updated ButtonsJson", ButtonsJson);
+            }
+            else
+            {
+                Logging.Handler.Error("/policy_settings -> Edit_Button_Dialog", "Result", "Failed to deserialize edited button.");
+            }
+            
+            Logging.Handler.Debug("/policy_settings -> Edit_Button_Dialog", "Updated ButtonsJson", ButtonsJson);
+
+            StateHasChanged();
+        }
+    }
+
+    private async Task DeleteTrayIconButton()
+    {
+        if (String.IsNullOrEmpty(TrayIconButtonsSelectedRowContentId))
+            return;
+        
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            BackgroundClass = "dialog-blurring",
+        };
+
+        bool? dialog_result = await DialogService.ShowMessageBox("Warning", "Are you sure you want to remove that button?", yesText: "Confirm", cancelText: "Cancel", options: options);
+
+        bool state = Convert.ToBoolean(dialog_result == null ? "false" : "true");
+        
+        if (!state)
+            return;
+        
+        try
+        {
+            // Deserialize existing buttons
+            List<ButtonSettings> existingButtons = new List<ButtonSettings>();
+            
+            if (!string.IsNullOrWhiteSpace(ButtonsJson) && ButtonsJson != "[]")
+            {
+                existingButtons = JsonSerializer.Deserialize<List<ButtonSettings>>(ButtonsJson);
+            }
+
+            // Remove the button with the selected ID
+            existingButtons.RemoveAll(b => b.Id == TrayIconButtonsSelectedRowContentId);
+
+            // Serialize back to JSON
+            ButtonsJson = JsonSerializer.Serialize(existingButtons, new JsonSerializerOptions { WriteIndented = true });
+
+            // Load the buttons again
+            await TrayIconButtonsLoad();
+
+            Logging.Handler.Debug("/policy_settings -> DeleteTrayIconButton", "Updated ButtonsJson", ButtonsJson);
+
+            // Clear selection
+            TrayIconButtonsSelectedRowContentId = String.Empty;
+            TrayIconButtonsSelectedRowContentJson = String.Empty;
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/policy_settings -> DeleteTrayIconButton", "ButtonsJson_Deserialize", ex.ToString());
+            ButtonsJson = "[]";
+        }
+    }
+    
     #endregion
 
 

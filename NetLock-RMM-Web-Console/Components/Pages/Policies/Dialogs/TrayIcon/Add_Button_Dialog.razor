@@ -1,0 +1,79 @@
+@using System.Security.Claims
+@using System.Text.Json
+
+@inject IDialogService DialogService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<MudDialog>
+    <DialogContent>
+        <MudTextField T="string" Label="Name" @bind-Value="@Name" Immediate="true" />
+        <MudTextField Class="mt-2" T="string" Label="Description" @bind-Value="@Description" Immediate="true" />
+        
+        <MudSelect Class="mt-2" T="string" @bind-Value="@Action" Label="Action" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter" Immediate="true">
+            <MudSelectItem T="string" Value="@("Open url")">Open url</MudSelectItem>
+            <MudSelectItem T="string" Value="@("Start process")">Start process</MudSelectItem>
+        </MudSelect>
+        
+        <MudTextField Class="mt-2" T="string" Label="Action Details" @bind-Value="@ActionDetails" HelperText="@GetActionDetailsHelperText()" Immediate="true" />
+        
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="@Submit" Color="Color.Success" Disabled="(String.IsNullOrEmpty(Name) || String.IsNullOrEmpty(Action) || String.IsNullOrEmpty(ActionDetails))">Submit</MudButton>
+        <MudButton OnClick="@Cancel" Color="Color.Default">Cancel</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Author { get; set; } = string.Empty;
+    public string Action { get; set; } = "Open url";
+    public string ActionDetails { get; set; } = "https://netlockrmm.com";
+
+    
+    private async void Submit()
+    {
+        
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            MudDialog.Cancel();
+            return;
+        }
+        
+        // Retrieve username from claims
+        string netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+        
+        var buttonData = new
+        {
+            Id = Randomizer.Handler.Standard(6),
+            Name = Name,
+            Description = Description,
+            Author = netlock_username,
+            Date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+            Action = Action,
+            ActionDetails = ActionDetails
+        };
+        
+        MudDialog.Close(DialogResult.Ok(JsonSerializer.Serialize(buttonData)));
+    }
+
+    void Cancel()
+    {
+        MudDialog.Cancel();
+    }
+    
+    string GetActionDetailsHelperText()
+    {
+        return Action switch
+        {
+            "Open url" => "Enter the URL to open (e.g., https://example.com)",
+            "Start process" => "Enter the process path or command to execute (e.g., notepad.exe)",
+            _ => "Enter the details for the selected action"
+        };
+    }
+}
