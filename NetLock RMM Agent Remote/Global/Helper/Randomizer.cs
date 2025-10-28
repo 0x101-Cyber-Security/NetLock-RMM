@@ -7,7 +7,7 @@ using System.Security.Cryptography;
 
 namespace Global.Helper
 {
-    public class Randomnizer
+    public class Randomizer
     {
         public static async Task<string> Generate_Access_Key(int length)
         {

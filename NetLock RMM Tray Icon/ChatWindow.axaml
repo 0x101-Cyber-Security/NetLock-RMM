@@ -16,11 +16,18 @@
 		<Border Grid.Row="0" Background="#2C3E50" Padding="20,15">
 			<Grid ColumnDefinitions="Auto,*,Auto">
 				<StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-					<Ellipse Width="40" Height="40" Margin="0,0,12,0">
-						<Ellipse.Fill>
-							<ImageBrush Source="Assets/avatar.png" Stretch="UniformToFill"/>
-						</Ellipse.Fill>
-					</Ellipse>
+					<!-- TrayIcon Image -->
+					<Border Width="40" Height="40" 
+					        CornerRadius="20" 
+					        Background="White" 
+					        Margin="0,0,12,0"
+					        ClipToBounds="True"
+					        x:Name="HeaderIconBorder">
+						<Image x:Name="HeaderIconImage"
+						       Stretch="UniformToFill"
+						       HorizontalAlignment="Center"
+						       VerticalAlignment="Center"/>
+					</Border>
 					<StackPanel VerticalAlignment="Center">
 						<TextBlock Text="{Binding DisplayName}"
 						          FontSize="18"
@@ -29,13 +36,6 @@
 
 					</StackPanel>
 				</StackPanel>
-
-				<TextBlock Grid.Column="1"
-				          Text="NetLock Remote Monitoring Management"
-				          FontSize="14"
-				          Foreground="#BDC3C7"
-				          VerticalAlignment="Center"
-				          HorizontalAlignment="Center"/>
 
 				<Button Grid.Column="2"
 				       x:Name="SettingsButton"

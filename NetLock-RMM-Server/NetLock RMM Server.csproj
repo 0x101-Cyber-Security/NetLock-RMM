@@ -13,8 +13,6 @@
   <ItemGroup>
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="LettuceEncrypt" Version="1.3.3" />
-    <PackageReference Include="LLamaSharp" Version="0.24.0" />
-    <PackageReference Include="LLamaSharp.Backend.Cpu" Version="0.24.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="9.0.8" />
     <PackageReference Include="MySqlConnector" Version="2.4.0" />

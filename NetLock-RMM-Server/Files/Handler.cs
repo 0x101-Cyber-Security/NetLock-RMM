@@ -695,6 +695,18 @@ namespace NetLock_RMM_Server.Files
                     archive.ExtractToDirectory(installer_extracted_dir);
                 }
                 
+                // Delete all files in installer_extracted_dir except the installer executable
+                if (Directory.Exists(installer_extracted_dir))
+                {
+                    foreach (string file in Directory.GetFiles(installer_extracted_dir))
+                    {
+                        if (!file.EndsWith("NetLock_RMM_Agent_Installer.exe") && !file.EndsWith("NetLock_RMM_Agent_Installer"))
+                        {
+                            File.Delete(file);
+                        }
+                    }
+                }
+                
                 //Thread.Sleep(20000);
 
                 // Check the architecture

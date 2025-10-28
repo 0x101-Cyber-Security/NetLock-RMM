@@ -18,6 +18,7 @@ namespace NetLock_RMM_Agent_Comm
         public static string TempDir = Path.Combine(Path.GetTempPath(), "NetLock RMM");
         public static string tray_icon_settings_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Tray Icon", "config.json");
         public static string program_data_debug_txt = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "debug.txt");
+        public static string netlock_comm_agent_version_txt = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "version.txt");
 
         private static string GetUserDataPath()
         {

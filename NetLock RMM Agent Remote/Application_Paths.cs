@@ -18,7 +18,14 @@ namespace NetLock_RMM_Agent_Remote
         public static string netlock_rmm_user_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock_RMM_User_Process.exe");
         public static string netlock_rmm_user_agent_uac_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock_RMM_User_Process_UAC.exe");
 
+        public static string program_files_tray_icon_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Tray Icon", "NetLock_RMM_Tray_Icon.exe");
+        
         public static string program_data_server_config_json = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "server_config.json");
+
+        public static string device_identity_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "device_identity.json");
+
+        public static string agent_settings_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "agent_config.json");
+        public static string tray_icon_settings_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Tray Icon", "config.json");
 
         private static string GetBasePath_CommonApplicationData()
         {

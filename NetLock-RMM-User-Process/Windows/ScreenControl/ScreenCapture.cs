@@ -83,8 +83,8 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
             return (actualX, actualY);
         }
 
-        // Method to capture the screen and return it as a Base64 string
-        public static async Task<string> CaptureScreenToBase64(int screenIndex, int maxFileSizeKB = 150)
+        // Method to capture the screen and return it as byte array
+        public static async Task<byte[]> CaptureScreenToBytes(int screenIndex, int maxFileSizeKB = 150)
         {
             Console.WriteLine($"Capturing screen index: {screenIndex}, max size: {maxFileSizeKB}KB");
 
@@ -120,19 +120,18 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
                 };
 
                 // Process the image for network transmission
-                string base64Result = await Task.Run(() => ProcessImageForTransmission(original, scalingInfo, screenIndex, maxFileSizeKB));
+                byte[] bytesResult = await Task.Run(() => ProcessImageForTransmission(original, scalingInfo, screenIndex, maxFileSizeKB));
                 
-                if (string.IsNullOrEmpty(base64Result))
+                if (bytesResult == null || bytesResult.Length == 0)
                 {
                     Console.WriteLine("Image processing failed, couldn't meet size requirements");
                 }
                 else 
                 {
-                    int base64Length = base64Result.Length;
-                    Console.WriteLine($"Processed image size: ~{base64Length / 1024}KB (Base64)");
+                    Console.WriteLine($"Processed image size: {bytesResult.Length / 1024}KB");
                 }
                 
-                return base64Result;
+                return bytesResult;
             }
             catch (Exception ex)
             {
@@ -142,7 +141,7 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
         }
 
         // Separate method to handle image processing for network transmission
-        private static string ProcessImageForTransmission(Bitmap original, ScalingInfo scalingInfo, int screenIndex, int maxFileSizeKB)
+        private static byte[] ProcessImageForTransmission(Bitmap original, ScalingInfo scalingInfo, int screenIndex, int maxFileSizeKB)
         {
             Bitmap processedImage = null;
             bool needsDispose = false;
@@ -211,8 +210,8 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
                     return null;
                 }
                 
-                // Convert to Base64
-                return Convert.ToBase64String(compressedBytes);
+                // Return bytes directly instead of Base64
+                return compressedBytes;
             }
             finally
             {
@@ -604,3 +603,4 @@ namespace NetLock_RMM_User_Process.Windows.ScreenControl
         }
     }
 }
+

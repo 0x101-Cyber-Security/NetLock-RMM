@@ -1,0 +1,96 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        x:Class="NetLock_RMM_Tray_Icon.AccessRequestWindow"
+        Title="Remote Access Request"
+        Width="450"
+        Height="320"
+        WindowStartupLocation="CenterScreen"
+        CanResize="False"
+        ShowInTaskbar="True"
+        Topmost="True"
+        Icon="Assets/trayicon.ico">
+	
+	<Window.Styles>
+		<Style Selector="Button">
+			<Setter Property="Cursor" Value="Hand"/>
+			<Setter Property="FontSize" Value="14"/>
+			<Setter Property="Padding" Value="20,10"/>
+			<Setter Property="CornerRadius" Value="6"/>
+			<Setter Property="BorderThickness" Value="0"/>
+		</Style>
+		
+		<Style Selector="Button.accept">
+			<Setter Property="Background" Value="#27AE60"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.accept:pointerover">
+			<Setter Property="Background" Value="#2ECC71"/>
+		</Style>
+		
+		<Style Selector="Button.decline">
+			<Setter Property="Background" Value="#E74C3C"/>
+			<Setter Property="Foreground" Value="White"/>
+		</Style>
+		
+		<Style Selector="Button.decline:pointerover">
+			<Setter Property="Background" Value="#C0392B"/>
+		</Style>
+	</Window.Styles>
+
+	<Border Background="#F5F6FA" Padding="30">
+		<StackPanel Spacing="25" VerticalAlignment="Center">
+			<!-- Icon and Title -->
+			<StackPanel Spacing="15" HorizontalAlignment="Center">
+				<Border Width="80" Height="80"
+				        CornerRadius="40"
+				        Background="White"
+				        ClipToBounds="True"
+				        HorizontalAlignment="Center"
+				        x:Name="IconBorder">
+					<Image x:Name="IconImage"
+					       Stretch="UniformToFill"
+					       HorizontalAlignment="Center"
+					       VerticalAlignment="Center"/>
+				</Border>
+				<TextBlock x:Name="TitleTextBlock"
+				          Text="A admin wants to control your screen"
+				          FontSize="18"
+				          FontWeight="Bold"
+				          Foreground="#2C3E50"
+				          TextAlignment="Center"
+				          TextWrapping="Wrap"/>
+			</StackPanel>
+
+			<!-- Message -->
+			<TextBlock x:Name="MessageTextBlock"
+			          Text="Do you want to allow remote screen control?"
+			          FontSize="14"
+			          Foreground="#7F8C8D"
+			          TextAlignment="Center"
+			          TextWrapping="Wrap"
+			          MaxWidth="380"/>
+
+			<!-- Buttons -->
+			<Grid ColumnDefinitions="*,20,*" Margin="0,10,0,0">
+				<Button x:Name="AcceptButton"
+				       Grid.Column="0"
+				       Classes="accept"
+				       Content="Accept"
+				       HorizontalAlignment="Stretch"
+				       HorizontalContentAlignment="Center"
+				       Click="AcceptButton_Click"/>
+				
+				<Button x:Name="DeclineButton"
+				       Grid.Column="2"
+				       Classes="decline"
+				       Content="Decline"
+				       HorizontalAlignment="Stretch"
+				       HorizontalContentAlignment="Center"
+				       Click="DeclineButton_Click"/>
+			</Grid>
+		</StackPanel>
+	</Border>
+</Window>

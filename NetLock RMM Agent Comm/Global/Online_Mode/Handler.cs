@@ -21,7 +21,7 @@ using Microsoft.Data.Sqlite;
 
 namespace Global.Online_Mode
 {
-    internal class Handler
+    public class Handler
     {
         public class Device_Identity
         {
@@ -416,6 +416,9 @@ namespace Global.Online_Mode
                 string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
                 Logging.Debug("Online_Mode.Handler.Authenticate", "json", json);
 
+                // Write the device identity JSON to disk
+                await File.WriteAllTextAsync(Application_Paths.device_identity_json_path, Encryption.String_Encryption.Encrypt(json, Application_Settings.NetLock_Local_Encryption_Key));
+                
                 // Declare public
                 Device_Worker.device_identity_json = json;
 
@@ -463,14 +466,11 @@ namespace Global.Online_Mode
                                 string new_server_config_json = JsonSerializer.Serialize(new_server_config, new JsonSerializerOptions { WriteIndented = true });
 
                                 // Write the new server config JSON to the file
-                                File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
-                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 Device_Worker.authorized = true;
                             }
-
-                            Device_Worker.sync_timer.Interval = 1800000; // change to 10 minutes
-                            Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
                         else if (result == "unauthorized")
                         {
@@ -496,8 +496,8 @@ namespace Global.Online_Mode
                                 string new_server_config_json = JsonSerializer.Serialize(new_server_config, new JsonSerializerOptions { WriteIndented = true });
 
                                 // Write the new server config JSON to the file
-                                File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
-                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 // Clear local information
                                 Device_Worker.processesJson = String.Empty;
@@ -517,7 +517,7 @@ namespace Global.Online_Mode
                                 Device_Worker.authorized = false;
                             }
 
-                            Device_Worker.sync_timer.Interval = 1800000; // change to 30 seconds
+                            Device_Worker.sync_timer.Interval = 30000; // change to 30 seconds
                             Logging.Debug("Online_Mode.Handler.Authenticate", "sync_timer.Interval", Device_Worker.sync_timer.Interval.ToString());
                         }
 
@@ -696,8 +696,8 @@ namespace Global.Online_Mode
                                 string new_server_config_json = JsonSerializer.Serialize(new_server_config, new JsonSerializerOptions { WriteIndented = true });
 
                                 // Write the new server config JSON to the file
-                                File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
-                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 // Clear local information
                                 Device_Worker.processesJson = String.Empty;
@@ -819,8 +819,8 @@ namespace Global.Online_Mode
                                 string new_server_config_json = JsonSerializer.Serialize(new_server_config, new JsonSerializerOptions { WriteIndented = true });
 
                                 // Write the new server config JSON to the file
-                                File.WriteAllText(Application_Paths.program_data_server_config_json, new_server_config_json);
-                                File.WriteAllText(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_server_config_json, new_server_config_json);
+                                await File.WriteAllTextAsync(Application_Paths.program_data_health_agent_server_config, new_server_config_json);
 
                                 // Clear local information
                                 Device_Worker.processesJson = String.Empty;
@@ -868,12 +868,18 @@ namespace Global.Online_Mode
                                 Device_Worker.policy_jobs_json = policy_jobs_json_element.ToString();
                                 
                                 JsonElement tray_icon_settings_element = document.RootElement.GetProperty("tray_icon_settings_json");
-                                Device_Worker.policy_tray_icon_settings_json = tray_icon_settings_element.ToString();
+                                Device_Worker.policy_tray_icon_settings_json = tray_icon_settings_element.ToString();                                
+
+                                JsonElement agent_settings_element = document.RootElement.GetProperty("agent_settings_json");
+                                Device_Worker.policy_agent_settings_json = agent_settings_element.ToString();
                             }
                             
-                            // Write the trayicon json to disk for the tray icon process to read it
-                            File.WriteAllText(Application_Paths.tray_icon_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_tray_icon_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
+                            // Write the trayicon json to disk for the tray icon & remote process to read it
+                            await File.WriteAllTextAsync(Application_Paths.tray_icon_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_tray_icon_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
 
+                            // Write the agent settings json to disk for the remote process to read it
+                            await File.WriteAllTextAsync(Application_Paths.agent_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_agent_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
+                            
                             // Insert into policy database
                             Initialization.Database.NetLock_Data_Setup();
 
@@ -892,7 +898,8 @@ namespace Global.Online_Mode
                                 "'antivirus_controlled_folder_access_ruleset_json', " +
                                 "'sensors_json', " +
                                 "'jobs_json', " +
-                                "'tray_icon_settings_json'" +
+                                "'tray_icon_settings_json', " +
+                                "'agent_settings_json'" +
 
                                 ") VALUES (" +
 
@@ -903,7 +910,8 @@ namespace Global.Online_Mode
                                 "'" + Windows_Worker.policy_antivirus_controlled_folder_access_ruleset_json + "'," + //policy_antivirus_controlled_folder_access_ruleset_json
                                 "'" + Device_Worker.policy_sensors_json + "'," + //policy_sensors_json
                                 "'" + Device_Worker.policy_jobs_json + "'," + //policy_sensors_json
-                                "'" + Device_Worker.policy_tray_icon_settings_json + "'" + //policy_jobs_json
+                                "'" + Device_Worker.policy_tray_icon_settings_json + "'," + //policy_jobs_json
+                                "'" + Device_Worker.policy_agent_settings_json + "'" + //policy_jobs_json
 
                                 ");"
                                 , db_conn);

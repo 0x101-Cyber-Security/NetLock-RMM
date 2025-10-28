@@ -35,6 +35,8 @@ namespace NetLock_RMM_Tray_Icon
         private static TcpClient? _client;
         private static NetworkStream? _stream;
         private CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
+        private bool _isConnected = false;
+        private bool _isReconnecting = false;
 
         public class Command
         {
@@ -42,32 +44,54 @@ namespace NetLock_RMM_Tray_Icon
             public string type { get; set; } = string.Empty;
             public string command { get; set; } = string.Empty;
         }
-
+        
+        private AccessRequestWindow? _accessRequestWindow;
         private ChatWindow? _chatWindow;
-
+        
         public async Task Local_Server_Connect()
         {
             try
             {
+                // Close existing connection if any
+                if (_client != null)
+                {
+                    try
+                    {
+                        _stream?.Close();
+                        _client?.Close();
+                    }
+                    catch { }
+                }
+
                 _client = new TcpClient();
+                _client.ReceiveTimeout = 5000;
+                _client.SendTimeout = 5000;
+                
                 await _client.ConnectAsync("127.0.0.1", 7338);
                 _stream = _client.GetStream();
+                _isConnected = true;
+                
                 // Send username to identify the user
                 string username = Environment.UserName;
                 await Local_Server_Send_Message($"username${username}tray");
 
-                // Start listening for messages from the server
-                _ = Local_Server_Handle_Server_Messages(_cancellationTokenSource.Token);
                 Console.WriteLine("Connected to the local server.");
                 Logging.Debug("UserClient", "Local_Server_Connect", "Connected to the local server.");
+
+                // Start listening for messages from the server
+                _ = Local_Server_Handle_Server_Messages(_cancellationTokenSource.Token);
                     
                 // Start checking the connection status in a separate task
                 _ = MonitorConnectionAsync(_cancellationTokenSource.Token);
             }
             catch (Exception ex)
             {
+                _isConnected = false;
                 Console.WriteLine($"Failed to connect to the local server: {ex.Message}");
                 Logging.Debug("UserClient", "Local_Server_Connect", $"Failed to connect to the local server: {ex.Message}");
+                
+                // Start reconnection attempts immediately
+                _ = MonitorConnectionAsync(_cancellationTokenSource.Token);
             }
         }
         
@@ -80,15 +104,30 @@ namespace NetLock_RMM_Tray_Icon
                 Console.WriteLine("Listening for messages from the server...");
 
                 // Buffer to read incoming data
-                byte[] buffer = new byte[4096]; // Adjust the size of the buffer as needed
+                byte[] buffer = new byte[4096];
                 StringBuilder messageBuilder = new StringBuilder();
 
-                while (!cancellationToken.IsCancellationRequested)
+                while (!cancellationToken.IsCancellationRequested && _isConnected)
                 {
-                    if (_stream.CanRead)
+                    try
                     {
+                        if (_stream == null || !_stream.CanRead)
+                        {
+                            Console.WriteLine("Stream is no longer readable. Connection lost.");
+                            _isConnected = false;
+                            break;
+                        }
+
                         // Read the incoming message length
                         int bytesRead = await _stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
+
+                        if (bytesRead == 0)
+                        {
+                            // Connection closed by server
+                            Console.WriteLine("Server closed the connection (0 bytes read).");
+                            _isConnected = false;
+                            break;
+                        }
 
                         if (bytesRead > 0)
                         {
@@ -125,14 +164,32 @@ namespace NetLock_RMM_Tray_Icon
                                 }
                             }
                         }
-                    }
 
-                    // Process commands from the queue
-                    while (_commandQueue.TryDequeue(out Command queuedCommand))
-                    {
-                        // Process the command asynchronously
-                        await ProcessCommand(queuedCommand);
+                        // Process commands from the queue
+                        while (_commandQueue.TryDequeue(out Command queuedCommand))
+                        {
+                            // Process the command asynchronously
+                            await ProcessCommand(queuedCommand);
+                        }
                     }
+                    catch (System.IO.IOException ioEx)
+                    {
+                        Console.WriteLine($"IO Error in message handler: {ioEx.Message}");
+                        _isConnected = false;
+                        break;
+                    }
+                    catch (SocketException sockEx)
+                    {
+                        Console.WriteLine($"Socket error in message handler: {sockEx.Message}");
+                        _isConnected = false;
+                        break;
+                    }
+                }
+                
+                if (!_isConnected)
+                {
+                    Console.WriteLine("Message listener detected connection loss. Triggering reconnect...");
+                    Logging.Debug("UserClient", "Local_Server_Handle_Server_Messages", "Connection lost, exiting message handler.");
                 }
             }
             catch (OperationCanceledException)
@@ -142,6 +199,8 @@ namespace NetLock_RMM_Tray_Icon
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred while listening for server messages: {ex.Message}");
+                _isConnected = false;
+                Logging.Error("UserClient", "Local_Server_Handle_Server_Messages", ex.ToString());
             }
         }
 
@@ -317,6 +376,95 @@ namespace NetLock_RMM_Tray_Icon
                             Console.WriteLine($"Failed to process new chat message: {ex.Message}");
                         }
                         break;
+                    case "access_request": // Access request
+                        try
+                        {
+                            Logging.Debug("UserClient", "ProcessCommand", "Access request received as per server command.");
+
+                            // Extract operator names from command JSON
+                            string firstName = "";
+                            string lastName = "";
+                            
+                            try
+                            {
+                                if (!string.IsNullOrEmpty(command.command))
+                                {
+                                    using (JsonDocument document = JsonDocument.Parse(command.command))
+                                    {
+                                        if (document.RootElement.TryGetProperty("firstName", out JsonElement firstNameElement))
+                                        {
+                                            firstName = firstNameElement.GetString() ?? "";
+                                        }
+                                        
+                                        if (document.RootElement.TryGetProperty("lastName", out JsonElement lastNameElement))
+                                        {
+                                            lastName = lastNameElement.GetString() ?? "";
+                                        }
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Debug("UserClient", "ProcessCommand", $"Could not parse operator names from access request: {ex.Message}");
+                            }
+
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                if (_accessRequestWindow == null || !_accessRequestWindow.IsVisible)
+                                {
+                                    _accessRequestWindow = new AccessRequestWindow(command.response_id, firstName, lastName);
+                                    _accessRequestWindow.Show();
+                                    Console.Beep(); // Play a beep sound
+                                }
+                                else
+                                {
+                                    _accessRequestWindow.WindowState = WindowState.Normal; // if minimized
+                                    _accessRequestWindow.Activate();
+                                    _accessRequestWindow.Topmost = true;
+                                    _accessRequestWindow.Topmost = false;
+                                    _accessRequestWindow.Focus();
+                                    Console.Beep(); // Play a beep sound
+                                }
+                            });
+                            break;
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to process access request: {ex.ToString()}");
+                            Console.WriteLine($"Failed to process access request: {ex.Message}");
+                        }
+                        break;
+                    case "end_remote_session": // End remote session
+                        try
+                        {
+                            Logging.Debug("UserClient", "ProcessCommand", "Ending remote session as per server command.");
+
+                            await Dispatcher.UIThread.InvokeAsync(() =>
+                            {
+                                // Close support overlay using static method
+                                SupportOverlay.CloseSupportOverlay();
+                                
+                                // Close chat window if open
+                                if (_chatWindow != null && _chatWindow.IsVisible)
+                                {
+                                    _chatWindow.Close();
+                                    _chatWindow = null;
+                                }
+                                
+                                // Close access request window if open
+                                if (_accessRequestWindow != null && _accessRequestWindow.IsVisible)
+                                {
+                                    _accessRequestWindow.Close();
+                                    _accessRequestWindow = null;
+                                }
+                            });
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("UserClient", "ProcessCommand", $"Failed to end remote session: {ex.ToString()}");
+                            Console.WriteLine($"Failed to end remote session: {ex.Message}");
+                        }
+                        break;
                 }
             }
             catch (Exception ex)
@@ -345,52 +493,191 @@ namespace NetLock_RMM_Tray_Icon
 
         private async Task MonitorConnectionAsync(CancellationToken cancellationToken)
         {
+            // Start with immediate check (no initial delay)
+            bool firstCheck = true;
+            
             while (!cancellationToken.IsCancellationRequested)
             {
-                // Check if the client is still connected
-                if (_client == null || !_client.Connected)
+                try
                 {
-                    Console.WriteLine("Disconnected from the server. Attempting to reconnect...");
-
-                    // Try to reconnect
-                    while (!_client.Connected && !cancellationToken.IsCancellationRequested)
+                    // Only delay after first check
+                    if (!firstCheck)
+                    {
+                        await Task.Delay(2000, cancellationToken); // Check every 2 seconds (faster)
+                    }
+                    firstCheck = false;
+                    
+                    // Check if the client is still connected
+                    bool isConnected = _client != null && _client.Connected && _isConnected;
+                    
+                    // Additional check: try to detect if socket is really alive
+                    if (_client != null && _client.Client != null && isConnected)
                     {
                         try
                         {
-                            _client = new TcpClient();
-                            await _client.ConnectAsync("127.0.0.1", 7338);
-                            _stream = _client.GetStream();
-
-                            // Send username to identify the user
-                            string username = Environment.UserName;
-                            await Local_Server_Send_Message($"username${username}");
-                            Console.WriteLine("Reconnected to the local server.");
-
-                            // Restart listening for messages
-                            _ = Local_Server_Handle_Server_Messages(cancellationToken);
+                            bool pollResult = _client.Client.Poll(100, SelectMode.SelectRead);
+                            bool dataAvailable = _client.Client.Available > 0;
+                            
+                            // If poll returns true but no data available, connection is likely broken
+                            if (pollResult && !dataAvailable)
+                            {
+                                Console.WriteLine("Poll detected broken connection.");
+                                isConnected = false;
+                            }
                         }
-                        catch (Exception ex)
+                        catch (Exception pollEx)
                         {
-                            Console.WriteLine($"Reconnect attempt failed: {ex.Message}");
-                            await Task.Delay(5000, cancellationToken); // Wait before retrying
+                            Console.WriteLine($"Poll check failed: {pollEx.Message}");
+                            isConnected = false;
                         }
                     }
+                    else if (_client == null || !_client.Connected)
+                    {
+                        isConnected = false;
+                    }
+                    
+                    if (!isConnected && !_isReconnecting)
+                    {
+                        _isReconnecting = true;
+                        _isConnected = false;
+                        
+                        Console.WriteLine("Connection lost. Attempting to reconnect...");
+                        Logging.Debug("UserClient", "MonitorConnectionAsync", "Connection lost. Attempting to reconnect...");
+
+                        // Close existing resources
+                        try
+                        {
+                            _stream?.Close();
+                            _client?.Close();
+                        }
+                        catch { }
+                        
+                        _client = null;
+                        _stream = null;
+
+                        // Try to reconnect with exponential backoff
+                        int retryCount = 0;
+                        int maxRetries = 10;
+                        int baseDelay = 1000; // Start with 1 second (faster initial retry)
+                        
+                        while (!_isConnected && !cancellationToken.IsCancellationRequested && retryCount < maxRetries)
+                        {
+                            try
+                            {
+                                retryCount++;
+                                int delay = Math.Min(baseDelay * (int)Math.Pow(2, retryCount - 1), 30000); // Max 30 seconds
+                                
+                                Console.WriteLine($"Reconnection attempt {retryCount}/{maxRetries} in {delay}ms...");
+                                Logging.Debug("UserClient", "MonitorConnectionAsync", $"Reconnection attempt {retryCount}/{maxRetries}");
+                                
+                                await Task.Delay(delay, cancellationToken);
+                                
+                                _client = new TcpClient();
+                                _client.ReceiveTimeout = 5000;
+                                _client.SendTimeout = 5000;
+                                
+                                // Try to connect with timeout
+                                var connectTask = _client.ConnectAsync("127.0.0.1", 7338);
+                                var timeoutTask = Task.Delay(5000, cancellationToken);
+                                
+                                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+                                
+                                if (completedTask == connectTask && !connectTask.IsFaulted)
+                                {
+                                    // Wait a bit to ensure connection is stable
+                                    await Task.Delay(100, cancellationToken);
+                                    
+                                    // Verify connection is really established
+                                    if (_client.Connected)
+                                    {
+                                        _stream = _client.GetStream();
+                                        _isConnected = true;
+
+                                        // Send username to identify the user
+                                        string username = Environment.UserName;
+                                        await Local_Server_Send_Message($"username${username}tray");
+                                        
+                                        Console.WriteLine("Successfully reconnected to the local server.");
+                                        Logging.Debug("UserClient", "MonitorConnectionAsync", "Successfully reconnected to the local server.");
+
+                                        // Restart listening for messages with new cancellation token
+                                        _cancellationTokenSource.Cancel();
+                                        _cancellationTokenSource = new CancellationTokenSource();
+                                        _ = Local_Server_Handle_Server_Messages(_cancellationTokenSource.Token);
+                                        
+                                        retryCount = 0; // Reset retry count on success
+                                    }
+                                    else
+                                    {
+                                        throw new Exception("Connection established but not in connected state");
+                                    }
+                                }
+                                else
+                                {
+                                    // Connection timeout or failed
+                                    try
+                                    {
+                                        _client?.Close();
+                                    }
+                                    catch { }
+                                    _client = null;
+                                    Console.WriteLine($"Connection attempt timed out or failed.");
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"Reconnect attempt {retryCount} failed: {ex.Message}");
+                                Logging.Debug("UserClient", "MonitorConnectionAsync", $"Reconnect attempt {retryCount} failed: {ex.Message}");
+                                
+                                try
+                                {
+                                    _client?.Close();
+                                }
+                                catch { }
+                                
+                                _client = null;
+                                _stream = null;
+                            }
+                        }
+                        
+                        // If max retries reached, reset and try again after a longer delay
+                        if (!_isConnected && retryCount >= maxRetries)
+                        {
+                            Logging.Error("UserClient", "MonitorConnectionAsync", $"Max reconnection attempts reached. Will retry.");
+                            await Task.Delay(60000, cancellationToken); // Wait 1 minute before restarting attempts
+                        }
+                        
+                        _isReconnecting = false;
+                    }
                 }
-
-                // Wait for a while before the next check
-                await Task.Delay(5000, cancellationToken); // Check every 5 seconds
+                catch (OperationCanceledException)
+                {
+                    // Task was cancelled, exit gracefully
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error in connection monitor: {ex.Message}");
+                    Logging.Error("UserClient", "MonitorConnectionAsync", ex.ToString());
+                    _isReconnecting = false;
+                }
             }
-
-            // Clean up resources if disconnected
-            Disconnect();
         }
 
         public void Disconnect()
         {
             _cancellationTokenSource.Cancel();
-            _stream?.Close();
-            _client?.Close();
+            _isConnected = false;
+            
+            try
+            {
+                _stream?.Close();
+                _client?.Close();
+            }
+            catch { }
+            
             Console.WriteLine("Disconnected from the server.");
+            Logging.Debug("UserClient", "Disconnect", "Disconnected from the server.");
         }
     }
 }

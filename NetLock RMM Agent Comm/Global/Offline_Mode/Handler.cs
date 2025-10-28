@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Global.Helper;
 using Microsoft.Data.Sqlite;
@@ -122,6 +123,20 @@ namespace Global.Offline_Mode
                             error = true;
                             Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (tray_icon_settings_json). Because of the following error, online settings will be requested.", ex.Message);
                         }
+                        
+                        // agent_settings_json
+                        try
+                        {
+                            Device_Worker.policy_agent_settings_json = reader["agent_settings_json"].ToString();
+                            
+                            // Write the agent settings json to disk for the remote process to read it
+                            File.WriteAllText(Application_Paths.agent_settings_json_path, Encryption.String_Encryption.Encrypt(Device_Worker.policy_agent_settings_json, Application_Settings.NetLock_Local_Encryption_Key));
+                        }
+                        catch (Exception ex)
+                        {
+                            error = true;
+                            Logging.Error("Global.Offline_Mode.Handler.Policy", "Read failed (agent_settings_json). Because of the following error, online settings will be requested.", ex.Message);
+                        }
                     }
 
                     reader.Close();
@@ -148,6 +163,39 @@ namespace Global.Offline_Mode
             Device_Worker.sync_active = false;
 
             Logging.Debug("Global.Offline_Mode.Handler.Policy", "Stop", "");
+        }
+
+        public class AgentSettings
+        {
+            public bool AutoUpdateEnabled { get; set; }
+            public int SyncInterval { get; set; }
+        }
+        
+        public static void LoadAgentSettings()
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(Device_Worker.policy_agent_settings_json))
+                    throw new Exception("policy_agent_settings_json is null or empty");
+
+                var agentSettings = JsonSerializer.Deserialize<AgentSettings>(Device_Worker.policy_agent_settings_json);
+
+                if (agentSettings != null)
+                {
+                    Device_Worker.agentAutoUpdateEnabled = agentSettings.AutoUpdateEnabled;
+                    Device_Worker.sync_timer.Interval = agentSettings.SyncInterval * 60 * 1000;
+                    Logging.Debug("Global.Offline_Mode.Handler.LoadAgentSettings", "Agent settings loaded", $"AutoUpdateEnabled: {Device_Worker.agentAutoUpdateEnabled}, SyncInterval: {Device_Worker.sync_timer.Interval}");
+                }
+                else
+                {
+                    Device_Worker.sync_timer .Interval = 30 * 60 * 1000; // Default to 30 minutes
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Error("Global.Offline_Mode.Handler.LoadAgentSettings", "Error loading agent settings, using defaults", e.ToString()); 
+                Device_Worker.sync_timer.Interval = 30 * 60 * 1000; // Default to 30 minutes
+            }
         }
     }
 }

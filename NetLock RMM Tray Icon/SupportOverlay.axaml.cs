@@ -17,6 +17,9 @@ namespace NetLock_RMM_Tray_Icon
     public partial class SupportOverlay : Window
     {
         private static SupportOverlay? _instance;
+        private string? _pendingFirstName;
+        private string? _pendingLastName;
+        private bool _allowClose = false;
 
         public SupportOverlay()
         {
@@ -56,6 +59,9 @@ namespace NetLock_RMM_Tray_Icon
                     string fullName = string.IsNullOrWhiteSpace(lastName) ? firstName : $"{firstName} {lastName}";
                     if (supportNameTextBlock != null)
                         supportNameTextBlock.Text = fullName;
+                    
+                    // Set initials from config
+                    SetInitials(firstName, lastName);
                 }
             }
             catch (Exception ex)
@@ -64,6 +70,11 @@ namespace NetLock_RMM_Tray_Icon
                 var supportNameTextBlock = this.FindControl<TextBlock>("SupportNameTextBlock");
                 if (supportNameTextBlock != null)
                     supportNameTextBlock.Text = "Support staff";
+                
+                // Set fallback initials
+                var initialsTextBlock = this.FindControl<TextBlock>("InitialsTextBlock");
+                if (initialsTextBlock != null)
+                    initialsTextBlock.Text = "S";
                 
                 Console.WriteLine($"Error loading support name: {ex.Message}");
                 Logging.Error("SupportOverlay", "SetSupportNameFromConfig", ex.ToString());
@@ -105,6 +116,14 @@ namespace NetLock_RMM_Tray_Icon
         private void SupportOverlay_Loaded(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
         {
             PositionBottomRight();
+            
+            // Apply pending operator name if set
+            if (!string.IsNullOrEmpty(_pendingFirstName))
+            {
+                SetOperatorName(_pendingFirstName, _pendingLastName);
+                _pendingFirstName = null;
+                _pendingLastName = null;
+            }
         }
 
         private void PositionBottomRight()
@@ -139,9 +158,9 @@ namespace NetLock_RMM_Tray_Icon
         }
 
         /// <summary>
-        /// Shows the support overlay (singleton)
+        /// Shows the support overlay (singleton) with optional operator name
         /// </summary>
-        public static void ShowSupportOverlay()
+        public static void ShowSupportOverlay(string? firstName = null, string? lastName = null)
         {
             try
             {
@@ -151,10 +170,24 @@ namespace NetLock_RMM_Tray_Icon
                     {
                         _instance?.Close();
                         _instance = new SupportOverlay();
+                        
+                        // Store pending names to be applied after window loads
+                        if (!string.IsNullOrEmpty(firstName))
+                        {
+                            _instance._pendingFirstName = firstName;
+                            _instance._pendingLastName = lastName;
+                        }
+                        
                         _instance.Show();
                     }
                     else
                     {
+                        // Update operator name if provided (window already loaded)
+                        if (!string.IsNullOrEmpty(firstName))
+                        {
+                            _instance.SetOperatorName(firstName, lastName);
+                        }
+                        
                         _instance.Activate();
                     }
                 });
@@ -162,21 +195,6 @@ namespace NetLock_RMM_Tray_Icon
             catch (Exception ex)
             {
                 Console.WriteLine($"Error showing support overlay: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Hides the support overlay
-        /// </summary>
-        public static void HideSupportOverlay()
-        {
-            try
-            {
-                Dispatcher.UIThread.Invoke(() => { _instance?.Hide(); });
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error hiding support overlay: {ex.Message}");
             }
         }
 
@@ -189,8 +207,12 @@ namespace NetLock_RMM_Tray_Icon
             {
                 Dispatcher.UIThread.Invoke(() =>
                 {
-                    _instance?.Close();
-                    _instance = null;
+                    if (_instance != null)
+                    {
+                        _instance._allowClose = true;
+                        _instance.Close();
+                        _instance = null;
+                    }
                 });
             }
             catch (Exception ex)
@@ -199,16 +221,77 @@ namespace NetLock_RMM_Tray_Icon
             }
         }
 
-        /// <summary>
-        /// Checks if the support overlay is currently visible
-        /// </summary>
-        public static bool IsOverlayVisible => _instance?.IsVisible ?? false;
-
         protected override void OnClosing(WindowClosingEventArgs e)
         {
-            // Prevent closing by user
-            e.Cancel = true;
-            // _instance = null; // Instance remains
+            // Only allow closing if explicitly requested via CloseSupportOverlay()
+            if (!_allowClose)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        /// <summary>
+        /// Sets the operator name dynamically
+        /// </summary>
+        public void SetOperatorName(string firstName, string? lastName = null)
+        {
+            try
+            {
+                var supportNameTextBlock = this.FindControl<TextBlock>("SupportNameTextBlock");
+                if (supportNameTextBlock != null)
+                {
+                    string fullName = string.IsNullOrWhiteSpace(lastName) 
+                        ? firstName 
+                        : $"{firstName} {lastName}";
+                    supportNameTextBlock.Text = fullName;
+                }
+                
+                // Set initials in avatar circle
+                SetInitials(firstName, lastName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting operator name: {ex.Message}");
+                Logging.Error("SupportOverlay", "SetOperatorName", ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Sets the initials in the avatar circle
+        /// </summary>
+        private void SetInitials(string firstName, string? lastName = null)
+        {
+            try
+            {
+                var initialsTextBlock = this.FindControl<TextBlock>("InitialsTextBlock");
+                if (initialsTextBlock != null)
+                {
+                    string initials = "";
+                    
+                    if (!string.IsNullOrWhiteSpace(firstName))
+                    {
+                        initials += firstName[0].ToString().ToUpper();
+                    }
+                    
+                    if (!string.IsNullOrWhiteSpace(lastName))
+                    {
+                        initials += lastName[0].ToString().ToUpper();
+                    }
+                    
+                    // Fallback if no names provided
+                    if (string.IsNullOrWhiteSpace(initials))
+                    {
+                        initials = "?";
+                    }
+                    
+                    initialsTextBlock.Text = initials;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting initials: {ex.Message}");
+                Logging.Error("SupportOverlay", "SetInitials", ex.ToString());
+            }
         }
     }
 }

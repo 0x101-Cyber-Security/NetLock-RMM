@@ -145,6 +145,7 @@
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.group_name)">@Localizer["group"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.agent_version)">@Localizer["agent_version"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.last_access)">@Localizer["last_access"]</MudTableSortLabel></MudTh>
+                            <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.policy)">Policy</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.ip_address)">@Localizer["ip_address"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.operating_system)">@Localizer["os"]</MudTableSortLabel></MudTh>
                             <MudTh style="white-space: nowrap;"><MudTableSortLabel SortBy="new Func<MySQL_Entity, object>(x => x.domain)">@Localizer["domain"]</MudTableSortLabel></MudTh>
@@ -262,6 +263,12 @@
                                                     <MudIcon Icon="@Icons.Material.Filled.AccessTime" Size="Size.Small" class="desktop-icon" />&nbsp;@row.last_access
                                                 </span>
                                             </MudTd>
+                        
+                                            <MudTd DataLabel="Policy" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
+                                                <span style="display: flex; align-items: center;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Policy" Size="Size.Small" class="desktop-icon" />&nbsp;@row.policy
+                                                </span>
+                                            </MudTd>
 
                                             <MudTd DataLabel="IP address" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                                 <span style="display: flex; align-items: center;">
@@ -351,6 +358,17 @@
                                     @if (permissions_devices_move)
                                     {
                                         <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.MoveDown" OnClick="Move_Device_Dialog">@Localizer["move"]</MudButton>
+                                    }
+
+                                    @if (permissions_devices_remote_control)
+                                    {
+                                        <MudTooltip Text="Shutdown">
+                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.PowerOff" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="Remote_Shutdown_Device"></MudIconButton>
+                                        </MudTooltip>
+                                        
+                                        <MudTooltip Text="Reboot">
+                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.RestartAlt" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="Remote_Reboot_Device"></MudIconButton>
+                                        </MudTooltip>
                                     }
 
                                     @if (permissions_devices_remote_shell)
@@ -463,7 +481,8 @@
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Update" Title="Status" Size="Size.Small" />&nbsp;Version: @agent_version</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.AccessTime" Title="Status" Size="Size.Small" />&nbsp;@Localizer["last_access"]: @last_access</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.NetworkWifi1Bar" Title="Status" Size="Size.Small" />&nbsp;@Localizer["external_ip"]: @ip_address_external</MudText>
-
+                                            <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Policy" Title="Status" Size="Size.Small" />&nbsp;Assigned policy: @policy_name</MudText>
+                                            
                                             <MudText Class="mt-5 ml-2" Typo="Typo.h6">@Localizer["os"]</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.DeveloperBoard" Title="Status" Size="Size.Small" />&nbsp;Edition: @operating_system</MudText>
                                             <MudText Class="ml-2 d-flex align-center" Typo="Typo.body1"><MudIcon Icon="@Icons.Material.Filled.Domain" Title="Status" Size="Size.Small" />&nbsp;@Localizer["domain"]: @domain</MudText>
@@ -3393,7 +3412,7 @@
 
                             @if (permissions_devices_antivirus && platform == "Windows" && antivirus_solution == "Windows Defender")
                             {
-                                <MudTabPanel Text="Antivirus">
+                                <MudTabPanel Text="Microsoft Defender Antivirus">
                             
                                     <MudPaper>
 

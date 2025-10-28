@@ -23,6 +23,12 @@ namespace Global.Initialization
         {
             try
             {
+                if (!Device_Worker.agentAutoUpdateEnabled)
+                {
+                    Logging.Debug("Initialization.Version_Handler.Check_Version", "Auto update enabled?", "false");
+                    return true;
+                }
+                
                 //Create JSON
                 Device_Identity identity = new Device_Identity
                 {

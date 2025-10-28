@@ -2,6 +2,7 @@ using _x101.HWID_System;
 using Global.Helper;
 using NetLock_RMM_Agent_Comm;
 using System.Net;
+using Global.Encryption;
 using Microsoft.Extensions.Hosting;
 
 Console.WriteLine("Starting NetLock RMM Comm Agent");
@@ -18,6 +19,9 @@ foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
         }
     }
 }
+
+// Write version to disk
+await File.WriteAllTextAsync(Application_Paths.netlock_comm_agent_version_txt, String_Encryption.Encrypt(Application_Settings.version, Application_Settings.NetLock_Local_Encryption_Key));
 
 // Check if debug mode
 if (Logging.Check_Debug_Mode()) // debug_mode
@@ -89,6 +93,7 @@ Global.Initialization.Health.Check_Firewall();
 Global.Initialization.Health.Check_Databases();
 Global.Offline_Mode.Handler.Policy();
 Global.Initialization.Health.Setup_Events_Virtual_Datatable();
+Global.Initialization.Health.User_Processes();
 
 // Check if platform is Windows
 if (OperatingSystem.IsWindows())

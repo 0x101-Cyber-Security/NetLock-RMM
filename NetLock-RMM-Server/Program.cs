@@ -1,7 +1,5 @@
 using Helper;
 using LettuceEncrypt;
-using LLama;
-using LLama.Common;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -91,6 +89,8 @@ var role_notification = builder.Configuration.GetValue<bool>("Kestrel:Roles:Noti
 var role_file = builder.Configuration.GetValue<bool>("Kestrel:Roles:File", true);
 var role_llm = builder.Configuration.GetValue<bool>("Kestrel:Roles:LLM", true);
 
+SemaphoreSlim _maxConcurrentNetLockPackageDownloadsSemaphore = new SemaphoreSlim(5, 5);
+
 Roles.Comm = role_comm;
 Roles.Update = role_update;
 Roles.Trust = role_trust;
@@ -136,6 +136,7 @@ Console.WriteLine($"LetsEncrypt: {letsencrypt}");
 
 Console.WriteLine($"Custom Certificate Path: {cert_path}");
 Console.WriteLine($"Custom Certificate Password: {cert_password}");
+
 Console.WriteLine(Environment.NewLine);
 
 // Output mysql configuration
@@ -267,6 +268,15 @@ else
 
     await NetLock_RMM_Server.MySQL.Handler.Update_Server_Information();
 
+    int _maxConcurrentAgentUpdates = Convert.ToInt32(await NetLock_RMM_Server.MySQL.Handler.Quick_Reader("SELECT * FROM settings;", "agent_updates_max_concurrent_updates"));
+
+    // Each agent performs up to 7 package downloads concurrently. Therefore, the total semaphore capacity must be scaled accordingly.
+    int packageDownloadsPerAgent = 7;
+    int maxConcurrentNetLockPackageDownloads = _maxConcurrentAgentUpdates * packageDownloadsPerAgent;
+    _maxConcurrentNetLockPackageDownloadsSemaphore = new SemaphoreSlim(1, 1);
+    
+    Console.WriteLine("Max concurrent agent updates & package downloads: " + _maxConcurrentAgentUpdates + " / " + maxConcurrentNetLockPackageDownloads);
+    
     // Get api key
     if (String.IsNullOrEmpty(Members_Portal.ApiKey))
     {
@@ -283,7 +293,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.IsApiEnabled)
     {
-        //OSSCH_START 519930b8-d62a-4dee-bc42-46540c9acc06 //OSSCH_END
+        //OSSCH_START a657832c-a942-4593-9bda-7455c8d3d6eb //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -292,8 +302,11 @@ if (Roles.Update || Roles.Trust)
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMvc();
-builder.Services.AddControllers();
 
+if (https)
+    builder.Services.AddLettuceEncrypt();
+
+builder.Services.AddControllers();
 builder.Services.AddSignalR(options =>
 {
     options.MaximumReceiveMessageSize = maxMsgSize; 
@@ -354,13 +367,13 @@ app.MapGet("/test", async context =>
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START e5755007-ec01-4e47-8292-34043f192b7b //OSSCH_END
+    //OSSCH_START 2e8f7ab3-af60-4513-888d-89d7da16d3bd //OSSCH_END
 }
 
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
     // Credentials update endpoint
-    //OSSCH_START 23dddb24-e73d-4879-b6e0-46c8c6659fd6 //OSSCH_END
+    //OSSCH_START 961d37ea-17d0-46ec-8b85-67f7a30cd9ac //OSSCH_END
 }
 
 //Check Version
@@ -690,89 +703,9 @@ if (role_comm)
     });
 }
 
-//Remote Command: Will be used in later development
-/*app.MapPost("/Agent/Windows/Remote/Command", async (HttpContext context, IHubContext<CommandHub> hubContext) =>
-{
-    try
-    {
-        Logging.Handler.Debug("POST Request Mapping", "/Agent/Windows/Remote/Command", "Request received.");
-
-        // Add headers
-        context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'"); // protect against XSS 
-
-        // Get the remote IP address
-        string ip_address_external = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue) ? headerValue.ToString() : context.Features.Get<IHttpConnectionFeature>()?.RemoteIpAddress?.ToString();
-
-        // Verify package guid
-        bool hasPackageGuid = context.Request.Headers.TryGetValue("Package_Guid", out StringValues package_guid);
-
-        if (hasPackageGuid == false)
-        {
-            context.Response.StatusCode = 401;
-            await context.Response.WriteAsync("Unauthorized.");
-            return;
-        }
-        else
-        {
-            bool package_guid_status = await Helper.Verify_Package_Guid(package_guid);
-
-            if (package_guid_status == false)
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("Unauthorized.");
-                return;
-            }
-        }
-ResetInstance
-        string api_key = string.Empty;
-
-        // Read the JSON data
-        string json;
-        using (StreamReader reader = new StreamReader(context.Request.Body))
-        {
-            json = await reader.ReadToEndAsync() ?? string.Empty;
-        }
-
-        bool api_key_status = await NetLock_RMM_Server.SignalR.Webconsole.Handler.Verify_Api_Key(json);
-
-        if (api_key_status == false)
-        {
-            context.Response.StatusCode = 403;
-            await context.Response.WriteAsync("Invalid api key.");
-            return;
-        }
-
-        // Get the command
-        string command = await NetLock_RMM_Server.SignalR.Webconsole.Handler.Get_Command(json);
-
-        // Get list of all connected clients
-        var clients = ConnectionManager.Instance.ClientConnections;
-        
-        foreach (var client in clients)
-            Logging.Handler.Debug("POST Request Mapping", "/Agent/Windows/Remote/Command", "Client: " + client.Key + " - " + client.Value);
-
-        // Check if the command is "sync_all" that means all devices should sync with the server
-        if (command == "sync_all")
-        {
-            await hubContext.Clients.All.SendAsync("ReceiveCommand", "sync"); // Send command to all clients
-        }
-
-        // Return the device status
-        context.Response.StatusCode = 200;
-        await context.Response.WriteAsync("ok");
-    }
-    catch (Exception ex)
-    {
-        context.Response.StatusCode = 500;
-        Logging.Handler.Error("POST Request Mapping", "/Agent/Windows/Remote/Command", ex.Message);
-        await context.Response.WriteAsync("Invalid request.");
-    }
-}).WithName("Swagger5").WithOpenApi();
-*/
-
+// File download public
 if (role_file)
 {
-    // File download public
     app.MapGet("/public/downloads/{fileName}", async context =>
     {
         try
@@ -1396,11 +1329,10 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
     }
 });
 
-
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START ba73b820-0670-49bf-b9e1-730611f5adb4 //OSSCH_END
+    //OSSCH_START d3e3c89c-76fb-4b23-bf68-b75513d513b5 //OSSCH_END
 }
 
 /*
@@ -1460,7 +1392,6 @@ if (role_llm)
 
 if (role_remote)
 {
-    //Get policy
     app.MapPost("/Agent/Windows/Remote/Command", async (HttpContext context, IHubContext<CommandHub> hubContext) =>
     {
         try
@@ -1468,104 +1399,112 @@ if (role_remote)
             Logging.Handler.Debug("POST Request Mapping", "/Agent/Windows/Remote/Command", "Request received.");
 
             // Add headers
-            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'"); // protect against XSS 
+            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
 
             // Get the remote IP address from the X-Forwarded-For header
-            string ip_address_external = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue) ? headerValue.ToString() : context.Connection.RemoteIpAddress.ToString();
+            string ip_address_external = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue) 
+                ? headerValue.ToString() 
+                : context.Connection.RemoteIpAddress.ToString();
 
             // Verify package guid
             bool hasPackageGuid = context.Request.Headers.TryGetValue("Package_Guid", out StringValues package_guid) || context.Request.Headers.TryGetValue("Package-Guid", out package_guid);
 
-            if (hasPackageGuid == false)
+            if (!hasPackageGuid)
             {
                 context.Response.StatusCode = 401;
                 await context.Response.WriteAsync("Unauthorized.");
                 return;
             }
-            else
-            {
-                bool package_guid_status = await Verify_NetLock_Package_Configurations_Guid(package_guid);
 
-                if (package_guid_status == false)
+            bool package_guid_status = await Verify_NetLock_Package_Configurations_Guid(package_guid);
+            if (!package_guid_status)
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Unauthorized.");
+                return;
+            }
+
+            string json;
+            string responseId = string.Empty;
+            byte[] screenshotBytes = null;
+
+            // Check if request is multipart/form-data (for binary screenshots)
+            if (context.Request.HasFormContentType)
+            {
+                var form = await context.Request.ReadFormAsync();
+
+                // Extract device_identity JSON from form
+                json = form["device_identity"].ToString();
+
+                // Extract response_id
+                responseId = form["response_id"].ToString();
+
+                // Extract binary screenshot data
+                var screenshotFile = form.Files["screenshot"];
+                if (screenshotFile != null && screenshotFile.Length > 0)
                 {
-                    context.Response.StatusCode = 401;
-                    await context.Response.WriteAsync("Unauthorized.");
-                    return;
+                    using (var memoryStream = new MemoryStream())
+                    {
+                        await screenshotFile.CopyToAsync(memoryStream);
+                        screenshotBytes = memoryStream.ToArray();
+                    }
                 }
             }
-
-            // Read the JSON data
-            string json;
-            using (StreamReader reader = new StreamReader(context.Request.Body))
+            else // Handle JSON requests (old behavior)
             {
-                json = await reader.ReadToEndAsync() ?? string.Empty;
-            }
-
-            // Verify the device
-            string device_status = await Authentification.Verify_Device(json, ip_address_external, true);
-
-            // Check if the device is authorized, synced, or not synced
-            if (device_status == "authorized" || device_status == "synced" || device_status == "not_synced")
-            {
-                string responseId = string.Empty;
-                string result = string.Empty;
+                using (StreamReader reader = new StreamReader(context.Request.Body))
+                {
+                    json = await reader.ReadToEndAsync() ?? string.Empty;
+                }
 
                 using (JsonDocument document = JsonDocument.Parse(json))
                 {
-                    // Get the root element
                     JsonElement root = document.RootElement;
-
-                    // Access the "remote_control" section
                     JsonElement remoteControlElement = root.GetProperty("remote_control");
 
-                    // Extract "response_id" and "result"
                     responseId = remoteControlElement.GetProperty("response_id").GetString();
-                    result = remoteControlElement.GetProperty("result").GetString();
                 }
+            }
 
+            // Verify the device
+            string device_status = await Authentification.Verify_Device(json, ip_address_external, false);
+
+            if (device_status == "authorized" || device_status == "synced" || device_status == "not_synced")
+            {
                 string admin_identity_info_json = CommandHubSingleton.Instance.GetAdminIdentity(responseId);
+                string admin_client_id = string.Empty;
 
-                string admin_client_id = String.Empty;
-                string admin_username = String.Empty;
-                string device_id = String.Empty;
-                string command = String.Empty;
-                int type = 0;
-                int file_browser_command = 0;
-
-                // Deserialisierung des gesamten JSON-Strings
                 using (JsonDocument document = JsonDocument.Parse(admin_identity_info_json))
                 {
-                    // Get the admin client ID from the JSON
                     JsonElement admin_client_id_element = document.RootElement.GetProperty("admin_client_id");
                     admin_client_id = admin_client_id_element.ToString();
                 }
 
-                await CommandHubSingleton.Instance.HubContext.Clients.Client(admin_client_id).SendAsync("ReceiveClientResponseRemoteControlScreenCapture", result);
+                // Send screenshot as byte array directly
+                await CommandHubSingleton.Instance.HubContext.Clients.Client(admin_client_id)
+                    .SendAsync("ReceiveClientResponseRemoteControlScreenCapture", screenshotBytes);
 
-                // Remove the response ID from the dictionary
                 CommandHubSingleton.Instance.RemoveAdminCommand(responseId);
 
-                // Return the device status
                 context.Response.StatusCode = 200;
                 await context.Response.WriteAsync("ok");
             }
-            else // If the device is not authorized, return the device status as unauthorized
+            else
             {
                 context.Response.StatusCode = 403;
                 await context.Response.WriteAsync(device_status);
             }
         }
         catch (Exception ex)
-        { 
+        {
             Logging.Handler.Error("POST Request Mapping", "/Agent/Windows/Remote/Command", ex.ToString());
-
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("Invalid request.");
         }
     });
 }
 
-// Admin command: Create custom installer
+// Admin command: custom installer
 // NetLock admin files, download
 if (role_file)
 {

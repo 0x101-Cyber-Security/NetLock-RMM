@@ -3,6 +3,9 @@ using System;
 using System.IO;
 using System.Linq;
 using NetLock_RMM_Agent_Remote;
+using System.Collections.Concurrent;
+using System.Threading.Channels;
+using System.Threading.Tasks;
 
 namespace Global.Helper
 {
@@ -15,6 +18,35 @@ namespace Global.Helper
             public string reported_by { get; set; } = string.Empty;
             public string _event { get; set; } = string.Empty;
             public string content { get; set; } = string.Empty;
+        }
+
+        // Asynchronous logging queue
+        private static readonly Channel<LogEntry> _logChannel = Channel.CreateUnbounded<LogEntry>(
+            new UnboundedChannelOptions
+            {
+                SingleReader = true,
+                SingleWriter = false
+            });
+
+        private static readonly Task _logTask;
+        private static readonly JsonSerializerOptions _jsonOptions = new JsonSerializerOptions
+        {
+            Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
+        };
+
+        private class LogEntry
+        {
+            public string Type { get; set; }
+            public string ReportedBy { get; set; }
+            public string Event { get; set; }
+            public Func<string> ContentProvider { get; set; }
+            public string FileName { get; set; }
+        }
+
+        static Logging()
+        {
+            // Start background log writer
+            _logTask = Task.Run(ProcessLogQueue);
         }
 
         public static bool Check_Debug_Mode()
@@ -34,327 +66,166 @@ namespace Global.Helper
 
         private static void Check_Dir()
         {
-            if (Directory.Exists(Application_Paths.program_data_logs) == false)
+            if (!Directory.Exists(Application_Paths.program_data_logs))
                 Directory.CreateDirectory(Application_Paths.program_data_logs);
         }
 
+        private static async Task ProcessLogQueue()
+        {
+            var reader = _logChannel.Reader;
+            
+            while (await reader.WaitToReadAsync())
+            {
+                while (reader.TryRead(out var entry))
+                {
+                    try
+                    {
+                        Check_Dir();
+
+                        var log_data = new Log_Data
+                        {
+                            type = entry.Type,
+                            date = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"), // Faster format
+                            reported_by = entry.ReportedBy,
+                            _event = entry.Event,
+                            content = entry.ContentProvider() // Lazy evaluation
+                        };
+
+                        string log_json = JsonSerializer.Serialize(log_data, _jsonOptions);
+                        string filePath = Path.Combine(Application_Paths.program_data_logs, entry.FileName);
+
+                        await File.AppendAllTextAsync(filePath, log_json + Environment.NewLine);
+                    }
+                    catch
+                    {
+                        // Silent fail - logging errors should not crash the app
+                    }
+                }
+            }
+        }
+
+        // Optimized Debug with Lazy Evaluation
         public static void Debug(string reported_by, string _event, string content)
         {
-            try
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            DebugLazy(reported_by, _event, () => content);
+        }
+
+        // New: Lazy evaluation version
+        public static void DebugLazy(string reported_by, string _event, Func<string> contentProvider)
+        {
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            _logChannel.Writer.TryWrite(new LogEntry
             {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Debug";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Debug.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
+                Type = "Debug",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = contentProvider,
+                FileName = "Debug.txt"
+            });
         }
 
         public static void Error(string reported_by, string _event, string content)
         {
-            try
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            ErrorLazy(reported_by, _event, () => content);
+        }
+
+        // New: Lazy evaluation version
+        public static void ErrorLazy(string reported_by, string _event, Func<string> contentProvider)
+        {
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            _logChannel.Writer.TryWrite(new LogEntry
             {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Error";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                string log_json = JsonSerializer.Serialize(json_object);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Error.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
+                Type = "Error",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = contentProvider,
+                FileName = "Error.txt"
+            });
         }
 
         public static void Microsoft_Defender_Firewall(string reported_by, string _event, string content)
         {
-            try
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            _logChannel.Writer.TryWrite(new LogEntry
             {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Microsoft_Defender_Firewall";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Microsoft_Defender_Firewall.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
+                Type = "Microsoft_Defender_Firewall",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = () => content,
+                FileName = "Microsoft_Defender_Firewall.txt"
+            });
         }
 
         public static void Device_Information(string reported_by, string _event, string content)
         {
-            try
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            _logChannel.Writer.TryWrite(new LogEntry
             {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Client_Information";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Device_Information.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void Microsoft_Defender_Antivirus(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Microsoft_Defender_Antivirus";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Microsoft_Defender_Antivirus.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void PowerShell(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "PowerShell";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "PowerShell.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void Registry(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Registry";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Registry.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void Jobs(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Jobs";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Jobs.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void Sensors(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Sensors";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Sensors.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
-        }
-
-        public static void Local_Server(string reported_by, string _event, string content)
-        {
-            try
-            {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Local_Server";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Local_Server.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
+                Type = "Client_Information",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = () => content,
+                FileName = "Device_Information.txt"
+            });
         }
 
         public static void Remote_Control(string reported_by, string _event, string content)
         {
-            try
+            if (!Configuration.Agent.debug_mode)
+                return;
+
+            _logChannel.Writer.TryWrite(new LogEntry
             {
-                if (!Configuration.Agent.debug_mode)
-                    return;
-
-                Check_Dir();
-
-                Log_Data json_object = new Log_Data();
-                json_object.type = "Remote_Control";
-                json_object.date = DateTime.Now.ToString();
-                json_object.reported_by = reported_by;
-                json_object._event = _event;
-                json_object.content = content;
-
-                JsonSerializerOptions options = new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                };
-
-                string log_json = JsonSerializer.Serialize(json_object, options);
-
-                File.AppendAllText(Path.Combine(Application_Paths.program_data_logs, "Remote_Control.txt"), log_json + Environment.NewLine);
-            }
-            catch
-            { }
+                Type = "Remote_Control",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = () => content,
+                FileName = "Remote_Control.txt"
+            });
         }
 
+        public static void PowerShell(string reported_by, string _event, string content)
+        {
+            if (!Configuration.Agent.debug_mode)
+                return;
 
+            _logChannel.Writer.TryWrite(new LogEntry
+            {
+                Type = "PowerShell",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = () => content,
+                FileName = "PowerShell.txt"
+            });
+        }
 
+        public static void Registry(string reported_by, string _event, string content)
+        {
+            if (!Configuration.Agent.debug_mode)
+                return;
 
-
+            _logChannel.Writer.TryWrite(new LogEntry
+            {
+                Type = "Registry",
+                ReportedBy = reported_by,
+                Event = _event,
+                ContentProvider = () => content,
+                FileName = "Registry.txt"
+            });
+        }
     }
 }

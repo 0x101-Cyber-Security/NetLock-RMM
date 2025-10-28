@@ -100,7 +100,13 @@
                         <MudSelectItem Value="@("osx-arm64")" />
                     </MudSelect>
 
-                    <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name) || creating_installer)">@Localizer["download_installer"]</MudButton>
+                    <div style="display: flex; align-items: center;">
+                        <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name) || creating_installer)">@Localizer["download_installer"]</MudButton>
+
+                        <MudTooltip Text="Creates a custom installer with the selected configuration. Once created, a download link will be provided. Please note that this will break the digital signature of the installer and may trigger warnings from antivirus software when executing. However, the installed agent will be fully digital signed.">
+                            <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                        </MudTooltip>
+                    </div>
                 </MudPaper>
             }
         }
@@ -749,7 +755,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START 67eb63e1-4cfb-4fd9-8916-b0671b361ef4 //OSSCH_END
+    //OSSCH_START ceb9a336-ac17-4d29-9bcb-94ac1220d8f7 //OSSCH_END
 
     private async Task GetCloudPreset()
     {

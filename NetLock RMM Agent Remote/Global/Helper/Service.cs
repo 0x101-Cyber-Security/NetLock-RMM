@@ -61,7 +61,7 @@ namespace Global.Helper
             }
             catch (Exception ex)
             {
-                Logging.Sensors("Global.Helper.Service", "Checking service state, or performing action failed", ex.ToString());
+                Logging.ErrorLazy("Global.Helper.Service", "Checking service state, or performing action failed", () => ex.ToString());
 
                 service_error_message = ex.Message;
                 return service_error_message;

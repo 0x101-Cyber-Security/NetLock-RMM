@@ -95,13 +95,12 @@ namespace NetLock_RMM_Agent_Comm
             // Check directories and registration asynchronously
             Windows.Initialization.Health.Handler.Check_Directories();
             Windows.Initialization.Health.Handler.Check_Registry();
-            Windows.Initialization.Health.Handler.User_Process();
             Windows.Initialization.Health.Handler.SaS();
 
             // Set up synchronisation timer
             try
             {
-                sync_timer?.Dispose(); // Falls vorher schon ein Timer existierte, aufräumen
+                sync_timer?.Dispose(); // Falls vorher schon ein Timer existierte, aufrï¿½umen
                 sync_timer = new System.Timers.Timer(600000); // 10 Minuten
                 sync_timer.Elapsed += Initialize_Timer_Tick;
                 sync_timer.AutoReset = true;
@@ -118,7 +117,7 @@ namespace NetLock_RMM_Agent_Comm
                 start_timer?.Dispose();
                 start_timer = new System.Timers.Timer(2500);
                 start_timer.Elapsed += Initialize_Timer_Tick;
-                start_timer.AutoReset = false; // Nur einmal ausführen
+                start_timer.AutoReset = false; // Nur einmal ausfï¿½hren
                 start_timer.Enabled = true;
             }
             catch (Exception ex)
@@ -169,7 +168,7 @@ namespace NetLock_RMM_Agent_Comm
 
             if (!Device_Worker.authorized)
                 return;
-
+            
             // Antivirus
             Windows.Microsoft_Defender_Antivirus.Handler.Initalization();
 

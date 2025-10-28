@@ -9,7 +9,6 @@ using static Windows.Helper.ScreenControl.User32;
 namespace Windows.Helper.ScreenControl;
 
 // TODO: Use https://github.com/microsoft/CsWin32 for all p/invokes.
-// Credits for https://github.com/immense/Remotely for already doing most of the work. That really helped me saving time on this. I will rebuild the classes on a sooner date.
 public class Win32Interop
 {
     public static List<WindowsSession> GetActiveSessions()

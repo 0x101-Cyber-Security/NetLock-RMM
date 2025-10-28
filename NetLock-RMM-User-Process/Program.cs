@@ -205,23 +205,7 @@ class UserClient
             {
                     // Ersetze den Fall "0" in ProcessCommand wie folgt:
                     case "0": // Screen Capture
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                string base64Image = string.Empty;
-                                if (OperatingSystem.IsWindows())
-                                    base64Image = await ScreenCapture.CaptureScreenToBase64(Convert.ToInt32(command.remote_control_screen_index));
-                                // else if (OperatingSystem.IsMacOS()) ...
-
-                                await Local_Server_Send_Message($"screen_capture${command.response_id}${base64Image}");
-                            }
-                            catch (Exception ex)
-                            {
-                                Console.WriteLine($"Screenshot-Fehler: {ex.Message}");
-                            }
-                        });
-
+                        _ = Task.Run(() => CaptureAndSendScreenshot(command));
                     break;
 
                 case "1": // Move Mouse / Clicks
@@ -395,6 +379,33 @@ class UserClient
         }
     }
 
+    // New method to send binary messages (e.g., image data)
+    public async Task Local_Server_Send_Binary_Message(string messageType, string responseId, byte[] data)
+    {
+        try
+        {
+            if (_stream != null && _client.Connected)
+            {
+                // Create header with message type, response ID, and data length
+                string header = $"{messageType}${responseId}${data.Length}$";
+                byte[] headerBytes = Encoding.UTF8.GetBytes(header);
+                
+                // Write header first
+                await _stream.WriteAsync(headerBytes, 0, headerBytes.Length);
+                
+                // Write binary data directly
+                await _stream.WriteAsync(data, 0, data.Length);
+                await _stream.FlushAsync();
+                
+                Console.WriteLine($"Sent binary message ({messageType}) with {data.Length} bytes to remote agent");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Failed to send binary message to the local server: {ex.Message}");
+        }
+    }
+
     private async Task MonitorConnectionAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -457,6 +468,26 @@ class UserClient
         _stream?.Close();
         _client?.Close();
         Console.WriteLine("Disconnected from the server.");
+    }
+
+    private async Task CaptureAndSendScreenshot(Command command)
+    {
+        try
+        {
+            byte[] imageBytes = null;
+            if (OperatingSystem.IsWindows())
+                imageBytes = await ScreenCapture.CaptureScreenToBytes(Convert.ToInt32(command.remote_control_screen_index));
+            // else if (OperatingSystem.IsMacOS()) ...
+
+            if (imageBytes != null && imageBytes.Length > 0)
+            {
+                await Local_Server_Send_Binary_Message("screen_capture", command.response_id, imageBytes);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Screenshot-Fehler: {ex.Message}");
+        }
     }
 }
 

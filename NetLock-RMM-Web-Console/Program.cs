@@ -90,7 +90,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check members portal parts
-//OSSCH_START aae7abab-4618-4cb4-b6d4-1406afc96460 //OSSCH_END
+//OSSCH_START 3f127b79-b163-4cd9-8ea4-beaa449b4001 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -337,6 +337,9 @@ builder.Services.AddSingleton<MudBlazor.MudThemeProvider>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMvc();
 
+if (https)
+    builder.Services.AddLettuceEncrypt();
+
 // Configure form options to increase the maximum upload file size limit to 150 MB
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -464,7 +467,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START a3bd9dc6-e17b-404e-8315-4634ffbeea65 //OSSCH_END
+//OSSCH_START a7a8180f-00b3-48a5-be8b-3ba2849b1191 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
@@ -474,7 +477,7 @@ Console.WriteLine("Server started.");
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 6c72b8cc-5a74-4629-b3c6-5507d835128e //OSSCH_END
+    //OSSCH_START 53351b58-e894-479c-988d-3cdff021136c //OSSCH_END
 }
 
 // Start server

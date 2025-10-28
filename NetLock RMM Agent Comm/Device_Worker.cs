@@ -25,6 +25,7 @@ namespace NetLock_RMM_Agent_Comm
         // Server config
         public static string access_key = string.Empty;
         public static bool authorized = false;
+        public static string policy_agent_settings_json = string.Empty;
 
         // Server communication
         public static string communication_server = string.Empty;
@@ -38,6 +39,9 @@ namespace NetLock_RMM_Agent_Comm
         public static bool update_server_status = false;
         public static bool file_server_status = false;
 
+        // Agent settings
+        public static bool agentAutoUpdateEnabled = false;
+        
         // Device identity
         public static string device_identity_json = string.Empty;
 
@@ -143,7 +147,7 @@ namespace NetLock_RMM_Agent_Comm
             // Setup synchronize timer
             try
             {
-                sync_timer = new System.Timers.Timer(1800000); //sync 30 minutes | currently testing with lower value
+                sync_timer = new System.Timers.Timer(900000); //sync 15 Minuten | wird später von den Agent-Einstellungen überschrieben
                 sync_timer.Elapsed += new ElapsedEventHandler(Initialize_Timer_Tick);
                 sync_timer.Enabled = true;
             }
@@ -304,7 +308,9 @@ namespace NetLock_RMM_Agent_Comm
 
             if (!authorized)
                 return;
-
+            
+            Global.Offline_Mode.Handler.LoadAgentSettings();
+            
             //Start jobs timer, trigger every thirty seconds
             try
             {

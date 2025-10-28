@@ -2,16 +2,21 @@
 using MacOS.Helper;
 using System.Diagnostics;
 using System.IO.Compression;
-using System.Reflection;
 using System.Text.Json;
-using Microsoft.Win32;
-using System.Text;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace NetLock_RMM_Agent_Installer
 {
     internal class Program
     {
+        // WinAPI functions to hide the console window on Windows
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr GetConsoleWindow();
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
         public class Server_Config
         {
             public bool ssl { get; set; } = false;
@@ -43,13 +48,48 @@ namespace NetLock_RMM_Agent_Installer
         {
             try
             {
-                // Check if running as admin
+                // Check if running as admin, if not, try to elevate
                 if (!Helper.Elevation.IsElevated())
                 {
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: This application requires administrative or root privileges. Please run as administrator or root.");
-                    Logging.Handler.Error("Main", "Elevation", "This application requires administrative or root privileges. Please run as administrator or root.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error: Failed to elevate. This application requires administrative or root privileges.");
+                    Logging.Handler.Error("Main", "Elevation", "Failed to elevate. Application requires administrative or root privileges.");
                     Thread.Sleep(5000);
-                    Environment.Exit(0);
+                    Environment.Exit(1);
+                }
+
+                // Handle hidden parameter (--hidden or -h). Filter it out so the rest of the argument
+                // processing remains unchanged. If present and running on Windows, hide the console window.
+                bool hideWindow = false;
+                bool noLog = false;
+                if (args != null && args.Length > 0)
+                {
+                    var filtered = args.Where(a => 
+                        !string.Equals(a, "--hidden", StringComparison.OrdinalIgnoreCase) && 
+                        !string.Equals(a, "-h", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(a, "--no-log", StringComparison.OrdinalIgnoreCase) &&
+                        !string.Equals(a, "--nolog", StringComparison.OrdinalIgnoreCase)).ToArray();
+                    
+                    hideWindow = args.Any(a => string.Equals(a, "--hidden", StringComparison.OrdinalIgnoreCase) || 
+                                               string.Equals(a, "-h", StringComparison.OrdinalIgnoreCase));
+                    
+                    noLog = args.Any(a => string.Equals(a, "--no-log", StringComparison.OrdinalIgnoreCase) || 
+                                          string.Equals(a, "--nolog", StringComparison.OrdinalIgnoreCase));
+                    
+                    args = filtered; // use filtered args for the rest of the program
+                }
+
+                if (hideWindow && OperatingSystem.IsWindows())
+                {
+                    try
+                    {
+                        var consoleHandle = GetConsoleWindow();
+                        if (consoleHandle != IntPtr.Zero)
+                            ShowWindow(consoleHandle, 0); // SW_HIDE = 0
+                    }
+                    catch
+                    {
+                        // ignore any failure to hide the window
+                    }
                 }
 
                 Console.Title = "NetLock RMM Agent Installer";
@@ -247,11 +287,38 @@ namespace NetLock_RMM_Agent_Installer
                     Logging.Handler.Debug("Main", "Delete old health.package", "Not present.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old health.package: Not present.");
                 }
+                
+                // User Process
+                if (File.Exists(Application_Paths.user_process_package_path))
+                {
+                    File.Delete(Application_Paths.user_process_package_path);
+                    Logging.Handler.Debug("Main", "Delete old user_process.package", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old user_process.package: Done.");
+                }
+                else
+                {
+                    Logging.Handler.Debug("Main", "Delete old user_process.package", "Not present.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old user_process.package: Not present.");
+                }
+                
+                // Tray Icon
+                if (File.Exists(Application_Paths.tray_icon_package_path))
+                {
+                    File.Delete(Application_Paths.tray_icon_package_path);
+                    Logging.Handler.Debug("Main", "Delete old tray_icon.package", "Done.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old tray_icon.package: Done.");
+                }
+                else
+                {
+                    Logging.Handler.Debug("Main", "Delete old tray_icon.package", "Not present.");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old tray_icon.package: Not present.");
+                }
 
                 // Check OS & Architecture
                 string comm_package_url = String.Empty;
                 string remote_package_url = String.Empty;
                 string health_package_url = String.Empty;
+                string tray_icon_package_url = String.Empty;
                 string user_process_package_url = String.Empty;
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
@@ -264,6 +331,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_winarm64;
                         remote_package_url = Application_Paths.remote_agent_package_url_winarm64;
                         health_package_url = Application_Paths.health_agent_package_url_winarm64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_winarm64;
                         user_process_package_url = Application_Paths.user_process_package_url_winarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
@@ -272,6 +340,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_winx64;
                         remote_package_url = Application_Paths.remote_agent_package_url_winx64;
                         health_package_url = Application_Paths.health_agent_package_url_winx64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_winx64;
                         user_process_package_url = Application_Paths.user_process_package_url_winx64;
                     }
                 }
@@ -283,6 +352,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_linuxarm64;
                         remote_package_url = Application_Paths.remote_agent_package_url_linuxarm64;
                         health_package_url = Application_Paths.health_agent_package_url_linuxarm64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_linuxarm64;
                         user_process_package_url = Application_Paths.user_process_package_url_linuxarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
@@ -291,6 +361,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_linuxx64;
                         remote_package_url = Application_Paths.remote_agent_package_url_linuxx64;
                         health_package_url = Application_Paths.health_agent_package_url_linuxx64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_linuxx64;
                         user_process_package_url = Application_Paths.user_process_package_url_linuxx64;
                     }
                 }
@@ -302,6 +373,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_osxarm64;
                         remote_package_url = Application_Paths.remote_agent_package_url_osxarm64;
                         health_package_url = Application_Paths.health_agent_package_url_osxarm64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_osxarm64;
                         user_process_package_url = Application_Paths.user_process_package_url_osxarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
@@ -310,6 +382,7 @@ namespace NetLock_RMM_Agent_Installer
                         comm_package_url = Application_Paths.comm_agent_package_url_osx64;
                         remote_package_url = Application_Paths.remote_agent_package_url_osx64;
                         health_package_url = Application_Paths.health_agent_package_url_osx64;
+                        tray_icon_package_url = Application_Paths.tray_icon_package_url_osx64;
                         user_process_package_url = Application_Paths.user_process_package_url_osx64;
                     }
                 }
@@ -342,6 +415,12 @@ namespace NetLock_RMM_Agent_Installer
                 Logging.Handler.Debug("Main", "Download health agent package", "Done.");
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download health agent package: Done.");
 
+                // Download Tray Icon package
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + tray_icon_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path), server_config_new.package_guid);
+                Logging.Handler.Debug("Main", "Download tray icon package", http_status.ToString());
+                Logging.Handler.Debug("Main", "Download tray icon package", "Done.");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download tray icon package: Done.");
+                
                 // Download User Process
                 if (OperatingSystem.IsWindows())
                 {
@@ -366,6 +445,11 @@ namespace NetLock_RMM_Agent_Installer
                 Logging.Handler.Debug("Main", "Get hash health agent package", health_agent_package_hash);
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash health agent package: " + health_agent_package_hash);
 
+                // Get hash tray icon package
+                string tray_icon_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + tray_icon_package_url + ".sha512", server_config_new.package_guid);
+                Logging.Handler.Debug("Main", "Get hash tray icon package", tray_icon_package_hash);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash tray icon package: " + tray_icon_package_hash);
+                
                 // Get hash user process package
                 string user_process_package_hash = String.Empty;
                 if (OperatingSystem.IsWindows())
@@ -446,6 +530,27 @@ namespace NetLock_RMM_Agent_Installer
                     Thread.Sleep(5000);
                     Environment.Exit(0);
                 }
+                
+                // Check hash tray icon package
+                string tray_icon_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path);
+                string tray_icon_package_hash_local = Helper.IO.Get_SHA512(tray_icon_package_path);
+                
+                Logging.Handler.Debug("Main", "Check hash tray icon package", tray_icon_package_hash_local);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: " + tray_icon_package_hash_local);
+                
+                if (tray_icon_package_hash_local == tray_icon_package_hash)
+                {
+                    Logging.Handler.Debug("Main", "Check hash tray icon package", "OK");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: OK");
+                }
+                else
+                {
+                    Logging.Handler.Debug("Main", "Check hash tray icon package", "KO");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: KO");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
+                    Thread.Sleep(5000);
+                    Environment.Exit(0);
+                }
 
                 // Check hash user process package
                 string user_process_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path);
@@ -502,6 +607,10 @@ namespace NetLock_RMM_Agent_Installer
                 if (!Directory.Exists(Application_Paths.program_data_health_agent_dir))
                     Directory.CreateDirectory(Application_Paths.program_data_health_agent_dir);
 
+                // Create program files & files dir (tray icon)
+               if (!Directory.Exists(Application_Paths.program_files_tray_icon_dir))
+                    Directory.CreateDirectory(Application_Paths.program_files_tray_icon_dir);
+                
                 // Create program data & files dir (user process/agent)
                 if (OperatingSystem.IsWindows())
                 {
@@ -566,6 +675,11 @@ namespace NetLock_RMM_Agent_Installer
                     ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path), Application_Paths.program_files_health_agent_dir, true);
                 }
 
+                // Extract tray icon package
+                Logging.Handler.Debug("Main", "Extracting tray icon package", "");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting tray icon package.");
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path), Application_Paths.program_files_tray_icon_dir, true);
+                
                 // Extract user process package
                 if (OperatingSystem.IsWindows())
                 {
@@ -769,12 +883,23 @@ namespace NetLock_RMM_Agent_Installer
 
                 if (File.Exists(health_agent_package_path))
                     File.Delete(health_agent_package_path);
+                
+                if (File.Exists(tray_icon_package_path))
+                    File.Delete(tray_icon_package_path);
 
                 if (OperatingSystem.IsWindows())
                     if (File.Exists(user_process_package_path))
                         File.Delete(user_process_package_path);
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Installation finished.");
+
+                // Delete logs if --no-log parameter is set
+                if (noLog)
+                {
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Deleting logs (--no-log parameter set)...");
+                    Logging.Handler.DeleteAllLogs();
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Logs deleted.");
+                }
 
                 // Wait for 5 seconds
                 Thread.Sleep(5000);

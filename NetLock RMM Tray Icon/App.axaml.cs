@@ -24,23 +24,6 @@ namespace NetLock_RMM_Tray_Icon
         private TrayIcon _trayIcon;
         private ActionSidebar? _actionSidebar;
         
-
-        
-        public class ConfigRoot
-        {
-            public Handler.TrayIconConfig? TrayIcon { get; set; }
-            public Handler.AboutInterfaceConfig? AboutInterface { get; set; }
-            public Handler.ChatInterfaceConfig? ChatInterface { get; set; }
-            public List<Handler.TrayButtonConfig>? Buttons { get; set; }
-        }
-        
-        public static class AppConfig
-        {
-            public static Handler.TrayIconConfig? TrayConfig { get; set; }
-            public static Handler.AboutInterfaceConfig? AboutConfig { get; set; }
-            public static Handler.ChatInterfaceConfig? ChatConfig { get; set; }
-        }
-        
         public override void Initialize()
         {
             AvaloniaXamlLoader.Load(this);
@@ -52,23 +35,63 @@ namespace NetLock_RMM_Tray_Icon
             {
                 if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                 {
-                    desktop.MainWindow = new ChatWindow();
-                    
-                    // Hide main window
-                    desktop.MainWindow.Hide();
-                    
-                    // Initialize ActionSidebar
-                    //_actionSidebar = new ActionSidebar();
-                    //_actionSidebar.Show();
+                    // Set shutdown mode to prevent automatic shutdown when no window is visible
+                    desktop.ShutdownMode = ShutdownMode.OnExplicitShutdown;
                     
                     LoadConfig();
                     
+                    // Load tray icon from config or use default
+                    WindowIcon? trayIconImage = null;
+                    try
+                    {
+                        // Try to load icon from Base64 in config
+                        if (!string.IsNullOrEmpty(Handler.AppConfig.TrayConfig?.IconBase64))
+                        {
+                            string base64Data = Handler.AppConfig.TrayConfig.IconBase64;
+                            
+                            // Remove data URI prefix if present (e.g., "data:image/png;base64,")
+                            if (base64Data.Contains(","))
+                            {
+                                int commaIndex = base64Data.IndexOf(',');
+                                base64Data = base64Data.Substring(commaIndex + 1);
+                            }
+                            
+                            byte[] iconBytes = Convert.FromBase64String(base64Data);
+                            using (var ms = new MemoryStream(iconBytes))
+                            {
+                                var bitmap = new Avalonia.Media.Imaging.Bitmap(ms);
+                                trayIconImage = new WindowIcon(bitmap);
+                            }
+                            Console.WriteLine("Loaded tray icon from Base64 config");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Failed to load icon from Base64: {ex.Message}");
+                        Logging.Error("OnFrameworkInitializationCompleted", "Failed to load Base64 icon", ex.ToString());
+                    }
+                    
+                    // Fallback to default icon if Base64 loading failed
+                    if (trayIconImage == null)
+                    {
+                        try
+                        {
+                            trayIconImage = new WindowIcon(System.IO.Path.Combine("Assets", "trayicon.ico"));
+                            Console.WriteLine("Using default tray icon from Assets");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Failed to load default icon: {ex.Message}");
+                        }
+                    }
+                    
                     _trayIcon = new TrayIcon
                     {
-                        Icon = new WindowIcon(System.IO.Path.Combine("Assets", "trayicon.ico")),
-                        ToolTipText = AppConfig.TrayConfig?.Title ?? "NetLock RMM",
+                        Icon = trayIconImage,
+                        ToolTipText = Handler.AppConfig.TrayConfig?.Title ?? "NetLock RMM",
                         IsVisible = true
                     };
+                    
                     var menu = new NativeMenu();
                     
                     // Additional buttons from config
@@ -82,7 +105,7 @@ namespace NetLock_RMM_Tray_Icon
                             
                             jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
                             
-                            var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
+                            var configRoot = JsonSerializer.Deserialize<Handler.ConfigRoot>(jsonString);
                             if (configRoot?.Buttons != null)
                             {
                                 foreach (var button in configRoot.Buttons)
@@ -103,17 +126,17 @@ namespace NetLock_RMM_Tray_Icon
                     }
                 
                     // Add buttons from config as menu items
-                    if (AppConfig.TrayConfig != null && AppConfig.TrayConfig.AboutButtonEnabled == true && AppConfig.AboutConfig.Enabled == true)
+                    if (Handler.AppConfig.TrayConfig != null && Handler.AppConfig.TrayConfig.AboutButtonEnabled == true && Handler.AppConfig.AboutConfig.Enabled == true)
                     {
-                        var aboutItem = new NativeMenuItem(AppConfig.TrayConfig.AboutButtonTitle ?? "About");
+                        var aboutItem = new NativeMenuItem(Handler.AppConfig.TrayConfig.AboutButtonTitle ?? "About");
                         aboutItem.Click += (_, __) => ShowAboutDialog();
                         menu.Items.Add(aboutItem);
                     }
 
                     // Add exit button from config
-                    if (AppConfig.TrayConfig != null && AppConfig.TrayConfig.ExitButtonEnabled == true)
+                    if (Handler.AppConfig.TrayConfig != null && Handler.AppConfig.TrayConfig.ExitButtonEnabled == true)
                     {
-                        var exitItem = new NativeMenuItem(AppConfig.TrayConfig.ExitButtonTitle ?? "Exit");
+                        var exitItem = new NativeMenuItem(Handler.AppConfig.TrayConfig.ExitButtonTitle ?? "Exit");
                         exitItem.Click += (_, __) => 
                         {
                             _actionSidebar?.Close();
@@ -145,7 +168,7 @@ namespace NetLock_RMM_Tray_Icon
                 
                 switch (action.ToLower())
                 {
-                    case "Open url":
+                    case "open url":
                         try
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(actionDetails) 
@@ -158,7 +181,7 @@ namespace NetLock_RMM_Tray_Icon
                             Logging.Error("HandleButtonAction", "error", ex.ToString());
                         }
                         break;
-                    case "Start process":
+                    case "start process":
                         try
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(actionDetails) 
@@ -194,10 +217,10 @@ namespace NetLock_RMM_Tray_Icon
                 
                     jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
                 
-                    var configRoot = JsonSerializer.Deserialize<ConfigRoot>(jsonString);
-                    AppConfig.TrayConfig = configRoot?.TrayIcon;
-                    AppConfig.AboutConfig = configRoot?.AboutInterface;
-                    AppConfig.ChatConfig = configRoot?.ChatInterface;
+                    var configRoot = JsonSerializer.Deserialize<Handler.ConfigRoot>(jsonString);
+                    Handler.AppConfig.TrayConfig = configRoot?.TrayIcon;
+                    Handler.AppConfig.AboutConfig = configRoot?.AboutInterface;
+                    Handler.AppConfig.ChatConfig = configRoot?.ChatInterface;
                 }
             }
             catch (Exception e)
@@ -210,7 +233,7 @@ namespace NetLock_RMM_Tray_Icon
         {
             try
             {
-                var about = AppConfig.AboutConfig ?? new Handler.AboutInterfaceConfig();
+                var about = Handler.AppConfig.AboutConfig ?? new Handler.AboutInterfaceConfig();
                 var dialog = new Window
                 {
                     Title = about.WindowTitle ?? "About NetLock RMM",
@@ -218,10 +241,39 @@ namespace NetLock_RMM_Tray_Icon
                     MinHeight = 320,
                     MaxHeight = 700,
                     SizeToContent = SizeToContent.Height,
-                    WindowStartupLocation = WindowStartupLocation.CenterOwner,
+                    WindowStartupLocation = WindowStartupLocation.CenterScreen,
                     CanResize = false,
-                    Background = new SolidColorBrush(Color.Parse("#F0F2F5"))
+                    Background = new SolidColorBrush(Color.Parse("#F0F2F5")),
+                    ShowInTaskbar = true
                 };
+
+                // Set window icon from config
+                try
+                {
+                    if (!string.IsNullOrEmpty(Handler.AppConfig.TrayConfig?.IconBase64))
+                    {
+                        string base64Data = Handler.AppConfig.TrayConfig.IconBase64;
+                        
+                        // Remove data URI prefix if present (e.g., "data:image/png;base64,")
+                        if (base64Data.Contains(","))
+                        {
+                            int commaIndex = base64Data.IndexOf(',');
+                            base64Data = base64Data.Substring(commaIndex + 1);
+                        }
+                        
+                        byte[] iconBytes = Convert.FromBase64String(base64Data);
+                        using (var ms = new MemoryStream(iconBytes))
+                        {
+                            var bitmap = new Avalonia.Media.Imaging.Bitmap(ms);
+                            dialog.Icon = new WindowIcon(bitmap);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to set window icon for About dialog: {ex.Message}");
+                    Logging.Error("ShowAboutDialog", "Failed to set window icon", ex.ToString());
+                }
 
                 var content = new StackPanel
                 {
@@ -229,13 +281,43 @@ namespace NetLock_RMM_Tray_Icon
                     Spacing = 15
                 };
 
-                content.Children.Add(new TextBlock
+                // Try to load logo from Base64 config, fallback to emoji
+                bool logoLoaded = false;
+                try
                 {
-                    Text = about.Emoji ?? "🔒",
-                    FontSize = 48,
-                    HorizontalAlignment = HorizontalAlignment.Center
-                });
-
+                    if (!string.IsNullOrEmpty(Handler.AppConfig.TrayConfig?.IconBase64))
+                    {
+                        string base64Data = Handler.AppConfig.TrayConfig.IconBase64;
+                        
+                        // Remove data URI prefix if present (e.g., "data:image/png;base64,")
+                        if (base64Data.Contains(","))
+                        {
+                            int commaIndex = base64Data.IndexOf(',');
+                            base64Data = base64Data.Substring(commaIndex + 1);
+                        }
+                        
+                        byte[] iconBytes = Convert.FromBase64String(base64Data);
+                        using (var ms = new MemoryStream(iconBytes))
+                        {
+                            var bitmap = new Avalonia.Media.Imaging.Bitmap(ms);
+                            var logoImage = new Avalonia.Controls.Image
+                            {
+                                Source = bitmap,
+                                Width = 80,
+                                Height = 80,
+                                HorizontalAlignment = HorizontalAlignment.Center
+                            };
+                            content.Children.Add(logoImage);
+                            logoLoaded = true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Failed to load logo from Base64 for About dialog: {ex.Message}");
+                    Logging.Error("ShowAboutDialog", "Failed to load Base64 logo", ex.ToString());
+                }
+                
                 content.Children.Add(new TextBlock
                 {
                     Text = about.Title ?? "NetLock RMM",
@@ -256,6 +338,7 @@ namespace NetLock_RMM_Tray_Icon
                         Margin = new Thickness(0, 10)
                     });
                 }
+                
                 // Show policy if enabled
                 if (about.PolicyEnabled == true)
                 {
@@ -268,23 +351,33 @@ namespace NetLock_RMM_Tray_Icon
                         Margin = new Thickness(0, 10, 0, 0)
                     });
                 }
+                
                 // Show version if enabled
                 if (about.VersionEnabled == true)
                 {
+                    string version = "Unknown.";
+
+                    if (File.Exists(Application_Paths.netlock_comm_agent_version_txt))
+                    {
+                        version = File.ReadAllText(Application_Paths.netlock_comm_agent_version_txt);
+                        version = String_Encryption.Decrypt(version, Application_Settings.NetLock_Local_Encryption_Key);
+                    }
+                        
                     content.Children.Add(new TextBlock
                     {
-                        Text = $"Version: {Application_Settings.Version}",
+                        Text = $"Version: {version}",
                         FontSize = 12,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Foreground = new SolidColorBrush(Color.Parse("#7F8C8D")),
                         Margin = new Thickness(0, 10, 0, 0)
                     });
                 }
+                
                 if (about.CopyrightTextEnabled == true)
                 {
                     content.Children.Add(new TextBlock
                     {
-                        Text = about.CopyrightText ?? $"© {DateTime.Now.Year} Copyright 2025 0x101 Cyber Security - All rights reserved.",
+                        Text = about.CopyrightText ?? $"© {DateTime.Now.Year} Copyright 0x101 GmbH. All rights reserved.",
                         FontSize = 12,
                         HorizontalAlignment = HorizontalAlignment.Center,
                         Foreground = new SolidColorBrush(Color.Parse("#95A5A6")),
@@ -307,7 +400,9 @@ namespace NetLock_RMM_Tray_Icon
                 content.Children.Add(closeButton);
 
                 dialog.Content = content;
-                dialog.ShowDialog((Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)?.MainWindow);
+                
+                // Use Show() instead of ShowDialog() since there is no MainWindow (tray-only app)
+                dialog.Show();
             }
             catch (Exception e)
             {

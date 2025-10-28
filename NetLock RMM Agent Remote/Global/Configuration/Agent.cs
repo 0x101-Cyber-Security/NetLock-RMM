@@ -18,4 +18,15 @@
         public static string hwid { get; set; } = String.Empty;
         public static string platform { get; set; } = String.Empty;
     }
+    
+    public class AgentSettings
+    {
+        public bool RemoteServiceEnabled { get; set; } = false;
+        public bool RemoteShellEnabled { get; set; } = false;
+        public bool RemoteFileBrowserEnabled { get; set; } = false;
+        public bool RemoteTaskManagerEnabled { get; set; } = false;
+        public bool RemoteServiceManagerEnabled { get; set; } = false;
+        public bool RemoteScreenControlEnabled { get; set; } = false;
+        public bool RemoteScreenControlUnattendedAccess { get; set; } = false;
+    }
 }

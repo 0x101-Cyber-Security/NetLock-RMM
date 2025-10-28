@@ -232,49 +232,47 @@ namespace Global.Device_Information
             }
             else if (OperatingSystem.IsLinux())
             {
-                string distroInfo = Linux.Helper.Linux.Get_Linux_Distribution().ToLower();
+                List<string> applications_installedJsonList = new List<string>();
+                string packageManager = Linux.Helper.Package_Manager.DetectPackageManager();
 
-                if (distroInfo == "ubuntu" || distroInfo == "debian")
+                if (!string.IsNullOrEmpty(packageManager))
                 {
-                    List<string> applications_installedJsonList = new List<string>();
-
                     try
                     {
-                        // Execute the command to get the list of installed packages
-                        var installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "apt list --installed 2>/dev/null");
-
-                        // Split the output into lines
-                        var lines = installedPackages.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-                        // Iterate over each line (excluding the header)
-                        foreach (var line in lines.Skip(1))
+                        string installedPackages = string.Empty;
+                        
+                        // Execute command based on detected package manager
+                        switch (packageManager.ToLower())
                         {
-                            var details = line.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries);
-                            if (details.Length >= 2)
-                            {
-                                string packageName = details[0].Trim();
-                                string packageVersion = details[1].Trim();
-                                string packageStatus = details.Length > 2 ? details[2].Trim() : "N/A";
-
-                                // Here, you would collect the necessary package information into a JSON format
-                                var applicationInfo = new Applications_Installed
-                                {
-                                    name = packageName,
-                                    version = packageVersion,
-                                    installed_date = "N/A",  // apt doesn't provide install date directly, consider using additional logic if needed
-                                    installation_path = "N/A",  // apt doesn't provide path; you might use 'dpkg-query' or similar for that info
-                                    vendor = "N/A",  // Vendor info isn't available directly with 'apt list --installed'
-                                    uninstallation_string = $"sudo apt remove {packageName}"  // Uninstall command
-                                };
-
-                                string applications_installedJson = JsonSerializer.Serialize(applicationInfo, new JsonSerializerOptions { WriteIndented = true });
-
-                                lock (applications_installedJsonList)
-                                {
-                                    applications_installedJsonList.Add(applications_installedJson);
-                                    currentApplications.Add(applicationInfo); // Add object to comparison list
-                                }
-                            }
+                            case "apt":
+                                installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "apt list --installed 2>/dev/null");
+                                Linux.Helper.Package_Manager.ParseAptPackages(installedPackages, applications_installedJsonList, currentApplications);
+                                break;
+                                
+                            case "yum":
+                                installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "yum list installed 2>/dev/null");
+                                Linux.Helper.Package_Manager.ParseYumPackages(installedPackages, applications_installedJsonList, currentApplications, "yum");
+                                break;
+                                
+                            case "dnf":
+                                installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "dnf list installed 2>/dev/null");
+                                Linux.Helper.Package_Manager.ParseYumPackages(installedPackages, applications_installedJsonList, currentApplications, "dnf");
+                                break;
+                                
+                            case "zypper":
+                                installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "zypper se --installed-only 2>/dev/null");
+                                Linux.Helper.Package_Manager.ParseZypperPackages(installedPackages, applications_installedJsonList, currentApplications);
+                                break;
+                                
+                            case "pacman":
+                                installedPackages = Linux.Helper.Bash.Execute_Script("Applications_Installed", false, "pacman -Q 2>/dev/null");
+                                Linux.Helper.Package_Manager.ParsePacmanPackages(installedPackages, applications_installedJsonList, currentApplications);
+                                break;
+                                
+                            default:
+                                Logging.Error("Device_Information.Software.Applications_Installed", "Unsupported package manager", packageManager);
+                                applications_installed_json = "[]";
+                                return applications_installed_json;
                         }
 
                         // Create and log JSON array
@@ -289,7 +287,7 @@ namespace Global.Device_Information
                 }
                 else
                 {
-                    Logging.Error("Device_Information.Software.Applications_Installed", "Collecting failed (unsupported Linux distribution)", distroInfo);
+                    Logging.Error("Device_Information.Software.Applications_Installed", "No supported package manager found", "");
                     applications_installed_json = "[]";
                 }
             }

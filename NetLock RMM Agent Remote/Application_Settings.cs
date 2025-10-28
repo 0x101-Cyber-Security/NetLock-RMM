@@ -1,4 +1,4 @@
-namespace NetLock_RMM_Tray_Icon;
+namespace NetLock_RMM_Agent_Remote;
 
 public class Application_Settings
 {

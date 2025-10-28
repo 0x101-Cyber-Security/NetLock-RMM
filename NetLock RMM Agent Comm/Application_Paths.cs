@@ -19,6 +19,7 @@ namespace NetLock_RMM_Agent_Comm
         // NetLock Paths
         public static string netlock_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "NetLock RMM Comm Agent Windows", "NetLock_RMM_Comm_Agent_Windows.exe");
         public static string netlock_health_service_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health", "NetLock_RMM_Health_Agent.exe");
+        public static string netlock_comm_agent_version_txt = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "version.txt");
         //public static string netlock_installer_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Installer", "Installer.exe");
         //public static string netlock_uninstaller_exe = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Uninstaller", "Uninstaller.exe");
         //public static string netlock_user_process_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Agent", "NetLock_RMM_User_Process.exe");
@@ -42,9 +43,15 @@ namespace NetLock_RMM_Agent_Comm
         public static string program_data_netlock_policy_database = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "policy.nlock");
         public static string program_data_netlock_events_database = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "events.nlock");
 
+        public static string device_identity_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "device_identity.json");
+
+        public static string agent_settings_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "agent_config.json");
+        
         // Tray Icon
         public static string tray_icon_dir =  Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Tray Icon");
         public static string tray_icon_settings_json_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "Tray Icon", "config.json");
+        
+        public static string tray_icon_icon_exe = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Tray Icon", "NetLock_RMM_Tray_Icon.exe");
         
         // Installer
         public static string installer_package_url_winx64 = "/private/downloads/netlock/installer.package.win-x64.zip";

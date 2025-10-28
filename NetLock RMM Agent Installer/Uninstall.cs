@@ -68,6 +68,10 @@ namespace NetLock_RMM_Agent_Installer
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_User_Process_UAC.exe\"");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock RMM User Process.exe"); // kill legacy process
                 Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock RMM User Process.exe\""); // kill legacy process
+                
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon.exe");
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Tray_Icon.exe\"");
 
                 Thread.Sleep(5000); // Wait a little to allow service manager to release handles to prevent service marked for deletion error
 
@@ -84,6 +88,10 @@ namespace NetLock_RMM_Agent_Installer
                 Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-health");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
                 Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-user-process");
+                
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Tray_Icon");
             }
             else if (OperatingSystem.IsMacOS())
             {
@@ -95,6 +103,10 @@ namespace NetLock_RMM_Agent_Installer
                 Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Agent_Health");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process");
                 Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_User_Process");
+                
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon");
+                Zsh.Execute_Script("Terminating processes", false, "pkill NetLock_RMM_Tray_Icon");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
@@ -113,6 +125,11 @@ namespace NetLock_RMM_Agent_Installer
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Unregistering user process.");
                 Logging.Handler.Debug("Main", "Unregistering user process", "NetLock RMM User Process");
                 Windows.Helper.Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Process");
+                
+                // Unregister tray icon process
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Unregistering tray icon process.");
+                Logging.Handler.Debug("Main", "Unregistering tray icon process", "NetLock RMM Tray Icon");
+                Windows.Helper.Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM Tray Icon");
             }
             else if (OperatingSystem.IsLinux())
             {
@@ -249,6 +266,11 @@ namespace NetLock_RMM_Agent_Installer
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"yara64.exe\""); // yara64.exe is (currently) not used in the project, its part of a netlock legacy feature
                 //Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"devcon_x64.exe\""); // devcon_x64.exe is (currently) not used in the project, its part of a netlock legacy feature
 
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon.exe");
+                Helper._Process.Start("cmd.exe", "/c taskkill /F /IM \"NetLock_RMM_Tray_Icon.exe\"");
+                
+                // Wait a little to allow service manager to release handles to prevent service marked for deletion error
                 Thread.Sleep(5000); // Wait a little to allow service manager to release handles to prevent service marked for deletion error
             }
             else if (OperatingSystem.IsLinux())
@@ -259,6 +281,10 @@ namespace NetLock_RMM_Agent_Installer
                 Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-agent-remote");
                 Logging.Handler.Debug("Main", "Terminating processes.", "netlock-rmm-user-process");
                 Bash.Execute_Script("Terminating processes", false, "pkill -f netlock-rmm-user-process");
+                
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon");
+                Bash.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Tray_Icon");
             }
             else if (OperatingSystem.IsMacOS())
             {
@@ -268,6 +294,13 @@ namespace NetLock_RMM_Agent_Installer
                 Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Agent_Remote");
                 Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Agent_Health");
                 Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Agent_Health");
+                
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_User_Process");
+                Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_User_Process");
+                
+                // Tray icon process
+                Logging.Handler.Debug("Main", "Terminating processes.", "NetLock_RMM_Tray_Icon");
+                Zsh.Execute_Script("Terminating processes", false, "pkill -f NetLock_RMM_Tray_Icon");
             }
             Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Terminated processes.");
 
@@ -353,6 +386,10 @@ namespace NetLock_RMM_Agent_Installer
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_dumps_dir);
             Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_data_comm_agent_temp_dir);
             Helper.IO.Delete_Directory(Application_Paths.program_data_comm_agent_temp_dir);
+            
+            // Tray icon directory
+            Logging.Handler.Debug("Main", "Deleting directories.", Application_Paths.program_files_tray_icon_dir);
+            Helper.IO.Delete_Directory(Application_Paths.program_files_tray_icon_dir);
             
             // Delete legacy directories
             Logging.Handler.Debug("Main", "Deleting directories (legacy).", Application_Paths.program_files_user_process_dir);

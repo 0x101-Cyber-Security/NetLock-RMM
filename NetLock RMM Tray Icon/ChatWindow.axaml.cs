@@ -38,6 +38,7 @@ namespace NetLock_RMM_Tray_Icon
                 _firstName = value;
                 OnPropertyChanged(nameof(FirstName));
                 OnPropertyChanged(nameof(DisplayName));
+                UpdateHeaderInitials();
             }
         }
 
@@ -49,6 +50,7 @@ namespace NetLock_RMM_Tray_Icon
                 _lastName = value;
                 OnPropertyChanged(nameof(LastName));
                 OnPropertyChanged(nameof(DisplayName));
+                UpdateHeaderInitials();
             }
         }
 
@@ -270,7 +272,15 @@ namespace NetLock_RMM_Tray_Icon
             var welcomeText = AppConfig.ChatConfig?.WelcomeMessageText ?? "Welcome!";
             
             if (welcomeMessageEnabled)
-                AddChatMessage(welcomeText, _firstName, _lastName, false);
+            {
+                // Use firstName and lastName if available, otherwise use fallback from config or default
+                string firstName = !string.IsNullOrEmpty(_firstName) ? _firstName : 
+                    (AppConfig.ChatConfig?.OperatorFirstName ?? "Support");
+                string lastName = !string.IsNullOrEmpty(_lastName) ? _lastName : 
+                    (AppConfig.ChatConfig?.OperatorLastName ?? "");
+                
+                AddChatMessage(welcomeText, firstName, lastName, false);
+            }
         }
 
         private void AddChatMessage(string message, string firstName, string lastName, bool isOwnMessage)
@@ -338,30 +348,42 @@ namespace NetLock_RMM_Tray_Icon
 
             if (!isOwnMessage)
             {
-                var avatar = new Ellipse
+                // Create avatar with initials
+                string firstInitial = !string.IsNullOrEmpty(firstName) ? firstName[0].ToString().ToUpper() : "S";
+                string lastInitial = !string.IsNullOrEmpty(lastName) ? lastName[0].ToString().ToUpper() : "";
+                string initials = firstInitial + lastInitial;
+
+                var avatarCircle = new Ellipse
                 {
                     Width = 32,
                     Height = 32,
-                    Fill = new SolidColorBrush(Color.Parse("#3498DB")),
+                    Fill = new SolidColorBrush(Color.Parse("#5C6BC0")),
                     VerticalAlignment = VerticalAlignment.Bottom,
                     Margin = new Thickness(0, 0, 0, 2)
                 };
 
-                try
+                var initialsText = new TextBlock
                 {
-                    avatar.Fill = new ImageBrush
-                    {
-                        Source = new Avalonia.Media.Imaging.Bitmap("Assets/avatar.png"),
-                        Stretch = Stretch.UniformToFill
-                    };
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Fehler beim Laden des Avatars: {ex.Message}");
-                    avatar.Fill = new SolidColorBrush(Color.Parse("#ECF0F1"));
-                }
+                    Text = initials,
+                    FontSize = 12,
+                    FontWeight = FontWeight.Bold,
+                    Foreground = Brushes.White,
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
 
-                messageContainer.Children.Add(avatar);
+                var avatarContainer = new Grid
+                {
+                    Width = 32,
+                    Height = 32,
+                    VerticalAlignment = VerticalAlignment.Bottom,
+                    Margin = new Thickness(0, 0, 0, 2)
+                };
+                
+                avatarContainer.Children.Add(avatarCircle);
+                avatarContainer.Children.Add(initialsText);
+
+                messageContainer.Children.Add(avatarContainer);
             }
 
             messageContainer.Children.Add(bubble);
@@ -442,36 +464,6 @@ namespace NetLock_RMM_Tray_Icon
                 Margin = new Thickness(42, 4, 60, 4),
                 Name = "TypingIndicator"
             };
-        }
-
-        private string GenerateBotResponse(string userMessage)
-        {
-            var lowerMessage = userMessage.ToLower();
-
-            if (lowerMessage.Contains("hallo") || lowerMessage.Contains("hi"))
-                return "Hallo! Schön Sie kennenzulernen. Wie kann ich Ihnen bei NetLock RMM helfen?";
-
-            if (lowerMessage.Contains("problem") || lowerMessage.Contains("fehler"))
-                return
-                    "Ich verstehe, dass Sie ein Problem haben. Können Sie mir mehr Details dazu geben? Welche Fehlermeldung erhalten Sie?";
-
-            if (lowerMessage.Contains("installation"))
-                return
-                    "Gerne helfe ich Ihnen bei der Installation! Welches Betriebssystem verwenden Sie und auf welchem Schritt sind Sie hängengeblieben?";
-
-            if (lowerMessage.Contains("verbindung") || lowerMessage.Contains("connection"))
-                return
-                    "Verbindungsprobleme können verschiedene Ursachen haben. Prüfen Sie bitte:\n\n• Ihre Internetverbindung\n• Firewall-Einstellungen\n• Proxy-Konfiguration\n\nWelche Fehlermeldung sehen Sie genau?";
-
-            if (lowerMessage.Contains("lizenz") || lowerMessage.Contains("license"))
-                return
-                    "Für Lizenzfragen wenden Sie sich bitte an unser Sales-Team:\n\n📧 sales@netlockrmm.com\n📞 +49 123 456 789\n\nIch kann Ihnen bei technischen Fragen weiterhelfen.";
-
-            if (lowerMessage.Contains("danke") || lowerMessage.Contains("thank"))
-                return "Gerne geschehen! Gibt es noch etwas anderes, womit ich Ihnen helfen kann? 😊";
-
-            return
-                "Das ist eine interessante Frage! Lassen Sie mich Ihnen dazu weiterhelfen. Können Sie mir etwas mehr Kontext geben, damit ich Ihnen gezielter helfen kann?";
         }
 
         private void AnimateNewMessage(Border messageContainer)
@@ -724,5 +716,65 @@ namespace NetLock_RMM_Tray_Icon
         }
 
         #endregion
+
+        private void UpdateHeaderInitials()
+        {
+            try
+            {
+                LoadAndDisplayTrayIcon();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to update header icon: {ex.Message}");
+            }
+        }
+
+        private void LoadAndDisplayTrayIcon()
+        {
+            try
+            {
+                string configPath = Application_Paths.tray_icon_settings_json_path;
+                
+                if (!File.Exists(configPath))
+                    return;
+
+                string jsonString = File.ReadAllText(configPath);
+                jsonString = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
+
+                var configRoot = JsonSerializer.Deserialize<Handler.ConfigRoot>(jsonString);
+                var trayConfig = configRoot?.TrayIcon;
+
+                if (trayConfig?.IconBase64 != null && !string.IsNullOrEmpty(trayConfig.IconBase64))
+                {
+                    // Remove "data:image/png;base64," or similar prefix if present
+                    string base64Data = trayConfig.IconBase64;
+                    if (base64Data.Contains(","))
+                    {
+                        base64Data = base64Data.Substring(base64Data.IndexOf(",", StringComparison.Ordinal) + 1);
+                    }
+
+                    byte[] imageBytes = Convert.FromBase64String(base64Data);
+                    using (var stream = new MemoryStream(imageBytes))
+                    {
+                        var bitmap = new Avalonia.Media.Imaging.Bitmap(stream);
+                        
+                        // Set header icon
+                        var headerIconImage = this.FindControl<Image>("HeaderIconImage");
+                        if (headerIconImage != null)
+                        {
+                            headerIconImage.Source = bitmap;
+                        }
+                        
+                        // Set window icon (also used in taskbar)
+                        this.Icon = new Avalonia.Controls.WindowIcon(bitmap);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load tray icon: {ex.Message}");
+                Logging.Error("ChatWindow", "LoadAndDisplayTrayIcon", ex.ToString());
+            }
+        }
     }
 }

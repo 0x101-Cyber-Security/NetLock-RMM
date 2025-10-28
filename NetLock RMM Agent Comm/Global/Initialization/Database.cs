@@ -139,7 +139,8 @@ namespace Global.Initialization
                             "antivirus_controlled_folder_access_ruleset_json TEXT NULL DEFAULT NULL," +
                             "sensors_json TEXT NULL DEFAULT NULL," +
                             "jobs_json TEXT NULL DEFAULT NULL," +
-                            "tray_icon_settings_json TEXT NULL DEFAULT NULL" +
+                            "tray_icon_settings_json TEXT NULL DEFAULT NULL," +
+                            "agent_settings_json TEXT NULL DEFAULT NULL" +
 
                             ");";
 

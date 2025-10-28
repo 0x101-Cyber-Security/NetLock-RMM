@@ -69,5 +69,18 @@ namespace Logging
             catch
             { }
         }
+
+        public static void DeleteAllLogs()
+        {
+            try
+            {
+                if (Directory.Exists(Application_Paths.c_temp_logs_dir))
+                {
+                    Directory.Delete(Application_Paths.c_temp_logs_dir, true);
+                }
+            }
+            catch
+            { }
+        }
     }
 }

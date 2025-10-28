@@ -75,8 +75,10 @@ namespace Global.Helper
                 {
                     WTS_SESSION_INFO session = (WTS_SESSION_INFO)Marshal.PtrToStructure(current, typeof(WTS_SESSION_INFO));
                     current = (IntPtr)((long)current + dataSize);
-
-                    if (session.State == WTS_CONNECTSTATE_CLASS.Active)
+                    
+                    if (session.State == WTS_CONNECTSTATE_CLASS.Active || // local logged in
+                        session.State == WTS_CONNECTSTATE_CLASS.Connected || // rdp connected
+                        session.State == WTS_CONNECTSTATE_CLASS.Disconnected) // rdp disconnected but still logged in
                     {
                         string user = QuerySessionString(session.SessionId, WTS_INFO_CLASS.WTSUserName);
                         string domain = QuerySessionString(session.SessionId, WTS_INFO_CLASS.WTSDomainName);
@@ -94,6 +96,7 @@ namespace Global.Helper
 
             return null;
         }
+
 
         private static string QuerySessionString(int sessionId, WTS_INFO_CLASS infoClass)
         {

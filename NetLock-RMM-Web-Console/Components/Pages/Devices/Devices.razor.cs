@@ -14,6 +14,8 @@ using MudBlazor;
 using MySqlConnector;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
+using NetLock_RMM_Web_Console.Classes.MySQL;
+using NetLock_RMM_Web_Console.Configuration;
 
 namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 {
@@ -232,6 +234,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         public string applications_scheduled_tasks = String.Empty;
         public string applications_services = String.Empty;
         public string applications_drivers = String.Empty;
+        public string policy_name = String.Empty;
 
         #region Device Table
 
@@ -3268,6 +3271,7 @@ WHERE device_id = @deviceId");
             public string platform { get; set; } = "Empty";
             public bool uptime_monitoring_enabled { get; set; } = false;
             public string last_active_user { get; set; } = "Empty";
+            public string policy { get; set; } = "Empty";
         }
 
         public List<MySQL_Entity> mysql_data;
@@ -3348,6 +3352,7 @@ WHERE device_id = @deviceId");
                                 platform = reader["platform"].ToString() ?? String.Empty,
                                 uptime_monitoring_enabled = (reader["uptime_monitoring_enabled"]?.ToString() == "1"),
                                 last_active_user = reader["last_active_user"].ToString() ?? String.Empty,
+                                policy = await Handler.GetAssignedDevicePolicyByDeviceId(reader["id"].ToString() ?? String.Empty),
                             };
 
                             mysql_data.Add(entity);
@@ -3474,7 +3479,7 @@ WHERE device_id = @deviceId");
 
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
             MySqlCommand command = new MySqlCommand(query, conn);
-
+            
             try
             {
                 await conn.OpenAsync();
@@ -3531,6 +3536,8 @@ WHERE device_id = @deviceId");
                             antivirus_solution = reader["antivirus_solution"].ToString() ?? String.Empty;
                             last_active_user = reader["last_active_user"].ToString() ?? String.Empty;
                         }
+                        
+                        policy_name = await Classes.MySQL.Handler.GetAssignedDevicePolicyByDeviceId(device_id);
                     }
                 }
             }
@@ -5049,6 +5056,22 @@ WHERE device_id = @deviceId");
                         StateHasChanged();
                     });
                 });
+                
+                // Shutdown / Restart - Action
+                remote_server_client.On<string>("ReceiveClientResponsePowerManagementAction", async (command) =>
+                {                
+                    Logging.Handler.Debug("/dashboard -> Remote_Setup_SignalR", "ReceiveClientResponsePowerManagementAction", command);
+                    // Use InvokeAsync to reflect changes on UI immediately
+                    await InvokeAsync(() =>
+                    {
+                        if (command == "shutdowndone")
+                            Remote_Result_Dialog("The device successfully received the shutdown command.");
+                        else if (command == "rebootdone")
+                            Remote_Result_Dialog("The device successfully received the reboot command.");
+                        
+                        StateHasChanged();
+                    });
+                });
 
                 // Start the connection
                 await remote_server_client.StartAsync();
@@ -5391,6 +5414,131 @@ WHERE device_id = @deviceId");
 
         }
 
+        #endregion
+        
+        #region Shutdown Device
+
+        private async Task Remote_Shutdown_Device()
+        {
+            try
+            {
+                // Ask user for confirmation
+                bool? result = await DialogService.ShowMessageBox(
+                    "Power warning!",
+                    "Are you sure you want to shutdown the device?",
+                    yesText: "Confirm",
+                    noText: "Cancel",
+                    options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, BackgroundClass = "dialog-blurring" }
+                );
+                
+                if (result != true)
+                    return;
+                
+                if (!remote_server_client_setup)
+                    await Remote_Setup_SignalR();
+
+                // Create the object
+                var adminIdentity = new Remote_Admin_Identity
+                {
+                    token = token
+                };
+
+                var targetDevice = new Remote_Target_Device
+                {
+                    device_id = notes_device_id,
+                    device_name = notes_device_name,
+                    tenant_guid = tenant_guid,
+                    location_guid = location_guid
+                };
+
+                var command = new Remote_Command
+                {
+                    type = 9,
+                    wait_response = true,
+                    command = "shutdown"
+                };
+
+                var rootObject = new Remote_Root_Object
+                {
+                    admin_identity = adminIdentity,
+                    target_device = targetDevice,
+                    command = command
+                };
+
+                // Serialization of the object
+                string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+                // Send the command to the remote server
+                await remote_server_client.InvokeAsync("MessageReceivedFromWebconsole", json);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> Remote_Uninstall_Application", "General error", ex.ToString());
+            }
+
+        }
+        #endregion
+        
+        #region Reboot Device
+        private async Task Remote_Reboot_Device()
+        {
+            // Ask user for confirmation
+            bool? result = await DialogService.ShowMessageBox(
+                "Power warning!",
+                "Are you sure you want to reboot the device?",
+                yesText: "Confirm",
+                noText: "Cancel",
+                options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.ExtraSmall, BackgroundClass = "dialog-blurring" }
+            );
+                
+            if (result != true)
+                return;
+            
+            try
+            {
+                if (!remote_server_client_setup)
+                    await Remote_Setup_SignalR();
+
+                // Create the object
+                var adminIdentity = new Remote_Admin_Identity
+                {
+                    token = token
+                };
+
+                var targetDevice = new Remote_Target_Device
+                {
+                    device_id = notes_device_id,
+                    device_name = notes_device_name,
+                    tenant_guid = tenant_guid,
+                    location_guid = location_guid
+                };
+
+                var command = new Remote_Command
+                {
+                    type = 9,
+                    wait_response = true,
+                    command = "reboot"
+                };
+
+                var rootObject = new Remote_Root_Object
+                {
+                    admin_identity = adminIdentity,
+                    target_device = targetDevice,
+                    command = command
+                };
+
+                // Serialization of the object
+                string json = JsonSerializer.Serialize(rootObject, new JsonSerializerOptions { WriteIndented = true });
+
+                // Send the command to the remote server
+                await remote_server_client.InvokeAsync("MessageReceivedFromWebconsole", json);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> Remote_Uninstall_Application", "General error", ex.ToString());
+            }
+
+        }
         #endregion
 
         #region Task Manager

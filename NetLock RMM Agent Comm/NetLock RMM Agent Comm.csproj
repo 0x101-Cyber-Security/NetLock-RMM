@@ -24,4 +24,8 @@
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="9.0.1" />
     <PackageReference Include="TaskScheduler" Version="2.11.0" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Linux\Initialization\" />
+  </ItemGroup>
 </Project>

@@ -58,10 +58,7 @@ namespace Windows.Helper
                     return "-";
                 }
 
-                Random random = new Random();
-                const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-                string random_id = new string(Enumerable.Repeat(chars, 12).Select(s => s[random.Next(s.Length)]).ToArray());
-                path = Application_Paths.program_data_scripts + @"\" + Randomizer.Standard(12) + ".ps1";
+                path = Application_Paths.program_data_scripts + @"\" + Guid.NewGuid() + ".ps1";
 
                 //Decode script
                 byte[] script_data = Convert.FromBase64String(script);

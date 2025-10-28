@@ -453,17 +453,18 @@
                         <MudSwitch Class="ml-2" @bind-Value="agent_updates_windows_enabled" Color="Color.Primary">Windows</MudSwitch>
                         <MudSwitch Class="ml-2" @bind-Value="agent_updates_linux_enabled" Color="Color.Primary">Linux</MudSwitch>
                         <MudSwitch Class="ml-2" @bind-Value="agent_updates_macos_enabled" Color="Color.Primary">MacOS</MudSwitch>
+                        
+                        <MudNumericField 
+                            Class="ml-2" 
+                            @bind-Value="agent_updates_max_concurrent_updates" 
+                            Label="Max concurrent updates & package downloads during a installation" 
+                            Variant="Variant.Text" 
+                            Min="1" 
+                            Max="@(Configuration.Members_Portal.IsCloudEnabled ? 50 : 9999)" />
 
-                        @if (!Configuration.Members_Portal.IsCloudEnabled)
-                        {
-                            <div style="display: flex; align-items: center; width: 250px">
-                                <MudNumericField Class="ml-2" @bind-Value="agent_updates_max_concurrent_updates" Label="Max concurrent updates" Variant="Variant.Text" Min="1" Max="100" />
-
-                                <MudTooltip Text="Controls how many devices update their agent concurrently. Choose a value appropriate for your available CPU, memory, and bandwidth to prevent ressource shortage & failed update processes.">
-                                    <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
-                                </MudTooltip>
-                            </div>
-                        }
+                        <MudTooltip Text="Controls how many devices update their agent concurrently. Choose a value appropriate for your available CPU, memory, and bandwidth to prevent resource shortage & failed update processes.">
+                            <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                        </MudTooltip>
 
                         <MudButton Class="ml-2 mt-3 mb-2" Size="Size.Small" Variant="Variant.Filled" Color="Color.Success" StartIcon="@Icons.Material.Filled.Save" OnClick="@SaveAgentUpdates">Save</MudButton>
                     </MudPaper>
@@ -977,13 +978,13 @@
     }
 
     // Save api key for members portal
-    //OSSCH_START df273b4d-fc7e-4340-a2fb-1571b6f92b2d //OSSCH_END
+    //OSSCH_START 4e923160-2925-4d58-b8d6-29b5d0086f0c //OSSCH_END
 
     // Update members portal license information
-    //OSSCH_START 612a95e4-031b-4191-9f7f-e7536df21356 //OSSCH_END
+    //OSSCH_START 25d3a6e4-fe3d-488f-aa22-db37b7f7126e //OSSCH_END
 
     // Get members portal license status
-    //OSSCH_START 5a33f06f-8396-452a-9de1-2dc75cb700aa //OSSCH_END
+    //OSSCH_START ad934a8f-193b-4388-869b-8c005b465e07 //OSSCH_END
 
     // Get agent updates settings
     private async Task Get_Agent_Updates()

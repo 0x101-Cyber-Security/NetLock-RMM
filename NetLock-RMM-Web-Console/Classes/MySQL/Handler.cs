@@ -7,12 +7,14 @@ using System.Collections.Generic;
 using System.Configuration;
 using MudBlazor;
 using System.ComponentModel;
+using Newtonsoft.Json;
+using Org.BouncyCastle.Math.EC.Multiplier;
 
 namespace NetLock_RMM_Web_Console.Classes.MySQL
 {
     public class Handler
     {
-        public static async Task <bool> Test_Connection()
+        public static async Task<bool> Test_Connection()
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -78,7 +80,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Classes.MySQL.Handler.Execute_Command", "Query: " + query,  ex.ToString());
+                Logging.Handler.Error("Classes.MySQL.Handler.Execute_Command", "Query: " + query, ex.ToString());
                 await conn.CloseAsync();
                 return false;
             }
@@ -91,7 +93,8 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         public static async Task<string> Quick_Reader(string query, string item)
         {
             Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "query", query);
-            Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "item", item); // war vorher ein Fehler, `query` statt `item`
+            Logging.Handler.Debug("Classes.MySQL.Handler.Quick_Reader", "item",
+                item); // war vorher ein Fehler, `query` statt `item`
 
             List<string> results = new List<string>();
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
@@ -150,7 +153,8 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
             catch (Exception ex)
             {
-                Logging.Handler.Error("Classes.MySQL.Handler.Get_TenantID_From_DeviceID", "Query: " + query, ex.ToString());
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_TenantID_From_DeviceID", "Query: " + query,
+                    ex.ToString());
                 return String.Empty;
             }
             finally
@@ -325,7 +329,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
 
                 MySqlCommand sessionCmd = new MySqlCommand(sessionGuidQuery, conn);
                 sessionCmd.Parameters.AddWithValue("@username", username);
-                
+
                 string session_guid = String.Empty;
 
                 using (MySqlDataReader sessionReader = await sessionCmd.ExecuteReaderAsync())
@@ -384,7 +388,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                 await conn.CloseAsync();
             }
         }
-        
+
         public static async Task<(string, string)> GetOperatorFirstLastName(string netlock_username)
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
@@ -406,7 +410,8 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                     {
                         while (await reader.ReadAsync())
                         {
-                            return (reader["first_name"].ToString() ?? String.Empty, reader["last_name"].ToString() ?? String.Empty);
+                            return (reader["first_name"].ToString() ?? String.Empty,
+                                reader["last_name"].ToString() ?? String.Empty);
                         }
                     }
                 }
@@ -419,8 +424,299 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             {
                 await conn.CloseAsync();
             }
-            
+
             return (String.Empty, String.Empty);
+        }
+
+        public class Automation_Entity
+        {
+            public string? name { get; set; }
+            public string? date { get; set; }
+            public string? author { get; set; }
+            public string? description { get; set; }
+            public int? category { get; set; }
+            public int? sub_category { get; set; }
+            public int? condition { get; set; }
+            public string? expected_result { get; set; }
+            public string? trigger { get; set; }
+        }
+
+        public static async Task<string> GetAssignedDevicePolicyByDeviceId(string device_id)
+        {
+            string policy_name = null;
+
+            var device_identity = await Get_Device_Details_For_Policy_Assignment(device_id);
+            string device_name = device_identity.Item1;
+            string tenant_name = device_identity.Item2;
+            string location_name = device_identity.Item3;
+            string group_name = device_identity.Item4;
+            string internal_ip_address = device_identity.Item5;
+            string external_ip_address = device_identity.Item6;
+            string domain = device_identity.Item7;
+            
+            Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "Device Details",
+                $"Device Name: {device_name}, Tenant Name: {tenant_name}, Location Name: {location_name}, Group Name: {group_name}, Internal IP: {internal_ip_address}, External IP: {external_ip_address}, Domain: {domain}");
+            
+            // Get automations from database
+            List<Automation_Entity> automations_list = new List<Automation_Entity>();
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                string query = "SELECT * FROM automations;";
+                
+                await conn.OpenAsync();
+                
+                MySqlCommand command = new MySqlCommand(query, conn);
+
+                Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy (automations)", "MySQL_Prepared_Query",
+                    query);
+                
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "automation_json", reader["json"].ToString());
+
+                            Automation_Entity automation = JsonConvert.DeserializeObject<Automation_Entity>(reader["json"].ToString());
+                            automations_list.Add(automation);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Agent.Windows.Policy_Handler.Get_Policy", "MySQL_Query", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            // Filter automations, detect which automation applies to the device and return the policy
+
+            // Device Name
+            foreach (var automation in automations_list)
+            {
+                if (automation.category == 0 && automation.condition == 0 && automation.expected_result == device_name)
+                {
+                    policy_name = automation.trigger;
+                    break;
+                }
+            }
+
+            // Tenant
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 1 && automation.expected_result == tenant_name)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // Location
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 2 && automation.expected_result == location_name)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // Group
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 3 && automation.expected_result == group_name)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // Internal IP
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 4 && automation.expected_result == internal_ip_address)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // External IP
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 5 && automation.expected_result == external_ip_address)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // Domain
+            if (policy_name == null)
+            {
+                foreach (var automation in automations_list)
+                {
+                    if (automation.category == 0 && automation.condition == 6 && automation.expected_result == domain)
+                    {
+                        policy_name = automation.trigger;
+                        break;
+                    }
+                }
+            }
+
+            // No policy found
+            if (policy_name == null)
+            {
+                Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "matched", "no_assigned_policy_found");
+                return "-";
+            }
+
+            Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "Filter automations (matched)", policy_name);
+            
+            return policy_name;
+        }
+
+        private static async Task<string> GetDeviceNameById(string device_id)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                string query = "SELECT * FROM devices WHERE id = @device_id;";
+
+                MySqlCommand command = new MySqlCommand(query, conn);
+                command.Parameters.AddWithValue("@device_id", device_id);
+
+                Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy (automations)", "MySQL_Prepared_Query",
+                    query);
+
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            return reader["device_name"].ToString() ?? string.Empty;
+                        }
+                    }
+                }
+
+                return String.Empty;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Agent.Windows.Policy_Handler.Get_Policy", "MySQL_Query", ex.ToString());
+                return String.Empty;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
+
+        // Get location name by device id
+        public static async Task<string> Get_Location_Name_By_Device_Id(string device_id)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                string query = "SELECT * FROM devices WHERE id = @device_id;";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+
+                string location_name = cmd.ExecuteScalar()?.ToString() ?? String.Empty;
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_Location_Name_By_Device_Id", "Query", query);
+
+                return location_name;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_Location_Name_By_Device_Id", "Query: ", ex.ToString());
+                return String.Empty;
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
+
+        // Get device details for policy assignment by device id
+        public static async Task<(string, string, string, string, string, string, string)> Get_Device_Details_For_Policy_Assignment(string device_id)
+        {
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+            try
+            {
+                await conn.OpenAsync();
+
+                string query = "SELECT * FROM devices WHERE id = @device_id;";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@device_id", device_id);
+
+                string device_name = String.Empty;
+                string tenant_name = String.Empty;
+                string location_name = String.Empty;
+                string group_name = String.Empty;
+                string ip_address_internal = String.Empty;
+                string ip_address_external = String.Empty;
+                string domain = String.Empty;
+                
+                using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            device_name = reader["device_name"].ToString() ?? String.Empty;
+                            tenant_name = reader["tenant_name"].ToString() ?? String.Empty;
+                            location_name = reader["location_name"].ToString() ?? String.Empty;
+                            group_name = reader["group_name"].ToString() ?? String.Empty;
+                            ip_address_internal = reader["ip_address_internal"].ToString() ?? String.Empty;
+                            ip_address_external = reader["ip_address_external"].ToString() ?? String.Empty;
+                            domain = reader["domain"].ToString() ?? String.Empty;
+                        }
+                    }
+                }
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.Get_Device_Details_For_Policy_Assignment", "Query", query);
+                return (device_name, tenant_name, location_name, group_name, ip_address_internal, ip_address_external, domain);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.Get_Device_Details_For_Policy_Assignment", "Query: ", ex.ToString());
+                return (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
         }
     }
 }

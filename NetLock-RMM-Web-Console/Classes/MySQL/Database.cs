@@ -436,7 +436,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         private static string upgrade_script_2_5_1_6_to_2_5_2_2v2 = "QUxURVIgVEFCTEUgc2V0dGluZ3MgQ0hBTkdFIENPTFVNTiBhZ2VudF91cGRhdGVzX2VuYWJsZWQgYWdlbnRfdXBkYXRlc193aW5kb3dzX2VuYWJsZWQgSU5UIE5VTEwgREVGQVVMVCAnMCcgQUZURVIgcGFja2FnZV9wcm92aWRlcl91cmwsIEFERCBDT0xVTU4gYWdlbnRfdXBkYXRlc19saW51eF9lbmFibGVkIElOVCBOVUxMIERFRkFVTFQgJzAnIEFGVEVSIGFnZW50X3VwZGF0ZXNfd2luZG93c19lbmFibGVkLCBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWFjb3NfZW5hYmxlZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiBhZ2VudF91cGRhdGVzX2xpbnV4X2VuYWJsZWQ7DQpBTFRFUiBUQUJMRSBzZXR0aW5ncyBBREQgQ09MVU1OIGFnZW50X3VwZGF0ZXNfbWF4X2NvbmN1cnJlbnRfdXBkYXRlcyBJTlQgTlVMTCBERUZBVUxUICc1JyBBRlRFUiBhZ2VudF91cGRhdGVzX21hY29zX2VuYWJsZWQ7";
         private static string upgrade_script_2_5_1_6_to_2_5_2_2c = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBjaGFuZ2Vsb2dfcmVhZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiByZW1vdGVfc2Vzc2lvbl90b2tlbjs=";
         private static string upgrade_script_2_5_2_2c_to_2_5_2_7 = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBmaXJzdF9uYW1lIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBtYWlsLCBBREQgQ09MVU1OIGxhc3RfbmFtZSBWQVJDSEFSKDI1NSkgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgZmlyc3RfbmFtZTs=";
-
+        private static string upgrade_script_2_5_2_7_to_2_5_3_0 = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09MVU1OIGxhYmVsIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBkZXZpY2VfbmFtZTsNCkFMVEVSIFRBQkxFIHBvbGljaWVzIEFERCBDT0xVTU4gdHJheV9pY29uX3NldHRpbmdzIE1FRElVTVRFWFQgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgam9iczsNCkFMVEVSIFRBQkxFIHBvbGljaWVzIEFERCBDT0xVTU4gYWdlbnRfc2V0dGluZ3MgTUVESVVNVEVYVCBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiB0cmF5X2ljb25fc2V0dGluZ3M7";
 
         // Execute installation SQL script
         public static async Task<bool> Execute_Installation_Script(bool reset)
@@ -614,6 +614,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2v2);
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2c);
             scripts.Add(upgrade_script_2_5_2_2c_to_2_5_2_7);
+            scripts.Add(upgrade_script_2_5_2_7_to_2_5_3_0);
 
             // Disabled due to testing...
 
@@ -788,9 +789,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
         }
 
-        //OSSCH_START 59138148-9440-429c-acf8-1b0e3b325399 //OSSCH_END
+        //OSSCH_START 1ce1349f-5f2a-413a-bb83-8d22e622f37d //OSSCH_END
         
         // Reset database
-        //OSSCH_START 8398b223-5b1d-4cf4-b097-4f4aaee5d57c //OSSCH_END
+        //OSSCH_START 9f1cc7d8-d4db-4ca2-aa63-f5e9348ce6db //OSSCH_END
     }
 }

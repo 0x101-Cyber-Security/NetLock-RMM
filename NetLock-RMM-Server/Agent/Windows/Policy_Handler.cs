@@ -191,6 +191,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                 string sensors_json = string.Empty;
                 string jobs_json = string.Empty;
                 string tray_icon_settings_json = string.Empty;
+                string agent_settings_json = string.Empty;
 
                 // Log the communicated agent information
                 Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy", "device_identity.device_name", device_name);
@@ -242,10 +243,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     string query = "SELECT * FROM automations;";
 
                     MySqlCommand command = new MySqlCommand(query, conn);
-                    command.Parameters.AddWithValue("@tenant_name", tenant_name);
-                    command.Parameters.AddWithValue("@location_name", location_name);
-                    command.Parameters.AddWithValue("@device_name", device_name);
-
+                    
                     Logging.Handler.Debug("Agent.Windows.Policy_Handler.Get_Policy (automations)", "MySQL_Prepared_Query", query);
 
                     using (DbDataReader reader = await command.ExecuteReaderAsync())
@@ -395,6 +393,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                                 sensors_json = reader["sensors"].ToString();
                                 jobs_json = reader["jobs"].ToString();
                                 tray_icon_settings_json = reader["tray_icon_settings"].ToString();
+                                agent_settings_json = reader["agent_settings"].ToString();
                             }
                         }
                     }
@@ -567,7 +566,8 @@ namespace NetLock_RMM_Server.Agent.Windows
                     antivirus_controlled_folder_access_ruleset_json,
                     policy_sensors_json,
                     policy_jobs_json,
-                    tray_icon_settings_json
+                    tray_icon_settings_json,
+                    agent_settings_json
                 };
 
                 // Serialize JSON object to string and return it

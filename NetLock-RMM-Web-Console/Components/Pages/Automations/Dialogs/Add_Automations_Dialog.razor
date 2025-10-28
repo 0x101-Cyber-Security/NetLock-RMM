@@ -76,17 +76,6 @@
 								}
 							</MudSelect>
 						}
-                        else if(condition == Localizer["condition_device_name"])
-						{
-							<MudSelect Class="mt-3" T="string" @bind-Value="expected_result" Label="@Localizer["equal..."]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
-								@{
-									foreach (var device in devices_list)
-									{
-										<MudSelectItem T="string" Value="@device">@device</MudSelectItem>
-									}
-								}
-							</MudSelect>
-						}
                         else
                         {
                             <MudTextField Label="@Localizer["equal..."]" T="string" @bind-Value="@expected_result" Variant="Variant.Text" Required="true" RequiredError="@Localizer["required"]" Immediate="@true" />

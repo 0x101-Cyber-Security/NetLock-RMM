@@ -531,6 +531,10 @@ namespace NetLock_RMM_Server.SignalR
             }
             else if (type == 6) // Tray Icon - Chat Message
                 return "ReceiveClientResponseTrayIconChatMessage";
+            else if (type == 7) // Remote Control Access Request
+                return "ReceiveClientResponseRemoteControlAccessRequest";
+            else if (type == 9) // Power Management Action
+                return "ReceiveClientResponsePowerManagementAction";
             
             return "ReceiveClientResponse"; // Fallback
         }

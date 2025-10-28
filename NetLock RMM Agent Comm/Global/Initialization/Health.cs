@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using Global.Helper;
 using System.Diagnostics;
+using Windows.Helper;
 using NetLock_RMM_Agent_Comm;
 
 namespace Global.Initialization
@@ -112,7 +113,7 @@ namespace Global.Initialization
             cmd_process.StartInfo.UseShellExecute = true;
             cmd_process.StartInfo.CreateNoWindow = true;
             cmd_process.StartInfo.FileName = "cmd.exe";
-            cmd_process.StartInfo.Arguments = "/c powershell" + " Stop-Service 'NetLock_RMM_Comm_Agent_Windows'; Remove-Item 'C:\\ProgramData\\0x101 Cyber Security\\NetLock RMM\\Comm Agent\\policy.nlock'; Remove-Item 'C:\\ProgramData\\0x101 Cyber Security\\NetLock RMM\\Comm Agent\\events.nlock'; Start-Service 'NetLock_RMM_Comm_Agent_Windows'";
+            cmd_process.StartInfo.Arguments = "/c powershell" + " Stop-Service 'NetLock_RMM_Agent_Comm'; Remove-Item 'C:\\ProgramData\\0x101 Cyber Security\\NetLock RMM\\Comm Agent\\policy.nlock'; Remove-Item 'C:\\ProgramData\\0x101 Cyber Security\\NetLock RMM\\Comm Agent\\events.nlock'; Start-Service 'NetLock_RMM_Agent_Comm'";
             cmd_process.Start();
             cmd_process.WaitForExit();
 
@@ -137,6 +138,102 @@ namespace Global.Initialization
             catch (Exception ex)
             {
                 Logging.Error("Global.Initialization.Health.Setup_Events_Virtual_Datatable", "Create datatable", ex.ToString());
+            }
+        }
+        
+        public static void User_Processes()
+        {
+            if (OperatingSystem.IsWindows())
+            {
+                // Delete old NetLock RMM User Agent from the registry, if it exists
+                Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Process");
+        
+                // Write the NetLock RMM User Process to the registry, if it does not exist
+                Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM User Agent");
+                Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent", Application_Paths.netlock_user_process_uac_exe);
+                
+                // Write the NetLock RMM Tray Icon to the registry, if it does not exist
+                Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM Tray Icon");
+                Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM Tray Icon", Application_Paths.tray_icon_icon_exe);
+            }
+            else if (OperatingSystem.IsLinux())
+            {
+                try
+                {
+                    string autostartDir = "/etc/xdg/autostart";
+                    string desktopFile = Path.Combine(autostartDir, "netlock-tray-icon.desktop");
+        
+                    // Ensure directory exists
+                    if (!Directory.Exists(autostartDir))
+                    {
+                        Directory.CreateDirectory(autostartDir);
+                    }
+        
+                    // Create .desktop file content
+                    string desktopContent = $@"[Desktop Entry]
+        Type=Application
+        Name=NetLock RMM Tray Icon
+        Exec={Application_Paths.tray_icon_icon_exe}
+        Hidden=false
+        NoDisplay=false
+        X-GNOME-Autostart-enabled=true
+        ";
+        
+                    Logging.Debug("Initialization.Health.User_Process", "Write autostart file", desktopFile);
+                    File.WriteAllText(desktopFile, desktopContent);
+                    
+                    // Set permissions (readable by all)
+                    var chmod = System.Diagnostics.Process.Start("chmod", $"644 {desktopFile}");
+                    chmod?.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Initialization.Health.User_Process", "Failed to create autostart entry", ex.Message);
+                }
+            }
+            else if (OperatingSystem.IsMacOS())
+            {
+                try
+                {
+                    string launchAgentsDir = "/Library/LaunchAgents";
+                    string plistFile = Path.Combine(launchAgentsDir, "com.netlock.rmm.trayicon.plist");
+
+                    if (!Directory.Exists(launchAgentsDir))
+                    {
+                        Directory.CreateDirectory(launchAgentsDir);
+                    }
+
+                    string plistContent = $@"<?xml version=""1.0"" encoding=""UTF-8""?>
+<!DOCTYPE plist PUBLIC ""-//Apple//DTD PLIST 1.0//EN"" ""http://www.apple.com/DTDs/PropertyList-1.0.dtd"">
+<plist version=""1.0"">
+<dict>
+    <key>Label</key>
+    <string>com.netlock.rmm.trayicon</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>{Application_Paths.tray_icon_icon_exe}</string>
+    </array>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <false/>
+</dict>
+</plist>
+";
+
+                    Logging.Debug("Initialization.Health.User_Process", "Write LaunchAgent plist", plistFile);
+                    File.WriteAllText(plistFile, plistContent);
+
+                    var chmod = Process.Start("chmod", $"644 {plistFile}");
+                    chmod?.WaitForExit();
+
+                    var chown = Process.Start("chown", $"root:wheel {plistFile}");
+                    chown?.WaitForExit();
+                }
+                catch (Exception ex)
+                {
+                    Logging.Error("Initialization.Health.User_Process", "Failed to create LaunchAgent", ex.Message);
+                }
             }
         }
     }
