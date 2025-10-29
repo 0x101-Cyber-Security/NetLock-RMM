@@ -156,8 +156,8 @@ namespace Global.Offline_Mode
                 Logging.Error("Global.Offline_Mode.Handler.Policy", "A clean service restart will be performed.", "");
 
                 // Should be reworked for linux. Maybe rebuilding the database?
-                if (OperatingSystem.IsWindows())
-                    Initialization.Health.Clean_Service_Restart();
+                //if (OperatingSystem.IsWindows())
+                  //  Initialization.Health.Clean_Service_Restart();
             }
 
             Device_Worker.sync_active = false;
