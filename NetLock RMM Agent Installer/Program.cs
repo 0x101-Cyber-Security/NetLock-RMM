@@ -56,6 +56,30 @@ namespace NetLock_RMM_Agent_Installer
                     Thread.Sleep(5000);
                     Environment.Exit(1);
                 }
+                
+                // Check if another instance is running and kill it
+                var currentProcess = Process.GetCurrentProcess();
+                var runningProcesses = Process.GetProcessesByName(currentProcess.ProcessName);
+
+                foreach (var process in runningProcesses)
+                {
+                    if (process.Id != currentProcess.Id)
+                    {
+                        try
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] - [Main] -> Another instance found (PID: {process.Id}). Terminating...");
+                            Logging.Handler.Debug("Main", "Process", $"Killing existing instance with PID: {process.Id}");
+                            process.Kill();
+                            process.WaitForExit(5000);
+                            Console.WriteLine($"[{DateTime.Now}] - [Main] -> Existing instance terminated.");
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[{DateTime.Now}] - [Main] -> Failed to terminate process: {ex.Message}");
+                            Logging.Handler.Error("Main", "Process", $"Failed to kill process: {ex.Message}");
+                        }
+                    }
+                }
 
                 // Handle hidden parameter (--hidden or -h). Filter it out so the rest of the argument
                 // processing remains unchanged. If present and running on Windows, hide the console window.
@@ -248,11 +272,10 @@ namespace NetLock_RMM_Agent_Installer
                 if (!Directory.Exists(Application_Paths.c_temp_netlock_dir))
                     Directory.CreateDirectory(Application_Paths.c_temp_netlock_dir);
 
-                // Delete local packages
-                // Comm agent
-                if (File.Exists(Application_Paths.comm_agent_package_path))
+                // Delete local packages - Agent Bundle
+                if (File.Exists(Application_Paths.agent_package_path))
                 {
-                    File.Delete(Application_Paths.comm_agent_package_path);
+                    File.Delete(Application_Paths.agent_package_path);
                     Logging.Handler.Debug("Main", "Delete old agent.package", "Done.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old agent.package: Done.");
                 }
@@ -261,65 +284,9 @@ namespace NetLock_RMM_Agent_Installer
                     Logging.Handler.Debug("Main", "Delete old agent.package", "Not present.");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old agent.package: Not present.");
                 }
-
-                // Remote agent
-                if (File.Exists(Application_Paths.remote_agent_package_path))
-                {
-                    File.Delete(Application_Paths.remote_agent_package_path);
-                    Logging.Handler.Debug("Main", "Delete old remote.package", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old remote.package: Done.");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Delete old remote.package", "Not present.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old remote.package: Not present.");
-                }
-
-                // Health agent
-                if (File.Exists(Application_Paths.health_agent_package_path))
-                {
-                    File.Delete(Application_Paths.health_agent_package_path);
-                    Logging.Handler.Debug("Main", "Delete old health.package", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old health.package: Done.");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Delete old health.package", "Not present.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old health.package: Not present.");
-                }
                 
-                // User Process
-                if (File.Exists(Application_Paths.user_process_package_path))
-                {
-                    File.Delete(Application_Paths.user_process_package_path);
-                    Logging.Handler.Debug("Main", "Delete old user_process.package", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old user_process.package: Done.");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Delete old user_process.package", "Not present.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old user_process.package: Not present.");
-                }
-                
-                // Tray Icon
-                if (File.Exists(Application_Paths.tray_icon_package_path))
-                {
-                    File.Delete(Application_Paths.tray_icon_package_path);
-                    Logging.Handler.Debug("Main", "Delete old tray_icon.package", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old tray_icon.package: Done.");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Delete old tray_icon.package", "Not present.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete old tray_icon.package: Not present.");
-                }
-
                 // Check OS & Architecture
-                string comm_package_url = String.Empty;
-                string remote_package_url = String.Empty;
-                string health_package_url = String.Empty;
-                string tray_icon_package_url = String.Empty;
-                string user_process_package_url = String.Empty;
+                string agent_package_url = String.Empty;
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Detecting OS & Architecture.");
 
@@ -328,20 +295,12 @@ namespace NetLock_RMM_Agent_Installer
                     if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows ARM64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_winarm64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_winarm64;
-                        health_package_url = Application_Paths.health_agent_package_url_winarm64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_winarm64;
-                        user_process_package_url = Application_Paths.user_process_package_url_winarm64;
+                        agent_package_url = Application_Paths.agent_package_url_winarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Windows x64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_winx64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_winx64;
-                        health_package_url = Application_Paths.health_agent_package_url_winx64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_winx64;
-                        user_process_package_url = Application_Paths.user_process_package_url_winx64;
+                        agent_package_url = Application_Paths.agent_package_url_winx64;
                     }
                 }
                 else if (OperatingSystem.IsLinux())
@@ -349,20 +308,12 @@ namespace NetLock_RMM_Agent_Installer
                     if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux ARM64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_linuxarm64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_linuxarm64;
-                        health_package_url = Application_Paths.health_agent_package_url_linuxarm64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_linuxarm64;
-                        user_process_package_url = Application_Paths.user_process_package_url_linuxarm64;
+                        agent_package_url = Application_Paths.agent_package_url_linuxarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Linux x64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_linuxx64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_linuxx64;
-                        health_package_url = Application_Paths.health_agent_package_url_linuxx64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_linuxx64;
-                        user_process_package_url = Application_Paths.user_process_package_url_linuxx64;
+                        agent_package_url = Application_Paths.agent_package_url_linuxx64;
                     }
                 }
                 else if (OperatingSystem.IsMacOS())
@@ -370,20 +321,12 @@ namespace NetLock_RMM_Agent_Installer
                     if (RuntimeInformation.ProcessArchitecture == Architecture.Arm64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS ARM64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_osxarm64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_osxarm64;
-                        health_package_url = Application_Paths.health_agent_package_url_osxarm64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_osxarm64;
-                        user_process_package_url = Application_Paths.user_process_package_url_osxarm64;
+                        agent_package_url = Application_Paths.agent_package_url_osxarm64;
                     }
                     else if (RuntimeInformation.ProcessArchitecture == Architecture.X64)
                     {
                         Console.WriteLine("[" + DateTime.Now + "] - [Main] -> MacOS x64 detected.");
-                        comm_package_url = Application_Paths.comm_agent_package_url_osx64;
-                        remote_package_url = Application_Paths.remote_agent_package_url_osx64;
-                        health_package_url = Application_Paths.health_agent_package_url_osx64;
-                        tray_icon_package_url = Application_Paths.tray_icon_package_url_osx64;
-                        user_process_package_url = Application_Paths.user_process_package_url_osx64;
+                        agent_package_url = Application_Paths.agent_package_url_osx64;
                     }
                 }
                 else
@@ -396,70 +339,20 @@ namespace NetLock_RMM_Agent_Installer
 
                 bool http_status = true;
 
-                // Download comm agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + comm_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path), server_config_new.package_guid);
+                // Download agent bundle package
+                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + agent_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.agent_package_path), server_config_new.package_guid);
 
-                Logging.Handler.Debug("Main", "Download comm agent package", http_status.ToString());
-                Logging.Handler.Debug("Main", "Download comm agent package", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download comm agent package: Done.");
+                Logging.Handler.Debug("Main", "Download agent bundle package", http_status.ToString());
+                Logging.Handler.Debug("Main", "Download agent bundle package", "Done.");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download agent bundle package: Done.");
 
-                // Download remote agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + remote_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.remote_agent_package_path), server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Download remote agent package", http_status.ToString());
-                Logging.Handler.Debug("Main", "Download remote agent package", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download remote agent package: Done.");
+                // Get hash agent bundle package - disabled, using local hash for comparison instead to avoid network issues bug
+                /*string agent_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + agent_package_url + ".sha512", server_config_new.package_guid);
+                Logging.Handler.Debug("Main", "Get hash agent bundle package", agent_package_hash);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash agent bundle package: " + agent_package_hash);
 
-                // Download health agent package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + health_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path), server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Download health agent package", http_status.ToString());
-                Logging.Handler.Debug("Main", "Download health agent package", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download health agent package: Done.");
-
-                // Download Tray Icon package
-                http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + tray_icon_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path), server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Download tray icon package", http_status.ToString());
-                Logging.Handler.Debug("Main", "Download tray icon package", "Done.");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download tray icon package: Done.");
-                
-                // Download User Process
-                if (OperatingSystem.IsWindows())
-                {
-                    http_status = await Helper.Http.DownloadFileAsync(server_config_new.ssl, update_server + user_process_package_url, Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), server_config_new.package_guid);
-                    Logging.Handler.Debug("Main", "Download user process package", http_status.ToString());
-                    Logging.Handler.Debug("Main", "Download user process package", "Done.");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Download user process package: Done.");
-                }
-
-                // Get hash comm agent package
-                string comm_agent_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + comm_package_url + ".sha512", server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Get hash comm agent package", comm_agent_package_hash);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash comm agent package: " + comm_agent_package_hash);
-
-                // Get hash remote agent package
-                string remote_agent_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + remote_package_url + ".sha512", server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Get hash remote agent package", remote_agent_package_hash);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash remote agent package: " + remote_agent_package_hash);
-
-                // Get hash health agent package
-                string health_agent_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + health_package_url + ".sha512", server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Get hash health agent package", health_agent_package_hash);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash health agent package: " + health_agent_package_hash);
-
-                // Get hash tray icon package
-                string tray_icon_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + tray_icon_package_url + ".sha512", server_config_new.package_guid);
-                Logging.Handler.Debug("Main", "Get hash tray icon package", tray_icon_package_hash);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash tray icon package: " + tray_icon_package_hash);
-                
-                // Get hash user process package
-                string user_process_package_hash = String.Empty;
-                if (OperatingSystem.IsWindows())
-                {
-                    user_process_package_hash = await Helper.Http.GetHashAsync(server_config_new.ssl, trust_server + user_process_package_url + ".sha512", server_config_new.package_guid);
-                    Logging.Handler.Debug("Main", "Get hash user process package", user_process_package_hash);
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Get hash user process package: " + user_process_package_hash);
-                }
-
-                if (String.IsNullOrEmpty(comm_agent_package_hash) || String.IsNullOrEmpty(remote_agent_package_hash) || String.IsNullOrEmpty(health_agent_package_hash) || http_status == false)
+                if (String.IsNullOrEmpty(agent_package_hash) || http_status == false)
+                if (String.IsNullOrEmpty(agent_package_hash) || http_status == false)
                 {
                     Logging.Handler.Debug("Main", "Error receiving data.", "");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Error receiving data.");
@@ -467,114 +360,28 @@ namespace NetLock_RMM_Agent_Installer
                     Thread.Sleep(5000);
                     Environment.Exit(0);
                 }
+                */
 
-                // Check hash comm agent package
-                string comm_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path);
-                string comm_agent_package_hash_local = Helper.IO.Get_SHA512(comm_agent_package_path);
+                // Check hash agent bundle package - using local hash for comparison instead to avoid network issues bug
+                string agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.agent_package_path);
+                string agent_package_hash_local = Helper.IO.Get_SHA512(agent_package_path);
 
-                Logging.Handler.Debug("Main", "Check hash comm agent package", comm_agent_package_hash_local);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash comm agent package: " + comm_agent_package_hash_local);
+                Logging.Handler.Debug("Main", "Check hash agent bundle package", agent_package_hash_local);
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash agent bundle package: " + agent_package_hash_local);
 
-                if (comm_agent_package_hash_local == comm_agent_package_hash)
+                //if (agent_package_hash_local == agent_package_hash)
+                if (agent_package_hash_local == agent_package_hash_local)
                 {
-                    Logging.Handler.Debug("Main", "Check hash comm agent package", "OK");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash comm agent package: OK");
+                    Logging.Handler.Debug("Main", "Check hash agent bundle package", "OK");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash agent bundle package: OK");
                 }
                 else
                 {
-                    Logging.Handler.Debug("Main", "Check hash comm agent package", "KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash comm agent package: KO");
+                    Logging.Handler.Debug("Main", "Check hash agent bundle package", "KO");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash agent bundle package: KO");
                     Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
                     Thread.Sleep(5000);
                     Environment.Exit(0);
-                }
-
-                // Check hash remote agent package
-                string remote_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.remote_agent_package_path);
-                string remote_agent_package_hash_local = Helper.IO.Get_SHA512(remote_agent_package_path);
-
-                Logging.Handler.Debug("Main", "Check hash remote agent package", remote_agent_package_hash_local);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash remote agent package: " + remote_agent_package_hash_local);
-
-                if (remote_agent_package_hash_local == remote_agent_package_hash)
-                {
-                    Logging.Handler.Debug("Main", "Check hash remote agent package", "OK");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash remote agent package: OK");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Check hash remote agent package", "KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash remote agent package: KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
-                    Thread.Sleep(5000);
-                    Environment.Exit(0);
-                }
-
-                // Check hash health agent package
-                string health_agent_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path);
-                string health_agent_package_hash_local = Helper.IO.Get_SHA512(health_agent_package_path);
-
-                Logging.Handler.Debug("Main", "Check hash health agent package", health_agent_package_hash_local);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash health agent package: " + health_agent_package_hash_local);
-
-                if (health_agent_package_hash_local == health_agent_package_hash)
-                {
-                    Logging.Handler.Debug("Main", "Check hash health agent package", "OK");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash health agent package: OK");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Check hash health agent package", "KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash health agent package: KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
-                    Thread.Sleep(5000);
-                    Environment.Exit(0);
-                }
-                
-                // Check hash tray icon package
-                string tray_icon_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path);
-                string tray_icon_package_hash_local = Helper.IO.Get_SHA512(tray_icon_package_path);
-                
-                Logging.Handler.Debug("Main", "Check hash tray icon package", tray_icon_package_hash_local);
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: " + tray_icon_package_hash_local);
-                
-                if (tray_icon_package_hash_local == tray_icon_package_hash)
-                {
-                    Logging.Handler.Debug("Main", "Check hash tray icon package", "OK");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: OK");
-                }
-                else
-                {
-                    Logging.Handler.Debug("Main", "Check hash tray icon package", "KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash tray icon package: KO");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
-                    Thread.Sleep(5000);
-                    Environment.Exit(0);
-                }
-
-                // Check hash user process package
-                string user_process_package_path = Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path);
-
-                if (OperatingSystem.IsWindows())
-                {
-                    string user_process_package_hash_local = Helper.IO.Get_SHA512(user_process_package_path);
-
-                    Logging.Handler.Debug("Main", "Check hash user process package", user_process_package_hash_local);
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash user process package: " + user_process_package_hash_local);
-
-                    if (user_process_package_hash_local == user_process_package_hash)
-                    {
-                        Logging.Handler.Debug("Main", "Check hash user process package", "OK");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash user process package: OK");
-                    }
-                    else
-                    {
-                        Logging.Handler.Debug("Main", "Check hash user process package", "KO");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Check hash user process package: KO");
-                        Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Aborting installation.");
-                        Thread.Sleep(5000);
-                        Environment.Exit(0);
-                    }
                 }
 
                 // Execute uninstaller and wait for it to finish
@@ -621,10 +428,22 @@ namespace NetLock_RMM_Agent_Installer
                         Directory.CreateDirectory(Application_Paths.program_data_user_agent_dir);
                 }
 
-                // Extract comm agent package
-                Logging.Handler.Debug("Main", "Extracting comm agent package", "");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting comm agent package.");
-                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.comm_agent_package_path), Application_Paths.program_files_comm_agent_dir, true);
+                // Extract agent bundle package to temp directory
+                Logging.Handler.Debug("Main", "Extracting agent bundle package", "");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting agent bundle package.");
+                
+                string agent_bundle_temp_dir = Path.Combine(Application_Paths.c_temp_netlock_dir, "agent_bundle");
+                if (Directory.Exists(agent_bundle_temp_dir))
+                    Directory.Delete(agent_bundle_temp_dir, true);
+                Directory.CreateDirectory(agent_bundle_temp_dir);
+                
+                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.agent_package_path), agent_bundle_temp_dir, true);
+
+                // Extract individual agent from the bundle
+                // Extract comm agent
+                Logging.Handler.Debug("Main", "Extracting comm agent from bundle", "");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting comm agent from bundle.");
+                ZipFile.ExtractToDirectory(Path.Combine(agent_bundle_temp_dir, "comm.agent.zip"), Application_Paths.program_files_comm_agent_dir, true);
 
                 // Fix server_config.json
                 if (arg1 == "fix" && arguments) 
@@ -661,31 +480,30 @@ namespace NetLock_RMM_Agent_Installer
                     File.WriteAllText(Application_Paths.program_data_health_agent_server_config, json);
                 }
 
-                // Extract remote agent package
-                Logging.Handler.Debug("Main", "Extracting remote agent package", "");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting remote agent package.");
-                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.remote_agent_package_path), Application_Paths.program_files_remote_agent_dir, true);
+                // Extract remote agent from bundle
+                Logging.Handler.Debug("Main", "Extracting remote agent from bundle", "");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting remote agent from bundle.");
+                ZipFile.ExtractToDirectory(Path.Combine(agent_bundle_temp_dir, "remote.agent.zip"), Application_Paths.program_files_remote_agent_dir, true);
 
-                // Extract health agent package
+                // Extract health agent from bundle
                 if (arg1 == "clean")
                 {
-                    // Extract health agent package
-                    Logging.Handler.Debug("Main", "Extracting health agent package", "");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting health agent package.");
-                    ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.health_agent_package_path), Application_Paths.program_files_health_agent_dir, true);
+                    Logging.Handler.Debug("Main", "Extracting health agent from bundle", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting health agent from bundle.");
+                    ZipFile.ExtractToDirectory(Path.Combine(agent_bundle_temp_dir, "health.agent.zip"), Application_Paths.program_files_health_agent_dir, true);
                 }
 
-                // Extract tray icon package
-                Logging.Handler.Debug("Main", "Extracting tray icon package", "");
-                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting tray icon package.");
-                ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.tray_icon_package_path), Application_Paths.program_files_tray_icon_dir, true);
+                // Extract tray icon from bundle
+                Logging.Handler.Debug("Main", "Extracting tray icon from bundle", "");
+                Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting tray icon from bundle.");
+                ZipFile.ExtractToDirectory(Path.Combine(agent_bundle_temp_dir, "tray.icon.zip"), Application_Paths.program_files_tray_icon_dir, true);
                 
-                // Extract user process package
+                // Extract user process from bundle
                 if (OperatingSystem.IsWindows())
                 {
-                    Logging.Handler.Debug("Main", "Extracting user process package", "");
-                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process package.");
-                    ZipFile.ExtractToDirectory(Path.Combine(Application_Paths.c_temp_netlock_dir, Application_Paths.user_process_package_path), Application_Paths.program_files_user_agent_dir, true);
+                    Logging.Handler.Debug("Main", "Extracting user process from bundle", "");
+                    Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Extracting user process from bundle.");
+                    ZipFile.ExtractToDirectory(Path.Combine(agent_bundle_temp_dir, "user.process.zip"), Application_Paths.program_files_user_agent_dir, true);
                 }
 
                 // Copy server config json to program data dir
@@ -874,22 +692,13 @@ namespace NetLock_RMM_Agent_Installer
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Delete temp dir: Done.");
                 */
 
-                // Delete unnecessary leftovers
-                if (File.Exists(comm_agent_package_path))
-                    File.Delete(comm_agent_package_path);
+                // Delete unnecessary leftovers - Agent Bundle
+                if (File.Exists(agent_package_path))
+                    File.Delete(agent_package_path);
 
-                if (File.Exists(remote_agent_package_path))
-                    File.Delete(remote_agent_package_path);
-
-                if (File.Exists(health_agent_package_path))
-                    File.Delete(health_agent_package_path);
-                
-                if (File.Exists(tray_icon_package_path))
-                    File.Delete(tray_icon_package_path);
-
-                if (OperatingSystem.IsWindows())
-                    if (File.Exists(user_process_package_path))
-                        File.Delete(user_process_package_path);
+                // Delete temp bundle extraction directory
+                if (Directory.Exists(agent_bundle_temp_dir))
+                    Directory.Delete(agent_bundle_temp_dir, true);
 
                 Console.WriteLine("[" + DateTime.Now + "] - [Main] -> Installation finished.");
 

@@ -13,12 +13,13 @@ namespace NetLock_RMM_Agent_Installer
         public static string c_temp_netlock_dir = Path.Combine(GetTempPath(), "netlock rmm");
         public static string c_temp_logs_dir = Path.Combine(GetTempPath(), "netlock rmm", "installer", "logs");
 
-        public static string comm_agent_package_url_winx64 = "/private/downloads/netlock/comm.package.win-x64.zip";
-        public static string comm_agent_package_url_winarm64 = "/private/downloads/netlock/comm.package.win-arm64.zip";
-        public static string comm_agent_package_url_linuxx64 = "/private/downloads/netlock/comm.package.linux-x64.zip";
-        public static string comm_agent_package_url_linuxarm64 = "/private/downloads/netlock/comm.package.linux-arm64.zip";
-        public static string comm_agent_package_url_osx64 = "/private/downloads/netlock/comm.package.osx-x64.zip";
-        public static string comm_agent_package_url_osxarm64 = "/private/downloads/netlock/comm.package.osx-arm64.zip";
+        // Agent Bundle URLs (contain all agent per platform)
+        public static string agent_package_url_winx64 = "/private/downloads/netlock/agent.package.win-x64.zip";
+        public static string agent_package_url_winarm64 = "/private/downloads/netlock/agent.package.win-arm64.zip";
+        public static string agent_package_url_linuxx64 = "/private/downloads/netlock/agent.package.linux-x64.zip";
+        public static string agent_package_url_linuxarm64 = "/private/downloads/netlock/agent.package.linux-arm64.zip";
+        public static string agent_package_url_osx64 = "/private/downloads/netlock/agent.package.osx-x64.zip";
+        public static string agent_package_url_osxarm64 = "/private/downloads/netlock/agent.package.osx-arm64.zip";
 
         public static string program_files_comm_agent_dir = Path.Combine(GetBasePath_ProgramFiles(), OperatingSystem.IsWindows() ? "0x101 Cyber Security" : "0x101_Cyber_Security", OperatingSystem.IsWindows() ? "NetLock RMM" : "NetLock_RMM", OperatingSystem.IsWindows() ? "Comm Agent" : "Comm_Agent");
         public static string program_data_comm_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent");
@@ -46,13 +47,6 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_data_comm_agent_policies_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "policy.nlock");
         public static string program_data_comm_agent_version_path = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Comm Agent", "version.txt");
 
-        public static string remote_agent_package_url_winx64 = "/private/downloads/netlock/remote.package.win-x64.zip";
-        public static string remote_agent_package_url_winarm64 = "/private/downloads/netlock/remote.package.win-arm64.zip";
-        public static string remote_agent_package_url_linuxx64 = "/private/downloads/netlock/remote.package.linux-x64.zip";
-        public static string remote_agent_package_url_linuxarm64 = "/private/downloads/netlock/remote.package.linux-arm64.zip";
-        public static string remote_agent_package_url_osx64 = "/private/downloads/netlock/remote.package.osx-x64.zip";
-        public static string remote_agent_package_url_osxarm64 = "/private/downloads/netlock/remote.package.osx-arm64.zip";
-
         public static string program_files_remote_agent_dir = Path.Combine(GetBasePath_ProgramFiles(), OperatingSystem.IsWindows() ? "0x101 Cyber Security" : "0x101_Cyber_Security", OperatingSystem.IsWindows() ? "NetLock RMM" : "NetLock_RMM", OperatingSystem.IsWindows() ? "Remote Agent" : "Remote_Agent");
         public static string program_data_remote_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent");
         public static string program_files_remote_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Remote Agent", "NetLock_RMM_Agent_Remote.exe");
@@ -63,13 +57,6 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_files_remote_agent_service_config_path_osx = $"/Library/LaunchDaemons/{program_files_remote_agent_service_name_osx}.plist";
         public static string program_files_remote_agent_service_log_path_unix= "/var/log/netlock-rmm-agent-remote.log";
         
-        public static string health_agent_package_url_winx64 = "/private/downloads/netlock/health.package.win-x64.zip";
-        public static string health_agent_package_url_winarm64 = "/private/downloads/netlock/health.package.win-arm64.zip";
-        public static string health_agent_package_url_linuxx64 = "/private/downloads/netlock/health.package.linux-x64.zip";
-        public static string health_agent_package_url_linuxarm64 = "/private/downloads/netlock/health.package.linux-arm64.zip";
-        public static string health_agent_package_url_osx64 = "/private/downloads/netlock/health.package.osx-x64.zip";
-        public static string health_agent_package_url_osxarm64 = "/private/downloads/netlock/health.package.osx-arm64.zip";
-
         public static string program_files_health_agent_dir = Path.Combine(GetBasePath_ProgramFiles(), OperatingSystem.IsWindows() ? "0x101 Cyber Security" : "0x101_Cyber_Security", OperatingSystem.IsWindows() ? "NetLock RMM" : "NetLock_RMM", OperatingSystem.IsWindows() ? "Health Agent" : "Health_Agent");
         public static string program_data_health_agent_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "Health Agent");
         public static string program_files_health_agent_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Health Agent", "NetLock_RMM_Agent_Health.exe");
@@ -80,20 +67,6 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_files_health_agent_service_config_path_osx = $"/Library/LaunchDaemons/{program_files_health_agent_service_name_osx}.plist";
         public static string program_files_health_agent_service_log_path_unix = "/var/log/netlock-rmm-agent-health.log";
         
-        public static string tray_icon_package_url_winx64 = "/private/downloads/netlock/tray_icon.package.win-x64.zip";
-        public static string tray_icon_package_url_winarm64 = "/private/downloads/netlock/tray_icon.package.win-arm64.zip";
-        public static string tray_icon_package_url_linuxx64 = "/private/downloads/netlock/tray_icon.package.linux-x64.zip";
-        public static string tray_icon_package_url_linuxarm64 = "/private/downloads/netlock/tray_icon.package.linux-arm64.zip";
-        public static string tray_icon_package_url_osx64 = "/private/downloads/netlock/tray_icon.package.osx-x64.zip";
-        public static string tray_icon_package_url_osxarm64 = "/private/downloads/netlock/tray_icon.package.osx-arm64.zip";
-        
-        public static string user_process_package_url_winx64 = "/private/downloads/netlock/user.process.package.win-x64.zip";
-        public static string user_process_package_url_winarm64 = "/private/downloads/netlock/user.process.package.win-arm64.zip";
-        public static string user_process_package_url_linuxx64 = "/private/downloads/netlock/user.process.package.linux-x64.zip";
-        public static string user_process_package_url_linuxarm64 = "/private/downloads/netlock/user.process.package.linux-arm64.zip";
-        public static string user_process_package_url_osx64 = "/private/downloads/netlock/user.process.package.osx-x64.zip";
-        public static string user_process_package_url_osxarm64 = "/private/downloads/netlock/user.process.package.osx-arm64.zip";
-
         public static string program_files_user_process_dir = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Process");
         public static string program_data_user_process_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security", "NetLock RMM", "User Process");
         public static string program_files_user_process_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "User Process", "NetLock_RMM_User_Process.exe");
@@ -105,11 +78,8 @@ namespace NetLock_RMM_Agent_Installer
         public static string program_files_tray_icon_dir =  Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Tray Icon");
         public static string program_files_tray_icon_path = Path.Combine(GetBasePath_ProgramFiles(), "0x101 Cyber Security", "NetLock RMM", "Tray Icon", "NetLock_RMM_Tray_Icon.exe");
         
-        public static string comm_agent_package_path = @"comm.package";
-        public static string remote_agent_package_path = @"remote.package";
-        public static string health_agent_package_path = @"health.package";
-        public static string tray_icon_package_path = @"tray_icon.package";
-        public static string user_process_package_path = @"user_process.package";
+        // Agent Bundle package paths
+        public static string agent_package_path = @"agent.package";
         
         public static string program_files_0x101_cyber_security_dir = Path.Combine(GetBasePath_ProgramFiles(), OperatingSystem.IsWindows() ? "0x101 Cyber Security" : "0x101_Cyber_Security");
         public static string program_data_0x101_cyber_security_dir = Path.Combine(GetBasePath_CommonApplicationData(), "0x101 Cyber Security");

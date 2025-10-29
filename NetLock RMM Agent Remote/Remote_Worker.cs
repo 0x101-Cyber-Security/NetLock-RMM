@@ -48,7 +48,7 @@ namespace NetLock_RMM_Agent_Remote
         private Timer user_process_monitoringCheckTimer;
 
         // Tray icon process monitoring
-        private Timer tray_icon_process_monitoringCheckTimer;
+        //private Timer tray_icon_process_monitoringCheckTimer; currently disabled to prevent ghosting issues
         
         // Get server config timer
         private Timer serverConfigCheckTimer;
@@ -152,8 +152,8 @@ if (Agent.debug_mode)
                             TimeSpan.Zero, TimeSpan.FromMinutes(1));
                         
                         // Start the timer to check the tray icon process status every 1 minute
-                        tray_icon_process_monitoringCheckTimer = new Timer(async (e) => await CheckTrayIconProcessStatus(), null,
-                            TimeSpan.Zero, TimeSpan.FromMinutes(1));
+                        //tray_icon_process_monitoringCheckTimer = new Timer(async (e) => await CheckTrayIconProcessStatus(), null,
+                          //  TimeSpan.Zero, TimeSpan.FromMinutes(1));
                         
                         // Start the timer to reload the server config every 1 minute
                         serverConfigCheckTimer = new Timer(async (e) => await LoadServerConfig(),
