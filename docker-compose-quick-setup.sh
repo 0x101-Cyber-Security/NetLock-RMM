@@ -208,15 +208,13 @@ fi
 
 # Pick one of the following options:
 # 1. Reverse proxy (nginx, traefik, caddy, etc.)
-# 2. No reverse proxy (direct access with Let's Encrypt)
-# 3. Local test environment without SSL (for testing purposes only)
+# 2. Local test environment without SSL (for testing purposes only)
 
 echo ""
 echo "Please choose your setup option:"
 PS3="Select an option (enter number): "
 options=(
-  "No Reverse Proxy (direct access with Let's Encrypt)"
-  "Reverse Proxy (nginx, traefik, caddy, etc.)"
+  "Existing Reverse Proxy (nginx, traefik, caddy, etc.)"
   "Local Test Environment (without SSL, for testing purposes only)"
 )
 
@@ -233,11 +231,6 @@ select opt in "${options[@]}"; do
         "${options[1]}")
             setup_option="2"
             echo "You selected: ${options[1]}"
-            break
-            ;;
-        "${options[2]}")
-            setup_option="3"
-            echo "You selected: ${options[2]}"
             break
             ;;
         *)
@@ -277,58 +270,7 @@ if [[ ! "$dns_records" =~ ^[Yy]$ ]]; then
     exit 1
 fi
 
-if [[ "$setup_option" == "1" ]]; then # No Reverse Proxy with Let's Encrypt
-    echo "Continueing with: No Reverse Proxy (direct access to the internet. Uses inbuilt Let's Encrypt integration for SSL)"
-
-    # Lets Encrypt setup
-    le_enabled=true
-    echo "Let's Encrypt will be used for SSL certificates. Make sure your DNS records are set up correctly."
-    read -p "Please enter your email address for Let's Encrypt: " le_email
-    if [[ -z "$le_email" ]]; then
-        echo "No email address entered. Exiting."
-        exit 1
-    fi
-
-    read -p "Please enter the password for the Let's Encrypt .pfx certificate: " le_pfx_password
-    if [[ -z "$le_pfx_password" ]]; then
-        echo "No password entered for Let's Encrypt .pfx certificate. Exiting."
-        exit 1
-    fi
-
-    echo ""
-
-    echo "Make sure you have the following ports open on your server:"
-    echo "80 (HTTP) and 443 (HTTPS) for web console access. Port 80 is used for Let's Encrypt certificate generation. Hold it open until the certificate is generated."
-    echo "7443 for the NetLock RMM server (remote access, file transfer, etc.)."
-
-    # Confirm the ports
-    read -p "Have you opened the ports 80, 443 and 7443 on your server? (Y/n): " ports_open
-    ports_open=${ports_open:-Y}
-
-    if [[ ! "$ports_open" =~ ^[Yy]$ ]]; then
-        echo "Please open the ports 80, 443 and 7443 on your server and try again."
-        exit 1
-    fi
-
-    # Set the web console and server ports
-    web_console_port_http=80
-    web_console_http_enabled=true
-    web_console_port_https=443
-    web_console_https_enabled=true
-
-    web_console_server_port=7080
-
-    server_http_enabled=true
-    server_port_http=7080
-    
-    server_https_enabled=true
-    server_port_https=7443
-    server_https_forced=false # No forced HTTPS because of the internal server communication
-
-    # Set the public override URL
-    publicOverrideUrl="https://$server_domain:$server_port_https"
-
-elif [[ "$setup_option" == "2" ]]; then # Reverse Proxy
+if [[ "$setup_option" == "1" ]]; then # Reverse Proxy
     echo "You chose: Reverse Proxy (nginx, traefik, caddy, etc.)"
 
     # Get internal ip of the server
@@ -410,7 +352,7 @@ elif [[ "$setup_option" == "2" ]]; then # Reverse Proxy
     # Set the public override URL
     publicOverrideUrl="https://$server_domain:443"
 
-elif [[ "$setup_option" == "3" ]]; then # Local Test Environment
+elif [[ "$setup_option" == "2" ]]; then # Local Test Environment
     echo "You chose: Local Test Environment (without SSL, for testing purposes only)"
     echo "This setup is for local testing purposes only and does not use SSL. It is not recommended for production use."
 
