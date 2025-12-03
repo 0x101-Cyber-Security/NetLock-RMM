@@ -9,7 +9,7 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
-## [Live Demo](https://docs.netlockrmm.com/en/home)
+## [Live Demo](https://demo-webconsole.netlockrmm.com)
 - Username: admin | Password: admin (some features might not work due to demo limitations)
 ## [Supported OS & Features](https://docs.netlockrmm.com/en/supported-os)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
@@ -86,4 +86,5 @@ Explore the full capabilities in our documentation to see everything NetLock RMM
 [See in our documentation](https://docs.netlockrmm.com/en/server-installation-docker)
 
 Happy monitoring! 🥳
+
 
