@@ -9,7 +9,8 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 
 ## [Website](https://netlockrmm.com/)
 ## [Documentation](https://docs.netlockrmm.com/en/home)
-## [Live Demo](https://docs.netlockrmm.com/en/home) (top info)
+## [Live Demo](https://docs.netlockrmm.com/en/home)
+- Username: admin | Password: admin (some features might not work due to demo limitations)
 ## [Supported OS & Features](https://docs.netlockrmm.com/en/supported-os)
 ## [Roadmap](https://docs.netlockrmm.com/en/roadmap)
 ## [Discord](https://discord.gg/HqUpZgtX4U)
@@ -37,11 +38,21 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 - **Real-time remote shell**, file browser, task manager, and service manager.
 - **Remote screen control (windows)** and support that’s as intuitive as TeamViewer.
   - Full support for session switching and display switching
-  - Unattended access
+  - Unattended access & attended access
+  - User chat interface
   - Ctrl + Alt + Del support for elevated access
   - Built-in session recording
   - Send input as keystrokes, ideal for automating password entry
   - Mobile support (wip)    
+
+### 🎧 Custom User Tray Icon & Chat
+- Enable a white labeled user tray icon on your end users machines to interact with them through a chat interface.
+  - Custom logo
+  - Custom interface texts
+  - Action buttons
+    - Open website
+    - Execute shell command
+  - Chat interface
 
 ### 📁 **Integrated File Server**
 - Host your favorite tools directly within NetLock RMM and embed them into your scripts.
@@ -71,37 +82,8 @@ NetLock RMM can be deployed in various environments, including cloud setups or i
 ### ➕ **And Much More...**
 Explore the full capabilities in our documentation to see everything NetLock RMM has to offer.
 
-Note: Why are the unsigned packages not on GitHub?
-https://blog.netlockrmm.com/2024/12/22/why-are-the-unsigned-packages-not-on-github/
-
-# Setup NetLock RMM using Docker in 10 minutes
+# Set Up NetLock RMM in Minutes with Our Step-by-Step Guide
 [See in our documentation](https://docs.netlockrmm.com/en/server-installation-docker)
 
-Do you wish to get started as fast as possible? Our docker compose script ensures a easy and smooth setup, currently supporting three deployment scenarios:
-- Single IP / VPS / Bare Metal, basically a machine & ip only for NetLock RMM
-- Reverse Proxy (supports any reverse proxy)
-- Local Testing (only for local test environments, not for production)
-
-The script expects docker compose to be installed, on a linux disctribution. Best to use would be Ubuntu 24.04. The script deploys the NetLock RMM componments as well as a MySQL 8.0 server and connects everything with each other.
-
-1. Download the script with wget.
-```plaintext
-sudo wget -P /home https://raw.githubusercontent.com/0x101-Cyber-Security/NetLock-RMM/main/docker-compose-quick-setup.sh
-```
-
-2. Make it executable:
-```plaintext
-sudo chmod +x /home/docker-compose-quick-setup.sh
-```
-
-3. Execute it:
-```plaintext
-sudo ./home/docker-compose-quick-setup.sh
-```
-
-4. Follow the instructions.
-
-## Video Tutorial
-[Watch the video on YouTube](https://youtu.be/-VMoL6wnSKs)
-
 Happy monitoring! 🥳
+
