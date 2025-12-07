@@ -88,6 +88,7 @@ Global.Configuration.Agent.hwid = ENGINE.HW_UID; // init after access key, becau
 
 Device_Worker.authorized = Global.Initialization.Server_Config.Authorized();
 
+Global.Initialization.Health.CleanTempScripts();
 Global.Initialization.Health.Check_Directories();
 Global.Initialization.Health.Check_Firewall();
 Global.Initialization.Health.Check_Databases();

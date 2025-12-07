@@ -1,4 +1,4 @@
-﻿using System.Runtime.InteropServices;
+using System.Runtime.InteropServices;
 
 namespace NetLock_RMM_Web_Console
 {
@@ -14,14 +14,9 @@ namespace NetLock_RMM_Web_Console
 
         public static string internal_recordings_dir = Path.Combine(GetCurrentDirectory(), "internal", "recordings");
 
-        //OSSCH_START
-        public static string internal_license_info_json_path = Path.Combine(GetCurrentDirectory(), "internal", "license_info.json");
-        public static string netlock_rmm_logo_svg_path = Path.Combine(Environment.CurrentDirectory, "wwwroot", "media", "images", "NetLock-RMM-Logo-Transparent.svg");
-        public static string netlock_rmm_logo_png_path = Path.Combine(Environment.CurrentDirectory, "wwwroot", "media", "images", "NetLock-RMM-Logo-Transparent.png");
+        //OSSCH_START beb422d5-2d5b-41dc-8aab-4fe4d0dda0e4 //OSSCH_END
 
-        //OSSCH_END
-
-        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
+        public static string certificates_path = Path.Combine(GetCurrentDirectory(), "certificates");
 
         private static string GetBasePath()
         {
@@ -29,9 +24,13 @@ namespace NetLock_RMM_Web_Console
             {
                 return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && Application_Settings.IsLiveEnvironment)
             {
                 return "/var";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !Application_Settings.IsLiveEnvironment)
+            {
+                return "/home/nico-mak/.local/share";
             }
             else
             {

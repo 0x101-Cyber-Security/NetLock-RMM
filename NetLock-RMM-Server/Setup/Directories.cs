@@ -4,53 +4,80 @@
     {
         public static void Check_Directories()
         {
-            // Create the directories if they do not exist
-            if (!Directory.Exists(Application_Paths.logs_dir))
-                Directory.CreateDirectory(Application_Paths.logs_dir);
+            try
+            {
+                // Create the directories if they do not exist
+                if (!Directory.Exists(Application_Paths.logs_dir))
+                    Directory.CreateDirectory(Application_Paths.logs_dir);
 
-            if (!Directory.Exists(Application_Paths.internal_dir))
-                Directory.CreateDirectory(Application_Paths.internal_dir);
+                if (!Directory.Exists(Application_Paths.internal_dir))
+                    Directory.CreateDirectory(Application_Paths.internal_dir);
 
-            if (!Directory.Exists(Application_Paths.internal_temp_dir))
-                Directory.CreateDirectory(Application_Paths.internal_temp_dir);
+                if (!Directory.Exists(Application_Paths.internal_temp_dir))
+                    Directory.CreateDirectory(Application_Paths.internal_temp_dir);
 
-            if (!Directory.Exists(Application_Paths._private_files_netlock))
-                Directory.CreateDirectory(Application_Paths._private_files_netlock);
+                if (!Directory.Exists(Application_Paths._private_files_netlock))
+                    Directory.CreateDirectory(Application_Paths._private_files_netlock);
 
-            if (!Directory.Exists(Application_Paths._private_files_netlock_temp))
-                Directory.CreateDirectory(Application_Paths._private_files_netlock_temp);
+                if (!Directory.Exists(Application_Paths._private_files_netlock_temp))
+                    Directory.CreateDirectory(Application_Paths._private_files_netlock_temp);
 
-            if (!Directory.Exists(Application_Paths.lettuceencrypt_persistent_data_dir))
-                Directory.CreateDirectory(Application_Paths.lettuceencrypt_persistent_data_dir);
+                if (!Directory.Exists(Application_Paths.certificates_path))
+                    Directory.CreateDirectory(Application_Paths.certificates_path);
 
-            if (!Directory.Exists(Application_Paths._public_uploads_user))
-                Directory.CreateDirectory(Application_Paths._public_uploads_user);
+                if (!Directory.Exists(Application_Paths._public_uploads_user))
+                    Directory.CreateDirectory(Application_Paths._public_uploads_user);
 
-            if (!Directory.Exists(Application_Paths._public_downloads_user))
-                Directory.CreateDirectory(Application_Paths._public_downloads_user);
+                if (!Directory.Exists(Application_Paths._public_downloads_user))
+                    Directory.CreateDirectory(Application_Paths._public_downloads_user);
+            }
+            catch (Exception e)
+            {
+                Logging.Handler.Error("Directories", "Check_Directories", $"Error checking/creating directories: {e.ToString()}");
+            }
         }
         
         public static bool Delete_Directories()
         {
-            if (Directory.Exists(Application_Paths._public_downloads_user))
-                Directory.Delete(Application_Paths._public_downloads_user, true);
+            try
+            {
+                if (Directory.Exists(Application_Paths._public_downloads_user))
+                    Directory.Delete(Application_Paths._public_downloads_user, true);
             
-            if (Directory.Exists(Application_Paths._public_uploads_user))
-                Directory.Delete(Application_Paths._public_uploads_user, true);
+                if (Directory.Exists(Application_Paths._public_uploads_user))
+                    Directory.Delete(Application_Paths._public_uploads_user, true);
             
-            if (Directory.Exists(Application_Paths._private_files))
-                Directory.Delete(Application_Paths._private_files, true);
-            
-            if (Directory.Exists(Application_Paths.internal_temp_dir))
-                Directory.Delete(Application_Paths.internal_temp_dir, true);
-            
-            if (Directory.Exists(Application_Paths.logs_dir))
-                Directory.Delete(Application_Paths.logs_dir, true);
-            
-            // Recreate directories
-            Check_Directories();
+                // Delete every directory & files inside private_files
+                if (Directory.Exists(Application_Paths._private_files))
+                {
+                    var dirInfo = new DirectoryInfo(Application_Paths._private_files);
+                    foreach (var dir in dirInfo.GetDirectories())
+                    {
+                        dir.Delete(true);
+                    }
+                    
+                    foreach (var file in dirInfo.GetFiles())
+                    {
+                        file.Delete();
+                    }
+                }
 
-            return true;
+                if (Directory.Exists(Application_Paths.internal_temp_dir))
+                    Directory.Delete(Application_Paths.internal_temp_dir, true);
+            
+                if (Directory.Exists(Application_Paths.logs_dir))
+                    Directory.Delete(Application_Paths.logs_dir, true);
+            
+                // Recreate directories
+                Check_Directories();
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                Logging.Handler.Error("Directories", "Delete_Directories", $"Error deleting directories: {e.ToString()}");
+                return false;
+            }
         }
     }
 }

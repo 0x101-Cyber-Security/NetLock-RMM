@@ -61,6 +61,54 @@ namespace Global.Initialization
             }
         }
 
+        public static void CleanTempScripts()
+        {
+            try
+            {
+                // Check if files exist in the scripts temp directory (comm agent)
+                if (Directory.Exists(Application_Paths.program_data_scripts))
+                {
+                    string[] temp_files = Directory.GetFiles(Application_Paths.program_data_scripts);
+
+                    foreach (string file in temp_files)
+                    {
+                        try
+                        {
+                            File.Delete(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("Global.Initialization.Health.CleanThings",
+                                "Failed to delete temp script: " + file, ex.ToString());
+                        }
+                    }
+                }
+                    
+                // Check if files exist in the scripts temp directory (remote agent)
+                if (Directory.Exists(Application_Paths.program_data_remote_agent_scripts))
+                {
+                    string[] temp_files = Directory.GetFiles(Application_Paths.program_data_remote_agent_scripts);
+
+                    foreach (string file in temp_files)
+                    {
+                        try
+                        {
+                            File.Delete(file);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Error("Global.Initialization.Health.CleanThings",
+                                "Failed to delete remote agent temp script: " + file, ex.ToString());
+                        }
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Logging.Error("Global.Initialization.Health.CleanThings", "", e.ToString());
+            }
+        }
+
         // Check if the registry keys are in place
         public static void Check_Registry()
         { 

@@ -4,7 +4,6 @@ using MySqlConnector;
 using System.Data.Common;
 using System.Text.Json;
 
-
 namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
 {
     public class Smtp
@@ -49,25 +48,20 @@ namespace NetLock_RMM_Web_Console.Classes.Helper.Notifications
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
             
             try
             {
                 using (SmtpClient smtpClient = new SmtpClient(smtpSettings.server, Convert.ToInt32(smtpSettings.port)))
                 {
-                    // Setze die Anmeldeinformationen für den SMTP-Server
                     smtpClient.Credentials = new NetworkCredential(smtpSettings.username, smtpSettings.password);
-
-                    // Aktiviere SSL
                     smtpClient.EnableSsl = smtpSettings.ssl;
 
-                    // Erstelle eine Instanz der MailMessage-Klasse
                     using (MailMessage mailMessage = new MailMessage())
                     {
-                        // Setze Absender, Empfänger, Betreff und Nachrichtentext
-                        mailMessage.From = new MailAddress("Alerts | NetLock <" + smtpSettings.username + ">");
-                        mailMessage.To.Add(recipient); // Füge hier die Empfänger-E-Mail-Adresse hinzu
+                        mailMessage.From = new MailAddress(smtpSettings.username, "Alerts | NetLock");
+                        mailMessage.To.Add(recipient);
                         mailMessage.Subject = subject;
                         mailMessage.Body = body;
 

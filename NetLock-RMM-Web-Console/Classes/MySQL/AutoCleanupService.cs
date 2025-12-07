@@ -257,6 +257,32 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
                     await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Execute_Command(query);
                 }
 
+                // Optimize tables
+                string[] tablesToOptimize = new string[]
+                {
+                    "applications_drivers_history",
+                    "applications_installed_history",
+                    "applications_logon_history",
+                    "applications_scheduled_tasks_history",
+                    "applications_services_history",
+                    "device_information_antivirus_products_history",
+                    "device_information_cpu_history",
+                    "device_information_cronjobs_history",
+                    "device_information_disks_history",
+                    "device_information_general_history",
+                    "device_information_history",
+                    "device_information_network_adapters_history",
+                    "device_information_ram_history",
+                    "device_information_task_manager_history",
+                    "events"
+                };
+                
+                foreach (string table in tablesToOptimize)
+                {
+                    string query = $"OPTIMIZE TABLE {table};";
+                    await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Execute_Command(query);
+                }
+                
                 Logging.Handler.Debug("Auto_Cleanup_Service.Clean", "Task finished at:", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                 Console.WriteLine("Auto_Cleanup_Service.Clean -> Task finished at: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             }

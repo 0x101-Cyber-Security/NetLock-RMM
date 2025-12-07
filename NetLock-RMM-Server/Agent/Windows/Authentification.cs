@@ -6,7 +6,6 @@ using System;
 using System.Collections.Concurrent;
 using NetLock_RMM_Server.SignalR;
 using Microsoft.Extensions.Primitives;
-using Org.BouncyCastle.Asn1.Icao;
 
 namespace NetLock_RMM_Server.Agent.Windows
 {
@@ -352,7 +351,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
@@ -388,7 +387,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
@@ -423,7 +422,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 

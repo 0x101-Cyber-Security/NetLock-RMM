@@ -41,8 +41,8 @@ namespace Windows.Helper
                 return "Error.";
             }
         }
-
-        public static string Execute_Script(string type, string script, int timeout = 120000)
+        
+        public static string Execute_Script(string type, string script, int timeout = 360) // timeout in minutes
         {
             string path = String.Empty;
             Process cmd_process = null;
@@ -114,6 +114,9 @@ namespace Windows.Helper
                 cmd_process.BeginOutputReadLine();
                 cmd_process.BeginErrorReadLine();
 
+                // Handle timeout
+                timeout = timeout * 1000 * 60; // Convert minutes to milliseconds
+                
                 bool exited = cmd_process.WaitForExit(timeout);
 
                 if (!exited)

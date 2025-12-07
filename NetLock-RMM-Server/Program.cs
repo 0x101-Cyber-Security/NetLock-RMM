@@ -1,5 +1,4 @@
 using Helper;
-using LettuceEncrypt;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -52,8 +51,6 @@ var https_port = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Por
 var https_force = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Force", true);
 var hsts = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Hsts:Enabled", true);
 var hsts_max_age = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Hsts:MaxAge");
-var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled", true);
-var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
 var isRunningInDocker = builder.Configuration.GetValue<bool>("Environment:Docker", true);
@@ -132,7 +129,6 @@ Console.WriteLine($"Https Port: {https_port}");
 Console.WriteLine($"Https (force): {https_force}");
 Console.WriteLine($"Hsts: {hsts}");
 Console.WriteLine($"Hsts Max Age: {hsts_max_age}");
-Console.WriteLine($"LetsEncrypt: {letsencrypt}");
 
 Console.WriteLine($"Custom Certificate Path: {cert_path}");
 Console.WriteLine($"Custom Certificate Password: {cert_password}");
@@ -201,29 +197,19 @@ builder.WebHost.UseKestrel(k =>
     {
         k.Listen(IPAddress.Any, https_port, o =>
         {
-            if (letsencrypt)
+            if (String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
             {
-                o.UseHttps(h =>
-                {
-                    h.UseLettuceEncrypt(appServices);
-                });
+                o.UseHttps(cert_path);
+            }
+            else if (!String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
+            {
+                o.UseHttps(cert_path, cert_password);
             }
             else
             {
-                if (String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
-                {
-                    o.UseHttps(cert_path);
-                }
-                else if (!String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
-                {
-                    o.UseHttps(cert_path, cert_password);
-                }
-                else
-                {
-                    Console.WriteLine("Custom certificate path or password is not set or file does not exist. Exiting...");
-                    Thread.Sleep(5000);
-                    Environment.Exit(1);
-                }
+                Console.WriteLine("Custom certificate path or password is not set or file does not exist. Exiting...");
+                Thread.Sleep(5000);
+                Environment.Exit(1);
             }
         });
     }
@@ -293,7 +279,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.IsApiEnabled)
     {
-        //OSSCH_START 7dd8e3d4-9ff6-4930-9348-36296224d44f //OSSCH_END
+        //OSSCH_START fa1de719-1d25-47e7-b5da-a9e56443471c //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -302,10 +288,6 @@ if (Roles.Update || Roles.Trust)
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddMvc();
-
-if (https)
-    builder.Services.AddLettuceEncrypt();
-
 builder.Services.AddControllers();
 builder.Services.AddSignalR(options =>
 {
@@ -367,13 +349,13 @@ app.MapGet("/test", async context =>
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 60e20861-9b2b-4e7e-aff8-2ae4635eaad8 //OSSCH_END
+    //OSSCH_START 95a8803c-af43-4ecf-b27e-4a373c55608f //OSSCH_END
 }
 
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
     // Credentials update endpoint
-    //OSSCH_START cc012f4c-f65b-4f79-9bcc-f3fc49b4082e //OSSCH_END
+    //OSSCH_START 14e84128-c3a2-4d2b-b1ea-22f265947867 //OSSCH_END
 }
 
 //Check Version
@@ -1332,7 +1314,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 9b93630b-8df7-4554-94ba-1688c624f0f8 //OSSCH_END
+    //OSSCH_START 24273416-c8ac-48a9-b430-747e00d9f31f //OSSCH_END
 }
 
 /*

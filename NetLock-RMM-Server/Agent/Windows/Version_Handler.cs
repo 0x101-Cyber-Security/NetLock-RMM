@@ -44,7 +44,7 @@ namespace NetLock_RMM_Server.Agent.Windows
             public Device_Identity_Entity? device_identity { get; set; }
         }
 
-        private static List<string> previous_versions = new List<string>
+        private static List<string> noAutoUpdateVersions = new List<string>
         {
             "2.5.0.6",
             "2.5.0.7",
@@ -96,7 +96,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     else if (device_identity.platform == "Linux")
                     {
                         // Check if the agent version supports auto updates
-                        if (previous_versions.Contains(device_identity.agent_version))
+                        if (noAutoUpdateVersions.Contains(device_identity.agent_version))
                         {
                             Logging.Handler.Debug("Agent.Windows.Version_Handler.Check_Version", "Auto updates are not supported for Linux version", device_identity.agent_version);
                             return "identical"; // Suppress updates for Linux version
@@ -114,7 +114,7 @@ namespace NetLock_RMM_Server.Agent.Windows
                     else if (device_identity.platform == "macOS")
                     {
                         // Check if the agent version supports auto updates
-                        if (previous_versions.Contains(device_identity.agent_version))
+                        if (noAutoUpdateVersions.Contains(device_identity.agent_version))
                         {
                             Logging.Handler.Debug("Agent.Windows.Version_Handler.Check_Version", "Auto updates are not supported for Linux version", device_identity.agent_version);
                             return "identical"; // Suppress updates for Linux version

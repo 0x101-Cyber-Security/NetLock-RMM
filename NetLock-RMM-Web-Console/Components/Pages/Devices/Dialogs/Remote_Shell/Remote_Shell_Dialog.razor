@@ -396,10 +396,7 @@
     {
         try
         {
-            if (platform == "Windows")
-                powershell_code = await Base64.Handler.EncodeUtf16LE(powershell_code);
-            else
-                powershell_code = await Base64.Handler.Encode(powershell_code);
+            powershell_code = await Base64.Handler.Encode(powershell_code);
 
             // Create the object
             var adminIdentity = new Remote_Admin_Identity

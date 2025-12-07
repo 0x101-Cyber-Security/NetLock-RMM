@@ -8,7 +8,6 @@ namespace NetLock_RMM_Server
     {
         public static string logs_dir = Path.Combine(GetBasePath(), "0x101 Cyber Security", "NetLock RMM", "Server", "Logs");
         
-        // Log-Dateipfade f�r verschiedene Log-Level
         public static string log_debug_path = Path.Combine(logs_dir, "debug.log");
         public static string log_info_path = Path.Combine(logs_dir, "info.log");
         public static string log_warning_path = Path.Combine(logs_dir, "warning.log");
@@ -26,10 +25,10 @@ namespace NetLock_RMM_Server
         public static string internal_dir = Path.Combine(GetCurrentDirectory(), "internal");
         public static string internal_temp_dir = Path.Combine(GetCurrentDirectory(), "internal", "temp");
 
-        //OSSCH_START 51bca9d1-7359-43db-81b0-9e33a0efb46a //OSSCH_END
+        //OSSCH_START ffac9a1d-4ff0-489f-b112-a6e502a967db //OSSCH_END
 
-        // LetsEncrypt-Pfad
-        public static string lettuceencrypt_persistent_data_dir = Path.Combine(GetCurrentDirectory(), "letsencrypt");
+        // Lets Encrypt path
+        public static string certificates_path = Path.Combine(GetCurrentDirectory(), "certificates");
 
         // LLM
         public static string llm_model_path = Path.Combine(GetCurrentDirectory(), "llm", "model.gguf");
@@ -40,9 +39,13 @@ namespace NetLock_RMM_Server
             {
                 return Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
             }
-            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && Application_Settings.IsLiveEnvironment)
             {
                 return "/var";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && !Application_Settings.IsLiveEnvironment)
+            {
+                return "/home/nico-mak/.local/share";
             }
             else
             {

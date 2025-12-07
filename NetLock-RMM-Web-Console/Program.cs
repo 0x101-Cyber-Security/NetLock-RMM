@@ -15,14 +15,11 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.Extensions.Configuration;
 using Microsoft.AspNetCore.Http.Features;
 using NetLock_RMM_Web_Console.Components.Pages.Devices;
-using LettuceEncrypt;
-using LettuceEncrypt.Acme;
 using MudBlazor;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Primitives;
 using static MudBlazor.Defaults;
 using NetLock_RMM_Web_Console.Classes.Helper;
-using Org.BouncyCastle.Asn1.X509.Qualified;
 
 NetLock_RMM_Web_Console.Classes.Setup.Directories.Check_Directories(); // Check if directories exist and create them if not
 
@@ -39,8 +36,6 @@ var https_port = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Por
 var https_force = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Force", true);
 var hsts = builder.Configuration.GetValue<bool>("Kestrel:Endpoint:Https:Hsts:Enabled", true);
 var hsts_max_age = builder.Configuration.GetValue<int>("Kestrel:Endpoint:Https:Hsts:MaxAge");
-var letsencrypt = builder.Configuration.GetValue<bool>("LettuceEncrypt:Enabled", true);
-var letsencrypt_password = builder.Configuration.GetValue<string>("LettuceEncrypt:CertificateStoredPfxPassword", String.Empty);
 var cert_path = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Path", String.Empty);
 var cert_password = builder.Configuration.GetValue<string>("Kestrel:Endpoint:Https:Certificate:Password", String.Empty);
 var loggingEnabled = builder.Configuration.GetValue<bool>("Logging:Custom:Enabled", true);
@@ -90,7 +85,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check members portal parts
-//OSSCH_START 46005d34-eb82-4a50-84b4-2f1b59b545e1 //OSSCH_END
+//OSSCH_START e8cedd72-7940-46c0-bc40-c77608e07ab5 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -118,7 +113,6 @@ Console.WriteLine($"Hsts: {hsts}");
 Console.WriteLine($"Hsts Max Age: {hsts_max_age}");
 Console.WriteLine($"Allowed IPs: {string.Join(", ", allowedIps)}");
 Console.WriteLine($"Known Proxies: {string.Join(", ", knownProxies)}");
-Console.WriteLine($"LetsEncrypt: {letsencrypt}");
 
 Console.WriteLine($"Custom Certificate Path: {cert_path}");
 Console.WriteLine($"Custom Certificate Password: {cert_password}");
@@ -192,29 +186,19 @@ builder.WebHost.UseKestrel(k =>
     {
         k.Listen(IPAddress.Any, https_port, o =>
         {
-            if (letsencrypt)
+            if (String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
             {
-                o.UseHttps(h =>
-                {
-                    h.UseLettuceEncrypt(appServices);
-                });
+                o.UseHttps(cert_path);
+            }
+            else if (!String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
+            {
+                o.UseHttps(cert_path, cert_password);
             }
             else
             {
-                if (String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
-                {
-                    o.UseHttps(cert_path);
-                }
-                else if (!String.IsNullOrEmpty(cert_password) && File.Exists(cert_path))
-                {
-                    o.UseHttps(cert_path, cert_password);
-                }
-                else
-                {
-                    Console.WriteLine("Custom certificate path or password is not set or file does not exist. Exiting...");
-                    Thread.Sleep(5000);
-                    Environment.Exit(1);
-                }
+                Console.WriteLine("Custom certificate path or password is not set or file does not exist. Exiting...");
+                Thread.Sleep(5000);
+                Environment.Exit(1);
             }
         });
     }
@@ -337,9 +321,6 @@ builder.Services.AddSingleton<MudBlazor.MudThemeProvider>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddMvc();
 
-if (https)
-    builder.Services.AddLettuceEncrypt();
-
 // Configure form options to increase the maximum upload file size limit to 150 MB
 builder.Services.Configure<FormOptions>(options =>
 {
@@ -355,7 +336,7 @@ catch (Exception ex)
     Console.WriteLine(ex.ToString());
 }
 
-///increase size of textarea accepted value value
+//increase size of textarea accepted value value
 builder.Services.AddServerSideBlazor().AddHubOptions(x => x.MaximumReceiveMessageSize = 102400000);
 
 // Add background services
@@ -467,17 +448,24 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e43095c9-d6a5-43ec-b3c6-a1570ba48df2 //OSSCH_END
+//OSSCH_START e0940b1d-d2dc-4567-8454-c9f00f0144a8 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
 Console.WriteLine(Environment.NewLine);
 Console.WriteLine("Server started.");
 
+// Test endpoint
+app.MapGet("/test", async context =>
+{
+    context.Response.StatusCode = 200;
+    await context.Response.WriteAsync("ok");
+});
+
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 22ce188a-4632-4872-8e4b-5d4322464c46 //OSSCH_END
+    //OSSCH_START 9d98eb99-ce09-4b88-a1a4-e307da776b97 //OSSCH_END
 }
 
 // Start server

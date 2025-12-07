@@ -779,9 +779,9 @@ if (Agent.debug_mode)
                                 if (!_remoteScreenControlAccessGranted || !_agentSettingsRemoteScreenControlEnabled)
                                 {
                                     result = "Remote screen control access denied.";
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Remote Control access denied", result);
-
+                                    
+                                    if (Agent.debug_mode)
+                                        Logging.Debug("Service.Setup_SignalR", "Remote Control access denied", result);
                                     
                                     // Return because no further action is required
                                     return;
@@ -791,9 +791,9 @@ if (Agent.debug_mode)
                                 if (!_remoteScreenControlGrantedUsers.Contains(command_object.remote_control_username))
                                 {
                                     result = "Remote screen control access denied for user: " +  command_object.remote_control_username;
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Remote Control access denied", result);
-
+                                    
+                                    if (Agent.debug_mode)
+                                        Logging.Debug("Service.Setup_SignalR", "Remote Control access denied", result);
                                     
                                     // Return because no further action is required
                                     return;
@@ -831,9 +831,9 @@ if (Agent.debug_mode)
                                     // Convert the object into a JSON string
                                     string json = JsonSerializer.Serialize(jsonObject,
                                         new JsonSerializerOptions { WriteIndented = true });
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
-
+                                    
+                                    if (Agent.debug_mode)
+                                        Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
 
                                     // Send through local SignalR Hub to User
                                     await SendToClient(command_object.remote_control_username, json);

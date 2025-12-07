@@ -65,7 +65,7 @@
 
             @if (permissions_policies_manage)
             {
-                <MudButton Class="ml-2 mt-5" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" @onclick="async () => { await Update_Selected_Policy(policies_selectedRowContent_id); }">@Localizer["manage"]</MudButton>
+                <MudButton Class="ml-2 mt-5" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Settings" @onclick="async () => { await Update_Selected_Policy(policies_selectedRowContent_id); }" Disabled="@(String.IsNullOrEmpty(policies_selectedRowContent_id))">@Localizer["manage"]</MudButton>
             }
 
             <MudTooltip Text="Export data">

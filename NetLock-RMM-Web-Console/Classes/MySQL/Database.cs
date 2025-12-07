@@ -437,6 +437,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         private static string upgrade_script_2_5_1_6_to_2_5_2_2c = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBjaGFuZ2Vsb2dfcmVhZCBJTlQgTlVMTCBERUZBVUxUICcwJyBBRlRFUiByZW1vdGVfc2Vzc2lvbl90b2tlbjs=";
         private static string upgrade_script_2_5_2_2c_to_2_5_2_7 = "QUxURVIgVEFCTEUgYWNjb3VudHMgQUREIENPTFVNTiBmaXJzdF9uYW1lIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBtYWlsLCBBREQgQ09MVU1OIGxhc3RfbmFtZSBWQVJDSEFSKDI1NSkgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgZmlyc3RfbmFtZTs=";
         private static string upgrade_script_2_5_2_7_to_2_5_3_0 = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09MVU1OIGxhYmVsIFZBUkNIQVIoMjU1KSBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiBkZXZpY2VfbmFtZTsNCkFMVEVSIFRBQkxFIHBvbGljaWVzIEFERCBDT0xVTU4gdHJheV9pY29uX3NldHRpbmdzIE1FRElVTVRFWFQgTlVMTCBERUZBVUxUIE5VTEwgQUZURVIgam9iczsNCkFMVEVSIFRBQkxFIHBvbGljaWVzIEFERCBDT0xVTU4gYWdlbnRfc2V0dGluZ3MgTUVESVVNVEVYVCBOVUxMIERFRkFVTFQgTlVMTCBBRlRFUiB0cmF5X2ljb25fc2V0dGluZ3M7";
+        private static string upgrade_script_2_5_3_4_to_2_5_3_4b = "QUxURVIgVEFCTEUgZGV2aWNlcyBBREQgQ09OU1RSQUlOVCBVUV9kZXZpY2VzX2FjY2Vzc19rZXkgVU5JUVVFIChhY2Nlc3Nfa2V5KTs="; // Alter table to add UNIQUE constraint on access_key
 
         // Execute installation SQL script
         public static async Task<bool> Execute_Installation_Script(bool reset)
@@ -569,8 +570,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
   ""settings_system_enabled"": true,
   ""settings_protocols_enabled"": true
 }";
-
-
+                
                 if (reset)
                 {
                     await Classes.MySQL.Handler.Execute_Command("INSERT INTO accounts (username, password, reset_password, role, permissions, tenants) VALUES ('admin', '" + BCrypt.Net.BCrypt.HashPassword(Randomizer.Handler.Generate_Password(false, 12)) + "', 1, 'Administrator', '" + permissions + "', '[\r\n  {\r\n    \"id\": \"3\",\r\n    \"guid\": \"96a08389-4e34-4c0f-91a4-d5b22e036a8c\"\r\n  }\r\n]');");
@@ -615,6 +615,7 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             scripts.Add(upgrade_script_2_5_1_6_to_2_5_2_2c);
             scripts.Add(upgrade_script_2_5_2_2c_to_2_5_2_7);
             scripts.Add(upgrade_script_2_5_2_7_to_2_5_3_0);
+            scripts.Add(upgrade_script_2_5_3_4_to_2_5_3_4b);
 
             // Disabled due to testing...
 
@@ -789,9 +790,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
         }
 
-        //OSSCH_START b47df971-b32e-4fde-8170-9e5037ae5dca //OSSCH_END
+        //OSSCH_START 891e6672-23e2-4a63-a570-1516d368eea5 //OSSCH_END
         
         // Reset database
-        //OSSCH_START 16bc9a47-85e9-4a66-aeef-2a7e929ae86e //OSSCH_END
+        //OSSCH_START a43ca99d-485c-465c-a9c8-6b162bbd7e8c //OSSCH_END
     }
 }

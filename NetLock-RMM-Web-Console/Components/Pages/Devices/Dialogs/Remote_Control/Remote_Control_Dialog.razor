@@ -818,7 +818,7 @@
                         await JSRuntime.InvokeVoidAsync("updateImageBlob", actualImageBytes);
 
                         // Check if recording is enabled
-                        //OSSCH_START f16058b6-b8fe-4e18-bd20-d781b4f413d5 //OSSCH_END
+                        //OSSCH_START 804050f0-8c4e-4ac3-b9e2-91bf71737e24 //OSSCH_END
 
                         // Prüfung auf leeres Bild
                         if (actualImageBytes.Length < 1000) // Anpassen je nach minimaler Bildgröße
@@ -1153,12 +1153,6 @@
         }
 
         StateHasChanged();
-    }
-
-    private async Task Refresh_Remote_Information()
-    {
-        await Remote_Get_Users();
-        await Remote_Get_Screen_Indexes();
     }
 
     private async Task Remote_Check_Connection()
