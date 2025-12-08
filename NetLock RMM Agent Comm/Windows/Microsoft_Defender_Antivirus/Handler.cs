@@ -175,6 +175,7 @@ namespace Windows.Microsoft_Defender_Antivirus
                 bool notifications_netlock_microsoft_teams = false;
                 bool notifications_netlock_telegram = false;
                 bool notifications_netlock_ntfy_sh = false;
+                bool notifications_netlock_webhook = false;
 
                 using (JsonDocument document = JsonDocument.Parse(Windows_Worker.policy_antivirus_settings_json))
                 {
@@ -189,11 +190,14 @@ namespace Windows.Microsoft_Defender_Antivirus
 
                     JsonElement notifications_netlock_ntfy_sh_element = document.RootElement.GetProperty("notifications_netlock_ntfy_sh");
                     notifications_netlock_ntfy_sh = notifications_netlock_ntfy_sh_element.GetBoolean();
+                    
+                    JsonElement notifications_netlock_webhook_element = document.RootElement.GetProperty("notifications_netlock_webhook");
+                    notifications_netlock_webhook = notifications_netlock_webhook_element.GetBoolean();
                 }
 
                 // Create notifications_json
-                string notifications_json = "{\"mail\":" + notifications_netlock_mail.ToString().ToLower() + ",\"microsoft_teams\":" + notifications_netlock_microsoft_teams.ToString().ToLower() + ",\"telegram\":" + notifications_netlock_telegram.ToString().ToLower() + ",\"ntfy_sh\":" + notifications_netlock_ntfy_sh.ToString().ToLower() + "}";
-
+                string notifications_json = "{\"mail\":" + notifications_netlock_mail.ToString().ToLower() + ",\"microsoft_teams\":" + notifications_netlock_microsoft_teams.ToString().ToLower() + ",\"telegram\":" + notifications_netlock_telegram.ToString().ToLower() + ",\"ntfy_sh\":" + notifications_netlock_ntfy_sh.ToString().ToLower() + ",\"webhook\":" + notifications_netlock_webhook.ToString().ToLower() + "}";
+                
                 Logging.Microsoft_Defender_Antivirus("Microsoft_Defender_AntiVirus.Handler.Get_Notifications_Json", "Notifications Json", notifications_json);
 
                 return notifications_json;

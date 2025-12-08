@@ -696,6 +696,14 @@
                 <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
             </MudTooltip>
         </div>
+        
+        <div style="display: flex; align-items: center;">
+            <MudCheckBox T="bool" @bind-Value="notifications_webook" Label="Webhook" Color="Color.Primary" />
+
+            <MudTooltip Text="Send notifications via Webhook.">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+            </MudTooltip>
+        </div>
 
     </DialogContent>
     <DialogActions>
@@ -813,6 +821,7 @@
     private bool notifications_microsoft_teams = false;
     private bool notifications_telegram = false;
     private bool notifications_ntfy_sh = false;
+    private bool notifications_webook = false;
 
     public class Sensor
     {
@@ -882,6 +891,7 @@
         public bool notifications_microsoft_teams { get; set; }
         public bool notifications_telegram { get; set; }
         public bool notifications_ntfy_sh { get; set; }
+        public bool notifications_webhook { get; set; }
     }
 
     public class Script
@@ -1131,6 +1141,7 @@
             notifications_microsoft_teams = _object.notifications_microsoft_teams;
             notifications_telegram = _object.notifications_telegram;
             notifications_ntfy_sh = _object.notifications_ntfy_sh;
+            notifications_webook = _object.notifications_webhook;
 
             //convert time schedule to human readable
             if (_object.time_scheduler_type == 0)
@@ -1412,7 +1423,8 @@
                     notifications_mail = notifications_mail,
                     notifications_microsoft_teams = notifications_microsoft_teams,
                     notifications_telegram = notifications_telegram,
-                    notifications_ntfy_sh = notifications_ntfy_sh
+                    notifications_ntfy_sh = notifications_ntfy_sh,
+                    notifications_webhook = notifications_webook
                 };
 
             string sensors_json_string = JsonSerializer.Serialize(sensor_json, new JsonSerializerOptions { WriteIndented = true });

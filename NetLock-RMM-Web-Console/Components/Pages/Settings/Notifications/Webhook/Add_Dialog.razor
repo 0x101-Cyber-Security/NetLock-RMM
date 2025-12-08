@@ -1,0 +1,400 @@
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Text.Json;
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<style>
+    .monaco-editor {
+        flex-grow: 1;
+        height: 50vh;
+        width: 100%; /* Each editor takes full screen width */
+    }
+
+    /* For mobile devices (max width 600px) */
+    @@media (max-width: 600px) {
+        .monaco-editor {
+            height: 300px; /* Reduced height for mobile */
+            width: 100%; /* Full width on mobile */
+        }
+    }
+</style>
+
+<MudDialog>
+    <TitleContent>
+        <MudText Typo="Typo.h6">Add Webhook</MudText>
+    </TitleContent>
+    <DialogContent>
+        <MudTextField Label="Name" T="string" @bind-Value="@name" Immediate="@true" />
+        <MudTextField Label="Description" T="string" @bind-Value="@description" Immediate="@true" />
+        
+        <MudSelect T="string" @bind-Value="severity" Label="Severity" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+            <MudSelectItem T="string" Value="@("Any")" />
+            <MudSelectItem T="string" Value="@("Critical")" />
+            <MudSelectItem T="string" Value="@("High")" />
+            <MudSelectItem T="string" Value="@("Moderate")" />
+            <MudSelectItem T="string" Value="@("Low")" />
+        </MudSelect>
+
+        <MudTextField Label="Url" T="string" @bind-Value="@url" Immediate="@true" />
+        
+        <MudSelect T="string" @bind-Value="methode" Label="Methode" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+            <MudSelectItem T="string" Value="@("GET")" />
+            <MudSelectItem T="string" Value="@("POST")" />
+            <MudSelectItem T="string" Value="@("PUT")" />
+            <MudSelectItem T="string" Value="@("DELETE")" />
+            <MudSelectItem T="string" Value="@("PATCH")" />
+        </MudSelect>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+            <MudText Typo="Typo.h6">Configuration</MudText>
+            <MudButton Variant="Variant.Outlined" Color="Color.Info" StartIcon="@Icons.Material.Filled.Send" OnClick="TestWebhook" Disabled="@(String.IsNullOrEmpty(url))">Test Webhook</MudButton>
+        </div>
+        
+        <MudTabs Class="mt-3" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+            <MudTabPanel Text="Request Body">
+                <StandaloneCodeEditor Id="requestBodyEditor" CssClass="monaco-editor" @ref="requestBodyEditor" ConstructionOptions="RequestBodyEditorConstructionOptions" OnDidChangeModelContent="RequestBodyEditorHandleInput" />
+            </MudTabPanel>
+            <MudTabPanel Text="Request Headers">
+                <StandaloneCodeEditor Id="requestHeadersEditor" CssClass="monaco-editor" @ref="requestHeadersEditor" ConstructionOptions="RequestHeadersEditorConstructionOptions" OnDidChangeModelContent="RequestHeadersEditorHandleInput" />
+            </MudTabPanel>
+        </MudTabs>
+
+        <div style="display: flex; align-items: center;">
+            <MudCheckBox @bind-Value="uptime_monitoring_enabled" Color="Color.Primary">Uptime Monitoring</MudCheckBox>
+
+            <MudTooltip Text="If Disconnection Alert is enabled in the device overview, the event is forwarded.">
+                <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+            </MudTooltip>
+        </div>
+
+        <MudDropContainer T="DropItem" Items="tenants" ItemsSelector="@((item,dropzone) => item.identifier  == dropzone)" ItemDropped="ItemUpdated" Class="d-flex flex-wrap flex-grow-1">
+            <ChildContent>
+                <MudDropZone T="DropItem" identifier="drop_zone_one" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+                    <MudText Typo="Typo.h6" Class="mb-4">Tenants</MudText>
+                </MudDropZone>
+                <MudDropZone T="DropItem" identifier="drop_zone_two" Class="rounded mud-background-gray pa-6 ma-8 flex-grow-1">
+                    <MudText Typo="Typo.h6" Class="mb-4">Selected tenants</MudText>
+                </MudDropZone>
+            </ChildContent>
+            <ItemRenderer>
+                <MudPaper Elevation="25" Class="pa-4 my-4">@context.id</MudPaper>
+            </ItemRenderer>
+        </MudDropContainer>
+
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Cancel</MudButton>
+
+        <MudButton Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success" OnClick="@OK" Disabled="@(String.IsNullOrEmpty(name) || tenants.Count == 0)">Confirm</MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+
+    private string netlock_username = string.Empty;
+    
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+
+        // Retrieve email from claims
+        netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+        severity = "Any";
+
+        await Get_Tenants();
+    }
+
+    private string name = String.Empty;
+    private string url = "https://example.com/webhook";
+    private string methode = "POST";
+    private string requestBody = String.Empty;
+    private string requestHeaders = @"{
+  ""Content-Type"": ""application/json""
+}";
+    private string description = String.Empty;
+    private string severity = String.Empty;
+    private bool uptime_monitoring_enabled = false;
+    private string tenants_json = String.Empty;
+
+    private StandaloneCodeEditor requestBodyEditor = null!;
+    private StandaloneCodeEditor requestHeadersEditor = null!;
+
+    private StandaloneEditorConstructionOptions RequestBodyEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Theme = "vs-dark",
+            Language = "json",
+            Value = requestBody
+        };
+    }
+    
+    private StandaloneEditorConstructionOptions RequestHeadersEditorConstructionOptions(StandaloneCodeEditor editor)
+    {
+        return new StandaloneEditorConstructionOptions
+        {
+            AutomaticLayout = true,
+            Theme = "vs-dark",
+            Language = "json",
+            Value = requestHeaders
+        };
+    }
+
+    private async Task RequestBodyEditorHandleInput(ModelContentChangedEvent e)
+    {
+        requestBody = await requestBodyEditor.GetValue();
+    }
+    
+    private async Task RequestHeadersEditorHandleInput(ModelContentChangedEvent e)
+    {
+        requestHeaders = await requestHeadersEditor.GetValue();
+    }
+
+    private async Task TestWebhook()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        // Validate URL
+        if (!Classes.Helper.Notifications.Webhook.IsValidUrl(url))
+        {
+            Snackbar.Add("Invalid webhook URL.", Severity.Error);
+            return;
+        }
+
+        // Validate Request Body JSON if not empty
+        if (!string.IsNullOrWhiteSpace(requestBody) && !Classes.Helper.Notifications.Webhook.IsValidJson(requestBody))
+        {
+            Snackbar.Add("Invalid JSON in Request Body.", Severity.Error);
+            return;
+        }
+
+        // Validate Request Headers JSON if not empty
+        if (!string.IsNullOrWhiteSpace(requestHeaders) && !Classes.Helper.Notifications.Webhook.IsValidJson(requestHeaders))
+        {
+            Snackbar.Add("Invalid JSON in Request Headers.", Severity.Error);
+            return;
+        }
+
+        Snackbar.Add("Sending test webhook...", Severity.Info);
+
+        try
+        {
+            var (success, statusCode, response) = await Classes.Helper.Notifications.Webhook.SendAsync(
+                url: url,
+                method: methode,
+                requestBody: requestBody,
+                requestHeaders: requestHeaders
+            );
+
+            if (success)
+            {
+                Snackbar.Add($"Webhook test successful! Status: {statusCode}", Severity.Success);
+                Logging.Handler.Debug("Add_Webhook_Notification_Dialog", "TestWebhook", $"Success: {statusCode} - {response}");
+            }
+            else
+            {
+                Snackbar.Add($"Webhook test failed. Status: {statusCode}", Severity.Warning);
+                Logging.Handler.Error("Add_Webhook_Notification_Dialog", "TestWebhook", $"Failed: {statusCode} - {response}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error testing webhook: {ex.Message}", Severity.Error);
+            Logging.Handler.Error("Add_Webhook_Notification_Dialog", "TestWebhook", ex.ToString());
+        }
+    }
+    
+    private List<DropItem> tenants = new();
+
+    public class DropItem
+    {
+        public string id { get; set; }
+        public string identifier { get; set; }
+    }
+
+    private void ItemUpdated(MudItemDropInfo<DropItem> dropItem)
+    {
+        dropItem.Item.identifier = dropItem.DropzoneIdentifier;
+    }
+
+    [CascadingParameter]
+    private IMudDialogInstance MudDialog { get; set; } = default!;
+
+    private bool Form_Valid()
+    {
+        if (String.IsNullOrEmpty(name))
+            return true;
+        else
+            return false;
+    }
+
+    private async Task Get_Tenants()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand command = new MySqlCommand("SELECT * FROM tenants;", conn);
+            using (DbDataReader reader = await command.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        tenants.Add(new DropItem { id = reader["name"].ToString() ?? String.Empty, identifier = "drop_zone_one" });
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Add_Webhook_Notification_Dialog", "Get_Tenants", ex.Message);
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task OK()
+    {
+        this.Snackbar.Configuration.ShowCloseIcon = true;
+        this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        //Get all tenants from drop zone two
+        var filtered_tenants = tenants.Where(item => item.identifier == "drop_zone_two").ToList();
+
+        // foreach filtered tenant, get tenant_id
+        foreach (var tenant in filtered_tenants)
+        {
+            int tenant_id = await Classes.MySQL.Handler.Get_Tenant_Id(tenant.id);
+
+            // replace name with id
+            tenant.id = tenant_id.ToString();
+        }
+
+        tenants_json = JsonSerializer.Serialize(filtered_tenants);
+
+        Logging.Handler.Debug("Add_Webhook_Notification_Dialog", "tenants_json", tenants_json);
+
+        if (tenants_json.Count() != 0)
+        {
+            // Add mail notification to database
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                // convert severity
+                string sevirity_converted = String.Empty;
+
+                if (severity == "Low")
+                    sevirity_converted = "0";
+                else if (severity == "Moderate")
+                    sevirity_converted = "1";
+                else if (severity == "High")
+                    sevirity_converted = "2";
+                else if (severity == "Critical")
+                    sevirity_converted = "3";
+                else if (severity == "Any")
+                    sevirity_converted = "4";
+
+                // convert uptime_monitoring_enabled
+                int uptime_monitoring_enabled = 0;
+
+                if (this.uptime_monitoring_enabled)
+                    uptime_monitoring_enabled = 1;
+                else
+                    uptime_monitoring_enabled = 0;
+
+                await conn.OpenAsync();
+
+                // Create JSON object with webhook configuration
+                var webhookConfig = new
+                {
+                    url = url,
+                    method = methode,
+                    requestBody = requestBody,
+                    requestHeaders = requestHeaders
+                };
+                string json_config = JsonSerializer.Serialize(webhookConfig);
+
+                string execute_query = "INSERT INTO `webhook_notifications` (`name`, `json`, `date`, `author`, `description`, `severity`, `tenants`, `uptime_monitoring_enabled`) VALUES (@name, @json, @date, @author, @description, @severity, @tenants, @uptime_monitoring_enabled);";
+
+                MySqlCommand cmd = new MySqlCommand(execute_query, conn);
+                cmd.Parameters.AddWithValue("@name", name);
+                cmd.Parameters.AddWithValue("@json", json_config);
+                cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                cmd.Parameters.AddWithValue("@author", netlock_username);
+                cmd.Parameters.AddWithValue("@description", description);
+                cmd.Parameters.AddWithValue("@severity", sevirity_converted);
+                cmd.Parameters.AddWithValue("@tenants", tenants_json);
+                cmd.Parameters.AddWithValue("@uptime_monitoring_enabled", uptime_monitoring_enabled);
+
+                cmd.ExecuteNonQuery();
+
+                success = true;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Add_Webhook_Notification_Dialog", "General error", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            if (success)
+            {
+                MudDialog.Close(DialogResult.Ok("success"));
+            }
+            else
+            {
+                Snackbar.Add("An error has occurred.", Severity.Error);
+            }
+        }
+        else
+        {
+            Snackbar.Add("An error has occurred.", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

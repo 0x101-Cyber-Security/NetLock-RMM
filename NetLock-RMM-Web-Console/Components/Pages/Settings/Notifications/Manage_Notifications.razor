@@ -58,6 +58,10 @@
         {
             <MudText Typo="Typo.h5">@Localizer["title"]</MudText>
 
+            <MudTooltip Text="Learn more in the docs">
+                <MudIconButton Class="ml-2 mt-5" Icon="@Icons.Material.Filled.QuestionMark" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" Href="https://docs.netlockrmm.com/en/web-console/notifications" Target="_blank"></MudIconButton>
+            </MudTooltip>
+            
             <MudTabs Class="mt-5" KeepPanelsAlive=true Elevation="4" Rounded="false" Color="@Color.Default" @bind-ActivePanelIndex=@settings_notifications_panel_index OnActivePanelIndexChanged="@Save_Panel_Index()">
 
                 @if (permissions_settings_notifications_mail_enabled)
@@ -122,7 +126,7 @@
                                         <span style="display: flex; align-items: center;">
                                             @if (permissions_settings_notifications_mail_test)
                                             {
-                                                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Mail(mail_row.mail_address))">@Localizer["test_alarm"]</MudButton>
+                                                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Mail(mail_row.mail_address))">Test</MudButton>
                                             }
 
                                             @if (permissions_settings_notifications_mail_edit)
@@ -206,7 +210,7 @@
                                         <span style="display: flex; align-items: center;">
                                             @if (permissions_settings_notifications_microsoft_teams_test)
                                             {
-                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Microsoft_Teams_Message(teams_row.id, teams_row.connector_name))">@Localizer["test_alarm"]</MudButton>
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Microsoft_Teams_Message(teams_row.id, teams_row.connector_name))">Test</MudButton>
                                             }
 
                                             @if (permissions_settings_notifications_microsoft_teams_edit)
@@ -297,7 +301,7 @@
                                         <span style="display: flex; align-items: center;">
                                             @if (permissions_settings_notifications_telegram_test)
                                             {
-                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Telegram_Message(telegram_row.id, telegram_row.bot_name))">@Localizer["test_alarm"]</MudButton>
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Telegram_Message(telegram_row.id, telegram_row.bot_name))">Test</MudButton>
                                             }
 
                                             @if (permissions_settings_notifications_telegram_edit)
@@ -387,7 +391,7 @@
                                         <span style="display: flex; align-items: center;">
                                             @if (permissions_settings_notifications_ntfysh_test)
                                             {
-                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Ntfy_sh_Message(ntfy_sh_row.id, ntfy_sh_row.topic_name))">@Localizer["test_alarm"]</MudButton>
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => Send_Ntfy_sh_Message(ntfy_sh_row.id, ntfy_sh_row.topic_name))">Test</MudButton>
                                             }
 
                                             @if (permissions_settings_notifications_ntfysh_edit)
@@ -398,6 +402,80 @@
                                             @if (permissions_settings_notifications_ntfysh_delete)
                                             {
                                                 <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Delete_Ntfy_sh_Notification_Dialog(ntfy_sh_row.id))">@Localizer["delete"]</MudButton>
+                                            }
+                                        </span>
+                                    </MudTd>
+                                </RowTemplate>
+                                <PagerContent>
+                                    <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100, 250, 500, int.MaxValue }" RowsPerPageString="@Localizer["rows_per_page"]" />
+                                </PagerContent>
+                            </MudTable>
+                        </MudPaper>
+                    </MudTabPanel>
+                }
+                
+                @if (permissions_settings_notifications_webhook_enabled)
+                {
+                    <MudTabPanel tabindex="4" Text="Webhook">
+                        <MudPaper>
+
+                            @if (permissions_settings_notifications_webhook_add)
+                            {
+                                <MudButton Class="mt-2 ml-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Topic" OnClick="@Add_Webhook_Notification_Dialog">@Localizer["add"]</MudButton>
+                            }
+                            
+                            <MudTable Class="mt-0" Height="60vh" FixedHeader="true" FixedFooter="true" Hover="true" RowsPerPage="25" Dense="true" Items="@webhook_notifications_mysql_data" Filter="new Func<Webhook_Notifications_Entity, bool>(Webhook_Notifications_Table_Filter_Func)">
+                                <ToolBarContent>
+                                    <MudTextField @bind-Value="webhook_notifications_table_search_string" Placeholder="@Localizer["search"]" Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" IconSize="Size.Medium" Class="mt-0"></MudTextField>
+                                </ToolBarContent>
+                                <HeaderContent>
+                                    <MudTh Sortable="true" @onclick="() => webhook_notifications_table_sorted_column = (nameof(Webhook_Notifications_Entity.name))" style="white-space: nowrap;">Name</MudTh>
+                                    <MudTh Sortable="true" @onclick="() => webhook_notifications_table_sorted_column = (nameof(Webhook_Notifications_Entity.date))" style="white-space: nowrap;">@Localizer["created"]</MudTh>
+                                    <MudTh Sortable="true" @onclick="() => webhook_notifications_table_sorted_column = (nameof(Webhook_Notifications_Entity.author))" style="white-space: nowrap;">@Localizer["author"]</MudTh>
+                                    <MudTh Sortable="true" @onclick="() => webhook_notifications_table_sorted_column = (nameof(Webhook_Notifications_Entity.tenants))" style="white-space: nowrap;">@Localizer["tenants"]</MudTh>
+                                    <MudTh></MudTh>
+                                </HeaderContent>
+                                <RowTemplate Context="webhook_row">
+
+                                    <MudTd DataLabel="Name" @onclick="() => Webhook_Notifications_RowClickHandler(webhook_row)" @ondblclick="() => Webhook_Notifications_RowDblClickHandler(webhook_row)" class="@Webhook_Notifications_GetRowClass(webhook_row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Topic" Size="Size.Small" />&nbsp;@webhook_row.name
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="@Localizer["created"]" @onclick="() => Webhook_Notifications_RowClickHandler(webhook_row)" @ondblclick="() => Webhook_Notifications_RowDblClickHandler(webhook_row)" class="@Webhook_Notifications_GetRowClass(webhook_row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.DateRange" Size="Size.Small" />&nbsp;@webhook_row.date
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="@Localizer["author"]" @onclick="() => Webhook_Notifications_RowClickHandler(webhook_row)" @ondblclick="() => Webhook_Notifications_RowDblClickHandler(webhook_row)" class="@Webhook_Notifications_GetRowClass(webhook_row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.SupportAgent" Size="Size.Small" />&nbsp;@webhook_row.author
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="@Localizer["tenants"]" @onclick="() => Webhook_Notifications_RowClickHandler(webhook_row)" @ondblclick="() => Webhook_Notifications_RowDblClickHandler(webhook_row)" class="@Webhook_Notifications_GetRowClass(webhook_row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Small" />&nbsp;@webhook_row.tenants
+                                        </span>
+                                    </MudTd>
+
+                                    <MudTd DataLabel="@Localizer["author"]" @onclick="() => Webhook_Notifications_RowClickHandler(webhook_row)" class="@Webhook_Notifications_GetRowClass(webhook_row)" style="white-space: nowrap;">
+                                        <span style="display: flex; align-items: center;">
+                                            @if (permissions_settings_notifications_webhook_test)
+                                            {
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Send" OnClick="@(() => TestWebhook(webhook_row.json))">Test</MudButton>
+                                            }
+
+                                            @if (permissions_settings_notifications_webhook_edit)
+                                            {
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Default" StartIcon="@Icons.Material.Filled.Edit" OnClick="@(() => Edit_Webhook_Notification_Dialog(webhook_row.id, webhook_row.name, webhook_row.json, webhook_row.description, webhook_row.severity, webhook_row.tenants_json, webhook_row.uptime_monitoring_enabled))">@Localizer["edit"]</MudButton>
+                                            }
+
+                                            @if (permissions_settings_notifications_webhook_delete)
+                                            {
+                                                <MudButton Class="ml-2" Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" StartIcon="@Icons.Material.Filled.Recycling" OnClick="@(() => Delete_Webhook_Notification_Dialog(webhook_row.id))">@Localizer["delete"]</MudButton>
                                             }
                                         </span>
                                     </MudTd>

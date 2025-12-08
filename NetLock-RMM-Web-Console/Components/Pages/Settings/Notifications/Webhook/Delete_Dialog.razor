@@ -1,0 +1,93 @@
+@using MySqlConnector;
+@using System.Data.Common;
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<AuthorizeView>
+    <NotAuthorized>
+        @{
+            NavigationManager.NavigateTo("/");
+        }
+    </NotAuthorized>
+
+    <Authorized>
+
+        <MudDialog>
+            <TitleContent>
+                <MudText Typo="Typo.h6">Delete Webhook</MudText>
+            </TitleContent>
+            <DialogContent>
+                <MudText>Are you sure you want to delete this webhook notification?</MudText>
+            </DialogContent>
+
+            <DialogActions>
+                <MudButton Size="Size.Small" OnClick="Cancel">Cancel</MudButton>
+                <MudButton Size="Size.Small" Variant="@Variant.Filled" Color="@Color.Error" OnClick="Delete">Delete</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    [Parameter] public string id { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get the current user from the authentication state
+        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+        // Check if user is authenticated
+        if (user?.Identity is not { IsAuthenticated: true })
+        {
+            NavigationManager.NavigateTo("/login", true);
+            return;
+        }
+    }
+
+    private async Task Delete()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        bool success = false;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+            MySqlCommand cmd = new MySqlCommand("DELETE FROM `webhook_notifications` WHERE id = @id;", conn);
+            cmd.Parameters.AddWithValue("@id", id);
+            await cmd.ExecuteNonQueryAsync();
+            success = true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Delete_Webhook_Notification_Dialog", "Delete", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+
+        if (success)
+        {
+            MudDialog.Close(DialogResult.Ok("success"));
+        }
+        else
+        {
+            Snackbar.Add("An error has occurred.", Severity.Error);
+        }
+    }
+
+    private void Cancel() => MudDialog.Cancel();
+}

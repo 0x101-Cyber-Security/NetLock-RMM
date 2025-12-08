@@ -85,7 +85,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check members portal parts
-//OSSCH_START e8cedd72-7940-46c0-bc40-c77608e07ab5 //OSSCH_END
+//OSSCH_START a07a701c-9f59-4f87-940d-55c1a62621f3 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -448,7 +448,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START e0940b1d-d2dc-4567-8454-c9f00f0144a8 //OSSCH_END
+//OSSCH_START 6c5fc7a1-842a-4641-bfca-fea297d554c0 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
@@ -465,7 +465,7 @@ app.MapGet("/test", async context =>
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 9d98eb99-ce09-4b88-a1a4-e307da776b97 //OSSCH_END
+    //OSSCH_START bd6e2c82-17dd-465b-b0a2-2c9dce3ab021 //OSSCH_END
 }
 
 // Start server

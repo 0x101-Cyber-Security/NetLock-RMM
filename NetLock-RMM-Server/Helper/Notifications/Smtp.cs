@@ -50,7 +50,7 @@ namespace Helper.Notifications
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
             
             try

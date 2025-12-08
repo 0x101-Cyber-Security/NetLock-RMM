@@ -53,6 +53,7 @@ public class Events_Notification_Service : BackgroundService
             await NetLock_RMM_Server.Events.Sender.Smtp("ms_teams_status", "microsoft_teams_notifications");
             await NetLock_RMM_Server.Events.Sender.Smtp("telegram_status", "telegram_notifications");
             await NetLock_RMM_Server.Events.Sender.Smtp("ntfy_sh_status", "ntfy_sh_notifications");
+            await NetLock_RMM_Server.Events.Sender.Smtp("webhook_status", "webhook_notifications");
 
             string finishedTime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             Logging.Handler.Debug("Events_Notification_Service.ProcessEventsTask", "Periodic task finished at: ", finishedTime);

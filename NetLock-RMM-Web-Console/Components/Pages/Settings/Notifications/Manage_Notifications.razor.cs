@@ -43,6 +43,12 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
         private bool permissions_settings_notifications_ntfysh_edit = false;
         private bool permissions_settings_notifications_ntfysh_delete = false;
 
+        private bool permissions_settings_notifications_webhook_enabled = false;
+        private bool permissions_settings_notifications_webhook_add = false;
+        private bool permissions_settings_notifications_webhook_test = false;
+        private bool permissions_settings_notifications_webhook_edit = false;
+        private bool permissions_settings_notifications_webhook_delete = false;
+        
         private async Task<bool> Permissions()
         {
             try
@@ -81,6 +87,11 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
                 permissions_settings_notifications_ntfysh_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_test");
                 permissions_settings_notifications_ntfysh_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_edit");
                 permissions_settings_notifications_ntfysh_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_ntfysh_delete");
+                permissions_settings_notifications_webhook_enabled = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_webhook_enabled");
+                permissions_settings_notifications_webhook_add = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_webhook_add");
+                permissions_settings_notifications_webhook_test = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_webhook_test");
+                permissions_settings_notifications_webhook_edit = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_webhook_edit");
+                permissions_settings_notifications_webhook_delete = await Classes.Authentication.Permissions.Verify_Permission(netlock_username, "settings_notifications_webhook_delete");
 
                 if (!permissions_settings_enabled || !permissions_settings_notifications_enabled)
                     logout = true;
@@ -130,6 +141,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
             microsoft_teams_notifications_mysql_data = await Get_Microsoft_Teams_Notifications_Overview();
             telegram_notifications_mysql_data = await Get_Telegram_Notifications_Overview();
             ntfy_sh_notifications_mysql_data = await Get_Ntfy_sh_Notifications_Overview();
+            webhook_notifications_mysql_data = await Get_Webhook_Notifications_Overview();
 
             StateHasChanged();
         }
@@ -1176,6 +1188,324 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Settings.Notifications
                 this.Snackbar.Add(Localizer["failed_sending"] + result, Severity.Error);
             }
         }
+        #endregion
+        
+        #region Webhook
+        
+        public List<Webhook_Notifications_Entity> webhook_notifications_mysql_data;
+
+        public class Webhook_Notifications_Entity
+        {
+            public string id { get; set; } = String.Empty;
+            public string name { get; set; } = String.Empty;
+            public string json { get; set; } = String.Empty;
+            public string date { get; set; } = String.Empty;
+            public string author { get; set; } = String.Empty;
+            public string description { get; set; } = String.Empty;
+            public string severity { get; set; } = String.Empty;
+            public string tenants { get; set; } = String.Empty;
+            public string tenants_json { get; set; } = String.Empty;
+            public bool uptime_monitoring_enabled { get; set; } = false;
+        }
+
+        private string webhook_notifications_table_view_port = "70vh";
+        private string webhook_notifications_table_sorted_column;
+        private string webhook_notifications_table_search_string = "";
+
+        private bool Webhook_Notifications_Table_Filter_Func(Webhook_Notifications_Entity row)
+        {
+            if (string.IsNullOrEmpty(webhook_notifications_table_search_string))
+                return true;
+
+            //Search logic for each column
+            return row.name.Contains(webhook_notifications_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   row.date.Contains(webhook_notifications_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   row.author.Contains(webhook_notifications_table_search_string, StringComparison.OrdinalIgnoreCase) ||
+                   row.tenants.Contains(webhook_notifications_table_search_string, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private string webhook_notifications_selectedRowContent = ""; // Hier wird der Inhalt der ausgew�hlten Zeile gespeichert
+
+        // Der Handler f�r den TableRowClick-Event
+        private void Webhook_Notifications_RowClickHandler(Webhook_Notifications_Entity row)
+        {
+            webhook_notifications_selectedRowContent = row.name;
+        }
+
+        private async void Webhook_Notifications_RowDblClickHandler(Webhook_Notifications_Entity row)
+        {
+            await Edit_Webhook_Notification_Dialog(row.id, row.name, row.json, row.description, row.severity, row.tenants_json, row.uptime_monitoring_enabled);
+        }
+
+        private string Webhook_Notifications_GetRowClass(Webhook_Notifications_Entity row)
+        {
+            return row.name == webhook_notifications_selectedRowContent ? "selected-row" : "";
+        }
+
+        private bool add_webhook_notification_dialog_open = false;
+
+        private async Task Add_Webhook_Notification_Dialog()
+        {
+            if (add_webhook_notification_dialog_open)
+                return;
+
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+            DialogParameters parameters = new DialogParameters();
+            
+            add_webhook_notification_dialog_open = true;
+            
+            var result = await DialogService.Show<Settings.Notifications.Webhook.Add_Dialog>(string.Empty, parameters, options).Result;
+
+            add_webhook_notification_dialog_open = false;
+
+            if (result.Canceled)
+                return;
+            else if (result.Data == null || result.Data == "error")
+                return;
+
+            Logging.Handler.Debug("/Manage_Notifications -> Add_Webhook_Notification_Dialog", "Result", result.Data.ToString());
+
+            if (result.Data == "success")
+                webhook_notifications_mysql_data = await Get_Webhook_Notifications_Overview();
+        }
+
+        private bool edit_webhook_notification_dialog_open = false;
+
+        private async Task Edit_Webhook_Notification_Dialog(string id, string name, string json, string description, string severity, string tenants_json, bool uptime_monitoring_enabled)
+        {
+            if (edit_webhook_notification_dialog_open)
+                return;
+
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+            DialogParameters parameters = new DialogParameters();
+            parameters.Add("id", id);
+            parameters.Add("name", name);
+            parameters.Add("json", json);
+            parameters.Add("description", description);
+            parameters.Add("severity", severity);
+            parameters.Add("tenants_json", tenants_json);
+            parameters.Add("uptime_monitoring_enabled", uptime_monitoring_enabled);
+
+            edit_webhook_notification_dialog_open = true;
+            
+            var result = await DialogService.Show<Settings.Notifications.Webhook.Edit_Dialog>(string.Empty, parameters, options).Result;
+
+            edit_webhook_notification_dialog_open = false;
+
+            if (result.Canceled)
+                return;
+            else if (result.Data == null || result.Data == "error")
+                return;
+
+            Logging.Handler.Debug("/Manage_Notifications -> Edit_Webhook_Notification_Dialog", "Result", result.Data.ToString());
+
+            if (result.Data == "success")
+                webhook_notifications_mysql_data = await Get_Webhook_Notifications_Overview();
+        }
+
+        private bool delete_webhook_notification_dialog_open = false;
+
+        private async Task Delete_Webhook_Notification_Dialog(string id)
+        {
+            if (delete_webhook_notification_dialog_open)
+                return;
+
+            var options = new DialogOptions
+            {
+                CloseButton = true,
+                FullWidth = true,
+                MaxWidth = MaxWidth.Medium,
+                BackgroundClass = "dialog-blurring",
+            };
+
+            DialogParameters parameters = new DialogParameters();
+            parameters.Add("id", id);
+
+            delete_webhook_notification_dialog_open = true;
+
+            var result = await this.DialogService.Show<Settings.Notifications.Webhook.Delete_Dialog>(string.Empty, parameters, options).Result;
+
+            delete_webhook_notification_dialog_open = false;
+
+            if (result.Canceled)
+                return;
+            else if (result.Data == null || result.Data == "error")
+                return;
+
+            Logging.Handler.Debug("/Manage_Notifications -> Delete_Webhook_Notification_Dialog", "Result", result.Data.ToString());
+
+            if (result.Data == "success")
+                webhook_notifications_mysql_data = await Get_Webhook_Notifications_Overview();
+        }
+
+        private async Task<List<Webhook_Notifications_Entity>> Get_Webhook_Notifications_Overview()
+        {
+            List<Webhook_Notifications_Entity> result = new List<Webhook_Notifications_Entity>();
+
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                MySqlCommand command = new MySqlCommand("SELECT * FROM webhook_notifications;", conn);
+                using (DbDataReader reader = await command.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            string tenants_string = "";
+
+                            try
+                            {
+                                var tenants_list = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(reader["tenants"].ToString());
+
+                                foreach (var tenant in tenants_list)
+                                    if (tenant.ContainsKey("id"))
+                                    {
+                                        tenants_string = tenants_string + await Classes.MySQL.Handler.Get_Tenant_Name_By_Id(Convert.ToInt32(tenant["id"])) + ", ";
+                                    }
+
+                                tenants_string = tenants_string.Remove(tenants_string.Length - 2);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Handler.Error("/Manage_Notifications -> Get_Webhook_Notifications_Overview", "Extract tenants to table", ex.ToString());
+                            }
+                            
+                            // Create entity and add to result list
+                            Webhook_Notifications_Entity entity = new Webhook_Notifications_Entity
+                            {
+                                id = reader["id"].ToString() ?? String.Empty,
+                                name = reader["name"].ToString() ?? String.Empty,
+                                json = reader["json"].ToString() ?? String.Empty,
+                                date = reader["date"].ToString() ?? String.Empty,
+                                author = reader["author"].ToString() ?? String.Empty,
+                                description = reader["description"].ToString() ?? String.Empty,
+                                severity = reader["severity"].ToString() ?? String.Empty,
+                                tenants = tenants_string,
+                                tenants_json = reader["tenants"].ToString() ?? String.Empty,
+                                uptime_monitoring_enabled = Convert.ToBoolean(reader["uptime_monitoring_enabled"]),
+                            };
+
+                            result.Add(entity);
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("class", "Get_Webhook_Notifications_Overview", ex.ToString());
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+
+            return result;
+        }
+
+        private async Task TestWebhook(string json)
+        {
+            // Parse JSON to extract URL, Method, Body, Headers
+            string url = string.Empty;
+            string methode = "POST";
+            string requestBody = string.Empty;
+            string requestHeaders = string.Empty;
+            
+            try
+            {
+                var jsonDoc = JsonDocument.Parse(json);
+                var root = jsonDoc.RootElement;
+
+                if (root.TryGetProperty("url", out JsonElement urlElement))
+                    url = urlElement.GetString() ?? string.Empty;
+
+                if (root.TryGetProperty("method", out JsonElement methodElement))
+                    methode = methodElement.GetString() ?? "POST";
+
+                if (root.TryGetProperty("requestBody", out JsonElement bodyElement))
+                    requestBody = bodyElement.GetString() ?? string.Empty;
+
+                if (root.TryGetProperty("requestHeaders", out JsonElement headersElement))
+                    requestHeaders = headersElement.GetString() ?? string.Empty;
+            }
+            catch (JsonException ex)
+            {
+                Snackbar.Add("Invalid JSON format.", Severity.Error);
+                Logging.Handler.Error("Add_Webhook_Notification_Dialog", "TestWebhook.Parse_JSON", ex.ToString());
+                return;
+            }
+            
+            this.Snackbar.Configuration.ShowCloseIcon = true;
+            this.Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+            // Validate URL
+            if (!Classes.Helper.Notifications.Webhook.IsValidUrl(url))
+            {
+                Snackbar.Add("Invalid webhook URL.", Severity.Error);
+                return;
+            }
+
+            // Validate Request Body JSON if not empty
+            if (!string.IsNullOrWhiteSpace(requestBody) && !Classes.Helper.Notifications.Webhook.IsValidJson(requestBody))
+            {
+                Snackbar.Add("Invalid JSON in Request Body.", Severity.Error);
+                return;
+            }
+
+            // Validate Request Headers JSON if not empty
+            if (!string.IsNullOrWhiteSpace(requestHeaders) && !Classes.Helper.Notifications.Webhook.IsValidJson(requestHeaders))
+            {
+                Snackbar.Add("Invalid JSON in Request Headers.", Severity.Error);
+                return;
+            }
+
+            Snackbar.Add("Sending test webhook...", Severity.Info);
+
+            try
+            {
+                var (success, statusCode, response) = await Classes.Helper.Notifications.Webhook.SendAsync(
+                    url: url,
+                    method: methode,
+                    requestBody: requestBody,
+                    requestHeaders: requestHeaders
+                );
+
+                if (success)
+                {
+                    Snackbar.Add($"Webhook test successful! Status: {statusCode}", Severity.Success);
+                    Logging.Handler.Debug("Add_Webhook_Notification_Dialog", "TestWebhook", $"Success: {statusCode} - {response}");
+                }
+                else
+                {
+                    Snackbar.Add($"Webhook test failed. Status: {statusCode}", Severity.Warning);
+                    Logging.Handler.Error("Add_Webhook_Notification_Dialog", "TestWebhook", $"Failed: {statusCode} - {response}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"Error testing webhook: {ex.Message}", Severity.Error);
+                Logging.Handler.Error("Add_Webhook_Notification_Dialog", "TestWebhook", ex.ToString());
+            }
+        }
+        
         #endregion
     }
 }

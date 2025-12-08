@@ -15,6 +15,7 @@ namespace NetLock_RMM_Server.Events
             public bool microsoft_teams { get; set; }
             public bool telegram { get; set; }
             public bool ntfy_sh { get; set; }
+            public bool webhook { get; set; }
         }
 
         public static async Task Smtp(string type, string table)
@@ -66,11 +67,16 @@ namespace NetLock_RMM_Server.Events
                                 {
                                     await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "ntfy_sh_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, "Device name: " + reader["device_name"].ToString() + Environment.NewLine + "Location name: " + reader["location_name_snapshot"].ToString() + Environment.NewLine + "Tenant name: " + reader["tenant_name_snapshot"].ToString() + Environment.NewLine + Environment.NewLine + "Details:" + Environment.NewLine + reader["description"].ToString() ?? String.Empty);
                                 }
+                                else if (type == "webhook_status" && notifications.webhook && reader["webhook_status"].ToString() == "0")
+                                {
+                                    await Check_Notification(reader["id"].ToString() ?? String.Empty, reader["device_id"].ToString() ?? String.Empty, reader["type"].ToString() ?? String.Empty, type, "webhook_notifications", reader["severity"].ToString() ?? String.Empty, reader["reported_by"].ToString() ?? String.Empty, reader["_event"].ToString() ?? String.Empty, reader["description"].ToString() ?? String.Empty, reader["tenant_name_snapshot"].ToString() ?? String.Empty, reader["location_name_snapshot"].ToString() ?? String.Empty, reader["device_name"].ToString() ?? String.Empty, reader["date"].ToString() ?? String.Empty);
+                                }
+                                
                             }
                             catch (Exception ex)
                             {
                                 // Set all notifications to true if an error occurs
-                                await MySQL.Handler.Execute_Command("UPDATE `events` SET mail_status = 1, ms_teams_status = 1, telegram_status = 1, ntfy_sh_status = 1 WHERE id = " + reader["id"].ToString() + ";");
+                                await MySQL.Handler.Execute_Command("UPDATE `events` SET mail_status = 1, ms_teams_status = 1, telegram_status = 1, ntfy_sh_status = 1, webhook_status = 1 WHERE id = " + reader["id"].ToString() + ";");
                                 Logging.Handler.Error("Events.Sender.Smtp", "MySQL_Query", ex.ToString());
                             }
                         }
@@ -87,7 +93,7 @@ namespace NetLock_RMM_Server.Events
             }
         }
 
-        private static async Task Check_Notification(string id, string device_id, string notification_type, string type, string table, string severity, string reported_by, string _event, string description)
+        private static async Task Check_Notification(string id, string device_id, string notification_type, string type, string table, string severity, string reported_by, string _event, string description, string tenant_name = "", string location_name = "", string device_name = "", string date = "")
         {
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
@@ -168,6 +174,19 @@ namespace NetLock_RMM_Server.Events
 
                                     success = await Helper.Notifications.Ntfy_sh.Send_Message(reader["id"].ToString() ?? String.Empty, reported_by + ": " + _event + Environment.NewLine + Environment.NewLine + description);
                                 }
+                                else if (table == "webhook_notifications")
+                                {
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "webhook_notifications", "true");
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "tenant_name", tenant_name);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "location_name", location_name);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "device_name", device_name);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "date", date);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "reported_by", reported_by);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "event", _event);
+                                    Logging.Handler.Debug("Events.Sender.Check_Notifications", "description", description);
+
+                                    success = await Helper.Notifications.Webhook.Send_Message(reader["id"].ToString() ?? String.Empty, tenant_name, location_name, device_name, date, reported_by, _event, description);
+                                }
                             }
 
                             // Update event
@@ -183,7 +202,7 @@ namespace NetLock_RMM_Server.Events
             }
             finally
             {
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
@@ -192,7 +211,7 @@ namespace NetLock_RMM_Server.Events
             try
             {
                 Logging.Handler.Debug("Events.Sender.Mark_Old_Read", "started_time & finished_time", started_time + " " + finished_time);
-                await MySQL.Handler.Execute_Command("UPDATE events SET mail_status = '1', ms_teams_status = '1', telegram_status = '1', ntfy_sh_status = '1' WHERE date < '" + finished_time + "';");
+                await MySQL.Handler.Execute_Command("UPDATE events SET mail_status = '1', ms_teams_status = '1', telegram_status = '1', ntfy_sh_status = '1', webhook_status = '1' WHERE date < '" + finished_time + "';");
             }
             catch (Exception ex)
             {

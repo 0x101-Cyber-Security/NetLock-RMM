@@ -325,6 +325,13 @@
                         <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
                         <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_ntfysh_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
 
+                        <MudText Class="ml-3 mt-3" Typo="Typo.h6">Webhook</MudText>
+                        <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_notifications_webhook_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_webhook_test" Label="Testalarm" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_webhook_add" Label="@Localizer["add"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_webhook_edit" Label="@Localizer["edit"]" Color="Color.Primary" />
+                        <MudCheckBox Class="ml-2" T="bool" @bind-Value="@settings_notifications_webhook_delete" Label="@Localizer["delete"]" Color="Color.Primary" />
+                        
                         <MudText Class="ml-3 mt-3" Typo="Typo.h5">@Localizer["system_settings"]</MudText>
                         <MudSwitch Class="ml-2" T="bool" @bind-Value="@settings_system_enabled" Label="@Localizer["enabled"]" Color="Color.Primary" />
 
@@ -572,6 +579,13 @@
     private bool settings_notifications_ntfysh_edit = false;
     private bool settings_notifications_ntfysh_delete = false;
 
+    //permissions: settings -> notifications -> webhook
+    private bool settings_notifications_webhook_enabled = false;
+    private bool settings_notifications_webhook_add = false;
+    private bool settings_notifications_webhook_test = false;
+    private bool settings_notifications_webhook_edit = false;
+    private bool settings_notifications_webhook_delete = false;
+    
     private bool settings_system_enabled = false;
     private bool settings_protocols_enabled = false;
 
@@ -706,6 +720,13 @@
         public bool settings_notifications_ntfysh_edit { get; set; }
         public bool settings_notifications_ntfysh_delete { get; set; }
 
+        //permissions: settings -> notifications -> webhook
+        public bool settings_notifications_webhook_enabled { get; set; }
+        public bool settings_notifications_webhook_add { get; set; }
+        public bool settings_notifications_webhook_test { get; set; }
+        public bool settings_notifications_webhook_edit { get; set; }
+        public bool settings_notifications_webhook_delete { get; set; }
+        
         public bool settings_system_enabled { get; set; }
         public bool settings_protocols_enabled { get; set; }
     }
@@ -897,6 +918,13 @@
                 settings_notifications_ntfysh_test = settings_notifications_ntfysh_test,
                 settings_notifications_ntfysh_edit = settings_notifications_ntfysh_edit,
                 settings_notifications_ntfysh_delete = settings_notifications_ntfysh_delete,
+                
+                //permissions: settings -> notifications -> webhook
+                settings_notifications_webhook_enabled = settings_notifications_webhook_enabled,
+                settings_notifications_webhook_add = settings_notifications_webhook_add,
+                settings_notifications_webhook_test = settings_notifications_webhook_test,
+                settings_notifications_webhook_edit = settings_notifications_webhook_edit,
+                settings_notifications_webhook_delete = settings_notifications_webhook_delete,
 
                 //permissions: settings_system
                 settings_system_enabled = settings_system_enabled,
@@ -1137,6 +1165,13 @@
             settings_notifications_ntfysh_test = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_test").GetBoolean();
             settings_notifications_ntfysh_edit = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_edit").GetBoolean();
             settings_notifications_ntfysh_delete = jsonDocument.RootElement.GetProperty("settings_notifications_ntfysh_delete").GetBoolean();
+            
+            //permissions: settings -> notifications -> webhook
+            settings_notifications_webhook_enabled = jsonDocument.RootElement.GetProperty("settings_notifications_webhook_enabled").GetBoolean();
+            settings_notifications_webhook_add = jsonDocument.RootElement.GetProperty("settings_notifications_webhook_add").GetBoolean();
+            settings_notifications_webhook_test = jsonDocument.RootElement.GetProperty("settings_notifications_webhook_test").GetBoolean();
+            settings_notifications_webhook_edit = jsonDocument.RootElement.GetProperty("settings_notifications_webhook_edit").GetBoolean();
+            settings_notifications_webhook_delete = jsonDocument.RootElement.GetProperty("settings_notifications_webhook_delete").GetBoolean();
 
             settings_system_enabled = jsonDocument.RootElement.GetProperty("settings_system_enabled").GetBoolean();
             settings_protocols_enabled = jsonDocument.RootElement.GetProperty("settings_protocols_enabled").GetBoolean();
