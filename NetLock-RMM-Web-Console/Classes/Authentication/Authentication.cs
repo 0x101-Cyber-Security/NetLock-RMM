@@ -18,13 +18,14 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
                 MySqlCommand cmd = new MySqlCommand("SELECT * FROM accounts WHERE username = @username LIMIT 1;", conn);
                 cmd.Parameters.AddWithValue("@username", username);
 
-                MySqlDataReader reader = cmd.ExecuteReader();
+                MySqlDataReader reader = await cmd.ExecuteReaderAsync();
 
                 if (reader.HasRows)
                 {
                     while (reader.Read())
                         isPasswordCorrect = BCrypt.Net.BCrypt.Verify(password, reader["password"].ToString());
                 }
+                
                 await reader.CloseAsync();
 
                 return isPasswordCorrect;
@@ -36,7 +37,7 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
             }
             finally
             { 
-                conn.Close();
+                await conn.CloseAsync();
             }
         }
 
@@ -105,6 +106,55 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
             finally
             {
                 await conn.CloseAsync();
+            }
+        }
+        
+        /// <summary>
+        /// Checks if a user is authorized for SSO login.
+        /// Returns true only if the user exists in the database and has role "SSO".
+        /// Does NOT create new users automatically.
+        /// </summary>
+        /// <param name="email">User email from SSO provider</param>
+        /// <returns>True if user is authorized for SSO, false otherwise</returns>
+        public static async Task<bool> CheckSsoUserAuthorization(string email)
+        {
+            try
+            {
+                using var conn = new MySqlConnector.MySqlConnection(Configuration.MySQL.Connection_String);
+                
+                await conn.OpenAsync();
+
+                // Check if user exists AND has SSO role
+                var checkCommand = new MySqlConnector.MySqlCommand("SELECT COUNT(*) FROM accounts WHERE username = @email AND role = 'SSO';", conn);
+                checkCommand.Parameters.AddWithValue("@email", email);
+                
+                var count = Convert.ToInt32(await checkCommand.ExecuteScalarAsync());
+                
+                if (count > 0)
+                {
+                    // User exists with SSO role, update last login
+                    var updateCommand = new MySqlConnector.MySqlCommand(
+                        "UPDATE accounts SET last_login = @now, ip_address = 'SSO' WHERE username = @email", conn);
+                    updateCommand.Parameters.AddWithValue("@email", email);
+                    updateCommand.Parameters.AddWithValue("@now", DateTime.Now);
+                    await updateCommand.ExecuteNonQueryAsync();
+                    
+                    Console.WriteLine($"SSO: User authorized and login updated: {email}");
+                    Logging.Handler.Debug("SSO", "User Authorized", $"User {email} has SSO role and is authorized");
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine($"SSO: User not authorized or does not have SSO role: {email}");
+                    Logging.Handler.Debug("SSO", "User Not Authorized", $"User {email} not found or does not have SSO role");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"SSO: Error checking user authorization: {ex.Message}");
+                Logging.Handler.Error("SSO", "Authorization Check Error", ex.ToString());
+                return false;
             }
         }
     }

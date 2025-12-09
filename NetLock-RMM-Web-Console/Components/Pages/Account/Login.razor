@@ -148,7 +148,7 @@
                 <MudImage Src="media/images/NetLock-RMM-Logo-Transparent.svg" Alt="Favicon" Width="35" Height="35" Class="mr-3" />
 
                 <!-- Only show the title on larger screens -->
-                <MudText Typo="Typo.h5" Class="ml-3 d-none d-md-flex">@Configuration.Web_Console.title</MudText>
+                <MudText Typo="Typo.h5" Class="ml-3 d-none d-md-flex">@NetLock_RMM_Web_Console.Configuration.Web_Console.title</MudText>
 
                 <MudSpacer />
 
@@ -184,6 +184,47 @@
                                     <MudTextField @bind-Value="@username" Label="@Localizer["username"]" RequiredError="@Localizer["required"]" Required="true" OnKeyDown="Enter" Immediate="true" />
                                     <MudTextField @bind-Value="@password" Label="@Localizer["password"]" RequiredError="@Localizer["required"]" Required="true" InputType="@InputType.Password" OnKeyDown="Enter" Immediate="true" />
                                     <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="@Authenticate" FullWidth="true">@Localizer["login"]</MudButton>
+                                    
+                                    @if (isSsoEnabled)
+                                    {
+                                        <MudDivider Class="my-4" />
+                                        <MudText Typo="Typo.body2" Align="Align.Center" Class="mb-2">Or sign in with</MudText>
+                                        
+                                        @if (isAzureAdEnabled)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" FullWidth="true" Href="/challenge/azuread" Class="mb-2">
+                                                Sign in with Microsoft
+                                            </MudButton>
+                                        }
+                                        
+                                        @if (isKeycloakEnabled)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" FullWidth="true" Href="/challenge/keycloak" Class="mb-2">
+                                                Sign in with Keycloak
+                                            </MudButton>
+                                        }
+                                        
+                                        @if (isGoogleIdentityEnabled)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" FullWidth="true" Href="/challenge/google" Class="mb-2">
+                                                Sign in with Google Identity
+                                            </MudButton>
+                                        }
+                                        
+                                        @if (isOktaEnabled)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" FullWidth="true" Href="/challenge/okta" Class="mb-2">
+                                                Sign in with Okta
+                                            </MudButton>
+                                        }
+                                        
+                                        @if (isAuth0Enabled)
+                                        {
+                                            <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Login" FullWidth="true" Href="/challenge/auth0" Class="mb-2">
+                                                Sign in with Auth0
+                                            </MudButton>
+                                        }
+                                    }
                                 }
                                 else if (auth_status == 0 && two_factor_state == 1) //2f setup mode
                                 {
@@ -261,6 +302,12 @@
     private string netlock_username = String.Empty;
     private bool permissions_dashboard_enabled = false;
     public static List<string> permissions_tenants_list = new List<string> { };
+    private bool isSsoEnabled => NetLock_RMM_Web_Console.Configuration.Sso.IsEnabled;
+    private bool isAzureAdEnabled => NetLock_RMM_Web_Console.Configuration.Sso.IsAzureAdEnabled;
+    private bool isKeycloakEnabled => NetLock_RMM_Web_Console.Configuration.Sso.IsKeycloakEnabled;
+    private bool isGoogleIdentityEnabled => NetLock_RMM_Web_Console.Configuration.Sso.isGoogleIdentityEnabled;
+    private bool isOktaEnabled => NetLock_RMM_Web_Console.Configuration.Sso.IsOktaEnabled;
+    private bool isAuth0Enabled => NetLock_RMM_Web_Console.Configuration.Sso.IsAuth0Enabled;
 
     private async Task<bool> Permissions()
     {
@@ -316,14 +363,47 @@
 
     private async Task AfterInitializedAsync()
     {
-        // Get the current user from the authentication state
-        var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
-
-        // Check if user is authenticated
-        if (user?.Identity is { IsAuthenticated: true })
+        // Check if user just logged out (to prevent automatic re-login)
+        var uri = new Uri(NavigationManager.Uri);
+        var justLoggedOut = uri.Query.Contains("logout=true");
+        
+        if (justLoggedOut)
         {
-            NavigationManager.NavigateTo("/dashboard", true);
-            return;
+            Logging.Handler.Debug("/login", "State", "User just logged out, clearing all caches");
+            
+            // Clear SSO cache explicitly
+            if (AuthenticationStateProvider is CustomAuthenticationStateProvider customProvider)
+            {
+                customProvider.ClearSsoCache();
+                Logging.Handler.Debug("/login", "State", "SSO cache cleared");
+            }
+            
+            // Verify user is really logged out
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+            if (user?.Identity is { IsAuthenticated: true })
+            {
+                Logging.Handler.Debug("/login", "State", "User still authenticated after logout, forcing full reload");
+                // User is still authenticated, force a full page reload to clear everything
+                NavigationManager.NavigateTo("/", true);
+                return;
+            }
+            
+            Logging.Handler.Debug("/login", "State", "Logout confirmed, clearing URL flag");
+            // Clear the logout flag from URL without reload (user is properly logged out)
+            NavigationManager.NavigateTo("/", false);
+        }
+        else
+        {
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is { IsAuthenticated: true })
+            {
+                Logging.Handler.Debug("/login", "State", "User already authenticated, redirecting to dashboard");
+                NavigationManager.NavigateTo("/dashboard", true);
+                return;
+            }
         }
 
         loading_overlay = true;
@@ -376,7 +456,7 @@
     {
         Logging.Handler.Debug("/login -> Authenticate", "username", username);
 
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+        MySqlConnection conn = new MySqlConnection(NetLock_RMM_Web_Console.Configuration.MySQL.Connection_String);
 
         try
         {
@@ -385,7 +465,7 @@
             MySqlCommand command = new MySqlCommand("SELECT * FROM accounts WHERE username = @username;", conn);
             command.Parameters.AddWithValue("@username", username);
 
-            MySqlDataReader reader = command.ExecuteReader();
+            MySqlDataReader reader = await command.ExecuteReaderAsync();
 
             if (reader.HasRows)
             {
@@ -503,7 +583,7 @@
             string ip_address = _httpContextAccessor.HttpContext?.Connection?.RemoteIpAddress?.ToString();
 
             // Update latest login session
-            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+            MySqlConnection conn = new MySqlConnection(NetLock_RMM_Web_Console.Configuration.MySQL.Connection_String);
 
             try
             {
@@ -560,7 +640,7 @@
         {
             bool success = false;
 
-            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+            MySqlConnection conn = new MySqlConnection(NetLock_RMM_Web_Console.Configuration.MySQL.Connection_String);
 
             try
             {
@@ -635,7 +715,7 @@
     {
         bool success = false;
 
-        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+        MySqlConnection conn = new MySqlConnection(NetLock_RMM_Web_Console.Configuration.MySQL.Connection_String);
 
         try
         {

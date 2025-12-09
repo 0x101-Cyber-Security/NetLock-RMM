@@ -790,9 +790,9 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             }
         }
 
-        //OSSCH_START 282be298-e8de-4d24-9b2c-91212f3bdfb2 //OSSCH_END
+        //OSSCH_START c08671e5-704e-4cb5-a1ee-40f703ffdaf7 //OSSCH_END
         
         // Reset database
-        //OSSCH_START ededa069-71d9-44eb-bb21-6c24b0e35f64 //OSSCH_END
+        //OSSCH_START 23cab9c1-8b7b-4fda-b8d1-3cb99bc80862 //OSSCH_END
     }
 }

@@ -19,6 +19,13 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
 
         public static async Task<bool> Verify_Tenants(string username, string tenant_guid)
         {
+            // Check if username is empty
+            if (string.IsNullOrEmpty(username))
+            {
+                Logging.Handler.Debug("Classes.Authentication.Verify_Tenants", "username", "Empty, logout user");
+                return false;
+            }
+
             string permissions_tenants_json = String.Empty;
             List<string> permissions_tenants_list = new List<string> { };
 
@@ -35,6 +42,7 @@ namespace NetLock_RMM_Web_Console.Classes.Authentication
                 command.Parameters.AddWithValue("@username", username);
 
                 Logging.Handler.Debug("Classes.Authentication.Verify_Tenants", "query", query);
+                Logging.Handler.Debug("Classes.Authentication.Verify_Tenants", "username", username);
 
                 using (DbDataReader reader = await command.ExecuteReaderAsync())
                 {

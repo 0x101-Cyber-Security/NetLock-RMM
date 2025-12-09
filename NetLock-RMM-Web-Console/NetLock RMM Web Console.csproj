@@ -40,6 +40,8 @@
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.15.0" />
     <PackageReference Include="System.Management" Version="9.0.11" />
     <PackageReference Include="Telegram.Bot" Version="22.7.5" />
+    <PackageReference Include="Microsoft.Identity.Web" Version="2.22.0" />
+    <PackageReference Include="Microsoft.Identity.Web.UI" Version="2.22.0" />
   </ItemGroup>
 
 

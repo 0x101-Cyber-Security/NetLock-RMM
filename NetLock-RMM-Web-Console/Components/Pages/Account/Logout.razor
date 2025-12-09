@@ -1,9 +1,12 @@
 ﻿@page "/logout"
 
 @using Microsoft.AspNetCore.Authentication
+@using Microsoft.AspNetCore.Authentication.Cookies
+@using Microsoft.AspNetCore.Authentication.OpenIdConnect
 @using NetLock_RMM_Web_Console.Classes.Authentication
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.AspNetCore.DataProtection
+@using System.Security.Claims
 
 @inject AuthenticationStateProvider authStateProvider
 @inject NavigationManager NavigationManager
@@ -13,6 +16,8 @@
 @inject IJSRuntime JSRuntime
 @inject IDataProtectionProvider DataProtectionProvider
 @inject ProtectedSessionStorage SessionStorage
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IConfiguration Configuration
 
 <h3>Logout</h3>
 
@@ -35,15 +40,58 @@
     {
         try
         {
-            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider); // not required if injecting it
-            await sessionStorage.DeleteAsync("SessionToken");
+            Logging.Handler.Debug("/logout", "Start", "Logout process started");
 
-            // Log out and reset claims
+            // Check if user is authenticated via SSO
+            var authState = await authStateProvider.GetAuthenticationStateAsync();
+            var user = authState.User;
+            bool isSsoUser = false;
+
+            if (user?.Identity is { IsAuthenticated: true })
+            {
+                // Check if this is an SSO user by looking at the authentication type
+                var authenticationType = user.Identity.AuthenticationType;
+                
+                // SSO users can have various authentication types:
+                // - "SSO" (our custom type)
+                // - "AuthenticationTypes.Federation" (Azure AD)
+                // - OpenIdConnectDefaults.AuthenticationScheme
+                // - CookieAuthenticationDefaults.AuthenticationScheme (when using SSO cookies)
+                // Normal users have "CustomAuth" type
+                isSsoUser = authenticationType != "CustomAuth" && !string.IsNullOrEmpty(authenticationType);
+                
+                Logging.Handler.Debug("/logout", "Authentication Type", authenticationType ?? "null");
+                Logging.Handler.Debug("/logout", "Is SSO User", isSsoUser.ToString());
+                Logging.Handler.Debug("/logout", "User Identity Name", user.Identity.Name ?? "null");
+            }
+            else
+            {
+                Logging.Handler.Debug("/logout", "User State", "Not authenticated or null");
+            }
+
+            // Delete session token (for normal authentication)
+            var sessionStorage = new ProtectedSessionStorage(JSRuntime, DataProtectionProvider);
+            await sessionStorage.DeleteAsync("SessionToken");
+            Logging.Handler.Debug("/logout", "SessionToken", "Deleted");
+
+            // Reset custom authentication state and clear cache
             var customAuthStateProvider = (CustomAuthenticationStateProvider)authStateProvider;
             await customAuthStateProvider.UpdateAuthentificationState(null, true);
+            Logging.Handler.Debug("/logout", "CustomAuthState", "Reset and cache cleared");
 
-            // Weiterleiten zur Login-Seite
-            NavigationManager.NavigateTo("/login", true);
+            if (isSsoUser)
+            {
+                // For SSO users: redirect to SSO logout handler
+                // This endpoint will properly initiate the OIDC signout flow
+                Logging.Handler.Debug("/logout", "Action", "Redirecting to SSO logout handler");
+                NavigationManager.NavigateTo("/sso-signout", true);
+            }
+            else
+            {
+                // For normal users: redirect to login page with logout flag
+                Logging.Handler.Debug("/logout", "Action", "Redirecting to login page");
+                NavigationManager.NavigateTo("/?logout=true", true);
+            }
         }
         catch (Exception ex)
         {
