@@ -35,6 +35,20 @@
                     }
                 }
 
+                <!-- Tenant Search -->
+                <div style="padding: 8px 16px;">
+                    <MudTextField @bind-Value="tenantSearchQuery" 
+                                  Placeholder="Search tenants..." 
+                                  Adornment="Adornment.Start" 
+                                  AdornmentIcon="@Icons.Material.Filled.Search" 
+                                  IconSize="Size.Small"
+                                  Immediate="true"
+                                  Variant="Variant.Outlined"
+                                  Margin="Margin.Dense"
+                                  DebounceInterval="300"
+                                  OnDebounceIntervalElapsed="FilterTenants" />
+                </div>
+
 
                 @{
 					if (tenants_full_access)
@@ -59,7 +73,7 @@
                 @{
                     HashSet<string> processedTenants = new HashSet<string>();
 
-                    @foreach (var tenant in tenant_list)
+                    @foreach (var tenant in filteredTenantList)
                     {
                         // Überprüfe, ob dieser tenant_name bereits verarbeitet wurde
                         if (!processedTenants.Contains(tenant.guid))
@@ -282,6 +296,8 @@
 
     public static List<Tenant> tenant_list = new List<Tenant> { };
     public static List<Location> locations_list = new List<Location> { };
+    private List<Tenant> filteredTenantList = new List<Tenant> { };
+    private string tenantSearchQuery = string.Empty;
 
     //private List<string> tenant_list = new List<string> { };
     public DataTable clients_table = new DataTable();
@@ -518,6 +534,9 @@
             }
 
             await reader.CloseAsync();
+            
+            // Initialize filtered list with all tenants
+            filteredTenantList = tenant_list.ToList();
         }
         catch (Exception ex)
         {
@@ -665,6 +684,21 @@
         {
             conn.Close();
         }
+    }
+
+    private void FilterTenants(string searchValue)
+    {
+        if (string.IsNullOrWhiteSpace(searchValue))
+        {
+            filteredTenantList = tenant_list.ToList();
+        }
+        else
+        {
+            filteredTenantList = tenant_list
+                .Where(t => t.name.Contains(searchValue, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+        StateHasChanged();
     }
 
     private void Redirect(string path)

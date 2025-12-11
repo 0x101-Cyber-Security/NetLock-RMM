@@ -196,13 +196,12 @@ namespace Global.Initialization
                 // Delete old NetLock RMM User Agent from the registry, if it exists
                 Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Process");
         
-                // Write the NetLock RMM User Process to the registry, if it does not exist
-                Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM User Agent");
-                Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent", Application_Paths.netlock_user_process_uac_exe);
+                // Delete the NetLock RMM User Agent from the registry, if it exists (is now started interactively by the remote agent)
+                Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM User Agent");
                 
-                // Write the NetLock RMM Tray Icon to the registry, if it does not exist
+                // Delete old NetLock RMM Tray Icon from the registry, if it exists (is now started interactively by the remote agent)
                 Logging.Debug("Initialization.Health.User_Process", "Write to registry", "NetLock RMM Tray Icon");
-                Registry.HKLM_Write_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM Tray Icon", Application_Paths.tray_icon_icon_exe);
+                Registry.HKLM_Delete_Value(Application_Paths.hklm_run_directory_reg_path, "NetLock RMM Tray Icon");
             }
             else if (OperatingSystem.IsLinux())
             {

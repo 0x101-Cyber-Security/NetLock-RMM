@@ -353,7 +353,7 @@
             // Convert the object into a JSON string
             string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
 
-            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json, true);
 
             if (result == "0")
             {
@@ -433,7 +433,7 @@
             // Convert the object into a JSON string
             string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
 
-            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json, true);
 
             if (result == "0")
             {
@@ -483,8 +483,8 @@
             string json_string = JsonSerializer.Serialize(json);
 
             string url = Application_Settings.IsLiveEnvironment ? Application_Settings.Members_Portal_Api_Url_Live : Application_Settings.Members_Portal_Api_Url_Test;
-            url = url + "/api/community/scripts/request_script";
-            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json_string);
+            url = url + "/api/community/scripts/request-script";
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json_string, true);
 
             // 0 = imported, 1 = updated, 2 = script not found, 3 = error
             if (result == "0")

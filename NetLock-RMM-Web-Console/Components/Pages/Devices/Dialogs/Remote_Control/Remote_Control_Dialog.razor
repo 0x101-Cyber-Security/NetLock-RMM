@@ -27,6 +27,83 @@
 @implements IDisposable
 
 <style>
+    /* Animations */
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @@keyframes slideInFromLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes slideInFromRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @@keyframes pulse {
+        0%, 100% {
+            opacity: 1;
+        }
+        50% {
+            opacity: 0.6;
+        }
+    }
+
+    @@keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+
+    @@keyframes bounce {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    /* Animated elements */
+    .fade-in {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    .slide-in-left {
+        animation: slideInFromLeft 0.4s ease-out;
+    }
+
+    .slide-in-right {
+        animation: slideInFromRight 0.4s ease-out;
+    }
+
+    .pulse-animation {
+        animation: pulse 2s ease-in-out infinite;
+    }
 
     .image-wrapper {
         display: flex;
@@ -41,6 +118,7 @@
         overflow: auto;
         width: 100%;
         height: 80vh;
+        transition: all 0.3s ease;
     }
 
     .interactive-image {
@@ -50,6 +128,11 @@
         border-radius: 12px;
         user-select: none;
         box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, box-shadow 0.3s ease;
+    }
+
+    .interactive-image:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     }
      
     .chat-container {
@@ -61,6 +144,7 @@
          gap: 8px;
          background-color: rgba(0,0,0,0.02);
          border-radius: 8px;
+         transition: background-color 0.3s ease;
      }
 
     .date-divider {
@@ -68,6 +152,7 @@
         align-items: center;
         justify-content: center;
         margin: 12px 0;
+        animation: fadeIn 0.5s ease-out;
     }
 
     .date-badge {
@@ -76,21 +161,29 @@
         border-radius: 12px;
         font-size: 0.75rem;
         color: var(--mud-palette-text-secondary);
+        transition: transform 0.2s ease;
+    }
+
+    .date-badge:hover {
+        transform: scale(1.05);
     }
 
     .message-container {
         display: flex;
         margin-bottom: 8px;
         max-width: 85%;
+        animation: fadeIn 0.4s ease-out;
     }
 
     .own-message {
         align-self: flex-end;
         flex-direction: row-reverse;
+        animation: slideInFromRight 0.4s ease-out;
     }
 
     .other-message {
         align-self: flex-start;
+        animation: slideInFromLeft 0.4s ease-out;
     }
 
     .avatar-placeholder {
@@ -134,6 +227,12 @@
         word-break: break-word;
         white-space: pre-wrap;
         overflow-wrap: break-word;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .message-bubble:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
 
     .own-content .message-bubble {
@@ -145,6 +244,93 @@
         background-color: var(--mud-palette-surface);
         border-bottom-left-radius: 4px;
         box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Smooth scrolling */
+    .chat-container {
+        scroll-behavior: smooth;
+    }
+
+    /* Loading skeleton animation */
+    .skeleton-loading {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+    /* Button hover effects */
+    .mud-button {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .mud-button:hover {
+        transform: translateY(-2px);
+    }
+
+    .mud-button:active {
+        transform: translateY(0);
+    }
+
+    /* Icon button animations */
+    .mud-icon-button {
+        transition: transform 0.2s ease, background-color 0.2s ease;
+    }
+
+    .mud-icon-button:hover {
+        transform: scale(1.1);
+    }
+
+    .mud-icon-button:active {
+        transform: scale(0.95);
+    }
+
+    /* Progress linear animations */
+    .mud-progress-linear {
+        transition: all 0.3s ease;
+    }
+
+    /* Alert animations */
+    .mud-alert {
+        animation: fadeIn 0.5s ease-out;
+    }
+
+    /* Select animations */
+    .mud-select {
+        transition: all 0.3s ease;
+    }
+
+    /* Card/Paper animations */
+    .mud-paper {
+        transition: box-shadow 0.3s ease, transform 0.2s ease;
+    }
+
+    .mud-paper:hover {
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Avatar bounce */
+    .mud-avatar {
+        transition: transform 0.2s ease;
+    }
+
+    .mud-avatar:hover {
+        animation: bounce 0.5s ease;
+    }
+
+    /* Smooth transitions for all elements */
+    * {
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Loading overlay improvements */
+    .mud-overlay {
+        transition: opacity 0.3s ease;
+    }
+
+    /* Wave emoji animation */
+    .wave-emoji {
+        display: inline-block;
+        animation: bounce 1s ease infinite;
     }
 </style>
 
@@ -174,57 +360,76 @@
 
                     @if (!connected)
                     {
-                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Warning" Indeterminate="true">
-                            <MudText Typo="Typo.body1">The device is not connected to the NetLock RMM backend. Waiting for it to come back.</MudText>
-                        </MudProgressLinear>
+                        <div class="fade-in">
+                            <MudProgressLinear Class="mt-2 mb-2 pulse-animation" Size="Size.Medium" Color="Color.Warning" Indeterminate="true">
+                                <MudText Typo="Typo.body1">The device is not connected to the NetLock RMM backend. Waiting for it to come back.</MudText>
+                            </MudProgressLinear>
+                        </div>
+                    }
+                    else if (waitingForRemoteProcess)
+                    {
+                        <div class="fade-in">
+                            <MudProgressLinear Class="mt-2 mb-2 pulse-animation" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
+                                <MudText Typo="Typo.body1">Device is online. Waiting for remote control process to start...</MudText>
+                            </MudProgressLinear>
+                            
+                            <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Get_Users">Retry</MudButton>
+                        </div>
                     }
                     else if (!users.Any())
                     {
-                        <MudProgressLinear Class="mt-2 mb-2" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
-                            <MudText Typo="Typo.body1">Waiting for device.</MudText>
-                        </MudProgressLinear>
+                        <div class="fade-in">
+                            <MudProgressLinear Class="mt-2 mb-2 pulse-animation" Size="Size.Medium" Color="Color.Info" Indeterminate="true">
+                                <MudText Typo="Typo.body1">Waiting for device.</MudText>
+                            </MudProgressLinear>
+                        </div>
                     }
                     else if (String.IsNullOrEmpty(user))
                     {
-                        <MudAlert Class="mt-2" Icon="@Icons.Material.Filled.PersonOff" Severity="Severity.Error">No user selected. Please select a user.</MudAlert>
+                        <div class="fade-in">
+                            <MudAlert Class="mt-2" Icon="@Icons.Material.Filled.PersonOff" Severity="Severity.Error">No user selected. Please select a user.</MudAlert>
 
-                        <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Handle_User_Change" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
-                            @{
-                                foreach (string user in users)
-                                {
-                                    <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                @{
+                                    foreach (string user in users)
+                                    {
+                                        <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                    }
                                 }
-                            }
 
-                        </MudSelect>
-                        
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Get_Users">Fetch user sessions</MudButton>
+                            </MudSelect>
+                            
+                            <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Get_Users">Fetch user sessions</MudButton>
+                        </div>
                     }
                     else if (connected && !rendered && !connectionAllowed)
                     {
-                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Info" Indeterminate="true">
-                            <MudText Typo="Typo.body1">Screen access not granted. Awaiting system or user approval.</MudText>
-                        </MudProgressLinear>
-                        
-                        <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Remote_Get_Screen_Indexes" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
+                        <div class="fade-in">
+                            <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2 pulse-animation" Color="Color.Info" Indeterminate="true">
+                                <MudText Typo="Typo.body1">Screen access not granted. Awaiting system or user approval.</MudText>
+                            </MudProgressLinear>
+                            
+                            <MudSelect Class="ml-2 mt-2" T="string" @bind-Value="user" @bind-Value:after="Handle_User_Change" Label="@Localizer["user"]" AnchorOrigin="Origin.BottomCenter" TransformOrigin="Origin.TopCenter">
 
-                            @{
-                                foreach (string user in users)
-                                {
-                                    <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                @{
+                                    foreach (string user in users)
+                                    {
+                                        <MudSelectItem T="string" Value="@user">@user</MudSelectItem>
+                                    }
                                 }
-                            }
 
-                        </MudSelect>
-                        
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Get_Users">Fetch user sessions</MudButton>
-                        <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Doorbell" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Request_Access">Request screen access from user (again)</MudButton>
+                            </MudSelect>
+                            
+                            <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.People" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Get_Users">Fetch user sessions</MudButton>
+                            <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Doorbell" Variant="Variant.Filled" Size="Size.Small" Color="Color.Info" FullWidth="true" OnClick="Remote_Request_Access">Request screen access from user (again)</MudButton>
+                        </div>
                     }
                     else if (connected && !rendered && connectionAllowed)
                     {
-                        <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2" Color="Color.Warning" Indeterminate="true">
-                            <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background. Please wait.</MudText>
+                        <div class="fade-in">
+                            <MudProgressLinear Size="Size.Medium" Class="mt-2 mb-2 pulse-animation" Color="Color.Warning" Indeterminate="true">
+                                <MudText Typo="Typo.body1">No screen output from user. Attempting auto detect in the background. Please wait.</MudText>
                         </MudProgressLinear>
                         
                         <MudButton Class="mt-2" StartIcon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" Size="Size.Small" Color="Color.Default" FullWidth="true" OnClick="Remote_Get_Users">Fetch users</MudButton>
@@ -239,11 +444,12 @@
                             }
 
                         </MudSelect>
+                        </div>
                     }
                     else
                     {
                         <!-- UI bar with MudSelects and Zoom -->
-                        <div style="
+                        <div class="fade-in" style="
                                         display: flex;
                                         align-items: center;
                                         flex-wrap: wrap;
@@ -704,20 +910,36 @@
                 Logging.Handler.Debug("ReceiveClientResponseCheckConnection", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
-                await InvokeAsync(() =>
+                await InvokeAsync(async () =>
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
+                        
                         if (command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
                         {
                             connected = false;
                             rendered = false;
-                            Remote_Check_Connection();
+                            
+                            // Start connection check timer if not already running
+                            if (!connection_check_timer_running)
+                            {
+                                await Connection_Check_Timer_Setup();
+                            }
                         }
                         else if (command == "Remote device is connected with the NetLock RMM backend.")
                         {
                             connected = true;
-                            Reconnect();
+                            
+                            // Stop connection check timer
+                            if (connection_check_timer_running)
+                            {
+                                await Connection_Check_Timer_Stop();
+                            }
+                            
+                            // Get users to continue
+                            await Remote_Get_Users();
                         }
 
                         StateHasChanged();
@@ -739,12 +961,33 @@
                 {
                     try
                     {
-                        if (connected && command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
+                        if (command == "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.")
                         {
-                            connected = false;
-                            rendered = false;
-                            StateHasChanged();
-                            await Remote_Check_Connection();
+                            if (connected)
+                            {
+                                // Device went offline - reset dialog to initial state
+                                connected = false;
+                                rendered = false;
+                                waitingForRemoteProcess = false;
+                                connectionAllowed = false;
+                                user = String.Empty;
+                                users.Clear();
+                                previous_users.Clear();
+                                screens.Clear();
+                                screen_index = "0";
+                                
+                                // Stop screen refresh timer
+                                if (refresh_screen_timer_running)
+                                {
+                                    await Remote_Screen_Refresh_Timer_Stop();
+                                }
+                                
+                                // Start connection check timer if not already running
+                                if (!connection_check_timer_running)
+                                {
+                                    await Connection_Check_Timer_Setup();
+                                }
+                            }
                         }
 
                         StateHasChanged();
@@ -765,6 +1008,8 @@
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
                         // Debug: Check first bytes
                         if (Web_Console.loggingEnabled && imageBytes.Length > 20)
                         {
@@ -818,7 +1063,7 @@
                         await JSRuntime.InvokeVoidAsync("updateImageBlob", actualImageBytes);
 
                         // Check if recording is enabled
-                        //OSSCH_START ab4b401f-42ce-41c2-8163-3205d5db7a05 //OSSCH_END
+                        //OSSCH_START a0c7d346-690f-4f03-a561-859fc679b703 //OSSCH_END
 
                         // Prüfung auf leeres Bild
                         if (actualImageBytes.Length < 1000) // Anpassen je nach minimaler Bildgröße
@@ -855,6 +1100,7 @@
                         {
                             connected = true;
                             rendered = true;
+                            waitingForRemoteProcess = false;
                             remoteScreenFetchTries = 0;
                         }
 
@@ -873,41 +1119,131 @@
                 Logging.Handler.Debug("ReceiveClientResponseRemoteControlUsers", "command", command);
 
                 // Use InvokeAsync to reflect changes on UI immediately
-                await InvokeAsync(() =>
+                await InvokeAsync(async () =>
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
+                        
+                        // Check if remote process is not running
+                        if (command == "Command executed. No result returned.")
+                        {
+                            // Device is online but remote process is not running - reset dialog to initial state
+                            connected = true;
+                            rendered = false;
+                            waitingForRemoteProcess = true;
+                            connectionAllowed = false;
+                            user = String.Empty;
+                            users.Clear();
+                            previous_users.Clear();
+                            screens.Clear();
+                            screen_index = "0";
+                            
+                            // Stop all timers
+                            if (connection_check_timer_running)
+                            {
+                                await Connection_Check_Timer_Stop();
+                            }
+                            
+                            if (refresh_screen_timer_running)
+                            {
+                                await Remote_Screen_Refresh_Timer_Stop();
+                            }
+                            
+                            // Start fetch users timer to keep retrying
+                            if (!fetch_users_timer_running)
+                            {
+                                await Fetch_Users_Timer_Setup();
+                            }
+                            
+                            StateHasChanged();
+                            return;
+                        }
+                        
+                        // Save previous users
+                        previous_users = new List<string>(users);
+                        
                         users.Clear();
                         users.AddRange(command.Split(',').Select(user => user));
 
-                        if (users.Count() == 0)
+                        // Check for new users - but don't show dialog if we were waiting for remote process
+                        var newUsers = users.Except(previous_users).ToList();
+                        
+                        if (newUsers.Any() && previous_users.Any() && !waitingForRemoteProcess)
                         {
-                            user = String.Empty;
+                            // New user detected - show popup (only if not waiting for remote process)
+                            foreach (var newUser in newUsers)
+                            {
+                                var result = await DialogService.ShowMessageBox(
+                                    "New user detected",
+                                    $"A new user '{newUser}' has been detected. Do you want to switch to this user's session?",
+                                    yesText: "Yes, switch",
+                                    cancelText: "No"
+                                );
+
+                                if (result == true)
+                                {
+                                    // Switch user and reset connection state
+                                    user = newUser;
+                                    connectionAllowed = false;
+                                    rendered = false;
+                                    screen_index = "0";
+                                    
+                                    // Get screen indexes for the new user
+                                    await Remote_Get_Screen_Indexes();
+                                    
+                                    // Request access for the new user session
+                                    await Remote_Request_Access();
+                                }
+                            }
                         }
-                        else if (users.Count() == 1)
+                        else if (users.Count() > 0 && String.IsNullOrEmpty(user))
                         {
-                            user = users[0]; // no other users logged in, switch to session 0
-                        }
-                        else if (users.Count() > 1)
-                        {
-                            user = users[1]; // other users are present. Switch to first user session
+                            // Initial user selection - set first user
+                            if (users.Count() == 1)
+                            {
+                                user = users[0]; // no other users logged in, switch to session 0
+                            }
+                            else if (users.Count() > 1)
+                            {
+                                user = users[1]; // other users are present. Switch to first user session
+                            }
                         }
 
                         if (users.Count() > 0)
                         {
                             connected = true;
-                            Remote_Request_Access();
+                            waitingForRemoteProcess = false;
+                            
+                            if (String.IsNullOrEmpty(user))
+                            {
+                                // No user selected yet - will be handled by UI
+                            }
+                            else if (!previous_users.Any())
+                            {
+                                // First time getting users after reset - request access and start screen sharing
+                                await Remote_Request_Access();
+                                
+                                // Start screen refresh timer
+                                if (!refresh_screen_timer_running)
+                                {
+                                    await Remote_Screen_Refresh_Timer_Setup();
+                                }
+                            }
+                            
+                            // Start fetch users timer if not already running
+                            if (!fetch_users_timer_running)
+                            {
+                                await Fetch_Users_Timer_Setup();
+                            }
                         }
                         else
                         {
                             connected = false;
                         }
-
-                        // if more users are available do not select the device name
                         
                         StateHasChanged();
-
-                        //Remote_Get_Screen_Indexes();
                     }
                     catch (Exception ex)
                     {
@@ -926,6 +1262,9 @@
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
+                        
                         screens.Clear();
                         screens = new List<int>();
 
@@ -953,6 +1292,8 @@
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
 
                         // Set the clipboard content
                         if (!String.IsNullOrEmpty(command) && command.Contains("clipboard_content%"))
@@ -989,6 +1330,8 @@
                 {
                     try
                     {
+                        // Update last response time
+                        lastResponseTime = DateTime.Now;
 
                         string name = String.Empty;
                         string message = string.Empty;
@@ -1029,7 +1372,7 @@
 
                 
                 // Use InvokeAsync to reflect changes on UI immediately
-                await InvokeAsync(() =>
+                await InvokeAsync(async () =>
                 {
                     try
                     {
@@ -1037,6 +1380,9 @@
                         if (command == "accepted")
                         {
                             connectionAllowed = true;
+                            
+                            // Immediately trigger a screen refresh to start getting images
+                            await Remote_Refresh_Screen();
                         }
                         else if (command == "declined")
                         {
@@ -1102,6 +1448,12 @@
 
         //await Remote_Refresh_Screen();
         await Remote_Screen_Refresh_Timer_Setup();
+        
+        // Start connection check timer to monitor device status
+        if (!connection_check_timer_running)
+        {
+            await Connection_Check_Timer_Setup();
+        }
     }
 
     #endregion
@@ -1112,15 +1464,29 @@
     private bool refresh_screen_timer_running = false;
     private bool rendered = false;
     private bool connectionAllowed = false;
+    private bool waitingForRemoteProcess = false;
     private string screen_index = "0";
     private List<int> screens = new List<int>();
     private string user = String.Empty;
     private List<string> users = new List<string>();
+    private List<string> previous_users = new List<string>();
 
     // Loop to refresh the screen
     private System.Threading.Timer remote_screen_refresh_timer;
     private int remote_screen_refresh_ms = 400;
     private int _quality = 0;
+    
+    // User fetch timer
+    private System.Threading.Timer fetch_users_timer;
+    private bool fetch_users_timer_running = false;
+    
+    // Connection check timer
+    private System.Threading.Timer connection_check_timer;
+    private bool connection_check_timer_running = false;
+    
+    // Track last response to detect offline devices
+    private DateTime lastResponseTime = DateTime.Now;
+    private const int ResponseTimeoutSeconds = 15; // Consider offline after 15 seconds of no response
 
     private async Task Remote_Screen_Refresh_Timer_Setup()
     {
@@ -1153,6 +1519,66 @@
         }
 
         StateHasChanged();
+    }
+    
+    private async Task Fetch_Users_Timer_Setup()
+    {
+        fetch_users_timer_running = true;
+
+        fetch_users_timer = new System.Threading.Timer(async (e) =>
+        {
+            await Remote_Get_Users();
+        }, null, 0, 15000); // 15 Sekunden
+    }
+    
+    private async Task Fetch_Users_Timer_Stop()
+    {
+        fetch_users_timer_running = false;
+
+        if (fetch_users_timer != null)
+        {
+            fetch_users_timer.Dispose();
+            fetch_users_timer = null;
+        }
+    }
+    
+    private async Task Connection_Check_Timer_Setup()
+    {
+        connection_check_timer_running = true;
+
+        connection_check_timer = new System.Threading.Timer(async (e) =>
+        {
+            // Check if we haven't received a response in a while
+            if ((DateTime.Now - lastResponseTime).TotalSeconds > ResponseTimeoutSeconds)
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (connected)
+                    {
+                        connected = false;
+                        rendered = false;
+                        StateHasChanged();
+                    }
+                });
+            }
+            
+            // Always check connection when offline
+            if (!connected)
+            {
+                await Remote_Check_Connection();
+            }
+        }, null, 0, 30000); // Check every 30 seconds
+    }
+    
+    private async Task Connection_Check_Timer_Stop()
+    {
+        connection_check_timer_running = false;
+
+        if (connection_check_timer != null)
+        {
+            connection_check_timer.Dispose();
+            connection_check_timer = null;
+        }
     }
 
     private async Task Remote_Check_Connection()
@@ -1364,6 +1790,20 @@
         }
     }
 
+    private async Task Handle_User_Change()
+    {
+        // Reset connection state when user changes
+        connectionAllowed = false;
+        rendered = false;
+        screen_index = "0";
+        
+        // Get screen indexes for the new user
+        await Remote_Get_Screen_Indexes();
+        
+        // Request access for the new user session
+        await Remote_Request_Access();
+    }
+    
     private async Task Remote_Get_Screen_Indexes()
     {
 
@@ -2678,6 +3118,12 @@
 
             remote_screen_refresh_timer?.Dispose();
             refresh_screen_timer_running = false;
+            
+            fetch_users_timer?.Dispose();
+            fetch_users_timer_running = false;
+            
+            connection_check_timer?.Dispose();
+            connection_check_timer_running = false;
 
             if (remote_server_client is not null)
             {
@@ -2709,6 +3155,7 @@
     public async Task DisposeOnUnload()
     {
         await Remote_Screen_Refresh_Timer_Stop();
+        await Fetch_Users_Timer_Stop();
         await Remote_End_Remote_Session();
 
         if (remote_server_client is not null)

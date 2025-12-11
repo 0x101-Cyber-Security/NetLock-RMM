@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Globalization;
 using Windows.Helper.ScreenControl;
 using System.Runtime.InteropServices;
+using Windows.Helper;
 using Global.Configuration;
 using Global.Encryption;
 
@@ -66,6 +67,9 @@ namespace NetLock_RMM_Agent_Remote
         private bool _agentSettingsRemoteScreenControlUnattendedAccess = false;
         private bool _remoteScreenControlAccessGranted = false;
         private List<string> _remoteScreenControlGrantedUsers = new List<string>();
+        
+        // Process monitoring flags
+        private bool _isCheckingUserProcesses = false;
 
         public class Device_Identity
         {
@@ -149,7 +153,7 @@ if (Agent.debug_mode)
                         
                         // Start the timer to check the user process status every 1 minute
                         user_process_monitoringCheckTimer = new Timer(async (e) => await CheckUserProcessStatus(), null,
-                            TimeSpan.Zero, TimeSpan.FromMinutes(1));
+                            TimeSpan.Zero, TimeSpan.FromSeconds(30));
                         
                         // Start the timer to check the tray icon process status every 1 minute
                         //tray_icon_process_monitoringCheckTimer = new Timer(async (e) => await CheckTrayIconProcessStatus(), null,
@@ -165,8 +169,12 @@ if (Agent.debug_mode)
                         // Establishing a connection to the local server
                         _ = Task.Run(async () => await Local_Server_Connect()); // Läuft im Hintergrund
                         
-                        // Check user process status as early as possible without blocking. This helps with device reboot scenarios
-                        _ = Task.Run(async () => await CheckUserProcessStatus());
+                        // Check user process status with a small delay to allow Windows sessions to stabilize during fast login
+                        _ = Task.Run(async () => 
+                        {
+                            await Task.Delay(15000);
+                            await CheckUserProcessStatus();
+                        });
                     }
                     catch (Exception ex)
                     {
@@ -850,9 +858,8 @@ if (Agent.debug_mode)
                         }
                         else if (command_object.type == 6 && _agentSettingsRemoteScreenControlEnabled) // Tray Icon - Show chat window
                         {
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command);
- 
+                            if (Agent.debug_mode)
+                                Logging.Debug("Service.Setup_SignalR", "Tray icon command", command_object.command);
                             
                             //  Create the JSON object
                             var jsonObject = new
@@ -864,9 +871,9 @@ if (Agent.debug_mode)
 
                             // Convert the object into a JSON string
                             string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
-
+                            
+                            if (Agent.debug_mode)
+                                Logging.Debug("Service.Setup_SignalR", "Remote Control json", json);
 
                             // Send through local server to tray icon user process
                             await SendToClient(command_object.remote_control_username + "tray", json);
@@ -890,10 +897,28 @@ if (Agent.debug_mode)
                                 {
                                     _remoteScreenControlGrantedUsers.Add(command_object.remote_control_username);
                                     result = "accepted";
+                                    
+                                    // Disable windows fast logon to prevent issues with cached credentials
+                                    if (OperatingSystem.IsWindows())
+                                    {
+                                        // HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Winlogon
+                                        
+                                        // SyncForegroundPolicy = 1 (disables async logon)
+                                        Registry.HKLM_Write_Value(@"Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "SyncForegroundPolicy", "1");
+                                    }
                                 }
                                 else
                                 {
-
+                                    // If windows fast logon is disabled, enable it back to previous state
+                                    if (OperatingSystem.IsWindows())
+                                    {
+                                        // HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Winlogon
+                                        
+                                        // SyncForegroundPolicy = 0 or delete (enables async logon)
+                                        Registry.HKLM_Delete_Value(@"Software\Microsoft\Windows NT\CurrentVersion\Winlogon", "SyncForegroundPolicy");
+                                    }
+                                    
+                                    // Send request to tray icon to show chat window
                                     var jsonObject = new
                                     {
                                         response_id = command_object.response_id,
@@ -902,9 +927,9 @@ if (Agent.debug_mode)
                                     };
 
                                     string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
-if (Agent.debug_mode)
-    Logging.Debug("Service.Setup_SignalR", "Remote Control access request json", json);
-
+                                    
+                                    if (Agent.debug_mode)
+                                        Logging.Debug("Service.Setup_SignalR", "Remote Control access request json", json);
 
                                     await SendToClient(command_object.remote_control_username + "tray", json);
 
@@ -996,42 +1021,204 @@ if (Agent.debug_mode)
         {
             if (!OperatingSystem.IsWindows()) return;
 
+            // Prevent multiple simultaneous executions
+            if (_isCheckingUserProcesses)
+            {
+                if (Agent.debug_mode)
+                    Logging.Debug("Service.CheckUserProcess", "Already checking processes, skipping", "");
+                return;
+            }
+
+            _isCheckingUserProcesses = true;
+
             try
             {
-                bool processIsRunning = false;
+                // Hole alle aktiven Sessions (inkl. Anmeldebildschirm)
+                var activeSessions = Windows.Helper.ScreenControl.WindowsSession.GetActiveSessions();
+                
+                if (Agent.debug_mode)
+                    Logging.Debug("Service.CheckUserProcess", "Active sessions found", $"Count: {activeSessions.Count}");
 
-                var allProcesses = Process.GetProcessesByName("NetLock_RMM_User_Process");
-
-                // Check if the user process is running
-                foreach (var process in allProcesses)
+                // Prüfe und starte NetLock_RMM_User_Process (System-Kontext) - nur einmal, unabhängig von Session
+                // Dieser Prozess läuft als SYSTEM und sollte nur einmal existieren
+                bool systemProcessRunning = false;
+                var systemProcesses = Process.GetProcessesByName("NetLock_RMM_User_Process");
+                
+                if (Agent.debug_mode)
+                    Logging.Debug("Service.CheckUserProcess", 
+                        "Checking system process", 
+                        $"Found {systemProcesses.Length} NetLock_RMM_User_Process instances");
+                
+                foreach (var process in systemProcesses)
                 {
                     if (process != null && !process.HasExited)
                     {
-                        processIsRunning = true;
+                        // Prüfe Session-ID - SYSTEM Prozess sollte in Session 0 oder 1 laufen
+                        uint processSessionId = Windows.Helper.ScreenControl.WindowsSession.GetProcessSessionId(process.Id);
                         
                         if (Agent.debug_mode)
-                            Logging.Debug("Service.CheckUserProcess", "User process is running.", $"PID: {process.Id}");
-
-                        break; // User process is running, no action needed
+                            Logging.Debug("Service.CheckUserProcess", 
+                                "Found system process instance", 
+                                $"PID: {process.Id}, SessionId: {processSessionId}, ProcessName: NetLock_RMM_User_Process");
+                        
+                        // Wenn wir mindestens einen SYSTEM-Prozess gefunden haben, ist er schon aktiv
+                        systemProcessRunning = true;
+                        break;
                     }
                 }
 
-                if (!processIsRunning)
+                if (!systemProcessRunning)
                 {
+                    if (Agent.debug_mode)
+                        Logging.Debug("Service.CheckUserProcess", 
+                            "Starting system process",
+                            $"ProcessName: NetLock_RMM_User_Process, Path: {Application_Paths.netlock_rmm_user_agent_path}");
+
                     bool success = Windows.Helper.ScreenControl.Win32Interop.CreateInteractiveSystemProcess(
                         commandLine: Application_Paths.netlock_rmm_user_agent_path,
-                        targetSessionId: 0,
+                        targetSessionId: 0, // System session
                         hiddenWindow: false,
                         out var procInfo
                     );
+
+                    if (Agent.debug_mode)
+                        Logging.Debug("Service.CheckUserProcess", 
+                            "System process start result", 
+                            $"Success: {success}, ProcessName: NetLock_RMM_User_Process");
+                    
+                    // Warte kurz damit der Prozess Zeit hat zu starten
+                    if (success)
+                        await Task.Delay(500);
+                }
+                else if (Agent.debug_mode)
+                {
+                    Logging.Debug("Service.CheckUserProcess", 
+                        "System process already running, skipping start",
+                        $"ProcessName: NetLock_RMM_User_Process");
+                }
+
+                // Prüfe und starte User-Prozesse für jede angemeldete Session
+                foreach (var sessionId in activeSessions)
+                {
+                    // Prüfe ob ein Benutzer angemeldet ist
+                    bool isUserLoggedIn = Windows.Helper.ScreenControl.WindowsSession.IsUserLoggedIntoSession(sessionId);
+                    
+                    // Nur für angemeldete User (nicht für Login-Bildschirm/Session 0)
+                    if (!isUserLoggedIn || sessionId == 0)
+                        continue;
+
+                    // Für angemeldete User: Starte NetLock_RMM_User_Process_UAC im User-Kontext
+                    string processName = "NetLock_RMM_User_Process_UAC";
+                    string processPath = Application_Paths.netlock_rmm_user_agent_uac_path;
+
+                    bool processIsRunning = false;
+                    var allProcesses = Process.GetProcessesByName(processName);
+
+                    // Prüfe, ob der Prozess bereits in dieser Session läuft
+                    foreach (var process in allProcesses)
+                    {
+                        if (process != null && !process.HasExited)
+                        {
+                            uint processSessionId = Windows.Helper.ScreenControl.WindowsSession.GetProcessSessionId(process.Id);
+
+                            if (processSessionId == sessionId)
+                            {
+                                processIsRunning = true;
+
+                                if (Agent.debug_mode)
+                                    Logging.Debug("Service.CheckUserProcess",
+                                        "User process is running.",
+                                        $"PID: {process.Id}, SessionId: {sessionId}, ProcessName: {processName}");
+                                break;
+                            }
+                        }
+                    }
+
+                    // Starte Prozess nur wenn er in dieser Session nicht läuft
+                    if (!processIsRunning)
+                    {
+                        if (Agent.debug_mode)
+                            Logging.Debug("Service.CheckUserProcess",
+                                "Starting user process in session",
+                                $"SessionId: {sessionId}, ProcessName: {processName}, Path: {processPath}");
+
+                        // Für angemeldete User: Starte im User-Kontext
+                        bool success = Windows.Helper.ScreenControl.Win32Interop.CreateProcessInUserSession(
+                            commandLine: processPath,
+                            targetSessionId: (int)sessionId,
+                            hiddenWindow: false,
+                            out var procInfo
+                        );
+
+                        if (Agent.debug_mode)
+                            Logging.Debug("Service.CheckUserProcess",
+                                "Process start result",
+                                $"Success: {success}, SessionId: {sessionId}, ProcessName: {processName}");
+
+                        // Warte kurz damit der Prozess Zeit hat zu starten
+                        if (success)
+                            await Task.Delay(500);
+                    }
+
+                    // Prüfe und starte Tray Icon für diese User-Session
+                    bool trayIconRunning = false;
+                    var trayIconProcesses = Process.GetProcessesByName("NetLock_RMM_Tray_Icon");
+
+                    foreach (var process in trayIconProcesses)
+                    {
+                        if (process != null && !process.HasExited)
+                        {
+                            uint traySessionId = Windows.Helper.ScreenControl.WindowsSession.GetProcessSessionId(process.Id);
+
+                            if (traySessionId == sessionId)
+                            {
+                                trayIconRunning = true;
+
+                                if (Agent.debug_mode)
+                                    Logging.Debug("Service.CheckUserProcess",
+                                        "Tray icon is running.",
+                                        $"PID: {process.Id}, SessionId: {sessionId}");
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!trayIconRunning)
+                    {
+                        if (Agent.debug_mode)
+                            Logging.Debug("Service.CheckUserProcess",
+                                "Starting tray icon in session",
+                                $"SessionId: {sessionId}, Path: {Application_Paths.program_files_tray_icon_path}");
+
+                        bool traySuccess = Windows.Helper.ScreenControl.Win32Interop.CreateProcessInUserSession(
+                            commandLine: Application_Paths.program_files_tray_icon_path,
+                            targetSessionId: (int)sessionId,
+                            hiddenWindow: false,
+                            out var trayProcInfo
+                        );
+
+                        if (Agent.debug_mode)
+                            Logging.Debug("Service.CheckUserProcess",
+                                "Tray icon start result",
+                                $"Success: {traySuccess}, SessionId: {sessionId}");
+
+                        if (traySuccess)
+                            await Task.Delay(500);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Logging.Error("Service.CheckUserProcess", "Exception while checking or starting user processes.",
+                Logging.Error("Service.CheckUserProcess", 
+                    "Exception while checking or starting user processes.",
                     ex.ToString());
             }
+            finally
+            {
+                _isCheckingUserProcesses = false;
+            }
         }
+
 
         #endregion
         
@@ -1614,23 +1801,23 @@ if (Agent.debug_mode)
                     _agentSettingsRemoteServiceManagerEnabled = agentSettings.RemoteServiceManagerEnabled;
                     _agentSettingsRemoteScreenControlEnabled = agentSettings.RemoteScreenControlEnabled;
                     _agentSettingsRemoteScreenControlUnattendedAccess = agentSettings.RemoteScreenControlUnattendedAccess;
- 
+
                     Logging.Debug("Service.LoadServerConfig", "Agent settings loaded",
                         $"RemoteServiceEnabled: {_agentSettingsRemoteServiceEnabled}, RemoteShellEnabled: {_agentSettingsRemoteShellEnabled}, RemoteFileBrowserEnabled: {_agentSettingsRemoteFileBrowserEnabled}, RemoteTaskManagerEnabled: {_agentSettingsRemoteTaskManagerEnabled}, RemoteServiceManagerEnabled: {_agentSettingsRemoteServiceManagerEnabled}, RemoteScreenControlEnabled: {_agentSettingsRemoteScreenControlEnabled}");
                 }
-                
+
                 // Get access key & authorized state
                 access_key = Global.Initialization.Server_Config.Access_Key();
                 authorized = Global.Initialization.Server_Config.Authorized();
-                
+
                 // Read device_identity.json file & decrypt
                 string jsonString = await File.ReadAllTextAsync(Application_Paths.device_identity_json_path);
                 device_identity_json = String_Encryption.Decrypt(jsonString, Application_Settings.NetLock_Local_Encryption_Key);
 if (Agent.debug_mode)
     Logging.Debug("Service.LoadServerConfig", "Device identity loaded", device_identity_json);
 
-                
-                // Check servers | We do not want to spam the server with requests here. 
+
+                // Check servers | We do not want to spam the server with requests here.
                 if (authorized && !remote_server_status || !file_server_status)
                     await Global.Initialization.Check_Connection.Check_Servers();
             }

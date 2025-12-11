@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Timers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -18,7 +19,7 @@ using NetLock_RMM_Web_Console.Configuration;
 
 namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 {
-    public partial class Devices
+    public partial class Devices : IDisposable
     {
 
         #region Permissions System
@@ -111,6 +112,8 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         #endregion
 
         private bool _isDarkMode = false;
+        private System.Timers.Timer? _autoRefreshTimer;
+        private bool _isRefreshing = false;
 
         protected override async Task OnInitializedAsync()
         {
@@ -160,6 +163,9 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             await Remote_Setup_SignalR();
 
+            // Start auto-refresh timer (30 seconds)
+            StartAutoRefreshTimer();
+
             loading_overlay = false;
             StateHasChanged();
         }
@@ -174,9 +180,6 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
             try
             {
                 members_portal_license_limit_reached = await Classes.Members_Portal.Handler.Check_License_Limit_Reached();
-
-                members_portal_license_count = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT COUNT(*) FROM devices WHERE authorized = '1';", "COUNT(*)"));
-                members_portal_license_limit = Convert.ToInt32(await Classes.MySQL.Handler.Quick_Reader("SELECT members_portal_licenses_max FROM settings;", "members_portal_licenses_max"));
             }
             catch (Exception ex)
             {
@@ -201,6 +204,7 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         private string group_id = String.Empty;
 
         //Device information
+        private bool deviceConnected = false;
         public string agent_version = String.Empty;
         public string operating_system = String.Empty;
         public string architecture = String.Empty;
@@ -234,7 +238,16 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
         public string applications_services = String.Empty;
         public string applications_drivers = String.Empty;
         public string policy_name = String.Empty;
-
+        
+        // Device policy config
+        private bool policyRemoteServiceEnabled = false;
+        private bool policyRemoteShellEnabled = false;
+        private bool policyRemoteFileBrowserEnabled = false;
+        private bool policyRemoteTaskManagerEnabled = false;
+        private bool policyRemoteServiceManagerEnabled = false;
+        private bool policyRemoteScreenControlEnabled = false;
+        private bool policyRemoteScreenControlUnattendedAccess = false;
+        
         #region Device Table
 
         private int devicesTableRowsPerPage = 25;
@@ -308,7 +321,19 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
                 notes_expanded = false;
             else
                 notes_expanded = true;
-
+            
+            // Get remote connected state
+            deviceConnected = row.connected;
+            
+            // Get policy remote features
+            (policyRemoteServiceEnabled,
+             policyRemoteShellEnabled,
+             policyRemoteFileBrowserEnabled,
+             policyRemoteTaskManagerEnabled,
+             policyRemoteServiceManagerEnabled,
+             policyRemoteScreenControlEnabled,
+             policyRemoteScreenControlUnattendedAccess) = await Classes.MySQL.Handler.GetPolicyRemoteFeatureSettings(row.device_id);
+            
             loading_overlay = false;
 
             StateHasChanged();
@@ -403,6 +428,95 @@ namespace NetLock_RMM_Web_Console.Components.Pages.Devices
 
             await AfterInitializedAsync();
         }
+
+        #region Auto-Refresh Timer
+
+        private void StartAutoRefreshTimer()
+        {
+            try
+            {
+                // Create timer with 30 second interval
+                _autoRefreshTimer = new System.Timers.Timer(30000);
+                _autoRefreshTimer.Elapsed += OnAutoRefreshTimer;
+                _autoRefreshTimer.AutoReset = true;
+                _autoRefreshTimer.Enabled = true;
+                
+                Logging.Handler.Debug("/devices -> StartAutoRefreshTimer", "Timer", "Auto-refresh timer started (30 seconds)");
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> StartAutoRefreshTimer", "Error", ex.ToString());
+            }
+        }
+
+        private async void OnAutoRefreshTimer(object? sender, ElapsedEventArgs e)
+        {
+            try
+            {
+                // Prevent multiple simultaneous refreshes
+                if (_isRefreshing)
+                {
+                    Logging.Handler.Debug("/devices -> OnAutoRefreshTimer", "Skip", "Already refreshing");
+                    return;
+                }
+
+                _isRefreshing = true;
+                
+                Logging.Handler.Debug("/devices -> OnAutoRefreshTimer", "Refresh", "Starting silent background refresh");
+
+                // Silent refresh without showing loading overlay
+                await InvokeAsync(async () =>
+                {
+                    try
+                    {
+                        // Refresh device list silently
+                        await Get_Clients_OverviewAsync(silent: true);
+                        
+                        // Update UI without disturbing user focus
+                        StateHasChanged();
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/devices -> OnAutoRefreshTimer", "Refresh error", ex.ToString());
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> OnAutoRefreshTimer", "Error", ex.ToString());
+            }
+            finally
+            {
+                _isRefreshing = false;
+            }
+        }
+
+        private void StopAutoRefreshTimer()
+        {
+            try
+            {
+                if (_autoRefreshTimer != null)
+                {
+                    _autoRefreshTimer.Stop();
+                    _autoRefreshTimer.Elapsed -= OnAutoRefreshTimer;
+                    _autoRefreshTimer.Dispose();
+                    _autoRefreshTimer = null;
+                    
+                    Logging.Handler.Debug("/devices -> StopAutoRefreshTimer", "Timer", "Auto-refresh timer stopped");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> StopAutoRefreshTimer", "Error", ex.ToString());
+            }
+        }
+
+        public void Dispose()
+        {
+            StopAutoRefreshTimer();
+        }
+
+        #endregion
 
         private void Device_Information_Expansion_Status()
         {
@@ -3253,6 +3367,8 @@ WHERE device_id = @deviceId");
         public class MySQL_Entity
         {
             public string device_id { get; set; } = "Empty";
+            public bool connected { get; set; } = false;
+            public string access_key { get; set; } = "Empty";
             public string device_name { get; set; } = "Empty";
             public string label { get; set; } = "Empty";
             public string tenant_name { get; set; } = "Empty";
@@ -3274,20 +3390,28 @@ WHERE device_id = @deviceId");
         }
 
         public List<MySQL_Entity> mysql_data;
+        
+        public static string connectedDevicesAccessKeys = String.Empty;
 
-        private async Task Get_Clients_OverviewAsync()
+        private async Task Get_Clients_OverviewAsync(bool silent = false)
         {
             string tenant_name = await localStorage.GetItemAsync<string>("tenant_name");
             string group_name = await localStorage.GetItemAsync<string>("group_name");
             string location_name = await localStorage.GetItemAsync<string>("location_name");
             string query = null;
 
-            mysql_data = new List<MySQL_Entity>();
-
+            // Only create new list if not in silent mode (to preserve references)
+            var tempMysqlData = silent ? new List<MySQL_Entity>() : null;
+            if (!silent)
+                mysql_data = new List<MySQL_Entity>();
+            
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
             try
             {
+                // Get list of remote connected devices from the server backend
+                string tempConnectedDevicesAccessKeys = await NetLock_RMM_Web_Console.Classes.Helper.Http.Get_Request_With_Api_Key(Configuration.Web_Console.publicOverrideUrl + "/admin/devices/connected", false);
+                
                 await conn.OpenAsync();
 
                 MySqlCommand command;
@@ -3334,6 +3458,7 @@ WHERE device_id = @deviceId");
                             MySQL_Entity entity = new MySQL_Entity
                             {
                                 device_id = reader["id"].ToString() ?? String.Empty,
+                                access_key = reader["access_key"].ToString() ?? String.Empty,
                                 device_name = reader["device_name"].ToString() ?? String.Empty,
                                 label = reader["label"].ToString() ?? String.Empty,
                                 tenant_name = reader["tenant_name"].ToString() ?? String.Empty,
@@ -3354,9 +3479,42 @@ WHERE device_id = @deviceId");
                                 policy = await Handler.GetAssignedDevicePolicyByDeviceId(reader["id"].ToString() ?? String.Empty),
                             };
 
-                            mysql_data.Add(entity);
+                            if (silent)
+                                tempMysqlData.Add(entity);
+                            else
+                                mysql_data.Add(entity);
                         }
                     }
+                }
+                
+                // Now iterate through the data and set the connected status based on the access keys
+                var dataToUpdate = silent ? tempMysqlData : mysql_data;
+                foreach (var device in dataToUpdate)
+                {
+                    try
+                    {
+                        if (tempConnectedDevicesAccessKeys.Contains(device.access_key))
+                            device.connected = true;                        
+                        else
+                            device.connected = false;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Handler.Error("/devices -> Get_Clients_OverviewAsync", "Set_Connected_Status",
+                            ex.ToString());
+                    }
+                }
+                
+                // In silent mode, update the main data only after successful completion
+                if (silent)
+                {
+                    mysql_data = tempMysqlData;
+                    connectedDevicesAccessKeys = tempConnectedDevicesAccessKeys;
+                    Logging.Handler.Debug("/devices -> Get_Clients_OverviewAsync", "Silent update", $"Updated {mysql_data.Count} devices");
+                }
+                else
+                {
+                    connectedDevicesAccessKeys = tempConnectedDevicesAccessKeys;
                 }
             }
             catch (Exception ex)
@@ -3376,14 +3534,14 @@ WHERE device_id = @deviceId");
                 await Get_Clients_OverviewAsync();
                 return;
             }
-
+            
             string tenant_name = await localStorage.GetItemAsync<string>("tenant_name");
             string group_name = await localStorage.GetItemAsync<string>("group_name");
             string location_name = await localStorage.GetItemAsync<string>("location_name");
 
             string query = null;
             mysql_data = new List<MySQL_Entity>();
-
+            
             MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
             try
@@ -3427,7 +3585,7 @@ WHERE device_id = @deviceId");
                     command.Parameters.AddWithValue("@tenant_name", tenant_name);
                     command.Parameters.AddWithValue("@deviceName", deviceNameFilter);
                 }
-
+                
                 Logging.Handler.Debug("/devices -> SearchDeviceByName", "MySQL_Query", query);
 
                 using (DbDataReader reader = await command.ExecuteReaderAsync())
@@ -5413,6 +5571,116 @@ WHERE device_id = @deviceId");
 
         }
 
+        #endregion
+        
+        #region Remote Action Availability Check
+        
+        private async Task CheckRemoteActionAvailability(Func<Task> action, bool policyFeatureEnabled)
+        {
+            // Refresh device connection status before checking
+            await RefreshSingleDeviceConnectionStatus();
+            
+            // Check if no policy is assigned
+            if (policy_name == "-")
+            {
+                await DialogService.ShowMessageBox(
+                    "No Policy Assigned",
+                    "This device does not have a policy assigned yet. Please assign a policy to enable remote features. See here: https://docs.netlockrmm.com/en/how-to/enabling-remote-features",
+                    yesText: "OK",
+                    options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Small, BackgroundClass = "dialog-blurring" }
+                );
+                return;
+            }
+            
+            // Check if device is not connected
+            if (!deviceConnected)
+            {
+                // Check if policy is assigned but device not connected
+                if (policyFeatureEnabled)
+                {
+                    await DialogService.ShowMessageBox(
+                        "Device Not Connected",
+                        "The device is currently not connected. The policy may not have been synchronized yet, or the device is offline. Please ensure the device is online and connected.",
+                        yesText: "OK",
+                        options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackgroundClass = "dialog-blurring" }
+                    );
+                }
+                else
+                {
+                    await DialogService.ShowMessageBox(
+                        "Device Not Connected",
+                        "The device is currently not connected or offline. Please ensure the device is online and connected.",
+                        yesText: "OK",
+                        options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackgroundClass = "dialog-blurring" }
+                    );
+                }
+                return;
+            }
+            
+            // Check if feature is disabled in policy
+            if (!policyFeatureEnabled)
+            {
+                await DialogService.ShowMessageBox(
+                    "Feature Disabled in Policy",
+                    "This feature is disabled in the assigned policy. Please enable the feature in the policy settings or assign a different policy to use this functionality. See here: https://docs.netlockrmm.com/en/how-to/enabling-remote-features",
+                    yesText: "OK",
+                    options: new DialogOptions() { FullWidth = true, MaxWidth = MaxWidth.Medium, BackgroundClass = "dialog-blurring" }
+                );
+                return;
+            }
+            
+            // If all checks pass, execute the action
+            await action.Invoke();
+        }
+        
+        /// <summary>
+        /// Refreshes the connection status for the currently selected device
+        /// </summary>
+        private async Task RefreshSingleDeviceConnectionStatus()
+        {
+            try
+            {
+                // Get list of connected device access keys
+                string connectedDevicesAccessKeys = await NetLock_RMM_Web_Console.Classes.Helper.Http.Get_Request_With_Api_Key(
+                    Configuration.Web_Console.publicOverrideUrl + "/admin/devices/connected", false);
+                
+                if (string.IsNullOrEmpty(connectedDevicesAccessKeys))
+                {
+                    deviceConnected = false;
+                    return;
+                }
+                
+                // Find the current device in mysql_data
+                var currentDevice = mysql_data?.FirstOrDefault(d => d.device_id == notes_device_id);
+                
+                if (currentDevice != null)
+                {
+                    // Check if the device's access key is in the connected devices list
+                    bool isConnected = connectedDevicesAccessKeys.Contains(currentDevice.access_key);
+                    
+                    // Update deviceConnected variable
+                    deviceConnected = isConnected;
+                    
+                    // Update the device in mysql_data table
+                    currentDevice.connected = isConnected;
+                    
+                    // Trigger UI update
+                    await InvokeAsync(StateHasChanged);
+                    
+                    Logging.Handler.Debug("/devices -> RefreshSingleDeviceConnectionStatus", 
+                        "Device connection status updated", 
+                        $"Device: {notes_device_name}, Access Key: {currentDevice.access_key}, Connected: {isConnected}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("/devices -> RefreshSingleDeviceConnectionStatus", 
+                    "Failed to refresh device connection status", 
+                    ex.ToString());
+                // Don't throw - just log the error and continue with existing status
+            }
+        }
+        
         #endregion
         
         #region Shutdown Device

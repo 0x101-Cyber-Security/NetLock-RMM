@@ -84,6 +84,22 @@
         100% { transform: rotate(0deg); }
     }
 
+    /* Pulsing animation for active remote connections */
+    @@keyframes pulse-remote {
+        0%, 100% {
+            filter: drop-shadow(0 0 0 transparent);
+            opacity: 1;
+        }
+        50% {
+            filter: drop-shadow(0 0 8px #2196f3);
+            opacity: 0.8;
+        }
+    }
+
+    .remote-active {
+        animation: pulse-remote 2s ease-in-out infinite;
+    }
+
 </style>
 
 
@@ -159,17 +175,30 @@
                     <RowTemplate Context="row">
 
                         @{
-                            DateTime lastAccess;
-                            var isValidDate = DateTime.TryParse(row.last_access, out lastAccess);
-                            var isOlderThan10Minutes = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 30;
-                            var iconColor = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes > 30 ? "color: grey;" : "color: green;";
+                            var iconColor = "color: grey;";
+                            var iconClass = "";
+                            
+                            if (row.connected)
+                            {
+                                // Device has active remote connection - show green icon with pulsing blue animation
+                                iconColor = "color: green;";
+                                iconClass = "remote-active";
+                            }
+                            else
+                            {
+                                // No active remote connection - check if device is online based on last_access
+                                DateTime lastAccess;
+                                var isValidDate = DateTime.TryParse(row.last_access, out lastAccess);
+                                // If last access within 5 minutes, show green (online), otherwise grey (offline)
+                                iconColor = isValidDate && (DateTime.UtcNow - lastAccess).TotalMinutes <= 5 ? "color: green;" : "color: grey;";
+                            }
                         }
 
                         @if (row.platform == "Windows")
                         {
                                 <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                     <span style="display: flex; align-items: center;">
-                                                    <MudIcon Icon="@Icons.Custom.Brands.MicrosoftWindows" Size="Size.Small" class="desktop-icon" Style="@(iconColor)" />&nbsp;@row.device_name
+                                                    <MudIcon Icon="@Icons.Custom.Brands.MicrosoftWindows" Size="Size.Small" class="@($"desktop-icon {iconClass}")" Style="@(iconColor)" />&nbsp;@row.device_name
                                     </span>
                                 </MudTd>
                         }
@@ -177,7 +206,7 @@
                         {
                                 <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                     <span style="display: flex; align-items: center;">
-                                        <MudIcon Icon="@Icons.Custom.Brands.Linux" Size="Size.Small" class="desktop-icon" Style="@(iconColor)" />&nbsp;@row.device_name
+                                        <MudIcon Icon="@Icons.Custom.Brands.Linux" Size="Size.Small" class="@($"desktop-icon {iconClass}")" Style="@(iconColor)" />&nbsp;@row.device_name
                                     </span>
                                 </MudTd>
                         }
@@ -185,7 +214,7 @@
                         {
                                 <MudTd DataLabel="Name" @onclick="() => Devices_RowClickHandler(row)" class="@Devices_GetRowClass(row)" style="white-space: nowrap;">
                                     <span style="display: flex; align-items: center;">
-                                        <MudIcon Icon="@Icons.Custom.Brands.Apple" Size="Size.Small" class="desktop-icon" Style="@(iconColor)" />&nbsp;@row.device_name
+                                        <MudIcon Icon="@Icons.Custom.Brands.Apple" Size="Size.Small" class="@($"desktop-icon {iconClass}")" Style="@(iconColor)" />&nbsp;@row.device_name
                                     </span>
                                 </MudTd>
                         }
@@ -363,27 +392,27 @@
                                     @if (permissions_devices_remote_control)
                                     {
                                         <MudTooltip Text="Shutdown">
-                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.PowerOff" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="Remote_Shutdown_Device"></MudIconButton>
+                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.PowerOff" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="@(async () => await CheckRemoteActionAvailability(async () => await Remote_Shutdown_Device(), policyRemoteShellEnabled))"></MudIconButton>
                                         </MudTooltip>
                                         
                                         <MudTooltip Text="Reboot">
-                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.RestartAlt" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="Remote_Reboot_Device"></MudIconButton>
+                                            <MudIconButton Class="ml-2" Icon="@Icons.Material.Filled.RestartAlt" Variant="Variant.Filled" Size="Size.Small" Color="Color.Warning" OnClick="@(async () => await CheckRemoteActionAvailability(async () => await Remote_Reboot_Device(), policyRemoteShellEnabled))"></MudIconButton>
                                         </MudTooltip>
                                     }
 
                                     @if (permissions_devices_remote_shell)
                                     {
-                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Terminal" OnClick="Remote_Shell_Dialog">Remote Shell</MudButton>
+                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Terminal" OnClick="@(async () => await CheckRemoteActionAvailability(async () => await Remote_Shell_Dialog(), policyRemoteShellEnabled))">Remote Shell</MudButton>
                                     }
 
                                     @if (permissions_devices_remote_file_browser)
                                     {
-                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="Remote_File_Browser_Dialog">@Localizer["file_browser"]</MudButton>
+                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.FolderOpen" OnClick="@(async () => await CheckRemoteActionAvailability(async () => await Remote_File_Browser_Dialog(), policyRemoteFileBrowserEnabled))">@Localizer["file_browser"]</MudButton>
                                     }
 
                                     @if (permissions_devices_remote_control && platform == "Windows")
                                     {
-                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Monitor" OnClick="Remote_Control_Dialog">Remote Screen Control</MudButton>
+                                        <MudButton Class="mb-2 mb-md-0 ml-0 ml-md-2" Size="Size.Small" Color="Color.Default" Variant="Variant.Filled" StartIcon="@Icons.Material.Filled.Monitor" OnClick="@(async () => await CheckRemoteActionAvailability(async () => await Remote_Control_Dialog(), policyRemoteScreenControlEnabled))">Remote Screen Control</MudButton>
                                     }
                                 }
                             </div>

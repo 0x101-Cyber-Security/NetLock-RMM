@@ -1,0 +1,306 @@
+@page "/community/events/retro"
+
+@using MySqlConnector
+@using System.Data
+@using System.Data.Common
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using System.Text
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<script src="/js/towerdefense.js"></script>
+
+<style>
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .animated-text {
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .wave-emoji {
+        display: inline-block;
+        animation: wave 1s infinite;
+    }
+    
+    @@keyframes wave {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(20deg); }
+        75% { transform: rotate(-20deg); }
+    }
+</style>
+
+<AuthorizeView>
+    <Authorized>
+
+        <MudDialog>
+            <DialogContent>
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">🛡️ Virus Defense</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Stats Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Resources:</strong> <span id="td-gold" style="color: #FFD700; font-weight: bold;">200</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>System Health:</strong> <span id="td-lives" style="color: var(--mud-palette-error); font-weight: bold;">20</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Attack Wave:</strong> <span id="td-wave" style="color: var(--mud-palette-info); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="td-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Viruses Removed:</strong> <span id="td-kills" style="color: var(--mud-palette-success); font-weight: bold;">0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Security Tool Selection Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Success" Class="mr-2" />
+                                    Deploy Security Tools
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudStack Spacing="2">
+                                    <MudButton Variant="Variant.Filled" 
+                                               Style="background-color: #1565C0; color: white;" 
+                                               OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "basic"))" 
+                                               FullWidth="true">
+                                        🛡️ Firewall (50G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Style="background-color: #FF8F00; color: white;" 
+                                               OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "rapid"))" 
+                                               FullWidth="true">
+                                        🔍 IDS (75G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Style="background-color: #2E7D32; color: white;" 
+                                               OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "sniper"))" 
+                                               FullWidth="true">
+                                        🦠 Antivirus (100G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                               Style="background-color: #6A1B9A; color: white;" 
+                                               OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "cannon"))" 
+                                               FullWidth="true">
+                                        🔒 Quarantine (150G)
+                                    </MudButton>
+                                    <MudDivider Class="my-2" />
+                                    <MudButton Variant="Variant.Filled" 
+                                               Color="Color.Error" 
+                                               OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.toggleDemolish"))" 
+                                               FullWidth="true"
+                                               StartIcon="@Icons.Material.Filled.Delete">
+                                        Uninstall Tool
+                                    </MudButton>
+                                </MudStack>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Class="mr-2" />
+                                    How to Play
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🛡️ Select a security tool</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">🖱️ Click on grid to deploy</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⬆️ Click tool to patch/upgrade (Max Lvl 5)</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💎 Hover tool to see upgrade cost</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">🗑️ Use uninstall mode to remove tools</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💰 Earn resources by removing viruses</MudText>
+                                <MudText Typo="Typo.body2">⚠️ Don't let viruses reach the end!</MudText>
+                            </MudPaper>
+                            
+                            <!-- Security Tool Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Success" Class="mr-2" />
+                                    Security Tools
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #1565C0;"><strong>🛡️ Firewall:</strong> Blocks threats</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #FF8F00;"><strong>🔍 IDS:</strong> Fast detection</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #2E7D32;"><strong>🦠 Antivirus:</strong> High damage scan</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2" Style="color: #6A1B9A;"><strong>🔒 Quarantine:</strong> Isolates multiple</MudText>
+                                <MudDivider Class="mb-2" />
+                                <MudText Typo="Typo.caption" Style="opacity: 0.8;">
+                                    💡 Upgrade Cost = Base Cost × 50% × Level
+                                </MudText>
+                                <MudText Typo="Typo.caption" Style="opacity: 0.8;">
+                                    💰 Refund Value = 70% of total invested
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="9">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="towerdefenseCanvas" width="800" height="600" style="border: 3px solid #555; background-color: #1a1a1a; box-shadow: 0 4px 20px rgba(0,0,0,0.5); cursor: crosshair;"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 800px;" Spacing="2">
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.FiberNew" Class="mr-2" /> New Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.togglePause"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Stats and Info (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 800px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Resources: <span id="td-gold-mobile">200</span></MudText>
+                                        <MudText Typo="Typo.body2">System Health: <span id="td-lives-mobile">20</span></MudText>
+                                        <MudText Typo="Typo.body2">Attack Wave: <span id="td-wave-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="td-score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Viruses Removed: <span id="td-kills-mobile">0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Deploy Security Tools</MudText>
+                                        <MudStack Spacing="1">
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #1565C0; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "basic"))" FullWidth="true" Size="Size.Small">
+                                                🛡️ Firewall (50G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #FF8F00; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "rapid"))" FullWidth="true" Size="Size.Small">
+                                                🔍 IDS (75G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #2E7D32; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "sniper"))" FullWidth="true" Size="Size.Small">
+                                                🦠 Antivirus (100G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #6A1B9A; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "cannon"))" FullWidth="true" Size="Size.Small">
+                                                🔒 Quarantine (150G)
+                                            </MudButton>
+                                            <MudDivider Class="my-1" />
+                                            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.toggleDemolish"))" FullWidth="true" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete">
+                                                Uninstall
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>How to Play:</strong></MudText>
+                                        <MudText Typo="Typo.body2">Select tool → Click grid to deploy</MudText>
+                                        <MudText Typo="Typo.body2">Click tool to upgrade (Max Lvl 5)</MudText>
+                                        <MudText Typo="Typo.body2">Hover tool to see upgrade cost</MudText>
+                                        <MudText Typo="Typo.body2">Earn resources by removing viruses</MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Security Tools:</strong></MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #1565C0;">🛡️ Firewall: Blocks threats</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #FF8F00;">🔍 IDS: Fast detection</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #2E7D32;">🦠 Antivirus: High damage</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #6A1B9A;">🔒 Quarantine: Isolates multiple</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+            </DialogContent>
+            <DialogActions>
+                <MudButton OnClick="@Close" Color="Color.Default" Size="Size.Small">Close</MudButton>
+            </DialogActions>
+        </MudDialog>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    [CascadingParameter] IMudDialogInstance MudDialog { get; set; }
+    
+    void Close()
+    {
+        MudDialog.Close();
+    }
+    
+    private string netlock_username = String.Empty;
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+            
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        if (!await Permissions())
+            return;
+        
+        StateHasChanged();
+    }
+}

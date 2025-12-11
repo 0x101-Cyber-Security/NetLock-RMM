@@ -101,7 +101,7 @@
                     </MudSelect>
 
                     <div style="display: flex; align-items: center;">
-                        <MudButton Class="mt-2" OnClick="Download_Installer" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name) || creating_installer)">@Localizer["download_installer"]</MudButton>
+                        <MudButton Class="mt-2" OnClick="@Show_Digital_Signature_Warning" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Info" Disabled="@(String.IsNullOrEmpty(name) || String.IsNullOrEmpty(communication_servers) || String.IsNullOrEmpty(remote_servers) || String.IsNullOrEmpty(update_servers) || String.IsNullOrEmpty(trust_servers) || String.IsNullOrEmpty(tenant_name)|| String.IsNullOrEmpty(location_name) || creating_installer)">@Localizer["download_installer"]</MudButton>
 
                         <MudTooltip Text="Creates a custom installer with the selected configuration. Once created, a download link will be provided. Please note that this will break the digital signature of the installer and may trigger warnings from antivirus software when executing. However, the installed agent will be fully digital signed.">
                             <MudIconButton Class="ml-2 mt-2" Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
@@ -123,6 +123,41 @@
         @if (!String.IsNullOrEmpty(installer_url) && !creating_installer)
         {
             <MudText Class="mt-2" Typo="Typo.body1">Url: @installer_url</MudText>
+            
+            <div style="display: flex; align-items: center; margin-top: 10px; gap: 10px;">
+                @if (architecture.StartsWith("win-"))
+                {
+                    <MudButton OnClick="@Download_Installation_Script_Windows" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">
+                        Download Windows installation script (.ps1)
+                    </MudButton>
+                    
+                    <MudTooltip Text="Downloads a PowerShell script that automatically downloads and installs the agent. The script checks if the NetLock RMM Agent is already installed and only performs the installation if it is not.">
+                        <MudIconButton Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                }
+                
+                @if (architecture.StartsWith("linux-"))
+                {
+                    <MudButton OnClick="@Download_Installation_Script_Linux" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">
+                        Download Linux installation script (.sh)
+                    </MudButton>
+                    
+                    <MudTooltip Text="Downloads a Bash script that automatically downloads and installs the agent. The script checks if the NetLock RMM Agent service is already installed and only performs the installation if it is not.">
+                        <MudIconButton Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                }
+                
+                @if (architecture.StartsWith("osx-"))
+                {
+                    <MudButton OnClick="@Download_Installation_Script_MacOS" Variant="Variant.Filled" Size="@Size.Small" Color="@Color.Success">
+                        Download macOS installation script (.sh)
+                    </MudButton>
+                    
+                    <MudTooltip Text="Downloads a Bash script that automatically downloads and installs the agent. The script checks if the NetLock RMM Agent service is already installed and only performs the installation if it is not.">
+                        <MudIconButton Icon="@Icons.Material.Filled.Info" Variant="Variant.Text" Size="Size.Small" Color="Color.Default"></MudIconButton>
+                    </MudTooltip>
+                }
+            </div>
         }
 
     </DialogContent>
@@ -755,7 +790,7 @@
             await Get_Configurations();
     }
 
-    //OSSCH_START c83b5301-be4d-4a67-8ae1-6740b6c32c6b //OSSCH_END
+    //OSSCH_START 2f899714-13a3-44f0-ad1d-3e3ac181a480 //OSSCH_END
 
     private async Task GetCloudPreset()
     {
@@ -774,6 +809,324 @@
     private async Task Download_Installer_Popup()
     {
         await JSRuntime.InvokeVoidAsync("window.open", installer_url, "_blank");
+    }
+
+    private async Task Download_Installation_Script_Windows()
+    {
+        try
+        {
+            string scriptContent = $@"# NetLock RMM Agent Installation Script for Windows
+# This script downloads and installs the NetLock RMM Agent
+$packageUrl = ""{installer_url}""
+
+# Check if the service NetLock_RMM_Agent_Comm exists
+$serviceName = ""NetLock_RMM_Agent_Comm""
+$service = Get-Service -Name $serviceName -ErrorAction SilentlyContinue
+
+if ($service) {{
+    Write-Host ""Service '$serviceName' already exists. Installation will not proceed."" -ForegroundColor Yellow
+    exit 0
+}}
+
+Write-Host ""Service '$serviceName' not found. Proceeding with installation..."" -ForegroundColor Green
+
+# Package download URL
+$tempFolder = ""C:\temp""
+$zipFile = ""$tempFolder\NetLock_Agent.zip""
+$extractFolder = ""$tempFolder\NetLock_Agent""
+
+# Create temp folder if it doesn't exist
+if (-not (Test-Path -Path $tempFolder)) {{
+    Write-Host ""Creating folder: $tempFolder"" -ForegroundColor Cyan
+    New-Item -ItemType Directory -Path $tempFolder -Force | Out-Null
+}}
+
+# Download the ZIP file
+Write-Host ""Downloading NetLock RMM Agent package..."" -ForegroundColor Cyan
+try {{
+    Invoke-WebRequest -Uri $packageUrl -OutFile $zipFile -UseBasicParsing
+    Write-Host ""Download completed successfully."" -ForegroundColor Green
+}} catch {{
+    Write-Host ""Error downloading package: $_"" -ForegroundColor Red
+    exit 1
+}}
+
+# Unzip the package
+Write-Host ""Extracting package to $extractFolder..."" -ForegroundColor Cyan
+try {{
+    # Remove existing extract folder if it exists
+    if (Test-Path -Path $extractFolder) {{
+        Remove-Item -Path $extractFolder -Recurse -Force
+    }}
+    
+    Expand-Archive -Path $zipFile -DestinationPath $extractFolder -Force
+    Write-Host ""Extraction completed successfully."" -ForegroundColor Green
+}} catch {{
+    Write-Host ""Error extracting package: $_"" -ForegroundColor Red
+    exit 1
+}}
+
+# Find and execute the installer
+$installerPath = Get-ChildItem -Path $extractFolder -Filter ""NetLock_RMM_Agent_Installer.exe"" -Recurse | Select-Object -First 1
+
+if ($installerPath) {{
+    Write-Host ""Running installer: $($installerPath.FullName)"" -ForegroundColor Cyan
+    try {{
+        Start-Process -FilePath $installerPath.FullName -Wait -NoNewWindow
+        Write-Host ""Installation completed successfully."" -ForegroundColor Green
+    }} catch {{
+        Write-Host ""Error running installer: $_"" -ForegroundColor Red
+        exit 1
+    }}
+}} else {{
+    Write-Host ""Installer executable 'NetLock_RMM_Agent_Installer.exe' not found in the extracted package."" -ForegroundColor Red
+    exit 1
+}}
+
+# Cleanup
+Write-Host ""Cleaning up temporary files..."" -ForegroundColor Cyan
+try {{
+    Remove-Item -Path $zipFile -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $extractFolder -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host ""Cleanup completed."" -ForegroundColor Green
+}} catch {{
+    Write-Host ""Warning: Could not clean up temporary files."" -ForegroundColor Yellow
+}}
+
+Write-Host ""NetLock RMM Agent installation process completed!"" -ForegroundColor Green";
+
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "Install-NetLockAgent.ps1", scriptContent);
+            
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Windows installation script downloaded successfully.", Severity.Success, config => { config.ShowCloseIcon = true; });
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Download_Installation_Script_Windows", "Result", ex.ToString());
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Error creating installation script. Please check the logs.", Severity.Error, config => { config.ShowCloseIcon = true; });
+        }
+    }
+
+    private async Task Download_Installation_Script_Linux()
+    {
+        try
+        {
+            string scriptContent = $@"#!/bin/bash
+# NetLock RMM Agent Installation Script for Linux
+# This script downloads and installs the NetLock RMM Agent
+
+PACKAGE_URL=""{installer_url}""
+SERVICE_NAME=""netlock-rmm-agent-comm""
+
+# Check if running as root
+if [ ""$EUID"" -ne 0 ]; then
+    echo ""Error: This script must be run as root (use sudo)""
+    exit 1
+fi
+
+# Check if the service already exists
+if systemctl list-units --full --all | grep -Fq ""$SERVICE_NAME.service""; then
+    echo ""Service '$SERVICE_NAME' already exists. Installation will not proceed.""
+    exit 0
+fi
+
+echo ""Service '$SERVICE_NAME' not found. Proceeding with installation...""
+
+# Package download settings
+TEMP_FOLDER=""/tmp/netlock_agent""
+ZIP_FILE=""$TEMP_FOLDER/NetLock_Agent.zip""
+EXTRACT_FOLDER=""$TEMP_FOLDER/NetLock_Agent""
+
+# Create temp folder if it doesn't exist
+if [ ! -d ""$TEMP_FOLDER"" ]; then
+    echo ""Creating folder: $TEMP_FOLDER""
+    mkdir -p ""$TEMP_FOLDER""
+fi
+
+# Download the ZIP file
+echo ""Downloading NetLock RMM Agent package...""
+if command -v wget &> /dev/null; then
+    wget -q --show-progress ""$PACKAGE_URL"" -O ""$ZIP_FILE""
+elif command -v curl &> /dev/null; then
+    curl -L ""$PACKAGE_URL"" -o ""$ZIP_FILE""
+else
+    echo ""Error: Neither wget nor curl is available. Please install one of them.""
+    exit 1
+fi
+
+if [ $? -eq 0 ]; then
+    echo ""Download completed successfully.""
+else
+    echo ""Error downloading package.""
+    exit 1
+fi
+
+# Unzip the package
+echo ""Extracting package to $EXTRACT_FOLDER...""
+
+# Check if unzip is available
+if ! command -v unzip &> /dev/null; then
+    echo ""Error: unzip is not installed. Please install unzip first.""
+    exit 1
+fi
+
+# Remove existing extract folder if it exists
+if [ -d ""$EXTRACT_FOLDER"" ]; then
+    rm -rf ""$EXTRACT_FOLDER""
+fi
+
+unzip -q ""$ZIP_FILE"" -d ""$EXTRACT_FOLDER""
+
+if [ $? -eq 0 ]; then
+    echo ""Extraction completed successfully.""
+else
+    echo ""Error extracting package.""
+    exit 1
+fi
+
+# Find and execute the installer
+INSTALLER_PATH=$(find ""$EXTRACT_FOLDER"" -name ""NetLock_RMM_Agent_Installer"" -type f | head -n 1)
+
+if [ -n ""$INSTALLER_PATH"" ]; then
+    echo ""Running installer: $INSTALLER_PATH""
+    chmod +x ""$INSTALLER_PATH""
+    ""$INSTALLER_PATH""
+    
+    if [ $? -eq 0 ]; then
+        echo ""Installation completed successfully.""
+    else
+        echo ""Error running installer.""
+        exit 1
+    fi
+else
+    echo ""Error: Installer executable 'NetLock_RMM_Agent_Installer' not found in the extracted package.""
+    exit 1
+fi
+
+# Cleanup
+echo ""Cleaning up temporary files...""
+rm -f ""$ZIP_FILE""
+rm -rf ""$EXTRACT_FOLDER""
+echo ""Cleanup completed.""
+
+echo ""NetLock RMM Agent installation process completed!""";
+
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "Install-NetLockAgent.sh", scriptContent);
+            
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Linux installation script downloaded successfully.", Severity.Success, config => { config.ShowCloseIcon = true; });
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Download_Installation_Script_Linux", "Result", ex.ToString());
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Error creating installation script. Please check the logs.", Severity.Error, config => { config.ShowCloseIcon = true; });
+        }
+    }
+
+    private async Task Download_Installation_Script_MacOS()
+    {
+        try
+        {
+            string scriptContent = $@"#!/bin/bash
+# NetLock RMM Agent Installation Script for macOS
+# This script downloads and installs the NetLock RMM Agent
+
+PACKAGE_URL=""{installer_url}""
+SERVICE_NAME=""netlock-rmm-agent-comm""
+
+# Check if running as root
+if [ ""$EUID"" -ne 0 ]; then
+    echo ""Error: This script must be run as root (use sudo)""
+    exit 1
+fi
+
+# Check if the service already exists (launchd)
+if launchctl list | grep -q ""$SERVICE_NAME""; then
+    echo ""Service '$SERVICE_NAME' already exists. Installation will not proceed.""
+    exit 0
+fi
+
+echo ""Service '$SERVICE_NAME' not found. Proceeding with installation...""
+
+# Package download settings
+TEMP_FOLDER=""/tmp/netlock_agent""
+ZIP_FILE=""$TEMP_FOLDER/NetLock_Agent.zip""
+EXTRACT_FOLDER=""$TEMP_FOLDER/NetLock_Agent""
+
+# Create temp folder if it doesn't exist
+if [ ! -d ""$TEMP_FOLDER"" ]; then
+    echo ""Creating folder: $TEMP_FOLDER""
+    mkdir -p ""$TEMP_FOLDER""
+fi
+
+# Download the ZIP file
+echo ""Downloading NetLock RMM Agent package...""
+curl -L ""$PACKAGE_URL"" -o ""$ZIP_FILE""
+
+if [ $? -eq 0 ]; then
+    echo ""Download completed successfully.""
+else
+    echo ""Error downloading package.""
+    exit 1
+fi
+
+# Unzip the package
+echo ""Extracting package to $EXTRACT_FOLDER...""
+
+# Remove existing extract folder if it exists
+if [ -d ""$EXTRACT_FOLDER"" ]; then
+    rm -rf ""$EXTRACT_FOLDER""
+fi
+
+unzip -q ""$ZIP_FILE"" -d ""$EXTRACT_FOLDER""
+
+if [ $? -eq 0 ]; then
+    echo ""Extraction completed successfully.""
+else
+    echo ""Error extracting package.""
+    exit 1
+fi
+
+# Find and execute the installer
+INSTALLER_PATH=$(find ""$EXTRACT_FOLDER"" -name ""NetLock_RMM_Agent_Installer"" -type f | head -n 1)
+
+if [ -n ""$INSTALLER_PATH"" ]; then
+    echo ""Running installer: $INSTALLER_PATH""
+    chmod +x ""$INSTALLER_PATH""
+    ""$INSTALLER_PATH""
+    
+    if [ $? -eq 0 ]; then
+        echo ""Installation completed successfully.""
+    else
+        echo ""Error running installer.""
+        exit 1
+    fi
+else
+    echo ""Error: Installer executable 'NetLock_RMM_Agent_Installer' not found in the extracted package.""
+    exit 1
+fi
+
+# Cleanup
+echo ""Cleaning up temporary files...""
+rm -f ""$ZIP_FILE""
+rm -rf ""$EXTRACT_FOLDER""
+echo ""Cleanup completed.""
+
+echo ""NetLock RMM Agent installation process completed!""";
+
+            await JSRuntime.InvokeVoidAsync("exportToTxt", "Install-NetLockAgent.sh", scriptContent);
+            
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("macOS installation script downloaded successfully.", Severity.Success, config => { config.ShowCloseIcon = true; });
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/MainLayout -> Download_Installation_Script_MacOS", "Result", ex.ToString());
+            Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+            Snackbar.Add("Error creating installation script. Please check the logs.", Severity.Error, config => { config.ShowCloseIcon = true; });
+        }
     }
 
     private void Cancel() => MudDialog.Cancel();

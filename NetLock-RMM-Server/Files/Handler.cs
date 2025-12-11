@@ -39,6 +39,9 @@ namespace NetLock_RMM_Server.Files
             {
                 bool api_key_exists = false;
 
+                if (string.IsNullOrEmpty(files_api_key))
+                    return false;
+                
                 MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
 
                 try
@@ -66,7 +69,7 @@ namespace NetLock_RMM_Server.Files
                 }
                 finally
                 {
-                    conn.Close();
+                    await conn.CloseAsync();
                 }
 
                 return api_key_exists;

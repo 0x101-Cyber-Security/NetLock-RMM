@@ -89,7 +89,7 @@ if (Web_Console.title == "Your company name")
 var language = builder.Configuration["Webinterface:Language"];
 
 // Check members portal parts
-//OSSCH_START 3eb7e221-4f4f-437a-b306-765953894a92 //OSSCH_END
+//OSSCH_START 388cb034-ca3a-4342-ab14-20dcebf55134 //OSSCH_END
 Console.WriteLine("---------Loader_End----------");
 
 // Output OS
@@ -269,7 +269,7 @@ else
             // Get api key
             if (String.IsNullOrEmpty(Members_Portal.ApiKey))
             {
-                Members_Portal.ApiKey = await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Get_Api_Key();
+                Members_Portal.ApiKey = await NetLock_RMM_Web_Console.Classes.MySQL.Handler.Get_Api_Key(true);
 
                 Console.WriteLine("Members Portal API key loaded from database: " + Members_Portal.ApiKey);
             }
@@ -528,7 +528,7 @@ app.UseStaticFiles();
 app.UseAntiforgery();
 app.MapRazorComponents<App>().AddInteractiveServerRenderMode();
 
-//OSSCH_START 269aeefa-6750-41e1-96c1-f2fa9a018564 //OSSCH_END
+//OSSCH_START d1011e03-a056-446b-a27b-2e399bf57906 //OSSCH_END
 
 Console.WriteLine("---------Loader_End----------");
 
@@ -953,7 +953,7 @@ app.MapGet("/test", async context =>
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 5c023aad-e525-48fe-bc13-00db8f83b187 //OSSCH_END
+    //OSSCH_START 1b9b00a9-f775-4a66-8ed2-7e12c2fe1411 //OSSCH_END
 }
 
 // Start server

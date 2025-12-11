@@ -353,9 +353,12 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
         }
 
         // Get api_key from settings table
-        public static async Task<string> Get_Api_Key()
+        public static async Task<string> Get_Api_Key(bool membersPortal)
         {
-            return await Quick_Reader("SELECT members_portal_api_key FROM settings;", "members_portal_api_key");
+            if (membersPortal)
+                return await Quick_Reader("SELECT members_portal_api_key FROM settings;", "members_portal_api_key");
+            else
+                return await Quick_Reader("SELECT * FROM settings;", "files_api_key");
         }
 
         // Get device platform
@@ -711,6 +714,82 @@ namespace NetLock_RMM_Web_Console.Classes.MySQL
             {
                 Logging.Handler.Error("Classes.MySQL.Handler.Get_Device_Details_For_Policy_Assignment", "Query: ", ex.ToString());
                 return (string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty, string.Empty);
+            }
+            finally
+            {
+                await conn.CloseAsync();
+            }
+        }
+
+        public static async Task<(bool, bool, bool, bool, bool, bool, bool)> GetPolicyRemoteFeatureSettings(string device_id)
+        {
+            string policyName = await GetAssignedDevicePolicyByDeviceId(device_id);
+            
+            MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+            try
+            {
+                await conn.OpenAsync();
+
+                string query = "SELECT * FROM policies WHERE name = @policy_name;";
+
+                MySqlCommand cmd = new MySqlCommand(query, conn);
+                cmd.Parameters.AddWithValue("@policy_name", policyName);
+
+                string agentSettingsJson = String.Empty;
+      
+                bool remoteServiceEnabled = false;
+                bool remoteShellEnabled = false;
+                bool remoteFileBrowserEnabled = false;
+                bool remoteTaskManagerEnabled = false;
+                bool remoteServiceManagerEnabled = false;
+                bool remoteScreenControlEnabled = false;
+                bool remoteScreenControlUnattendedAccess = false;
+
+                using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+                {
+                    if (reader.HasRows)
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            agentSettingsJson = reader["agent_settings"].ToString() ?? String.Empty;
+                        }
+                    }
+                }
+                
+                // {
+                //   "AutoUpdateEnabled": true,
+                //   "SyncInterval": 5,
+                //   "RemoteServiceEnabled": true,
+                //   "RemoteShellEnabled": true,
+                //   "RemoteFileBrowserEnabled": true,
+                //   "RemoteTaskManagerEnabled": true,
+                //   "RemoteServiceManagerEnabled": true,
+                //   "RemoteScreenControlEnabled": true,
+                //   "RemoteScreenControlUnattendedAccess": true
+                // }
+                
+                // Parse agentSettingsJson
+                if (!string.IsNullOrEmpty(agentSettingsJson))
+                {
+                    dynamic agentSettings = JsonConvert.DeserializeObject(agentSettingsJson);
+                    remoteServiceEnabled = agentSettings.RemoteServiceEnabled;
+                    remoteShellEnabled = agentSettings.RemoteShellEnabled;
+                    remoteFileBrowserEnabled = agentSettings.RemoteFileBrowserEnabled;
+                    remoteTaskManagerEnabled = agentSettings.RemoteTaskManagerEnabled;
+                    remoteServiceManagerEnabled = agentSettings.RemoteServiceManagerEnabled;
+                    remoteScreenControlEnabled = agentSettings.RemoteScreenControlEnabled;
+                    remoteScreenControlUnattendedAccess = agentSettings.RemoteScreenControlUnattendedAccess;
+                }
+
+                Logging.Handler.Debug("Classes.MySQL.Handler.GetPolicyRemoteFeatureSettings", "Query", query);
+                
+                return (remoteServiceEnabled, remoteShellEnabled, remoteFileBrowserEnabled, remoteTaskManagerEnabled, remoteServiceManagerEnabled, remoteScreenControlEnabled, remoteScreenControlUnattendedAccess);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("Classes.MySQL.Handler.GetPolicyRemoteFeatureSettings", "Query: ", ex.ToString());
+                return (false, false, false, false, false, false, false);
             }
             finally
             {

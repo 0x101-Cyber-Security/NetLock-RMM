@@ -873,7 +873,7 @@
             Logging.Handler.Debug("Community_Scripts.Import", "json", json);
 
             // Send the JSON to the API
-            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json);
+            string result = await Classes.Helper.Http.POST_Request_Json_With_Api_Key(url, json, true);
 
             // Check the result
             if (result == "0")

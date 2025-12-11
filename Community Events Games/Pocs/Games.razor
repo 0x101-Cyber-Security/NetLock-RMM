@@ -1,0 +1,925 @@
+@page "/community/events/retro"
+
+@using MySqlConnector
+@using System.Data
+@using System.Data.Common
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.DataProtection
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using System.Text
+@using System.Security.Claims
+
+@inject NavigationManager NavigationManager
+@inject ILocalStorageService localStorage
+@inject IDialogService DialogService
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+@inject IDataProtectionProvider DataProtectionProvider
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<script src="/js/tetris.js"></script>
+<script src="/js/spaceinvaders.js"></script>
+<script src="/js/pacman.js"></script>
+<script src="/js/snake.js"></script>
+<script src="/js/doom.js"></script>
+<script src="/js/towerdefense.js"></script>
+
+<style>
+    @@keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    
+    .animated-text {
+        animation: pulse 2s infinite;
+    }
+    
+    @@keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    
+    .wave-emoji {
+        display: inline-block;
+        animation: wave 1s infinite;
+    }
+    
+    @@keyframes wave {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(20deg); }
+        75% { transform: rotate(-20deg); }
+    }
+</style>
+
+<MudOverlay Visible="@loading_overlay" DarkBackground="false" Absolute="false">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; gap: 1rem; animation: fadeIn 0.5s ease-in-out;">
+        <MudProgressCircular Color="Color.Primary" Size="Size.Large" Indeterminate="true" Thickness="6" />
+        <MudText Typo="Typo.h5" Class="animated-text">
+            Please wait... <span class="wave-emoji">🐧</span>
+        </MudText>
+    </div>
+</MudOverlay>
+
+<AuthorizeView>
+    <Authorized>
+
+        <MudText Class="ml-3 mb-3" Typo="Typo.h5">Hello @firstName!</MudText>
+        
+        <MudTabs KeepPanelsAlive=true Class="mt-0" Elevation="4" Rounded="false" Color="@Color.Default">
+
+            <MudTabPanel Text="Tetris">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Tetris</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Score Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Level:</strong> <span id="level" style="color: var(--mud-palette-success); font-weight: bold;">1</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Lines:</strong> <span id="lines" style="color: var(--mud-palette-info); font-weight: bold;">0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Controls Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Gamepad" Color="Color.Info" Class="mr-2" />
+                                    Controls
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" /> <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" /> Move Left/Right</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" /> Soft Drop</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" /> Rotate</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>Space</strong> Hard Drop</MudText>
+                                <MudText Typo="Typo.body2"><strong>P</strong> Pause/Resume</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="6">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="tetrisCanvas" width="300" height="600" style="border: 3px solid #555; background-color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 300px;" Spacing="2">
+                                    <MudItem xs="12">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(() => JSRuntime.InvokeVoidAsync("tetris.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-2" /> Start Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("tetris.togglePause"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => JSRuntime.InvokeVoidAsync("tetris.stopGame"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Stop" Class="mr-1" /> Stop
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Score and Controls (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 300px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Level: <span id="level-mobile">1</span></MudText>
+                                        <MudText Typo="Typo.body2">Lines: <span id="lines-mobile">0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Controls:</strong></MudText>
+                                        <MudText Typo="Typo.body2">← → : Move Left/Right</MudText>
+                                        <MudText Typo="Typo.body2">↓ : Soft Drop</MudText>
+                                        <MudText Typo="Typo.body2">↑ : Rotate</MudText>
+                                        <MudText Typo="Typo.body2">Space : Hard Drop</MudText>
+                                        <MudText Typo="Typo.body2">P : Pause/Resume</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+            <MudTabPanel Text="Space Invaders">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Space Invaders</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Score Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="si-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Level:</strong> <span id="si-level" style="color: var(--mud-palette-success); font-weight: bold;">1</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Lives:</strong> <span id="si-lives" style="color: var(--mud-palette-error); font-weight: bold;">3</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Kills:</strong> <span id="si-kills" style="color: var(--mud-palette-info); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Max Combo:</strong> <span id="si-combo" style="color: #FFD700; font-weight: bold;">0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Controls Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Gamepad" Color="Color.Info" Class="mr-2" />
+                                    Controls
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" /> <MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" /> Move Left/Right</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>Space</strong> Shoot</MudText>
+                                <MudText Typo="Typo.body2"><strong>P</strong> Pause/Resume</MudText>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Success" Class="mr-2" />
+                                    Features
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🛡️ Destructible shields</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⚡ Combo system</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💫 Invulnerability frames</MudText>
+                                <MudText Typo="Typo.body2">🎯 Shoot cooldown</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="6">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="spaceInvadersCanvas" width="600" height="600" style="border: 3px solid #555; background-color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 600px;" Spacing="2">
+                                    <MudItem xs="12">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(() => JSRuntime.InvokeVoidAsync("spaceInvaders.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-2" /> Start Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("spaceInvaders.togglePause"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => JSRuntime.InvokeVoidAsync("spaceInvaders.stopGame"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Stop" Class="mr-1" /> Stop
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Score and Controls (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 600px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="si-score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Level: <span id="si-level-mobile">1</span></MudText>
+                                        <MudText Typo="Typo.body2">Lives: <span id="si-lives-mobile">3</span></MudText>
+                                        <MudText Typo="Typo.body2">Kills: <span id="si-kills-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Max Combo: <span id="si-combo-mobile">0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Controls:</strong></MudText>
+                                        <MudText Typo="Typo.body2">← → : Move Left/Right</MudText>
+                                        <MudText Typo="Typo.body2">Space : Shoot</MudText>
+                                        <MudText Typo="Typo.body2">P : Pause/Resume</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+            <MudTabPanel Text="Pac-Man">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Pac-Man</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Score Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="pm-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Level:</strong> <span id="pm-level" style="color: var(--mud-palette-success); font-weight: bold;">1</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Lives:</strong> <span id="pm-lives" style="color: var(--mud-palette-error); font-weight: bold;">3</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Pellets:</strong> <span id="pm-pellets" style="color: var(--mud-palette-info); font-weight: bold;">0 / 0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Controls Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Gamepad" Color="Color.Info" Class="mr-2" />
+                                    Controls
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" /> Move Up</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" /> Move Down</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" /> Move Left</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" /> Move Right</MudText>
+                                <MudText Typo="Typo.body2"><strong>P</strong> Pause/Resume</MudText>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Success" Class="mr-2" />
+                                    How to Play
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🟡 Eat all pellets</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⚪ Power pellets: 50pts</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">👻 Avoid ghosts</MudText>
+                                <MudText Typo="Typo.body2">💙 Eat scared ghosts!</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="6">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="pacmanCanvas" width="560" height="620" style="border: 3px solid #555; background-color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 560px;" Spacing="2">
+                                    <MudItem xs="12">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(() => JSRuntime.InvokeVoidAsync("pacman.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-2" /> Start Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("pacman.togglePause"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => JSRuntime.InvokeVoidAsync("pacman.stopGame"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Stop" Class="mr-1" /> Stop
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Score and Controls (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 560px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="pm-score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Level: <span id="pm-level-mobile">1</span></MudText>
+                                        <MudText Typo="Typo.body2">Lives: <span id="pm-lives-mobile">3</span></MudText>
+                                        <MudText Typo="Typo.body2">Pellets: <span id="pm-pellets-mobile">0 / 0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Controls:</strong></MudText>
+                                        <MudText Typo="Typo.body2">Arrow Keys : Move</MudText>
+                                        <MudText Typo="Typo.body2">P : Pause/Resume</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+            <MudTabPanel Text="Snake">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">Snake</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Score Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="snake-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>High Score:</strong> <span id="snake-highscore" style="color: var(--mud-palette-warning); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Length:</strong> <span id="snake-length" style="color: var(--mud-palette-success); font-weight: bold;">3</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Speed:</strong> <span id="snake-speed" style="color: var(--mud-palette-info); font-weight: bold;">10</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Controls Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Gamepad" Color="Color.Info" Class="mr-2" />
+                                    Controls
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowUp" Size="Size.Small" /> Move Up</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowDown" Size="Size.Small" /> Move Down</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowLeft" Size="Size.Small" /> Move Left</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><MudIcon Icon="@Icons.Material.Filled.KeyboardArrowRight" Size="Size.Small" /> Move Right</MudText>
+                                <MudText Typo="Typo.body2"><strong>P</strong> Pause/Resume</MudText>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Success" Class="mr-2" />
+                                    How to Play
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🐍 Eat red food: 10pts</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⭐ Golden food: 50pts</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⚠️ Don't hit walls</MudText>
+                                <MudText Typo="Typo.body2">⚠️ Don't hit yourself</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="6">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="snakeCanvas" width="600" height="500" style="border: 3px solid #555; background-color: #1a1a1a; box-shadow: 0 4px 20px rgba(0,0,0,0.5);"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 600px;" Spacing="2">
+                                    <MudItem xs="12">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(() => JSRuntime.InvokeVoidAsync("snake.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-2" /> Start Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("snake.togglePause"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => JSRuntime.InvokeVoidAsync("snake.stopGame"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Stop" Class="mr-1" /> Stop
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Score and Controls (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 600px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="snake-score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">High Score: <span id="snake-highscore-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Length: <span id="snake-length-mobile">3</span></MudText>
+                                        <MudText Typo="Typo.body2">Speed: <span id="snake-speed-mobile">10</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Controls:</strong></MudText>
+                                        <MudText Typo="Typo.body2">Arrow Keys : Move</MudText>
+                                        <MudText Typo="Typo.body2">P : Pause/Resume</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+            <MudTabPanel Text="DOOM">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">DOOM 🔥</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Score Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Health:</strong> <span id="doom-health" style="color: var(--mud-palette-error); font-weight: bold;">100</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Ammo:</strong> <span id="doom-ammo" style="color: var(--mud-palette-warning); font-weight: bold;">50</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Kills:</strong> <span id="doom-kills" style="color: var(--mud-palette-success); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Score:</strong> <span id="doom-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Controls Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Gamepad" Color="Color.Info" Class="mr-2" />
+                                    Controls
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>W/↑</strong> Move Forward</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>S/↓</strong> Move Backward</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>A</strong> Strafe Left</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>D</strong> Strafe Right</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>←/→</strong> Turn Left/Right</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1"><strong>Space</strong> Shoot</MudText>
+                                <MudText Typo="Typo.body2"><strong>P</strong> Pause/Resume</MudText>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Success" Class="mr-2" />
+                                    Features
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🎯 3D First-Person Shooter</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">👹 Kill demons and monsters</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💊 Collect health packs</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">🔫 Find ammo pickups</MudText>
+                                <MudText Typo="Typo.body2">🏆 Survive and get high score!</MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="6">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="doomCanvas" width="800" height="600" style="border: 3px solid #555; background-color: #000; box-shadow: 0 4px 20px rgba(0,0,0,0.5); cursor: crosshair;"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 800px;" Spacing="2">
+                                    <MudItem xs="12">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="@(() => JSRuntime.InvokeVoidAsync("doom.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.PlayArrow" Class="mr-2" /> Start Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("doom.togglePause"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@(() => JSRuntime.InvokeVoidAsync("doom.stopGame"))" FullWidth="true">
+                                            <MudIcon Icon="@Icons.Material.Filled.Stop" Class="mr-1" /> Stop
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Score and Controls (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 800px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Health: <span id="doom-health-mobile">100</span></MudText>
+                                        <MudText Typo="Typo.body2">Ammo: <span id="doom-ammo-mobile">50</span></MudText>
+                                        <MudText Typo="Typo.body2">Kills: <span id="doom-kills-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="doom-score-mobile">0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Controls:</strong></MudText>
+                                        <MudText Typo="Typo.body2">W/↑ : Move Forward</MudText>
+                                        <MudText Typo="Typo.body2">S/↓ : Move Backward</MudText>
+                                        <MudText Typo="Typo.body2">A/D : Strafe</MudText>
+                                        <MudText Typo="Typo.body2">←/→ : Turn</MudText>
+                                        <MudText Typo="Typo.body2">Space : Shoot</MudText>
+                                        <MudText Typo="Typo.body2">P : Pause/Resume</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+            <MudTabPanel Text="Virus Defense">
+                <MudPaper Class="pa-4" Elevation="3">
+                    <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">🛡️ Virus Defense</MudText>
+                    
+                    <MudGrid Justify="Justify.Center" Spacing="4">
+                        <!-- Left Side: Score and Controls (visible on larger screens) -->
+                        <MudItem xs="12" md="4" lg="3" Style="display: flex; flex-direction: column; gap: 1rem;">
+                            <!-- Stats Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.EmojiEvents" Color="Color.Warning" Class="mr-2" />
+                                    Statistics
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Resources:</strong> <span id="td-gold" style="color: #FFD700; font-weight: bold;">200</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>System Health:</strong> <span id="td-lives" style="color: var(--mud-palette-error); font-weight: bold;">20</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Attack Wave:</strong> <span id="td-wave" style="color: var(--mud-palette-info); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1" Class="mb-2">
+                                    <strong>Score:</strong> <span id="td-score" style="color: var(--mud-palette-primary); font-weight: bold;">0</span>
+                                </MudText>
+                                <MudText Typo="Typo.body1">
+                                    <strong>Viruses Removed:</strong> <span id="td-kills" style="color: var(--mud-palette-success); font-weight: bold;">0</span>
+                                </MudText>
+                            </MudPaper>
+                            
+                            <!-- Security Tool Selection Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Success" Class="mr-2" />
+                                    Deploy Security Tools
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudStack Spacing="2">
+                                    <MudButton Variant="Variant.Filled" 
+                                              Style="background-color: #1565C0; color: white;" 
+                                              OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "basic"))" 
+                                              FullWidth="true">
+                                        🛡️ Firewall (50G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                              Style="background-color: #FF8F00; color: white;" 
+                                              OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "rapid"))" 
+                                              FullWidth="true">
+                                        🔍 IDS (75G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                              Style="background-color: #2E7D32; color: white;" 
+                                              OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "sniper"))" 
+                                              FullWidth="true">
+                                        🦠 Antivirus (100G)
+                                    </MudButton>
+                                    <MudButton Variant="Variant.Filled" 
+                                              Style="background-color: #6A1B9A; color: white;" 
+                                              OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "cannon"))" 
+                                              FullWidth="true">
+                                        🔒 Quarantine (150G)
+                                    </MudButton>
+                                    <MudDivider Class="my-2" />
+                                    <MudButton Variant="Variant.Filled" 
+                                              Color="Color.Error" 
+                                              OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.toggleDemolish"))" 
+                                              FullWidth="true"
+                                              StartIcon="@Icons.Material.Filled.Delete">
+                                        Uninstall Tool
+                                    </MudButton>
+                                </MudStack>
+                            </MudPaper>
+                            
+                            <!-- Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Info" Color="Color.Info" Class="mr-2" />
+                                    How to Play
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1">🛡️ Select a security tool</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">🖱️ Click on grid to deploy</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">⬆️ Click tool to patch/upgrade (Max Lvl 5)</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💎 Hover tool to see upgrade cost</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">🗑️ Use uninstall mode to remove tools</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1">💰 Earn resources by removing viruses</MudText>
+                                <MudText Typo="Typo.body2">⚠️ Don't let viruses reach the end!</MudText>
+                            </MudPaper>
+                            
+                            <!-- Security Tool Info Card -->
+                            <MudPaper Class="pa-4" Elevation="2">
+                                <MudText Typo="Typo.h6" Class="mb-3">
+                                    <MudIcon Icon="@Icons.Material.Filled.Security" Color="Color.Success" Class="mr-2" />
+                                    Security Tools
+                                </MudText>
+                                <MudDivider Class="mb-3" />
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #1565C0;"><strong>🛡️ Firewall:</strong> Blocks threats</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #FF8F00;"><strong>🔍 IDS:</strong> Fast detection</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-1" Style="color: #2E7D32;"><strong>🦠 Antivirus:</strong> High damage scan</MudText>
+                                <MudText Typo="Typo.body2" Class="mb-2" Style="color: #6A1B9A;"><strong>🔒 Quarantine:</strong> Isolates multiple</MudText>
+                                <MudDivider Class="mb-2" />
+                                <MudText Typo="Typo.caption" Style="opacity: 0.8;">
+                                    💡 Upgrade Cost = Base Cost × 50% × Level
+                                </MudText>
+                                <MudText Typo="Typo.caption" Style="opacity: 0.8;">
+                                    💰 Refund Value = 70% of total invested
+                                </MudText>
+                            </MudPaper>
+                        </MudItem>
+                        
+                        <!-- Center: Game Canvas -->
+                        <MudItem xs="12" md="8" lg="9">
+                            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+                                <canvas id="towerdefenseCanvas" width="800" height="600" style="border: 3px solid #555; background-color: #1a1a1a; box-shadow: 0 4px 20px rgba(0,0,0,0.5); cursor: crosshair;"></canvas>
+                                
+                                <!-- Buttons below canvas -->
+                                <MudGrid Class="mt-4" Style="width: 800px;" Spacing="2">
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.startGame"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.FiberNew" Class="mr-2" /> New Game
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6">
+                                        <MudButton Variant="Variant.Filled" Color="Color.Info" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.togglePause"))" FullWidth="true" Size="Size.Large">
+                                            <MudIcon Icon="@Icons.Material.Filled.Pause" Class="mr-1" /> Pause
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                                
+                                <!-- Mobile: Stats and Info (visible only on small screens) -->
+                                <div class="d-md-none mt-4" style="width: 100%; max-width: 800px;">
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Statistics</MudText>
+                                        <MudText Typo="Typo.body2">Resources: <span id="td-gold-mobile">200</span></MudText>
+                                        <MudText Typo="Typo.body2">System Health: <span id="td-lives-mobile">20</span></MudText>
+                                        <MudText Typo="Typo.body2">Attack Wave: <span id="td-wave-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Score: <span id="td-score-mobile">0</span></MudText>
+                                        <MudText Typo="Typo.body2">Viruses Removed: <span id="td-kills-mobile">0</span></MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.h6" Class="mb-2">Deploy Security Tools</MudText>
+                                        <MudStack Spacing="1">
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #1565C0; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "basic"))" FullWidth="true" Size="Size.Small">
+                                                🛡️ Firewall (50G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #FF8F00; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "rapid"))" FullWidth="true" Size="Size.Small">
+                                                🔍 IDS (75G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #2E7D32; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "sniper"))" FullWidth="true" Size="Size.Small">
+                                                🦠 Antivirus (100G)
+                                            </MudButton>
+                                            <MudButton Variant="Variant.Filled" Style="background-color: #6A1B9A; color: white;" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.selectTower", "cannon"))" FullWidth="true" Size="Size.Small">
+                                                🔒 Quarantine (150G)
+                                            </MudButton>
+                                            <MudDivider Class="my-1" />
+                                            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="@(() => JSRuntime.InvokeVoidAsync("towerdefense.toggleDemolish"))" FullWidth="true" Size="Size.Small" StartIcon="@Icons.Material.Filled.Delete">
+                                                Uninstall
+                                            </MudButton>
+                                        </MudStack>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3 mb-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>How to Play:</strong></MudText>
+                                        <MudText Typo="Typo.body2">Select tool → Click grid to deploy</MudText>
+                                        <MudText Typo="Typo.body2">Click tool to upgrade (Max Lvl 5)</MudText>
+                                        <MudText Typo="Typo.body2">Hover tool to see upgrade cost</MudText>
+                                        <MudText Typo="Typo.body2">Earn resources by removing viruses</MudText>
+                                    </MudPaper>
+                                    
+                                    <MudPaper Class="pa-3" Elevation="2">
+                                        <MudText Typo="Typo.body2"><strong>Security Tools:</strong></MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #1565C0;">🛡️ Firewall: Blocks threats</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #FF8F00;">🔍 IDS: Fast detection</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #2E7D32;">🦠 Antivirus: High damage</MudText>
+                                        <MudText Typo="Typo.body2" Style="color: #6A1B9A;">🔒 Quarantine: Isolates multiple</MudText>
+                                    </MudPaper>
+                                </div>
+                            </div>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+            </MudTabPanel>
+            
+        </MudTabs>
+
+        <MudText Class="mt-10" Typo="Typo.h5" Align="Align.Center">"@funFact"</MudText>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+
+    private bool loading_overlay = false;
+
+    private bool _isDarkMode;
+
+    private string netlock_username = String.Empty;
+    public static List<string> permissions_tenants_list = new List<string> { };
+
+    private async Task<bool> Permissions()
+    {
+        try
+        {
+            bool logout = false;
+
+            // Get the current user from the authentication state
+            var user = (await AuthenticationStateProvider.GetAuthenticationStateAsync()).User;
+
+            // Check if user is authenticated
+            if (user?.Identity is not { IsAuthenticated: true })
+                logout = true;
+
+            netlock_username = user.FindFirst(ClaimTypes.Email)?.Value;
+
+            permissions_tenants_list = await Classes.Authentication.Permissions.Get_Tenants(netlock_username, false);
+
+            if (logout) // Redirect to the login page
+            {
+                NavigationManager.NavigateTo("/logout", true);
+                return false;
+            }
+
+            // All fine? Nice.
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/dashboard -> Permissions", "Error", ex.ToString());
+            return false;
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await AfterInitializedAsync();
+        }
+    }
+
+    private async Task AfterInitializedAsync()
+    {
+        loading_overlay = true;
+        StateHasChanged();
+
+        if (!await Permissions())
+            return;
+
+        _isDarkMode = await JSRuntime.InvokeAsync<bool>("isDarkMode");
+
+        await LoadProfile();
+
+        funFact = await Classes.Miscellaneous.FunFacts.GetRandomFact();
+
+        loading_overlay = false;
+        StateHasChanged();
+    }
+
+    private string firstName = String.Empty;
+    private string lastName = String.Empty;
+    private string email = String.Empty;
+    private string phone = String.Empty;
+    private string role = String.Empty;
+
+    private string funFact = String.Empty;
+
+    private async Task LoadProfile()
+    {
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        try
+        {
+            await conn.OpenAsync();
+
+            string query = "SELECT * FROM accounts WHERE username = @netlock_username;";
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+            Logging.Handler.Debug("Example", "MySQL_Prepared_Query", query);
+
+            using (DbDataReader reader = await cmd.ExecuteReaderAsync())
+            {
+                if (reader.HasRows)
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        email = reader["mail"].ToString() ?? String.Empty;
+                        firstName = reader["first_name"].ToString() ?? String.Empty;
+                        lastName = reader["last_name"].ToString() ?? String.Empty;
+                        phone = reader["phone"].ToString() ?? String.Empty;
+                        role = reader["role"].ToString() ?? String.Empty;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("Example", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        Snackbar.Configuration.ShowCloseIcon = true;
+        Snackbar.Configuration.PositionClass = Defaults.Classes.Position.BottomRight;
+
+        MySqlConnection conn = new MySqlConnection(Configuration.MySQL.Connection_String);
+
+        string query = "UPDATE accounts SET first_name = @first_name, last_name = @last_name, phone = @phone, mail = @mail WHERE username = @netlock_username;";
+
+        try
+        {
+            await conn.OpenAsync();
+
+            MySqlCommand cmd = new MySqlCommand(query, conn);
+            cmd.Parameters.AddWithValue("@first_name", firstName);
+            cmd.Parameters.AddWithValue("@last_name", lastName);
+            cmd.Parameters.AddWithValue("@phone", phone);
+            cmd.Parameters.AddWithValue("@mail", email);
+            cmd.Parameters.AddWithValue("@netlock_username", netlock_username);
+
+            Logging.Handler.Debug("UpdateProfile", "MySQL_Prepared_Query", query);
+
+            await cmd.ExecuteNonQueryAsync();
+
+            Snackbar.Add("Saved.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("UpdateProfile", "MySQL_Query", ex.ToString());
+        }
+        finally
+        {
+            await conn.CloseAsync();
+        }
+    }
+}

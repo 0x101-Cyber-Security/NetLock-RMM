@@ -13,6 +13,491 @@
 @inject IDataProtectionProvider DataProtectionProvider
 @inject ProtectedSessionStorage SessionStorage
 
+<style>
+    /* ===== MODERN DESIGN SYSTEM (NetLock Style) ===== */
+    
+    /* Apply Poppins Font globally */
+    * {
+        font-family: 'Poppins', 'Roboto', sans-serif !important;
+    }
+
+    /* Modern AppBar styling - Let MudBlazor handle colors from palette */
+    .mud-appbar {
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Modern Card styling */
+    .mud-card {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .mud-theme-dark .mud-card {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Modern Button styling */
+    .mud-button-filled.mud-button-filled-primary {
+        background: linear-gradient(135deg, #910012 0%, #b30015 100%) !important;
+        box-shadow: 0 4px 15px rgba(145, 0, 18, 0.3) !important;
+        font-weight: 600 !important;
+    }
+
+    .mud-button-filled.mud-button-filled-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(145, 0, 18, 0.4) !important;
+    }
+
+    /* Modern Icon Button hover effect */
+    .mud-icon-button:hover {
+        background-color: rgba(145, 0, 18, 0.1) !important;
+        transform: scale(1.1);
+    }
+
+    .mud-theme-dark .mud-icon-button:hover {
+        background-color: rgba(237, 13, 50, 0.15) !important;
+    }
+
+    /* Modern Drawer styling */
+    .mud-drawer {
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .mud-theme-dark .mud-drawer {
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* Modern Navigation Link styling - Only hover and active effects */
+    .mud-nav-link:hover {
+        background-color: rgba(145, 0, 18, 0.08) !important;
+        transform: translateX(5px);
+    }
+
+    .mud-theme-dark .mud-nav-link:hover {
+        background-color: rgba(237, 13, 50, 0.15) !important;
+    }
+
+    .mud-nav-link.active {
+        background: linear-gradient(135deg, rgba(145, 0, 18, 0.15) 0%, rgba(145, 0, 18, 0.08) 100%) !important;
+        border-left: 3px solid #910012 !important;
+        font-weight: 600 !important;
+    }
+
+    .mud-theme-dark .mud-nav-link.active {
+        background: linear-gradient(135deg, rgba(237, 13, 50, 0.2) 0%, rgba(237, 13, 50, 0.1) 100%) !important;
+        border-left: 3px solid #ED0D32 !important;
+    }
+
+    /* Modern TextField styling */
+    .mud-input-underline:before {
+        border-bottom-color: rgba(145, 0, 18, 0.2) !important;
+    }
+
+    .mud-input-underline:hover:before {
+        border-bottom-color: rgba(145, 0, 18, 0.5) !important;
+    }
+
+    .mud-input-underline:after {
+        border-bottom-color: #910012 !important;
+    }
+
+    /* Modern Paper styling */
+    .mud-paper {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    .mud-theme-dark .mud-paper {
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25) !important;
+    }
+
+    /* Modern Table styling */
+    .mud-table {
+        overflow: hidden;
+    }
+
+    .mud-table-head {
+        background: rgba(145, 0, 18, 0.05) !important;
+        font-weight: 600 !important;
+    }
+
+    .mud-theme-dark .mud-table-head {
+        background: rgba(237, 13, 50, 0.1) !important;
+    }
+
+    .mud-table-row:hover {
+        background-color: rgba(145, 0, 18, 0.03) !important;
+    }
+
+    .mud-theme-dark .mud-table-row:hover {
+        background-color: rgba(237, 13, 50, 0.08) !important;
+    }
+
+    /* Modern Dialog styling */
+    .mud-dialog {
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .mud-theme-dark .mud-dialog {
+        box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4) !important;
+    }
+
+    /* Modern Snackbar styling */
+    .mud-snackbar {
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12) !important;
+        font-weight: 500 !important;
+    }
+
+    /* Modern Chip styling */
+    .mud-chip {
+        font-weight: 500 !important;
+    }
+
+    /* Modern Progress styling */
+    .mud-progress-circular.mud-primary-text > svg > circle {
+        stroke: #910012 !important;
+    }
+
+    .mud-theme-dark .mud-progress-circular.mud-primary-text > svg > circle {
+        stroke: #ED0D32 !important;
+    }
+
+    /* Modern Scrollbar styling */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: rgba(145, 0, 18, 0.3);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: rgba(145, 0, 18, 0.5);
+    }
+
+    .mud-theme-dark ::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .mud-theme-dark ::-webkit-scrollbar-thumb {
+        background: rgba(237, 13, 50, 0.4);
+    }
+
+    .mud-theme-dark ::-webkit-scrollbar-thumb:hover {
+        background: rgba(237, 13, 50, 0.6);
+    }
+
+    /* Modern Badge styling */
+    .mud-badge-primary {
+        background-color: #910012 !important;
+    }
+
+    .mud-theme-dark .mud-badge-primary {
+        background-color: #ED0D32 !important;
+    }
+
+
+    /* Modern Divider styling */
+    .mud-divider {
+        border-color: rgba(145, 0, 18, 0.12) !important;
+    }
+
+    .mud-theme-dark .mud-divider {
+        border-color: rgba(237, 13, 50, 0.2) !important;
+    }
+
+    /* Modern Switch styling */
+    .mud-switch .mud-switch-thumb {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    /* Modern Checkbox styling */
+    .mud-checkbox.mud-checked .mud-button-root {
+        color: #910012 !important;
+    }
+
+    .mud-theme-dark .mud-checkbox.mud-checked .mud-button-root {
+        color: #ED0D32 !important;
+    }
+
+    /* Seasonal Events - Only in AppBar */
+
+    .seasonal-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        overflow: hidden;
+    }
+
+    /* ===== WINTER SNOWFALL ===== */
+    .snowflake {
+        position: absolute;
+        top: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: snowfall-appbar;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        color: #fff;
+        text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+    }
+
+    @@keyframes snowfall-appbar {
+        0% {
+            transform: translateY(0px) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(80px) rotate(360deg);
+            opacity: 0.3;
+        }
+    }
+
+    .snowflake:nth-of-type(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; font-size: 14px; }
+    .snowflake:nth-of-type(2) { left: 20%; animation-duration: 10s; animation-delay: 1s; font-size: 16px; }
+    .snowflake:nth-of-type(3) { left: 30%; animation-duration: 7s; animation-delay: 2s; font-size: 12px; }
+    .snowflake:nth-of-type(4) { left: 40%; animation-duration: 11s; animation-delay: 0.5s; font-size: 15px; }
+    .snowflake:nth-of-type(5) { left: 50%; animation-duration: 9s; animation-delay: 1.5s; font-size: 13px; }
+    .snowflake:nth-of-type(6) { left: 60%; animation-duration: 8s; animation-delay: 3s; font-size: 14px; }
+    .snowflake:nth-of-type(7) { left: 70%; animation-duration: 10s; animation-delay: 0.2s; font-size: 12px; }
+    .snowflake:nth-of-type(8) { left: 80%; animation-duration: 9s; animation-delay: 2.5s; font-size: 16px; }
+    .snowflake:nth-of-type(9) { left: 90%; animation-duration: 11s; animation-delay: 1.8s; font-size: 13px; }
+    .snowflake:nth-of-type(10) { left: 15%; animation-duration: 10s; animation-delay: 0.8s; font-size: 15px; }
+
+    /* ===== NEW YEAR FIREWORKS ===== */
+    .firework {
+        position: absolute;
+        bottom: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: firework-launch;
+        animation-timing-function: ease-out;
+        animation-iteration-count: infinite;
+        font-size: 20px;
+    }
+
+    @@keyframes firework-launch {
+        0% {
+            transform: translateY(0px) scale(0.5);
+            opacity: 1;
+        }
+        50% {
+            transform: translateY(-60px) scale(1);
+            opacity: 1;
+        }
+        70% {
+            transform: translateY(-60px) scale(1.5);
+            opacity: 0.8;
+        }
+        100% {
+            transform: translateY(-60px) scale(2);
+            opacity: 0;
+        }
+    }
+
+    .firework:nth-of-type(1) { left: 15%; animation-duration: 2s; animation-delay: 0s; }
+    .firework:nth-of-type(2) { left: 30%; animation-duration: 2.5s; animation-delay: 0.3s; }
+    .firework:nth-of-type(3) { left: 45%; animation-duration: 2.2s; animation-delay: 0.6s; }
+    .firework:nth-of-type(4) { left: 60%; animation-duration: 2.8s; animation-delay: 0.9s; }
+    .firework:nth-of-type(5) { left: 75%; animation-duration: 2.4s; animation-delay: 1.2s; }
+    .firework:nth-of-type(6) { left: 85%; animation-duration: 2.6s; animation-delay: 1.5s; }
+    .firework:nth-of-type(7) { left: 20%; animation-duration: 2.3s; animation-delay: 1.8s; }
+    .firework:nth-of-type(8) { left: 50%; animation-duration: 2.7s; animation-delay: 2.1s; }
+
+    /* ===== HALLOWEEN GHOSTS & BATS ===== */
+    .halloween-item {
+        position: absolute;
+        top: 10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: float-across;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+        font-size: 18px;
+    }
+
+    @@keyframes float-across {
+        0% {
+            transform: translateX(-50px) translateY(0px);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateX(calc(100vw + 50px)) translateY(-10px);
+            opacity: 0;
+        }
+    }
+
+    .halloween-item:nth-of-type(1) { top: 15px; animation-duration: 12s; animation-delay: 0s; }
+    .halloween-item:nth-of-type(2) { top: 25px; animation-duration: 15s; animation-delay: 3s; }
+    .halloween-item:nth-of-type(3) { top: 35px; animation-duration: 13s; animation-delay: 6s; }
+    .halloween-item:nth-of-type(4) { top: 20px; animation-duration: 14s; animation-delay: 9s; }
+    .halloween-item:nth-of-type(5) { top: 30px; animation-duration: 16s; animation-delay: 12s; }
+
+    /* ===== EASTER EGGS ===== */
+    .easter-egg {
+        position: absolute;
+        top: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: egg-drop;
+        animation-timing-function: ease-in;
+        animation-iteration-count: infinite;
+        font-size: 16px;
+    }
+
+    @@keyframes egg-drop {
+        0% {
+            transform: translateY(0px) rotate(0deg);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(80px) rotate(180deg);
+            opacity: 0.5;
+        }
+    }
+
+    .easter-egg:nth-of-type(1) { left: 12%; animation-duration: 4s; animation-delay: 0s; }
+    .easter-egg:nth-of-type(2) { left: 25%; animation-duration: 5s; animation-delay: 1s; }
+    .easter-egg:nth-of-type(3) { left: 38%; animation-duration: 4.5s; animation-delay: 2s; }
+    .easter-egg:nth-of-type(4) { left: 51%; animation-duration: 5.5s; animation-delay: 0.5s; }
+    .easter-egg:nth-of-type(5) { left: 64%; animation-duration: 4.8s; animation-delay: 1.5s; }
+    .easter-egg:nth-of-type(6) { left: 77%; animation-duration: 5.2s; animation-delay: 2.5s; }
+    .easter-egg:nth-of-type(7) { left: 88%; animation-duration: 4.3s; animation-delay: 3s; }
+
+    /* ===== SPRING FLOWERS ===== */
+    .spring-flower {
+        position: absolute;
+        bottom: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: flower-grow;
+        animation-timing-function: ease-out;
+        animation-iteration-count: infinite;
+        font-size: 18px;
+    }
+
+    @@keyframes flower-grow {
+        0% {
+            transform: translateY(0px) scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: translateY(-20px) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-40px) scale(0.8);
+            opacity: 0;
+        }
+    }
+
+    .spring-flower:nth-of-type(1) { left: 10%; animation-duration: 6s; animation-delay: 0s; }
+    .spring-flower:nth-of-type(2) { left: 25%; animation-duration: 7s; animation-delay: 1s; }
+    .spring-flower:nth-of-type(3) { left: 40%; animation-duration: 6.5s; animation-delay: 2s; }
+    .spring-flower:nth-of-type(4) { left: 55%; animation-duration: 7.5s; animation-delay: 3s; }
+    .spring-flower:nth-of-type(5) { left: 70%; animation-duration: 6.8s; animation-delay: 4s; }
+    .spring-flower:nth-of-type(6) { left: 85%; animation-duration: 7.2s; animation-delay: 5s; }
+
+    /* ===== AUTUMN LEAVES ===== */
+    .autumn-leaf {
+        position: absolute;
+        top: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: leaf-fall;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
+        font-size: 16px;
+    }
+
+    @@keyframes leaf-fall {
+        0% {
+            transform: translateY(0px) translateX(0px) rotate(0deg);
+            opacity: 1;
+        }
+        25% {
+            transform: translateY(20px) translateX(10px) rotate(90deg);
+        }
+        50% {
+            transform: translateY(40px) translateX(-5px) rotate(180deg);
+        }
+        75% {
+            transform: translateY(60px) translateX(8px) rotate(270deg);
+        }
+        100% {
+            transform: translateY(80px) translateX(0px) rotate(360deg);
+            opacity: 0.3;
+        }
+    }
+
+    .autumn-leaf:nth-of-type(1) { left: 15%; animation-duration: 8s; animation-delay: 0s; }
+    .autumn-leaf:nth-of-type(2) { left: 30%; animation-duration: 10s; animation-delay: 2s; }
+    .autumn-leaf:nth-of-type(3) { left: 45%; animation-duration: 9s; animation-delay: 4s; }
+    .autumn-leaf:nth-of-type(4) { left: 60%; animation-duration: 11s; animation-delay: 1s; }
+    .autumn-leaf:nth-of-type(5) { left: 75%; animation-duration: 9.5s; animation-delay: 3s; }
+    .autumn-leaf:nth-of-type(6) { left: 85%; animation-duration: 10.5s; animation-delay: 5s; }
+
+    /* ===== HEARTS (Valentine's Day) ===== */
+    .valentine-heart {
+        position: absolute;
+        bottom: -10px;
+        z-index: 1;
+        user-select: none;
+        cursor: default;
+        pointer-events: none;
+        animation-name: heart-float;
+        animation-timing-function: ease-in-out;
+        animation-iteration-count: infinite;
+        font-size: 16px;
+        color: #ff69b4;
+    }
+
+    @@keyframes heart-float {
+        0% {
+            transform: translateY(0px) scale(0.5);
+            opacity: 0;
+        }
+        50% {
+            transform: translateY(-40px) scale(1);
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-80px) scale(0.5);
+            opacity: 0;
+        }
+    }
+
+    .valentine-heart:nth-of-type(1) { left: 20%; animation-duration: 5s; animation-delay: 0s; }
+    .valentine-heart:nth-of-type(2) { left: 40%; animation-duration: 6s; animation-delay: 1s; }
+    .valentine-heart:nth-of-type(3) { left: 60%; animation-duration: 5.5s; animation-delay: 2s; }
+    .valentine-heart:nth-of-type(4) { left: 80%; animation-duration: 6.5s; animation-delay: 3s; }
+</style>
+
 <MudThemeProvider Theme="@_theme" @ref="@_mudThemeProvider" @bind-IsDarkMode="@_isDarkMode" />
 
 <MudPopoverProvider />
@@ -23,7 +508,65 @@
 
     <AuthorizeView>
         <Authorized>
-            <MudAppBar Dense="true" Color="Color.Inherit" Elevation="1">
+            <MudAppBar Dense="true" Color="Color.Default" Elevation="1">
+                <!-- Seasonal Events Container -->
+                @if (_currentSeasonalEvent != SeasonalEvent.None)
+                {
+                    <div class="seasonal-container">
+                        @switch (_currentSeasonalEvent)
+                        {
+                            case SeasonalEvent.WinterSnowfall:
+                                @for (int i = 0; i < 10; i++)
+                                {
+                                    <div class="snowflake">❄</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.NewYearFireworks:
+                                @for (int i = 0; i < 8; i++)
+                                {
+                                    <div class="firework">🎆</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.Halloween:
+                                @for (int i = 0; i < 5; i++)
+                                {
+                                    <div class="halloween-item">@(i % 2 == 0 ? "👻" : "🦇")</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.Easter:
+                                @for (int i = 0; i < 7; i++)
+                                {
+                                    <div class="easter-egg">🥚</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.Spring:
+                                @for (int i = 0; i < 6; i++)
+                                {
+                                    <div class="spring-flower">@(new[] { "🌸", "🌺", "🌼", "🌻", "🌷", "🌹" }[i])</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.Autumn:
+                                @for (int i = 0; i < 6; i++)
+                                {
+                                    <div class="autumn-leaf">🍂</div>
+                                }
+                                break;
+
+                            case SeasonalEvent.Valentine:
+                                @for (int i = 0; i < 4; i++)
+                                {
+                                    <div class="valentine-heart">❤️</div>
+                                }
+                                break;
+                        }
+                    </div>
+                }
+                
                 <MudImage Src="media/images/NetLock-RMM-Logo-Transparent.svg" Alt="Favicon" Width="35" Height="35" Class="mr-3" />
                 <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
 
@@ -47,6 +590,7 @@
                     <MudIconButton Icon="@Icons.Material.Filled.MenuBook" Color="Color.Inherit" Href="https://docs.netlockrmm.com/en/home" Title="@Localizer["documentation"]" Target="_blank" />
                     <MudIconButton Icon="@Icons.Material.Filled.Support" Color="Color.Inherit" Href="https://members.netlockrmm.com/" Title="Support" Target="_blank" />
                     <MudIconButton Icon="@Icons.Custom.Brands.Discord" Color="Color.Inherit" Href="https://discord.gg/HqUpZgtX4U" Title="Discord" Target="_blank" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Gamepad" Color="Color.Inherit" OnClick="@OpenGameDialog" Title="Tickets open? Hah, play a game instead! :')" Target="_blank" />
                     <MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Inherit" Title="@Localizer["logout"]" Href="/logout" Class="d-none d-md-flex" />
                 </div>
 
@@ -88,6 +632,20 @@
     private bool _isDarkMode = false;
     private MudTheme? _theme = null;
     private MudThemeProvider _mudThemeProvider;
+    private SeasonalEvent _currentSeasonalEvent = SeasonalEvent.None;
+
+    // Seasonal Event Enum
+    private enum SeasonalEvent
+    {
+        None,
+        WinterSnowfall,      // December 10 - February 28
+        NewYearFireworks,    // December 28 - January 3 (Silvester/New Year)
+        Valentine,           // February 10-14
+        Easter,              // Easter week (calculated)
+        Spring,              // March 20 - June 20
+        Halloween,           // October 15 - November 1
+        Autumn               // September 22 - December 9
+    }
 
     protected override void OnInitialized()
     {
@@ -99,6 +657,46 @@
             PaletteDark = _darkPalette,
             LayoutProperties = new LayoutProperties()
         };
+
+        // Detect current seasonal event
+        _currentSeasonalEvent = DetectSeasonalEvent();
+    }
+
+    private SeasonalEvent DetectSeasonalEvent()
+    {
+        var now = DateTime.Now;
+        int month = now.Month;
+        int day = now.Day;
+
+        // New Year / Silvester (highest priority)
+        if ((month == 12 && day >= 28) || (month == 1 && day <= 3))
+            return SeasonalEvent.NewYearFireworks;
+
+        // Valentine's Day
+        if (month == 2 && day >= 10 && day <= 14)
+            return SeasonalEvent.Valentine;
+
+        // Easter (around Easter Sunday - simplified: April)
+        if (month == 4 && day >= 10 && day <= 20)
+            return SeasonalEvent.Easter;
+
+        // Halloween
+        if ((month == 10 && day >= 15) || (month == 11 && day == 1))
+            return SeasonalEvent.Halloween;
+
+        // Winter Snowfall (December-February, but not during New Year)
+        if (month == 12 || month == 1 || month == 2)
+            return SeasonalEvent.WinterSnowfall;
+
+        // Spring
+        if (month >= 3 && month <= 5)
+            return SeasonalEvent.Spring;
+
+        // Autumn
+        if (month >= 9 && month <= 11)
+            return SeasonalEvent.Autumn;
+
+        return SeasonalEvent.None;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -141,7 +739,7 @@
             Background = "#141414",           // Hintergrundfarbe für die gesamte Seite (sehr dunkles Grau)
             BackgroundGray = "#2B2B2B",       // Leicht heller Hintergrund für Sekundärflächen (dunkles Grau)
             AppbarText = "#FFFFFF",           // Textfarbe in der AppBar (weiß)
-            AppbarBackground = "3a3a3a", // Transparente schwarze Hintergrundfarbe für AppBar
+            AppbarBackground = "#3a3a3a",     // Hintergrundfarbe für AppBar (dunkles Grau)
             DrawerBackground = "#3a3a3a",     // Hintergrundfarbe für das Drawer-Menü (dunkles Grau)
             ActionDefault = "#FFFFFF",        // Standardfarbe für Aktionen wie Schaltflächen (weiß)
             ActionDisabled = "#9999994d",     // Farbe für deaktivierte Aktionen (grau mit Transparenz)
@@ -308,8 +906,25 @@
         }
         finally
         {
-            conn.Close();
+            await conn.CloseAsync();
         }
+    }
+    
+    private async Task OpenGameDialog()
+    {
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.ExtraExtraLarge,
+            BackgroundClass = "dialog-blurring",
+        };
+
+        var parameters = new DialogParameters
+        {
+        };
+
+        DialogService.Show<Pages.Community.Events.Virus_Defense_Dialog>(String.Empty, parameters, options);
     }
 }
 

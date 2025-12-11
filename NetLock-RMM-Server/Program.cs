@@ -279,7 +279,7 @@ if (Roles.Update || Roles.Trust)
 {
     if (Members_Portal.IsApiEnabled)
     {
-        //OSSCH_START dcae5642-41c6-4f9f-ad0f-a74727c6e611 //OSSCH_END
+        //OSSCH_START 23c5767f-bd39-4b5b-b7b6-79ac59f00688 //OSSCH_END
         Console.WriteLine("----------------------------------------");
     }
 }
@@ -349,13 +349,13 @@ app.MapGet("/test", async context =>
 // Members Portal Api Cloud Version Endpoints
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
-    //OSSCH_START 7e183b1d-197e-4427-94f8-de63f17f7c54 //OSSCH_END
+    //OSSCH_START cc6b1598-f586-4465-a839-9d1987fbe74e //OSSCH_END
 }
 
 if (Members_Portal.IsApiEnabled && Members_Portal.IsCloudEnabled)
 {
     // Credentials update endpoint
-    //OSSCH_START f91b0363-be54-4d47-956b-93ed7ba40390 //OSSCH_END
+    //OSSCH_START 2c488b1a-1605-4e6e-8617-1d115f4651a0 //OSSCH_END
 }
 
 //Check Version
@@ -733,6 +733,24 @@ if (role_file)
     {
         try
         {
+            Logging.Handler.Debug("/admin/files", "Request received.", path);
+
+            // Add security header
+            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+
+            // Determine external IP address (if available)
+            string ipAddressExternal = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue)
+                ? headerValue.ToString()
+                : context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            // Verify API key
+            if (!context.Request.Headers.TryGetValue("x-api-key", out StringValues apiKey) || !await NetLock_RMM_Server.Files.Handler.Verify_Api_Key(apiKey))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Unauthorized.");
+                return;
+            }
+
             // Check whether the path is null or empty
             if (String.IsNullOrWhiteSpace(path))
             {
@@ -761,25 +779,7 @@ if (role_file)
                     return;
                 }
             }
-
-            Logging.Handler.Debug("/admin/files", "Request received.", path);
-
-            // Add security header
-            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
-
-            // Determine external IP address (if available)
-            string ipAddressExternal = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue)
-                ? headerValue.ToString()
-                : context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
-
-            // Verify API key
-            if (!context.Request.Headers.TryGetValue("x-api-key", out StringValues apiKey) || !await NetLock_RMM_Server.Files.Handler.Verify_Api_Key(apiKey))
-            {
-                context.Response.StatusCode = 401;
-                await context.Response.WriteAsync("Unauthorized.");
-                return;
-            }
-
+            
             // Check directory
             var fullPath = Path.Combine(Application_Paths._private_files, path);
 
@@ -1314,7 +1314,7 @@ app.MapPost("/admin/files/upload/device", async (HttpContext context) =>
 // NetLock files download private - GUID, used for update server & trust server
 if (role_update || role_trust)
 {
-    //OSSCH_START 89a9374b-8b49-433b-ad67-9b154fe3bb7c //OSSCH_END
+    //OSSCH_START 07dc9d03-0cb9-428e-adf7-0b2c856a79dc //OSSCH_END
 }
 
 /*
@@ -1545,6 +1545,71 @@ if (role_file)
             Logging.Handler.Error("/admin/create_installer", "General error", ex.ToString());
             context.Response.StatusCode = 500;
             await context.Response.WriteAsync("1"); // something went wrong
+        }
+    });
+}
+
+// Web console get connected devices
+if (role_file)
+{
+    app.MapGet("/admin/devices/connected", async (HttpContext context) =>
+    {
+        try
+        {
+            Logging.Handler.Debug("/admin/devices/connected", "Request received.", "");
+
+            // Add security header
+            context.Response.Headers.Add("Content-Security-Policy", "default-src 'self'");
+
+            // Determine external IP address (if available)
+            string ipAddressExternal = context.Request.Headers.TryGetValue("X-Forwarded-For", out var headerValue)
+                ? headerValue.ToString()
+                : context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+            // Verify API key
+            if (!context.Request.Headers.TryGetValue("x-api-key", out StringValues apiKey) || !await NetLock_RMM_Server.Files.Handler.Verify_Api_Key(apiKey))
+            {
+                context.Response.StatusCode = 401;
+                await context.Response.WriteAsync("Unauthorized.");
+                return;
+            }
+            
+            // Get connected devices access keys from CommandHubSingleton
+            var connectedAccessKeys = new List<string>();
+            foreach (var identityJson in NetLock_RMM_Server.SignalR.CommandHubSingleton.Instance._clientConnections.Values)
+            {
+                try
+                {
+                    var identityDoc = JsonDocument.Parse(identityJson);
+                    if (identityDoc.RootElement.TryGetProperty("device_identity", out var deviceIdentity) &&
+                        deviceIdentity.TryGetProperty("access_key", out var accessKeyElement))
+                    {
+                        string accessKey = accessKeyElement.GetString();
+                        if (!string.IsNullOrEmpty(accessKey) && !connectedAccessKeys.Contains(accessKey))
+                        {
+                            connectedAccessKeys.Add(accessKey);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("/admin/devices/connected", "Failed to parse identity JSON", ex.ToString());
+                }
+            }
+
+            // Create JSON response
+            var jsonObject = new { access_keys = connectedAccessKeys };
+            string json = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            Logging.Handler.Debug("/admin/devices/connected", "Connected devices", json);
+
+            context.Response.ContentType = "application/json";
+            await context.Response.WriteAsync(json);
+        }
+        catch (Exception ex)
+        {
+            Logging.Handler.Error("/admin/devices/connected/index", "General error", ex.ToString());
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("An error occurred while processing the request.");
         }
     });
 }

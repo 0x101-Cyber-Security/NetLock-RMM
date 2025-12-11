@@ -3,6 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.InteropServices;
 using System.Text;
 using Global.Helper;
+using Global.Configuration;
 using static Windows.Helper.ScreenControl.ADVAPI32;
 using static Windows.Helper.ScreenControl.User32;
 
@@ -112,6 +113,10 @@ public class Win32Interop
 
             var dwSessionId = ResolveWindowsSession(targetSessionId);
 
+            if (Global.Configuration.Agent.debug_mode)
+                Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                    $"Resolved SessionId: {dwSessionId}, CommandLine: {commandLine}");
+
             // Obtain the process ID of the winlogon process that is running within the currently active session.
             var processes = Process.GetProcessesByName("winlogon");
             foreach (Process p in processes)
@@ -119,17 +124,52 @@ public class Win32Interop
                 if ((uint)p.SessionId == dwSessionId)
                 {
                     winlogonPid = (uint)p.Id;
+                    if (Global.Configuration.Agent.debug_mode)
+                        Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                            $"Found winlogon PID: {winlogonPid} in session {dwSessionId}");
                 }
             }
 
-            // Obtain a handle to the winlogon process.
-            hProcess = Kernel32.OpenProcess(MAXIMUM_ALLOWED, false, winlogonPid);
-
-            // Obtain a handle to the access token of the winlogon process.
-            if (!OpenProcessToken(hProcess, TOKEN_DUPLICATE, ref hPToken))
+            // If no winlogon found, use the current process token (we're running as SYSTEM service)
+            if (winlogonPid == 0)
             {
-                Kernel32.CloseHandle(hProcess);
-                return false;
+                if (Global.Configuration.Agent.debug_mode)
+                    Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                        $"No winlogon found for session {dwSessionId}, using current process token");
+
+                // Get the current process token
+                hProcess = Kernel32.GetCurrentProcess();
+                
+                if (!OpenProcessToken(hProcess, TOKEN_DUPLICATE, ref hPToken))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                        $"Failed to open current process token. Error: {error}");
+                    return false;
+                }
+            }
+            else
+            {
+                // Obtain a handle to the winlogon process.
+                hProcess = Kernel32.OpenProcess(MAXIMUM_ALLOWED, false, winlogonPid);
+                
+                if (hProcess == nint.Zero)
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                        $"Failed to open winlogon process {winlogonPid}. Error: {error}");
+                    return false;
+                }
+
+                // Obtain a handle to the access token of the winlogon process.
+                if (!OpenProcessToken(hProcess, TOKEN_DUPLICATE, ref hPToken))
+                {
+                    int error = Marshal.GetLastWin32Error();
+                    Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                        $"Failed to open process token. Error: {error}");
+                    Kernel32.CloseHandle(hProcess);
+                    return false;
+                }
             }
 
             // Security attibute structure used in DuplicateTokenEx and CreateProcessAsUser.
@@ -139,9 +179,22 @@ public class Win32Interop
             // Copy the access token of the winlogon process; the newly created token will be a primary token.
             if (!DuplicateTokenEx(hPToken, MAXIMUM_ALLOWED, ref sa, SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup))
             {
+                int error = Marshal.GetLastWin32Error();
+                Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                    $"Failed to duplicate token. Error: {error}");
                 Kernel32.CloseHandle(hProcess);
                 Kernel32.CloseHandle(hPToken);
                 return false;
+            }
+
+            // Set the session ID in the token to the target session
+            if (!Kernel32.SetTokenInformation(hUserTokenDup, Kernel32.TOKEN_INFORMATION_CLASS.TokenSessionId, 
+                ref dwSessionId, (uint)Marshal.SizeOf(dwSessionId)))
+            {
+                int error = Marshal.GetLastWin32Error();
+                if (Global.Configuration.Agent.debug_mode)
+                    Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                        $"SetTokenInformation failed (may not be critical). Error: {error}");
             }
 
             // By default, CreateProcessAsUser creates a process on a non-interactive window station, meaning
@@ -179,6 +232,18 @@ public class Win32Interop
                 ref si,
                 out procInfo);
 
+            if (!result)
+            {
+                int error = Marshal.GetLastWin32Error();
+                Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                    $"CreateProcessAsUser failed. Error: {error}, Desktop: {si.lpDesktop}, CommandLine: {commandLine}");
+            }
+            else if (Global.Configuration.Agent.debug_mode)
+            {
+                Logging.Debug("Win32Interop.cs", "CreateInteractiveSystemProcess", 
+                    $"Process created successfully. PID: {procInfo.dwProcessId}, Desktop: {si.lpDesktop}");
+            }
+
             // Invalidate the handles.
             Kernel32.CloseHandle(hProcess);
             Kernel32.CloseHandle(hPToken);
@@ -189,6 +254,111 @@ public class Win32Interop
         catch (Exception ex)
         {
             Logging.Error("Win32Interop.cs", "CreateInteractiveSystemProcess", $"Error: {ex.ToString()}");
+            procInfo = new PROCESS_INFORMATION();
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// Creates a process in the user's session context (not SYSTEM)
+    /// Uses WTSQueryUserToken to get the actual user token
+    /// </summary>
+    public static bool CreateProcessInUserSession(
+        string commandLine,
+        int targetSessionId,
+        bool hiddenWindow,
+        out PROCESS_INFORMATION procInfo)
+    {
+        try
+        {
+            var hUserToken = nint.Zero;
+            var hUserTokenDup = nint.Zero;
+
+            procInfo = new PROCESS_INFORMATION();
+
+            var dwSessionId = ResolveWindowsSession(targetSessionId);
+
+            if (Global.Configuration.Agent.debug_mode)
+                Logging.Debug("Win32Interop.cs", "CreateProcessInUserSession", 
+                    $"Resolved SessionId: {dwSessionId}, CommandLine: {commandLine}");
+
+            // Get the user token for this session
+            if (!WTSAPI32.WTSQueryUserToken(dwSessionId, out hUserToken))
+            {
+                int error = Marshal.GetLastWin32Error();
+                Logging.Error("Win32Interop.cs", "CreateProcessInUserSession", 
+                    $"WTSQueryUserToken failed for session {dwSessionId}. Error: {error}");
+                return false;
+            }
+
+            // Security attribute structure
+            var sa = new SECURITY_ATTRIBUTES();
+            sa.Length = Marshal.SizeOf(sa);
+
+            // Duplicate the token
+            if (!DuplicateTokenEx(hUserToken, MAXIMUM_ALLOWED, ref sa, 
+                SECURITY_IMPERSONATION_LEVEL.SecurityIdentification, TOKEN_TYPE.TokenPrimary, out hUserTokenDup))
+            {
+                int error = Marshal.GetLastWin32Error();
+                Logging.Error("Win32Interop.cs", "CreateProcessInUserSession", 
+                    $"Failed to duplicate token. Error: {error}");
+                Kernel32.CloseHandle(hUserToken);
+                return false;
+            }
+
+            // Setup startup info
+            var si = new STARTUPINFO();
+            si.cb = Marshal.SizeOf(si);
+            si.lpDesktop = @"winsta0\Default"; // User sessions always use Default desktop
+
+            // Flags for process creation
+            uint dwCreationFlags;
+            if (hiddenWindow)
+            {
+                dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NO_WINDOW;
+                si.dwFlags = STARTF_USESHOWWINDOW;
+                si.wShowWindow = 0;
+            }
+            else
+            {
+                dwCreationFlags = NORMAL_PRIORITY_CLASS | CREATE_UNICODE_ENVIRONMENT | CREATE_NEW_CONSOLE;
+            }
+
+            // Create the process in the user's context
+            var result = CreateProcessAsUser(
+                hUserTokenDup,
+                null,
+                commandLine,
+                ref sa,
+                ref sa,
+                false,
+                dwCreationFlags,
+                nint.Zero,
+                null,
+                ref si,
+                out procInfo);
+
+            if (!result)
+            {
+                int error = Marshal.GetLastWin32Error();
+                Logging.Error("Win32Interop.cs", "CreateProcessInUserSession", 
+                    $"CreateProcessAsUser failed. Error: {error}, Desktop: {si.lpDesktop}, CommandLine: {commandLine}");
+            }
+            else if (Global.Configuration.Agent.debug_mode)
+            {
+                Logging.Debug("Win32Interop.cs", "CreateProcessInUserSession", 
+                    $"Process created successfully in user context. PID: {procInfo.dwProcessId}, SessionId: {dwSessionId}");
+            }
+
+            // Clean up handles
+            Kernel32.CloseHandle(hUserToken);
+            Kernel32.CloseHandle(hUserTokenDup);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Logging.Error("Win32Interop.cs", "CreateProcessInUserSession", $"Error: {ex.ToString()}");
             procInfo = new PROCESS_INFORMATION();
             return false;
         }

@@ -6,11 +6,11 @@ namespace NetLock_RMM_Web_Console.Classes.Helper
 {
     public class Http
     {
-        public static async Task<string> Get_Request_With_Api_Key(string url)
+        public static async Task<string> Get_Request_With_Api_Key(string url, bool membersPortal)
         {
             try
             {
-                string api_key = await Classes.MySQL.Handler.Get_Api_Key();
+                string api_key = await Classes.MySQL.Handler.Get_Api_Key(membersPortal);
 
                 using (var httpClient = new HttpClient())
                 {
@@ -19,7 +19,7 @@ namespace NetLock_RMM_Web_Console.Classes.Helper
 
                     // GET Request absenden
                     var response = await httpClient.GetAsync(url);
-
+                    
                     if (response.IsSuccessStatusCode)
                     {
                         // Read response
@@ -38,16 +38,17 @@ namespace NetLock_RMM_Web_Console.Classes.Helper
             }
             catch (Exception ex)
             {
+                Console.WriteLine(ex.ToString());
                 Logging.Handler.Error("Online_Mode.Handler.Get_Request_With_Api_Key", "General error", ex.ToString());
                 return String.Empty;
             }
         }
 
-        public static async Task <string> POST_Request_Json_With_Api_Key(string url, string json)
+        public static async Task <string> POST_Request_Json_With_Api_Key(string url, string json, bool membersPortal)
         {
             try
             {
-                string api_key = await Classes.MySQL.Handler.Get_Api_Key();
+                string api_key = await Classes.MySQL.Handler.Get_Api_Key(membersPortal);
 
                 using (var httpClient = new HttpClient())
                 {
