@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using MySqlConnector;
 using System;
@@ -68,20 +68,25 @@ namespace NetLock_RMM_Server.SignalR
             public bool wait_response { get; set; }
             public string powershell_code { get; set; } 
             public int file_browser_command { get; set; } 
-            public string file_browser_path { get; set; } 
-            public string file_browser_path_move { get; set; } 
-            public string file_browser_file_content { get; set; } 
+            public string file_browser_path { get; set; }
+            public string file_browser_path_move { get; set; }
+            public List<string> file_browser_paths { get; set; }
+            public string file_browser_file_content { get; set; }
             public string file_browser_file_guid { get; set; }
             public string remote_control_username { get; set; }
             public string remote_control_screen_index { get; set; }
             public string remote_control_mouse_action { get; set; }
             public string remote_control_mouse_xyz { get; set; }
-            public string remote_control_keyboard_input { get; set; }
+            public string remote_control_input_intent { get; set; }
+            public string remote_control_keyboard_text { get; set; }
+            public string remote_control_key_code { get; set; }
+            public string remote_control_modifiers { get; set; }
             public string remote_control_keyboard_content { get; set; }
             public string remote_control_elevation_username { get; set; }
             public string remote_control_elevation_password { get; set; }
             public int remote_control_render_mode { get; set; }
             public string command { get; set; } // used for service, task manager, screen capture
+            public string remote_shell_language { get; set; } // "", "powershell", "cmd", "bash", "zsh", "python3"
         }
          
         public class Root_Entity
@@ -90,6 +95,222 @@ namespace NetLock_RMM_Server.SignalR
             public Admin_Identity? admin_identity { get; set; }
             public Target_Device? target_device { get; set; }
             public Command? command { get; set; }
+        }
+
+        // Maps a remote command type to the account permission key that the web console UI uses to
+        // expose it. Types not present here have no matching permission and are rejected. Check
+        // connection (type 5) is handled separately and intentionally not listed.
+        private static readonly Dictionary<int, string> CommandTypePermissionMap = new Dictionary<int, string>
+        {
+            { 0, "devices_remote_shell" },              // Remote Shell
+            { 1, "devices_remote_file_browser" },       // File Browser
+            { 2, "devices_remote_control" },            // Service Action
+            { 3, "devices_task_manager" },              // Task Manager Action
+            { 4, "devices_remote_control" },            // Remote Screen Control
+            { 6, "devices_remote_control" },            // Tray Icon - Show chat window
+            { 7, "devices_remote_control" },            // Ask for remote screen control access
+            { 8, "devices_remote_control" },            // Remote control - elevation request
+            { 9, "devices_shutdown" },                  // Power actions (shutdown/reboot)
+            { 10, "devices_remote_eventlog_viewer" },   // Event Log - Simple Commands
+            { 11, "devices_remote_eventlog_viewer" },   // Event Log - Read with Parameters
+            { 12, "devices_remote_eventlog_viewer" },   // Event Log - Stats
+            { 13, "devices_remote_eventlog_viewer" },   // Event Log - Clear
+            { 15, "devices_remote_control" },           // Virtual Display Management
+            { 17, "devices_remote_shell" },             // Real-Time Shell
+            { 18, "devices_remote_registry_editor" },   // Registry Editor
+            { 19, "devices_remote_shell" },             // Remote Shell - Get Users
+            { 20, "devices_wake_on_lan" },              // Wake On LAN
+            { 21, "devices_software" },                 // Uninstall Application
+            { 22, "devices_force_sync" },               // Force Sync
+            { 23, "devices_snmp_tools" },               // SNMP Tools
+            { 24, "devices_remote_control" },           // Read Service Details
+            { 25, "devices_remote_control" },           // Apply Service Edit
+            { 26, "devices_remote_control" },           // Refresh Services List
+            { 27, "devices_remote_control" },           // Realtime Metrics
+            { 28, "devices_software" },                 // Software Deployment - Trigger Pull
+            { 29, "devices_uninstall_agent" },          // Uninstall Agent
+            { 30, "sensors_dynamic_discovery" },        // Sensor Discovery (dynamic option picker)
+            { 31, "devices_updates" },                  // Patch Now (on-demand patch installation)
+            { 61, "devices_remote_control" },           // Tray Icon
+            { 62, "devices_remote_control" },           // Tray Icon - Play sound
+            { 63, "devices_remote_control" },           // Tray Icon
+            { 64, "devices_remote_control" },           // Tray Icon
+            { 65, "devices_remote_control" },           // Tray Icon - Show support overlay
+        };
+
+        // Maps a remote command type to the AgentSettings (policy) JSON property that gates it.
+        // The device policy must have the mapped property set to true for the command to be forwarded.
+        // Types not present here are not policy-gated server-side (always allowed at this stage).
+        // Screen-control types (4,6,7,8,61,63,64,65) are intentionally NOT listed: they remain gated
+        // on the agent. Type 27 (no policy field) and always-allowed types are also not listed.
+        private static readonly Dictionary<int, string> CommandTypeFeatureMap = new Dictionary<int, string>
+        {
+            { 0, "RemoteShellEnabled" },                // Remote Shell
+            { 17, "RemoteShellEnabled" },               // Real-Time Shell
+            { 19, "RemoteShellEnabled" },               // Remote Shell - Get Users
+            { 1, "RemoteFileBrowserEnabled" },          // File Browser
+            { 2, "RemoteServiceManagerEnabled" },       // Service Action
+            { 24, "RemoteServiceManagerEnabled" },      // Read Service Details
+            { 25, "RemoteServiceManagerEnabled" },      // Apply Service Edit
+            { 26, "RemoteServiceManagerEnabled" },      // Refresh Services List
+            { 3, "RemoteTaskManagerEnabled" },          // Task Manager Action
+            { 10, "RemoteEventLogEnabled" },            // Event Log - Simple Commands
+            { 11, "RemoteEventLogEnabled" },            // Event Log - Read with Parameters
+            { 12, "RemoteEventLogEnabled" },            // Event Log - Stats
+            { 13, "RemoteEventLogEnabled" },            // Event Log - Clear
+            { 18, "RemoteRegistryEditorEnabled" },      // Registry Editor
+            { 23, "SnmpToolsEnabled" },                 // SNMP Tools
+        };
+
+        // Per-device agent_settings JSON cache keyed by access_key, used to gate command types
+        // against the device policy without resolving the policy on every command. Entries expire
+        // after AGENT_SETTINGS_CACHE_TTL_SECONDS.
+        private static readonly ConcurrentDictionary<string, (string agentSettingsJson, DateTime expiresAt)> _agentSettingsCache = new ConcurrentDictionary<string, (string, DateTime)>();
+        private const int AGENT_SETTINGS_CACHE_TTL_SECONDS = 30;
+
+        private bool IsAdminConnection()
+        {
+            return Context.Items.TryGetValue("role", out var role) && (role as string) == "admin";
+        }
+
+        private bool IsDeviceConnection()
+        {
+            return Context.Items.TryGetValue("role", out var role) && (role as string) == "device";
+        }
+
+        // Confirms the operator's permissions grant the given command type. Unmapped types are rejected.
+        private static bool Operator_Has_Permission_For_Type(MySQL.Handler.Operator_Info op, int type)
+        {
+            if (op == null)
+                return false;
+
+            if (!CommandTypePermissionMap.TryGetValue(type, out string permission_key) || string.IsNullOrEmpty(permission_key))
+                return false;
+
+            if (string.IsNullOrEmpty(op.permissions_json) || op.permissions_json == "[]")
+                return false;
+
+            try
+            {
+                using JsonDocument document = JsonDocument.Parse(op.permissions_json);
+
+                if (document.RootElement.TryGetProperty(permission_key, out JsonElement element) &&
+                    element.ValueKind == JsonValueKind.True)
+                    return true;
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "Operator_Has_Permission_For_Type", ex.ToString());
+                return false;
+            }
+        }
+
+        // Confirms the operator may act on the device's tenant. Full-access operators are always allowed.
+        private static bool Operator_Has_Tenant_Access(MySQL.Handler.Operator_Info op, string tenant_id)
+        {
+            if (op == null)
+                return false;
+
+            if (op.full_access)
+                return true;
+
+            if (string.IsNullOrEmpty(tenant_id))
+                return false;
+
+            return op.tenant_ids.Contains(tenant_id);
+        }
+
+        // Resolves the device policy's agent_settings JSON for the given access_key, using a short-lived
+        // cache. On a cache miss the policy name is resolved via the automations priority chain (external
+        // IP intentionally skipped) and the matching policy's agent_settings column is read. The result
+        // (including an empty string) is cached for AGENT_SETTINGS_CACHE_TTL_SECONDS.
+        private static async Task<string> Get_Agent_Settings_For_Device(string access_key)
+        {
+            if (string.IsNullOrEmpty(access_key))
+                return string.Empty;
+
+            if (_agentSettingsCache.TryGetValue(access_key, out var cached) && cached.expiresAt > DateTime.UtcNow)
+                return cached.agentSettingsJson;
+
+            string agent_settings_json = string.Empty;
+
+            try
+            {
+                using (var conn = new MySqlConnection(Configuration.MySQL.Connection_String))
+                {
+                    await conn.OpenAsync();
+
+                    // Read the persisted internal IP and domain for this device (used by the resolver).
+                    string internal_ip = string.Empty;
+                    string domain = string.Empty;
+
+                    using (var cmd = new MySqlCommand(
+                        "SELECT ip_address_internal, domain FROM devices WHERE access_key = @access_key LIMIT 1;", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@access_key", access_key);
+
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                internal_ip = reader["ip_address_internal"] != DBNull.Value ? reader["ip_address_internal"].ToString() : string.Empty;
+                                domain = reader["domain"] != DBNull.Value ? reader["domain"].ToString() : string.Empty;
+                            }
+                        }
+                    }
+
+                    // Resolve the policy name (external IP skipped) and read its agent_settings.
+                    string policy_name = await Agent.Windows.Policy_Handler.Resolve_Policy_Name_For_Device(conn, access_key, internal_ip, domain, "");
+
+                    if (!string.IsNullOrEmpty(policy_name))
+                        agent_settings_json = await Agent.Windows.Policy_Handler.Get_Agent_Settings_By_Policy_Name(conn, policy_name);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "Get_Agent_Settings_For_Device", ex.ToString());
+            }
+
+            _agentSettingsCache[access_key] = (agent_settings_json ?? string.Empty, DateTime.UtcNow.AddSeconds(AGENT_SETTINGS_CACHE_TTL_SECONDS));
+
+            return agent_settings_json ?? string.Empty;
+        }
+
+        // Confirms the device policy allows the given command type. Types not in CommandTypeFeatureMap
+        // are always allowed. If the policy / agent_settings cannot be resolved, the command is denied
+        // (fail-closed). The mapped property must exist and be a JSON boolean true.
+        private static async Task<bool> Device_Policy_Allows_Command_Type(string access_key, int type)
+        {
+            if (!CommandTypeFeatureMap.TryGetValue(type, out string feature_property) || string.IsNullOrEmpty(feature_property))
+                return true;
+
+            string agent_settings_json = await Get_Agent_Settings_For_Device(access_key);
+
+            if (string.IsNullOrEmpty(agent_settings_json))
+            {
+                Logging.Handler.Warning("SignalR CommandHub", "Device_Policy_Allows_Command_Type",
+                    $"No agent_settings resolved for access_key {access_key}. Command type {type} denied (fail-closed).");
+                return false;
+            }
+
+            try
+            {
+                using JsonDocument document = JsonDocument.Parse(agent_settings_json);
+
+                if (document.RootElement.TryGetProperty(feature_property, out JsonElement element) &&
+                    element.ValueKind == JsonValueKind.True)
+                    return true;
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Warning("SignalR CommandHub", "Device_Policy_Allows_Command_Type",
+                    $"Failed to parse agent_settings for access_key {access_key}. Command type {type} denied (fail-closed). {ex}");
+                return false;
+            }
         }
 
         public override async Task OnConnectedAsync()
@@ -148,6 +369,17 @@ namespace NetLock_RMM_Server.SignalR
                         await Task.CompletedTask;
                         return;
                     }
+                    
+                    // Verify that the device exists in the database and is authorized to connect
+                    bool isDeviceAuthorized = await VerifyDeviceAccessKey(deviceIdentity.access_key);
+                    if (!isDeviceAuthorized)
+                    {
+                        Logging.Handler.Warning("SignalR CommandHub", "OnConnectedAsync", 
+                            $"Device with access_key {deviceIdentity.access_key} is not authorized. Connection rejected.");
+                        Context.Abort();
+                        await Task.CompletedTask;
+                        return;
+                    }
 
                     // Improved connection logic: Check for existing connections
                     // Device identifies itself only via access_key
@@ -162,14 +394,54 @@ namespace NetLock_RMM_Server.SignalR
                         Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", 
                             $"Connection replacement: Old ID={deviceClientId}, New ID={clientId}");
                         
-                        // Remove old connection 
+                        // Remove old connection
                         CommandHubSingleton.Instance.RemoveClientConnection(deviceClientId);
                     }
+
+                    // Tag this connection as a device so hub methods can distinguish it from an admin
+                    Context.Items["role"] = "device";
                 }
                 else if (!string.IsNullOrEmpty(adminIdentityEncoded))
                 {
                     decodedIdentityJson = Uri.UnescapeDataString(adminIdentityEncoded);
                     Logging.Handler.Debug("SignalR CommandHub", "OnConnectedAsync", "Admin identity: " + decodedIdentityJson);
+
+                    // Verify admin token
+                    try
+                    {
+                        var adminRoot = JsonSerializer.Deserialize<Root_Entity>(decodedIdentityJson);
+                        if (adminRoot?.admin_identity == null || string.IsNullOrEmpty(adminRoot.admin_identity.token))
+                        {
+                            Logging.Handler.Warning("SignalR CommandHub", "OnConnectedAsync", 
+                                "Admin identity token is missing. Connection rejected.");
+                            Context.Abort();
+                            await Task.CompletedTask;
+                            return;
+                        }
+
+                        bool isTokenValid = await Webconsole.Handler.Verify_Remote_Session_Token(adminRoot.admin_identity.token);
+                        if (!isTokenValid)
+                        {
+                            Logging.Handler.Warning("SignalR CommandHub", "OnConnectedAsync",
+                                "Admin token is invalid. Connection rejected.");
+                            Context.Abort();
+                            await Task.CompletedTask;
+                            return;
+                        }
+
+                        // Tag this connection as an admin and remember the verified token so hub methods
+                        // can scope it to the operator behind it.
+                        Context.Items["role"] = "admin";
+                        Context.Items["admin_token"] = adminRoot.admin_identity.token;
+                    }
+                    catch (JsonException ex)
+                    {
+                        Logging.Handler.Error("SignalR CommandHub", "OnConnectedAsync", 
+                            $"Failed to parse admin identity JSON: {ex.Message}");
+                        Context.Abort();
+                        await Task.CompletedTask;
+                        return;
+                    }
                 }
 
                 // Save clientId and any other relevant data in the Singleton's data structure
@@ -303,6 +575,44 @@ namespace NetLock_RMM_Server.SignalR
             await base.OnDisconnectedAsync(exception);
         }
 
+        /// <summary>
+        /// Verifies that the device access_key exists and is authorized in the database
+        /// </summary>  
+        private async Task<bool> VerifyDeviceAccessKey(string accessKey)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(Configuration.MySQL.Connection_String))
+                {
+                    await conn.OpenAsync();
+                    
+                    using (var cmd = new MySqlCommand(
+                        "SELECT authorized FROM devices WHERE access_key = @access_key LIMIT 1;", conn))
+                    {
+                        cmd.Parameters.AddWithValue("@access_key", accessKey);
+                        
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await reader.ReadAsync())
+                            {
+                                // Device exists, check if authorized
+                                var authorized = reader["authorized"]?.ToString();
+                                return authorized == "1";
+                            }
+                        }
+                    }
+                }
+                
+                // Device not found
+                return false;
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "VerifyDeviceAccessKey", ex.ToString());
+                return false;
+            }
+        }
+
         // Get device client id by access key (used when admin sends command via webconsole)
         public async Task<string> Get_Device_ClientId(string access_key)
         {
@@ -380,7 +690,7 @@ namespace NetLock_RMM_Server.SignalR
             }
         }
 
-        public async Task SendMessageToClient(string client_id, string command_json)
+        private async Task SendMessageToClient(string client_id, string command_json)
         {
             try
             {
@@ -398,7 +708,7 @@ namespace NetLock_RMM_Server.SignalR
             }
         }
 
-        public async Task SendMessageToClientAndWaitForResponse(string admin_identity_info_json, string client_id, string command_json)
+        private async Task SendMessageToClientAndWaitForResponse(string admin_identity_info_json, string client_id, string command_json)
         {
             try
             {
@@ -450,6 +760,10 @@ namespace NetLock_RMM_Server.SignalR
         {
             try
             {
+                // This callback is only ever raised by a connected device.
+                if (!IsDeviceConnection())
+                    return;
+
                 Logging.Handler.Debug("SignalR CommandHub", "ReceiveClientResponse", $"Received response from client. ResponseId: {responseId}");
 
                 if (String.IsNullOrEmpty(responseId) || String.IsNullOrEmpty(response))
@@ -483,6 +797,7 @@ namespace NetLock_RMM_Server.SignalR
                 string command = String.Empty;
                 int file_browser_command = 0;
                 string powershell_code = String.Empty;
+                string remote_control_username = String.Empty;
 
                 // Deserialisierung des gesamten JSON-Strings
                 using (JsonDocument document = JsonDocument.Parse(admin_identity_info_json))
@@ -516,6 +831,10 @@ namespace NetLock_RMM_Server.SignalR
                         // Get the file browser command from the JSON
                         JsonElement file_browser_command_element = document.RootElement.GetProperty("file_browser_command");
                         file_browser_command = file_browser_command_element.GetInt32();
+
+                        // Get the remote control username (run as user) from the JSON
+                        if (document.RootElement.TryGetProperty("remote_control_username", out JsonElement remote_control_username_element))
+                            remote_control_username = remote_control_username_element.GetString() ?? "";
                     }
                     catch (Exception ex)
                     {
@@ -537,13 +856,14 @@ namespace NetLock_RMM_Server.SignalR
                             await conn.OpenAsync();
 
                             // Parameter definieren und mit AddWithValue hinzufügen
-                            string execute_query = "INSERT INTO `device_information_remote_shell_history` (`device_id`, `date`, `author`, `command`, `result`) VALUES (@device_id, @date, @author, @command, @result);";
+                            string execute_query = "INSERT INTO `device_information_remote_shell_history` (`device_id`, `date`, `author`, `run_as_user`, `command`, `result`) VALUES (@device_id, @date, @author, @run_as_user, @command, @result);";
 
                             using (MySqlCommand cmd = new MySqlCommand(execute_query, conn))
                             {
                                 cmd.Parameters.AddWithValue("@device_id", device_id);
                                 cmd.Parameters.AddWithValue("@date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
                                 cmd.Parameters.AddWithValue("@author", await MySQL.Handler.Get_Admin_Username_By_Remote_Session_Token(admin_token));
+                                cmd.Parameters.AddWithValue("@run_as_user", remote_control_username);
                                 cmd.Parameters.AddWithValue("@command", powershell_code);
                                 cmd.Parameters.AddWithValue("@result", response);
 
@@ -604,6 +924,12 @@ namespace NetLock_RMM_Server.SignalR
                     case 9: return "ReceiveClientResponseRemoteFileBrowserRenameFile";
                     case 10: return "ReceiveClientResponseRemoteFileBrowserUploadFile";
                     case 11: return "ReceiveClientResponseRemoteFileBrowserDownloadFile";
+                    case 12: return "ReceiveClientResponseRemoteFileBrowserReadFile";
+                    case 13: return "ReceiveClientResponseRemoteFileBrowserViewImage";
+                    case 14: return "ReceiveClientResponseRemoteFileBrowserViewPdf";
+                    case 15: return "ReceiveClientResponseRemoteFileBrowserViewZip";
+                    case 16: return "ReceiveClientResponseRemoteFileBrowserExtractZip";
+                    case 17: return "ReceiveClientResponseRemoteFileBrowserZipItems";
                     default: return "ReceiveClientResponse";
                 }
             }
@@ -634,7 +960,31 @@ namespace NetLock_RMM_Server.SignalR
                 return "ReceiveClientResponseRemoteEventlogViewer";
             else if (type == 15) // Virtual Display Driver Management
                 return "ReceiveClientResponseVirtualDisplay";
-            
+            else if (type == 17) // Real-Time Shell (output streams via dedicated ReceiveRealTimeShellOutput method)
+                return "ReceiveRealTimeShellOutput";
+            else if (type == 19) // Remote Shell - Get Users
+                return "ReceiveClientResponseRemoteShellUsers";
+            else if (type == 18) // Remote Registry Editor
+                return "ReceiveClientResponseRemoteRegistryEditor";
+            else if (type == 20) // Wake On LAN
+                return "ReceiveClientResponseWakeOnLan";
+            else if (type == 21) // Uninstall Application
+                return "ReceiveClientResponseUninstallApplication";
+            else if (type == 23) // SNMP Tools
+                return "ReceiveClientResponseSNMPTools";
+            else if (type == 24) // Read Service Details
+                return "ReceiveClientResponseServiceReadDetails";
+            else if (type == 25) // Apply Service Edit
+                return "ReceiveClientResponseServiceEditApply";
+            else if (type == 26) // Refresh Services List
+                return "ReceiveClientResponseRefreshServicesList";
+            else if (type == 27) // Realtime Metrics (CPU / RAM live poll)
+                return "ReceiveClientResponseRealtimeMetrics";
+            else if (type == 29) // Uninstall Agent
+                return "ReceiveClientResponseUninstallAgent";
+            else if (type == 30) // Sensor Discovery
+                return "ReceiveClientResponseSensorDiscovery";
+
             return "ReceiveClientResponse"; // Fallback
         }
 
@@ -650,37 +1000,99 @@ namespace NetLock_RMM_Server.SignalR
 
                 // Deserialize the JSON
                 Root_Entity rootData = JsonSerializer.Deserialize<Root_Entity>(adminIdentityJson);
-                
-                if (rootData == null || rootData.admin_identity == null || 
+
+                if (rootData == null || rootData.admin_identity == null ||
                     rootData.target_device == null || rootData.command == null)
                 {
                     Logging.Handler.Error("SignalR CommandHub", "MessageReceivedFromWebconsole", "Invalid message format");
                     return;
                 }
-                
+
                 Admin_Identity admin_identity = rootData.admin_identity;
                 Target_Device target_device = rootData.target_device;
                 Command command = rootData.command;
 
+                Console.WriteLine($"[REALTIME-SHELL-DEBUG] MessageReceivedFromWebconsole: type={command.type}, wait_response={command.wait_response}, command_length={command.command?.Length}");
+
+                // Only admin connections may dispatch commands to devices.
+                if (!IsAdminConnection())
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", "Caller is not an admin connection. Rejected.");
+                    return;
+                }
+
+                // The token in the payload must be valid and match the one this connection authenticated with.
+                if (admin_identity == null || string.IsNullOrEmpty(admin_identity.token) ||
+                    !await Webconsole.Handler.Verify_Remote_Session_Token(admin_identity.token) ||
+                    !(Context.Items.TryGetValue("admin_token", out var connToken) && (connToken as string) == admin_identity.token))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", "Admin token missing, invalid, or does not match the connection. Rejected.");
+                    return;
+                }
+
+                // Resolve the operator so we can scope it to its tenants and permissions.
+                MySQL.Handler.Operator_Info op = await MySQL.Handler.Resolve_Operator(admin_identity.token);
+                if (op == null)
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", "Operator could not be resolved. Rejected.");
+                    return;
+                }
+
                 string commandJson = JsonSerializer.Serialize(command);
-                
+
                 // Get signalR client id of the target device
                 string client_id = await Get_Device_ClientId(target_device.access_key);
-                
-                // Get device_id from database based on access_key 
+
+                // Get device_id from database based on access_key
                 string device_id = await MySQL.Handler.Get_Device_Id_By_Access_Key(target_device.access_key);
+
+                // Scope the operator to the target device's tenant.
+                string device_tenant_id = await MySQL.Handler.Get_TenantID_From_DeviceID(device_id);
+                if (!Operator_Has_Tenant_Access(op, device_tenant_id))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", $"Operator {op.username} has no access to tenant {device_tenant_id}. Rejected.");
+                    return;
+                }
+
+                // Check connection is allowed for any tenant-scoped operator and carries no feature permission.
+                if (command.type != 5 && !Operator_Has_Permission_For_Type(op, command.type))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", $"Operator {op.username} lacks permission for command type {command.type}. Rejected.");
+                    return;
+                }
+
+                // Enforce the device policy gating for non-screen-control feature command types.
+                if (command.type != 5 && !await Device_Policy_Allows_Command_Type(target_device.access_key, command.type))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "MessageReceivedFromWebconsole", $"Command type {command.type} is disabled by device policy for access_key {target_device.access_key}. Rejected.");
+                    return;
+                }
 
                 // Do connection checks
                 if (String.IsNullOrEmpty(client_id))
                 {
                     string responseMessage = "Remote device is not connected with the NetLock RMM backend. Make sure your target device is connected.";
-                    
+
                     if (command.type == 0) // if remote shell
                         await Clients.Caller.SendAsync("ReceiveClientResponseRemoteShell", responseMessage);
                     else if (command.type == 4) // if remote control
                         await Clients.Caller.SendAsync("ReceiveClientResponseRemoteControl", responseMessage);
                     else if (command.type == 5) // check connection
                         await Clients.Caller.SendAsync("ReceiveClientResponseCheckConnection", responseMessage);
+                    else if (command.type == 17) // real-time shell
+                        await Clients.Caller.SendAsync("ReceiveRealTimeShellOutput", "", responseMessage);
+                    else if (command.type == 18) // registry editor
+                        await Clients.Caller.SendAsync("ReceiveClientResponseRemoteRegistryEditor", responseMessage);
+                    else if (command.type == 19) // remote shell get users
+                        await Clients.Caller.SendAsync("ReceiveClientResponseRemoteShellUsers", responseMessage);
+                    else if (command.type == 24) // read service details
+                        await Clients.Caller.SendAsync("ReceiveClientResponseServiceReadDetails", responseMessage);
+                    else if (command.type == 25) // apply service edit
+                        await Clients.Caller.SendAsync("ReceiveClientResponseServiceEditApply", responseMessage);
+                    else if (command.type == 26) // refresh services list
+                        await Clients.Caller.SendAsync("ReceiveClientResponseRefreshServicesList", responseMessage);
+                    else if (command.type == 30) // sensor discovery
+                        await Clients.Caller.SendAsync("ReceiveClientResponseSensorDiscovery", responseMessage);
                     else
                         await Clients.Caller.SendAsync("ReceiveClientResponse", responseMessage);
                     
@@ -705,6 +1117,7 @@ namespace NetLock_RMM_Server.SignalR
                     powershell_code = command.powershell_code, // powershell_code
                     type = command.type, // represents the command type. Needed for the response to know how to handle the response
                     file_browser_command = command.file_browser_command, // represents the file browser command type. Needed for the response to know how to handle the response
+                    remote_control_username = command.remote_control_username ?? "", // for run as user feature
                 };
                 
                 // Convert the object into a JSON string
@@ -758,6 +1171,151 @@ namespace NetLock_RMM_Server.SignalR
             }
         }
         
+        // Receive real-time shell output from agent and forward to admin client
+        public async Task ReceiveRealTimeShellOutput(string responseId, string sessionId, string data)
+        {
+            try
+            {
+                // This callback is only ever raised by a connected device.
+                if (!IsDeviceConnection())
+                    return;
+
+                Console.WriteLine($"[REALTIME-SHELL-DEBUG] ReceiveRealTimeShellOutput called: ResponseId={responseId}, SessionId={sessionId}, DataLength={data?.Length}");
+                Logging.Handler.Debug("SignalR CommandHub", "ReceiveRealTimeShellOutput", $"ResponseId: {responseId}, SessionId: {sessionId}, DataLength: {data?.Length}");
+
+                // Look up the admin client info from the responseId
+                string admin_identity_info_json = await Get_Admin_ClientId_By_ResponseId(responseId);
+
+                if (string.IsNullOrEmpty(admin_identity_info_json))
+                {
+                    Logging.Handler.Debug("SignalR CommandHub", "ReceiveRealTimeShellOutput", "Admin identity info not found for responseId: " + responseId);
+                    return;
+                }
+
+                string admin_client_id = String.Empty;
+
+                using (JsonDocument document = JsonDocument.Parse(admin_identity_info_json))
+                {
+                    JsonElement admin_client_id_element = document.RootElement.GetProperty("admin_client_id");
+                    admin_client_id = admin_client_id_element.ToString();
+                }
+
+                if (string.IsNullOrEmpty(admin_client_id))
+                {
+                    Logging.Handler.Debug("SignalR CommandHub", "ReceiveRealTimeShellOutput", "Admin client ID not found.");
+                    return;
+                }
+
+                // Forward the output to the admin client
+                await CommandHubSingleton.Instance.HubContext.Clients.Client(admin_client_id).SendAsync("ReceiveRealTimeShellOutput", sessionId, data);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "ReceiveRealTimeShellOutput", ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Convenience wrapper used by the Deploy_Software_Dialog ("Run Now"): resolves the
+        /// client_id by access_key then forwards the command via SendMessageToClient. Keeps
+        /// the web-console call site a single hub invocation without needing a prior hop.
+        /// </summary>
+        public async Task SendMessageToClientByAccessKey(string access_key, string command_json)
+        {
+            try
+            {
+                // Only admin connections may dispatch commands to devices.
+                if (!IsAdminConnection())
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "SendMessageToClientByAccessKey", "Caller is not an admin connection. Rejected.");
+                    return;
+                }
+
+                // Use the token this connection authenticated with to resolve the operator.
+                if (!(Context.Items.TryGetValue("admin_token", out var connToken) && connToken is string admin_token) ||
+                    string.IsNullOrEmpty(admin_token) || !await Webconsole.Handler.Verify_Remote_Session_Token(admin_token))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "SendMessageToClientByAccessKey", "Connection has no valid admin token. Rejected.");
+                    return;
+                }
+
+                MySQL.Handler.Operator_Info op = await MySQL.Handler.Resolve_Operator(admin_token);
+                if (op == null)
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "SendMessageToClientByAccessKey", "Operator could not be resolved. Rejected.");
+                    return;
+                }
+
+                // Determine the command type from the payload.
+                int command_type;
+                try
+                {
+                    using JsonDocument document = JsonDocument.Parse(command_json);
+                    command_type = document.RootElement.GetProperty("type").GetInt32();
+                }
+                catch (Exception ex)
+                {
+                    Logging.Handler.Error("SignalR CommandHub", "SendMessageToClientByAccessKey", "Could not parse command type: " + ex.ToString());
+                    return;
+                }
+
+                // Scope the operator to the target device's tenant.
+                string device_id = await MySQL.Handler.Get_Device_Id_By_Access_Key(access_key);
+                string device_tenant_id = await MySQL.Handler.Get_TenantID_From_DeviceID(device_id);
+                if (!Operator_Has_Tenant_Access(op, device_tenant_id))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "SendMessageToClientByAccessKey", $"Operator {op.username} has no access to tenant {device_tenant_id}. Rejected.");
+                    return;
+                }
+
+                if (command_type != 5 && !Operator_Has_Permission_For_Type(op, command_type))
+                {
+                    Logging.Handler.Warning("SignalR CommandHub", "SendMessageToClientByAccessKey", $"Operator {op.username} lacks permission for command type {command_type}. Rejected.");
+                    return;
+                }
+
+                string client_id = await Get_Device_ClientId(access_key);
+                if (string.IsNullOrEmpty(client_id))
+                {
+                    Logging.Handler.Debug("SignalR CommandHub", "SendMessageToClientByAccessKey",
+                        $"No connected client for access_key {access_key} — command dropped.");
+                    return;
+                }
+                await CommandHubSingleton.Instance.HubContext.Clients.Client(client_id).SendAsync("SendMessageToClient", command_json);
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "SendMessageToClientByAccessKey", ex.ToString());
+            }
+        }
+
+        // ----- Software Deployment live-progress groups -----
+        // The Deployment_Detail page joins "software_deployment_<id>" so the agent's
+        // ReceiveDeploymentProgress events can be fanned out to interested admins only.
+        public async Task Join_Software_Deployment_Group(int job_id)
+        {
+            try
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, $"software_deployment_{job_id}");
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "Join_Software_Deployment_Group", ex.ToString());
+            }
+        }
+
+        public async Task Leave_Software_Deployment_Group(int job_id)
+        {
+            try
+            {
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, $"software_deployment_{job_id}");
+            }
+            catch (Exception ex)
+            {
+                Logging.Handler.Error("SignalR CommandHub", "Leave_Software_Deployment_Group", ex.ToString());
+            }
+        }
+
         // Helper method for more robust SignalR communication
         private async Task<bool> TrySendToClientWithRetry(string clientId, string method, string arg)
         {
