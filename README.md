@@ -20,6 +20,12 @@
 
 ---
 
+> ## ⏸️ Public commits are currently paused — but NetLock RMM is **actively developed**
+>
+> Development has **not** stopped — quite the opposite. NetLock RMM is being **actively built and shipped** every day; we have simply **paused public commits to this repository** while we curate what we publish under our **open-core model**. New releases, features and fixes keep coming. This decision follows repeated **license violations** — startups copying the project and using AI to re-implement it to sidestep the AGPL. Read the full background in our **[🔓 Open Core statement](#-open-core--and-why-it-changed)** below and the **[founder's story](https://netlockrmm.com/company/about)**.
+
+---
+
 > **⭐ If NetLock RMM is useful to you, please star this repo — it helps others discover the project!**
 
 ## What is NetLock RMM?
@@ -103,7 +109,7 @@ NetLock RMM is a full-stack platform — monitoring, automation, remote access, 
 | 📑 **Reports** | **53 pre-built templates** plus a visual query builder and raw-SQL "God Mode". Metric / chart / table / text widgets, brand templates, **6 schedule frequencies** and export to **PDF, HTML, CSV or JSON** via download, email or webhook. |
 | 🧩 **Custom Fields & Dashboards** | Build whole device-page tabs from manual input, job results (RegEx-parsed) or SQL — with action buttons. Per-user **custom dashboards** with drag-and-resize chart & table panels on a 12-column grid. |
 | 📊 **Dashboards & Event Viewer** | Centralised dashboards with statistics, unread events and a powerful **event browser** with severity-based filtering. |
-| 🕵️ **Tamper-Evident Auditing** | Append-only, immutable **audit log** covering 10 action categories across 18 entity types with severity levels, tenant scoping, rich filters and JSON/CSV export. |
+| 🕵️ **Auditing** | Append-only, immutable **audit log** covering 10 action categories across 18 entity types with severity levels, tenant scoping, rich filters and JSON/CSV export. |
 | 🤖 **NetLock AI** | OpenAI-API-compatible LLM connector (OpenAI, Claude or self-hosted models) wired into the script editor, remote shell, event-log viewer, ticketing and auditing — with file attachments, streaming markdown and per-tenant token budgets. |
 | 🔔 **Event Notifications** | Get alerted via **Email, Microsoft Teams, ntfy.sh, Telegram** or **custom webhooks** with templated variables and priority-based routing. |
 | 📁 **Integrated File Server** | Host your favourite scripts and tools directly inside NetLock RMM and reference them from your jobs, with 1-click custom installers per platform. |
