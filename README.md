@@ -4,7 +4,7 @@
 
 # NetLock RMM
 
-### Open-Source Remote Monitoring & Management for MSPs and IT Teams
+### Open-Core Remote Monitoring & Management for MSPs and IT Teams
 
 [![Website](https://img.shields.io/badge/Website-netlockrmm.com-blue?style=for-the-badge)](https://netlockrmm.com/)
 [![Documentation](https://img.shields.io/badge/Docs-netlockrmm.com%2Fdocs-blue?style=for-the-badge)](https://netlockrmm.com/docs)
@@ -24,7 +24,7 @@
 
 ## What is NetLock RMM?
 
-**NetLock RMM** is a fully open-source Remote Monitoring & Management platform built for **Managed Service Providers** and **internal IT teams**, with a strong focus on **cybersecurity**. Lightweight cross-platform agents stream telemetry to a self-hostable server so you can monitor, manage and remotely support your entire fleet from a single web console.
+**NetLock RMM** is an **open-core** Remote Monitoring & Management platform built for **Managed Service Providers** and **internal IT teams**, with a strong focus on **cybersecurity**. Lightweight cross-platform agents stream telemetry to a self-hostable server so you can monitor, manage and remotely support your entire fleet from a single web console.
 
 Whether you run NetLock RMM in the cloud, on-premises, in Docker / Kubernetes, or in fully isolated / air-gapped environments — and whether you manage ten endpoints or ten thousand — NetLock RMM gives you the visibility, automation and remote tooling that modern IT operations demand, without per-seat license fees.
 
@@ -48,35 +48,70 @@ NetLock RMM is **not** a "vibe-coded" weekend project and it is definitely not A
 
 Years of real engineering, real architectural decisions and real production usage went into this platform long before the current AI hype cycle. We are aware that AI will permanently change how software is built, and we do adopt it where it sensibly accelerates our work — but **every security-relevant and architectural decision in NetLock RMM is designed, reviewed and implemented by humans, by hand, without AI**. That is a hard rule for us, and it is not negotiable.
 
-### 🔍 Why Open Source?
+### 🔓 Open Core — and Why It Changed
 
-We made NetLock RMM open source for one simple reason: **maximum transparency and trust**. An RMM agent runs with high privileges on every endpoint it touches — you should never have to take a vendor's word for what that agent does. With NetLock RMM you can read the source, audit the network traffic, verify that there is no hidden telemetry, and convince yourself (and your customers, and your auditors) that the platform behaves exactly the way it claims to.
+We made NetLock RMM open for one simple reason: **maximum transparency and trust**. An RMM agent runs with high privileges on every endpoint it touches — you should never have to take a vendor's word for what that agent does. With NetLock RMM you can read the source of the core, audit the network traffic, verify that there is no hidden telemetry, and convince yourself (and your customers, and your auditors) that the platform behaves exactly the way it claims to.
 
-Open source is how we earn — and keep — your trust.
+NetLock RMM originally launched **fully under the AGPL**, because transparency matters to us. Over time, though, we watched startups copy the project outright — and increasingly use AI to re-implement its logic in another language to sidestep the license entirely, profiting from the work without giving anything back.
+
+So in **2026** we made a deliberate decision to move to an **open-core model**: the **core stays open under the AGPL**, but not every feature's source is published. Anyone who wants to can still build on the open core, and fair pricing stays central — with the **v3** release, the cloud version actually became *cheaper*.
+
+**Want to audit the security of NetLock RMM against the full, current codebase?** If you are a **genuine security-audit / pentesting company or a government institution**, we gladly **invite you to perform audits on the complete and up-to-date codebase, on-site within our company**. Transparency does not stop at the open core — it extends to giving qualified auditors real, verifiable access to everything that matters.
+
+Practically, this means we now publish **selected parts of the codebase** to this public repository — and **further parts on request** — rather than mirroring everything in real time. Our internal codebase has evolved very significantly since the early open-source days, and curating what we publish lets us **harden security** while still giving the community, customers and auditors a real, verifiable view into how NetLock RMM works. 
+
+None of this changes our mission: we want to be the **fairest and still most transparent RMM vendor on the market** — with **very fair, very low pricing**, **solid engineering**, **first-class support**, and all of it **built and run from Germany** 🇩🇪.
+
+Transparency is still how we earn — and keep — your trust.
+
+> 📖 Read the full reasoning behind this decision in the founder's story: **[netlockrmm.com/company/about](https://netlockrmm.com/company/about)**
 
 ---
 
 ## ✨ Features at a Glance
 
+<div align="center">
+
+**350+ ready-made sensors** &nbsp;•&nbsp; **85+ features** &nbsp;•&nbsp; **100+ granular permissions** &nbsp;•&nbsp; **53 report templates** &nbsp;•&nbsp; **9 console languages** &nbsp;•&nbsp; **3 platforms** &nbsp;•&nbsp; **0 hidden telemetry**
+
+</div>
+
+NetLock RMM is a full-stack platform — monitoring, automation, remote access, patching, software deployment, ticketing, reporting and security tooling all in one console. Here's the high-level map:
+
 | Category | What You Can Do |
 |---|---|
-| 🖥️ **Cross-Platform Agents** | One-click installer for **Windows** (7 → 11 / Server 2012 → 2025), **Linux** (Ubuntu, Debian, RHEL, CentOS Stream, Fedora) and **macOS** (Ventura, Sonoma, Sequoia). Both **x64 and ARM64** are supported. |
-| 🧩 **Multi-Tenancy** | Full tenant, location and group management — perfect for MSPs juggling many customers from one console. |
-| 👥 **Users, Roles & SSO** | Granular role-based permissions, **two-factor authentication (TOTP)** and **Single Sign-On** via Keycloak, Entra ID, Auth0 or Okta. |
-| 🛡️ **Flexible & Scalable Architecture** | Run everything on a single box, or split server roles across multiple machines for HA. **Fallback servers** per role and full **reverse-proxy** support. |
-| 🚀 **Streamlined Setup** | Server and Web Console ship as a standalone **Kestrel**-based binary — no Apache, no IIS, no fuss. Run it on bare metal, in Docker or in Kubernetes. |
-| 🛠️ **Powerful Remote Tools** | Real-time **remote shell** (PowerShell / Bash / Zsh), **file browser**, **task manager**, **service manager** and **remote registry** at your fingertips. |
-| 🖱️ **Remote Screen Control** | TeamViewer-grade remote control for **Windows & Linux**. Session & display switching, unattended + attended access, user chat, **Ctrl+Alt+Del**, **session recording**, keystroke injection — and a **Relay App** for end-to-end encrypted tunnels. |
-| 🎧 **Custom User Tray Icon & Chat** | Deploy a white-label tray icon to end users with custom logo, custom interface texts, action buttons (open URL / run command) and a built-in chat interface. |
-| 🧾 **Inventory & Hardware Monitoring** | Software & hardware inventory, CPU, RAM, drives, network adapters, drivers, services, scheduled tasks, logon history and more. |
-| 🛡️ **Antivirus & Security** | Manage **Microsoft Defender Antivirus**, monitor firewall status and enforce security baselines through policies. |
-| ⚙️ **Automation Engine** | **Jobs** for scheduled PowerShell, Bash and Zsh scripts. **Sensors** for CPU, RAM, disk, ping, Windows Event Logs, services and **custom RegEx-based script sensors**. |
-| 📜 **Policy Management** | Auto-assign policies by tenant, location, group, domain, IP or device name. Define and enforce antivirus, notification, sensor and job policies. |
+| 🖥️ **Cross-Platform Agents** | **Code-signed** one-click installer for **Windows** (7 → 11 / Server 2012 → 2025), **Linux** (Ubuntu, Debian, RHEL, CentOS Stream, Fedora, Proxmox) and **macOS** (Ventura → Sequoia). Both **x64 and ARM64**. Agents auto-update and self-heal. |
+| 🧩 **Multi-Tenancy** | **Unlimited** tenants, locations and groups with full isolation — no per-tenant fees. Perfect for MSPs juggling many customers from one console, with unified cross-tenant reporting. |
+| 👥 **Users, Roles & SSO** | **100+ granular permission settings**, importable role templates, **two-factor authentication (TOTP)** and **Single Sign-On** (SAML & OIDC) via **Keycloak, Entra ID, Auth0 or Okta**. Per-user auth modes (password / SSO / both / enforced 2FA). |
+| 🛡️ **Flexible & Scalable Architecture** | Run everything on a single box, or split the **8 server roles** (Comm, Update, Trust, Remote, Notification, File, LLM, Relay) across machines for HA. **Fallback servers** per role and full **reverse-proxy** support. A 2-core / 8 GB server handles **5,000+ devices**. |
+| 🚀 **Streamlined Setup** | Server and Web Console ship as a standalone **Kestrel**-based binary — no Apache, no IIS, no fuss. Run it on bare metal, in Docker or in Kubernetes, with a custom **1-click Install Builder** (GPO / Intune / MDM scripts). |
+| 🛠️ **Powerful Remote Tools** | Real-time **remote shell** (PowerShell / Bash / Zsh / Python3, classic + VT100/ANSI, run-as-user, bulk execution), **file browser**, **task manager**, **service manager**, **remote registry**, **Windows Event Log viewer**, **Wake-on-LAN** and instant **shutdown / reboot**. |
+| 🖱️ **Remote Screen Control** | TeamViewer-grade remote control for **Windows & Linux**. **H.264 adaptive streaming**, multi-monitor & virtual-display switching, multi-operator session switching (incl. RDP/RDS), unattended + attended access, user chat, **Ctrl+Alt+Del**, **session recording**, keystroke injection — with an optional **2FA gate** on remote actions. |
+| 🔗 **E2E-Encrypted Relay** | Tunnel **RDP, SSH, MySQL, VNC or any TCP service** through the **Relay App** — no port forwarding, no exposed ports. Use your own tools (DBeaver, native RDP, PuTTY) or reach internal web apps and LAN devices through a jump host. |
+| 🎧 **Custom User Tray Icon & Chat** | Deploy a white-label tray icon with custom logo, interface texts and action buttons (open URL / run command), a built-in **support chat**, and an optional **end-to-end-encrypted end-user AI chat**. |
+| 🧾 **Inventory & Hardware Monitoring** | Software & hardware inventory, CPU, RAM, drives, network adapters, drivers, services, scheduled tasks, logon history and more — across Windows, Linux and macOS. |
+| 📡 **Monitoring & Sensors** | **350+ ready-made sensors** plus **custom RegEx script sensors** (PowerShell / Bash / Zsh / Python3). Utilization, process, service, ping, Windows Event Log, **SNMP (v1 / v2c / v3)** and **port-scanner** sensors, with counter-based triggers, spam-prevention and auto-reset. **28 monitored vendors** out of the box. |
+| 🌐 **Website & Uptime Monitoring** | Server-side HTTP/HTTPS checks with **SSL-expiry** (30/14/7/3-day) alerts, **DNS** record monitoring, content & **defacement** detection, response-time history (24h / 7d / 30d) and a full **incident timeline** with smart root-cause detection. |
+| ⚙️ **Automation & Jobs** | **Jobs** for scheduled PowerShell, Bash, Zsh and Python scripts with retry logic, timeouts and a shared script library. Attach scripts to sensors for **self-healing** and escalation. Import community scripts. |
+| 📜 **Policy Management** | Auto-assign policies by tenant, location, group, domain, IP or device name with a clear **most-specific-wins** hierarchy. Define and enforce antivirus, notification, sensor, patch and job policies. |
+| 🩹 **Patch Management** | Patch **Windows, Linux, macOS & Docker** — plus third-party apps via **winget, Chocolatey & Flatpak**. Approval workflows, **severity-based SLA windows**, deployment rings, Patch-Tuesday-relative scheduling, smart maintenance windows, reboot handling and **automatic rollback** on failure-rate thresholds. |
+| 📦 **Software Deployment & App Hub** | Deploy from a catalogue sourced from **Winget, Flathub, Chocolatey** or custom **scripts**. A 4-step wizard targets devices/groups/locations/tenants with run modes, scheduling, retries and per-device status & attempt history. |
+| 🛡️ **Application Control** *(Windows)* | In-house **default-deny allowlisting** engine matching path, version info, **SHA256/SHA512 hashes** and certificate details — approve pending apps straight into allow rules. |
+| 🔌 **USB Device Control** *(Windows)* | Allowlist devices by vendor ID, product ID, serial or device class, with approval scopes from a single device up to global, across **10 recognised device classes**. |
+| 🛡️ **Antivirus & Firewall** | Manage **Microsoft Defender Antivirus**, monitor firewall status, and drive the **Linux UFW Firewall Manager** (policy-based with drift re-apply) — all enforced through policies. |
+| 🎫 **Ticketing, Helpdesk & CRM** | Optional helpdesk module with multi-department **IMAP/SMTP**, **SLA engine**, time tracking (auto + manual, billable rounding), labels, templates, per-department webhooks, a native **CRM** with tenant linkage and a statistics dashboard. |
+| 📑 **Reports** | **53 pre-built templates** plus a visual query builder and raw-SQL "God Mode". Metric / chart / table / text widgets, brand templates, **6 schedule frequencies** and export to **PDF, HTML, CSV or JSON** via download, email or webhook. |
+| 🧩 **Custom Fields & Dashboards** | Build whole device-page tabs from manual input, job results (RegEx-parsed) or SQL — with action buttons. Per-user **custom dashboards** with drag-and-resize chart & table panels on a 12-column grid. |
 | 📊 **Dashboards & Event Viewer** | Centralised dashboards with statistics, unread events and a powerful **event browser** with severity-based filtering. |
-| 🔔 **Event Notifications** | Get alerted via **Email**, **Microsoft Teams**, **ntfy.sh**, **Telegram** or **custom webhooks** with templated variables. |
-| 📁 **Integrated File Server** | Host your favorite scripts and tools directly inside NetLock RMM and reference them from your jobs. |
-| 🎨 **White-Label Branding** | Customise the console title and logo to match your brand. |
-| 🔐 **Security by Design** | Special agent handshake so only authorised agents talk to your server, role-based server architecture, full data sovereignty through self-hosting and **end-to-end encryption** for relay connections. **No hidden telemetry — verify it yourself in the source.** |
+| 🕵️ **Tamper-Evident Auditing** | Append-only, immutable **audit log** covering 10 action categories across 18 entity types with severity levels, tenant scoping, rich filters and JSON/CSV export. |
+| 🤖 **NetLock AI** | OpenAI-API-compatible LLM connector (OpenAI, Claude or self-hosted models) wired into the script editor, remote shell, event-log viewer, ticketing and auditing — with file attachments, streaming markdown and per-tenant token budgets. |
+| 🔔 **Event Notifications** | Get alerted via **Email, Microsoft Teams, ntfy.sh, Telegram** or **custom webhooks** with templated variables and priority-based routing. |
+| 📁 **Integrated File Server** | Host your favourite scripts and tools directly inside NetLock RMM and reference them from your jobs, with 1-click custom installers per platform. |
+| 🗺️ **Device World Map** | Visualise your whole fleet on a map using **bundled, offline GeoIP** — no third-party lookups. |
+| 🎨 **White-Label Branding** | Theme every colour, logo and title; brand the tray icon, support chat and screen-control prompts; set a custom login background (image/video) — and share signed white-label themes with the community. |
+| 🛠️ **Maintenance Mode** | Manual or scheduled weekly maintenance windows that suppress notifications while you work. |
+| 🔏 **Code Signing** | **Every edition — including Community — ships code-signed Windows agents and installers** (x64 & ARM64): SmartScreen-safe, verified-publisher, tamper-evident. |
+| 🔐 **Security by Design** | Agent handshake so only authorised agents talk to your server, **Trust Server** supply-chain hash verification, RAM-based encrypted package delivery, Web Console & backend IP restriction, outbound-only agents, full data sovereignty through self-hosting and **end-to-end encryption** for relay connections. **No hidden telemetry — verify it yourself in the source.** |
 
 > Looking for the full feature list? Head over to **[netlockrmm.com/docs/features](https://netlockrmm.com/docs/features)**.
 
@@ -102,8 +137,8 @@ flowchart LR
     B -- HTTP --> S[NetLock Server Roles]
     C -- TCP --> D[(MySQL)]
     S -- TCP --> D
-    E[Agents - Windows / Linux / macOS] -- HTTPS / SignalR --> S
-    R[Relay App] <-- E2E Encrypted --> S
+    E[Agents - Windows / Linux / macOS] -- HTTPS / SignalR --> B
+    R[Relay App] <-- E2E Encrypted --> B
 ```
 
 ---
@@ -114,7 +149,7 @@ NetLock RMM is built for **enterprises, MSPs, MSP startups and any organisation*
 
 | Edition | Hosting | Who it's for | Device limit |
 |---|---|---|---|
-| 🆓 **Community Edition** | Self-hosted | Homelabs, evaluators, small teams, anyone who wants to try or run NetLock RMM for free. The full open-source platform, all core features, no per-seat fees. Community support via [Discord](https://discord.gg/HqUpZgtX4U) and [GitHub Issues](https://github.com/0x101-Cyber-Security/NetLock-RMM/issues). | **Up to 25 devices** |
+| 🆓 **Community Edition** | Self-hosted | Homelabs, evaluators, small teams, anyone who wants to try or run NetLock RMM for free. The open-core platform, all core features, no per-seat fees. Community support via [Discord](https://discord.gg/HqUpZgtX4U) and [GitHub Issues](https://github.com/0x101-Cyber-Security/NetLock-RMM/issues). | **Up to 25 devices** |
 | 💼 **Self-Hosted Paid** | Self-hosted | Enterprises, MSPs and businesses that want to run NetLock RMM in their own infrastructure but need an SLA-backed professional partner. Includes professional support directly from the maintainers and prioritised handling. | **Unlimited** — no device cap |
 | ☁️ **Cloud-Hosted Edition** | Hosted by us | Organisations that want NetLock RMM up and running **without managing any infrastructure**. We handle provisioning, updates, backups, scaling and uptime — you focus on managing your fleet. | **Per-package limit** — pick the tier that fits your fleet |
 
@@ -122,9 +157,9 @@ NetLock RMM is built for **enterprises, MSPs, MSP startups and any organisation*
 
 ### Why a Members Portal?
 
-The **[Members Portal](https://members.netlockrmm.com)** is the professional interface between the NetLock RMM community, the businesses that depend on the platform, and us as the maintainers. It's where you manage your subscription and licence, access professional support, run the live demo, and interact with the team in a structured way that scales beyond a Discord channel — **without ever locking the open-source platform behind a paywall**.
+The **[Members Portal](https://members.netlockrmm.com)** is the professional interface between the NetLock RMM community, the businesses that depend on the platform, and us as the maintainers. It's where you manage your subscription and licence, access professional support, run the live demo, and interact with the team in a structured way that scales beyond a Discord channel — **without ever locking the open core behind a paywall**.
 
-The platform stays open source. The portal exists so that the people who need a professional vendor relationship can have one.
+The core stays open under the AGPL. The portal exists so that the people who need a professional vendor relationship can have one.
 
 > ⚡ **The Cloud-Hosted Edition is by far the easiest way to deploy and maintain NetLock RMM.** Provisioning, updates, backups and infrastructure are all handled for you — no Docker, no reverse proxy, no maintenance windows. Just sign up and start enrolling agents. See **[netlockrmm.com/docs/install](https://netlockrmm.com/docs/install)** for the full installation guide and all available deployment paths.
 
@@ -202,6 +237,8 @@ This is a deliberate, considered decision — not laziness and not gatekeeping:
 - All **security-relevant and architectural code** is written and reviewed by us personally, by hand, without AI — and we want to keep that promise honest.
 
 If you have an idea, please open an issue or post in the Discord wishlist. We read every single one, and many features in NetLock RMM today started exactly that way.
+
+> 📖 **Read the full policy in [CONTRIBUTING.md](CONTRIBUTING.md)** — including how to write a great bug report, how to suggest features, and the detailed reasoning behind the no-PR policy.
 
 ### Repository Layout
 
