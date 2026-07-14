@@ -202,7 +202,7 @@ After installation, open your console URL in the browser and follow the first-ti
 
 ## 📚 Documentation
 
-Full documentation — including installation guides, agent management, policies, sensors, jobs, integrations and API reference — lives at:
+Full documentation — including installation guides, agent management, policies, sensors, jobs lives at:
 
 👉 **[netlockrmm.com/docs](https://netlockrmm.com/docs)**
 
